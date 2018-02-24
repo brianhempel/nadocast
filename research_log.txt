@@ -1,0 +1,10 @@
+- Figured out distance and wrote distance_and_midpoint, waypoints, distance_to_line functions in Julia using GeographicLib exposed by Proj4
+- Downloaded and inspected schema changes in +1hr inventory files. (Downloaded by modifying get_rap.rb; run ruby examine_inventory.rb to dump files where schema changed to inventory_changes/ as well as print out a summary of common layers to stdout.)
+    - Apparently, simulated reflectivity wasn't added to RUC until late 2008
+- Downloaded US national boundary shapefile from https://www.nohrsc.noaa.gov/gisdatasets/ (ln_us/ln_us.shp). Apparently this file is CONUS-only, which is what we want.
+- Also obtained states shapefile from https://www.weather.gov/gis/USStates for later use (s_11au16/s_11au16.shp). https://www.weather.gov/gis/USStates has explanation of layers
+- Installed wgrib2 according to https://bovineaerospace.wordpress.com/2017/08/20/how-to-install-wgrib2-in-osx/ except I used "export CC=clang" with "export FC=gfortran". Symlinked to the built binary /Users/brian/Documents/open_source/grib2/wgrib2/wgrib2
+- Imported grid (make grid_coords_only.txt) into GRASS GIS along with the CONUS shapefile and instructed it to find the intersection (see grass_gis_grid_conus_intersection.png for settings)
+    - Output file is "grid_xys_inside_conus.txt"; columns are lon,lat,i (not lat lon!) where i is the line number (starting from 1) in grid_coords_only.txt and grid.txt
+    - "conus_grid_gis.gxw" is just saved workspace settings; refers to layers stored in a GIS workspace elsewhere on my computer
+-
