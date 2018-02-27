@@ -779,7 +779,7 @@ VGRD:975 mb
 VGRD:max wind
 VGRD:tropopause
 VIS:surface
-VSTM:u storm motion
+VSTM:v storm motion
 VVEL:100 mb
 VVEL:1000 mb
 VVEL:120-90 mb above ground

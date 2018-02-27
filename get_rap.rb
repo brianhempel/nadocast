@@ -2,7 +2,7 @@ require "date"
 
 # Modify these constants.
 INV_OR_GRIB    = %w[inv grb2][1]
-DATES          = (Date.new(2016,11,18)..Date.new(2018,2,16)-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
+DATES          = (Date.new(2008,11,18)..Date.new(2018,2,16)-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
 HOURS_OF_DAY   = (0..23).to_a
 FORECAST_HOURS = (1..1).to_a # RAP forcasts 0 - 18 hours ahead.
 BASE_URL       = FORECAST_HOURS.max <= 1 ? "https://nomads.ncdc.noaa.gov/data/rucanl" : "https://nomads.ncdc.noaa.gov/data/rap130" # Based a single sample, files in these two folders are identical if they exist in both

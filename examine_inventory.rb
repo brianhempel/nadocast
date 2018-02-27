@@ -48,7 +48,7 @@ unique_inventories_ignoring_number = unique_inventories.map do |inventory|
   inventory.map do |abbrev, desc|
     next(["MSTAV", "0 m underground"]) if abbrev == "MSTAV"
     next(["USTM", "u storm motion"]) if abbrev == "USTM"
-    next(["VSTM", "u storm motion"]) if abbrev == "VSTM"
+    next(["VSTM", "v storm motion"]) if abbrev == "VSTM"
     next(["HLCY", "3000-0 m above ground"]) if abbrev == "HLCY" && desc == "surface"
     [
       abbrev.gsub(/\bDIST\b/, "HGT"), # Also changed from m to gpm (geo-potential meters); probably not a big deal.

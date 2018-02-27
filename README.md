@@ -1,4 +1,4 @@
-# Intraday Tornado Prediction
+# NadoCast.com — Intraday Tornado Prediction
 
 Planning to use the [Rapid Refresh weather model](https://rapidrefresh.noaa.gov/) to generate hourly tornado probabilities.
 

@@ -1,6 +1,8 @@
 Pkg.update()
 
 Pkg.add("DataFrames")
+# Pkg.add("CSV")
+# Pkg.add("DelimitedFiles")
 Pkg.add("TimeZones")
 # Pkg.add("Distances")
 # Pkg.checkout("Distances") # haversine not in registered package as of 2017-12-30
