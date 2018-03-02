@@ -19,7 +19,7 @@ rap_130_20170515_0000_001.grb2:
 	curl https://nomads.ncdc.noaa.gov/data/rucanl/201705/20170515/rap_130_20170515_0000_001.grb2 > rap_130_20170515_0000_001.grb2
 
 grid.txt: rap_130_20170515_0000_001.grb2
-	wgrib2 rap_130_20170515_0000_001.grb2 -end -s -gridout - | ruby -e 'puts STDIN.read.strip.split(":").last' > grid.txt
+	wgrib2 rap_130_20170515_0000_001.grb2 -end -inv /dev/null -gridout - > grid.txt
 
 grid_coords_only.txt: grid.txt
 	# GRASS GIS point input can't handle extra whitespace

@@ -12,3 +12,10 @@
     - `wgrib2 -help asdf` seems to be equivalent to `wgrib2 | grep asdf`
     - See also long list of command line options here: http://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/long_cmd_list.html
     - `wgrib2 asdf.grb -header -bin -`
+- read_grib.jl
+    - read grib for inventory, normalize and select fields, read those out in binary
+    - convert UV winds to polar r/theta
+    - rotate thetas relative to storm direction
+    - tell wgrib2 to rotate the storm winds to lat/lon aligned (changes velocities by <1%; changes to storm angle of course more dramatic)
+    - TODO check whether order of grid points in grid.txt is same as order of data output in binary format
+    -

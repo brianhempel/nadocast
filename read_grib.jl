@@ -22,6 +22,11 @@
 # It *does* appear that there are multiple accumulation periods in the forecast (i.e. always a 1-hour period somewhere for all of the above)
 # May look for that.
 
+grib2_path = "rap_130_20170515_0000_001.grb2"
+
+stdout_limited = IOContext(STDOUT, :display_size=>(100,60))
+stdout_limited = IOContext(stdout_limited, :limit=>true)
+
 ### Common Fields ###
 layers = readdlm(IOBuffer("""ABSV:500 mb
 CAPE:255-0 mb above ground
@@ -331,8 +336,8 @@ VVEL:950 mb
 VVEL:975 mb
 VVEL:1000 mb"""), ':', String; header=false, use_mmap=false, quotes=false)
 
-
-inventory_lines = open(`wgrib2 rap_130_20170515_0000_001.grb2 -s -n`) do inv
+# Read the inventory of the file so we can corrolate it to figure out which layers we want.
+inventory_lines = open(`wgrib2 $grib2_path -s -n`) do inv
   readdlm(inv, ':', String; header=false, use_mmap=false, quotes=false)
 end
 
@@ -364,21 +369,15 @@ end
 #   end
 # end
 
-function normalize_line(row)
-  abbrev = row[4]
-  desc   = row[5]
+function normalize_abbrev_and_desc(abbrev, desc)
   if abbrev == "MSTAV"
-    row[4:5] = ["MSTAV", "0 m underground"]
-    return row
+    return ("MSTAV", "0 m underground")
   elseif abbrev == "USTM"
-    row[4:5] = ["USTM", "u storm motion"]
-    return row
+    return ("USTM", "u storm motion")
   elseif abbrev == "VSTM"
-    row[4:5] = ["VSTM", "v storm motion"]
-    return row
+    return ("VSTM", "v storm motion")
   elseif abbrev == "HLCY" && desc == "surface"
-    row[4:5] = ["HLCY", "3000-0 m above ground"]
-    return row
+    return ("HLCY", "3000-0 m above ground")
   end
   if abbrev == "DIST"
     abbrev = "HGT"
@@ -387,39 +386,44 @@ function normalize_line(row)
   desc = replace(desc, r"\bentire atmosphere\z", "entire atmosphere (considered as a single layer)")
   desc = replace(desc, r"\b3 m underground\b", "surface") # BGRUN:3 m underground -> BGRUN:surface
 
+  return (abbrev, desc)
+end
+
+function normalize_line(row)
+  abbrev, desc = normalize_abbrev_and_desc(row[4], row[5])
   row[4:5] = [abbrev, desc]
   return row
 end
 
-show(STDIN, "text/plain", inventory_lines)
+show(stdout_limited, "text/plain", inventory_lines)
 
 inventory_lines_normalized =
   mapslices(normalize_line, inventory_lines, 2)
 
-show(STDIN, "text/plain", inventory_lines_normalized)
+show(stdout_limited, "text/plain", inventory_lines_normalized)
 
 function desiredLayerToInventoryLine(desired)
   desiredAbbrev = desired[1]
   desiredDesc   = desired[2]
   # I hate this language.
-  matching_i    = findfirst([[desiredAbbrev, desiredDesc] == inventory_lines_normalized[i,4:5] for i=1:size(inventory_lines_normalized,1)])
+  matching_i =
+    findfirst([[desiredAbbrev, desiredDesc] == inventory_lines_normalized[i,4:5] for i=1:size(inventory_lines_normalized,1)])
+
   if matching_i > 0
     return inventory_lines_normalized[matching_i, :]
   else
     error("Could not find inventory_lines_normalized row for $desiredAbbrev $desiredDesc")
   end
-
-  findfirst(row -> row[4] == desiredAbbrev && row[5] == desiredDesc, inventory_lines_normalized)
 end
 
 layers_to_fetch = mapslices(desiredLayerToInventoryLine, layers, 2)
 
-show(STDIN, "text/plain", layers_to_fetch)
+show(stdout_limited, "text/plain", layers_to_fetch)
 
-layerToData = Dict{String,Array{Float64}}()
+layer_to_data = Dict{String,Array{Float64}}()
 
 # If you don't redirect inventory to /dev/null, it goes to stdout. No way to turn inventory off.
-(from_wgrib2, to_wgrib2, wgrib2) = readandwrite(`wgrib2 rap_130_20170515_0000_001.grb2 -i -header -inv /dev/null -bin -`)
+(from_wgrib2, to_wgrib2, wgrib2) = readandwrite(`wgrib2 $grib2_path -i -header -inv /dev/null -bin -`)
 
 # Tell wgrib2 which layers we want.
 for layer_i = 1:size(layers_to_fetch,1)
@@ -432,13 +436,14 @@ close(to_wgrib2)
 # Read out the data in those layers.
 for layer_i = 1:size(layers_to_fetch,1)
   layer_to_fetch    = layers_to_fetch[layer_i, :]
-  layer_key         = layer_to_fetch[1] * ":" * layer_to_fetch[2]
+  abbrev, desc      = normalize_abbrev_and_desc(layer_to_fetch[4], layer_to_fetch[5])
+  layer_key         = abbrev * ":" * desc
   grid_length       = read(from_wgrib2, UInt32)
   values            = read(from_wgrib2, Float32, div(grid_length, 4))
   grid_length_again = read(from_wgrib2, UInt32)
   # println(grid_length)
   # println(values)
-  layerToData[layer_key] = values
+  layer_to_data[layer_key] = values
   # println(grid_length_again)
 end
 
@@ -449,4 +454,185 @@ end
 
 # Normalize wind angle relative to storm motion (convert to polar: ground speed + relative direction)
 
+# UV to polar
+function uv_to_r_theta(pair)
+  u, v = pair
+  if u == 0.0 && v == 0.0
+    return (0.0, 0.0)
+  end
+  r     = sqrt(u^2 + v^2)
+  theta = atan2(v, u) # Angle, in radians
+  theta = mod(theta + π, 2π) - π # Turns π into -π (otherwise a passthrough here)
+  (r, theta)
+end
+
+storm_motion_us = layer_to_data["USTM:u storm motion"]
+storm_motion_vs = layer_to_data["VSTM:v storm motion"]
+
+storm_motion_polar_vectors = map(uv_to_r_theta, zip(storm_motion_us, storm_motion_vs))
+storm_motion_rs     = map(first, storm_motion_polar_vectors)
+storm_motion_thetas = map(last,  storm_motion_polar_vectors)
+
+uv_layers_to_relativize = [
+  ("UGRD:10 m above ground",       "VGRD:10 m above ground"),
+  ("UGRD:100 mb",                  "VGRD:100 mb"),
+  ("UGRD:120-90 mb above ground",  "VGRD:120-90 mb above ground"),
+  ("UGRD:125 mb",                  "VGRD:125 mb"),
+  ("UGRD:150 mb",                  "VGRD:150 mb"),
+  ("UGRD:150-120 mb above ground", "VGRD:150-120 mb above ground"),
+  ("UGRD:175 mb",                  "VGRD:175 mb"),
+  ("UGRD:180-150 mb above ground", "VGRD:180-150 mb above ground"),
+  ("UGRD:200 mb",                  "VGRD:200 mb"),
+  ("UGRD:225 mb",                  "VGRD:225 mb"),
+  ("UGRD:250 mb",                  "VGRD:250 mb"),
+  ("UGRD:275 mb",                  "VGRD:275 mb"),
+  ("UGRD:30-0 mb above ground",    "VGRD:30-0 mb above ground"),
+  ("UGRD:300 mb",                  "VGRD:300 mb"),
+  ("UGRD:325 mb",                  "VGRD:325 mb"),
+  ("UGRD:350 mb",                  "VGRD:350 mb"),
+  ("UGRD:375 mb",                  "VGRD:375 mb"),
+  ("UGRD:400 mb",                  "VGRD:400 mb"),
+  ("UGRD:425 mb",                  "VGRD:425 mb"),
+  ("UGRD:450 mb",                  "VGRD:450 mb"),
+  ("UGRD:475 mb",                  "VGRD:475 mb"),
+  ("UGRD:500 mb",                  "VGRD:500 mb"),
+  ("UGRD:525 mb",                  "VGRD:525 mb"),
+  ("UGRD:550 mb",                  "VGRD:550 mb"),
+  ("UGRD:575 mb",                  "VGRD:575 mb"),
+  ("UGRD:60-30 mb above ground",   "VGRD:60-30 mb above ground"),
+  ("UGRD:600 mb",                  "VGRD:600 mb"),
+  ("UGRD:625 mb",                  "VGRD:625 mb"),
+  ("UGRD:650 mb",                  "VGRD:650 mb"),
+  ("UGRD:675 mb",                  "VGRD:675 mb"),
+  ("UGRD:700 mb",                  "VGRD:700 mb"),
+  ("UGRD:725 mb",                  "VGRD:725 mb"),
+  ("UGRD:750 mb",                  "VGRD:750 mb"),
+  ("UGRD:775 mb",                  "VGRD:775 mb"),
+  ("UGRD:800 mb",                  "VGRD:800 mb"),
+  ("UGRD:825 mb",                  "VGRD:825 mb"),
+  ("UGRD:850 mb",                  "VGRD:850 mb"),
+  ("UGRD:875 mb",                  "VGRD:875 mb"),
+  ("UGRD:90-60 mb above ground",   "VGRD:90-60 mb above ground"),
+  ("UGRD:900 mb",                  "VGRD:900 mb"),
+  ("UGRD:925 mb",                  "VGRD:925 mb"),
+  ("UGRD:950 mb",                  "VGRD:950 mb"),
+  ("UGRD:975 mb",                  "VGRD:975 mb"),
+  ("UGRD:1000 mb",                 "VGRD:1000 mb"),
+  ("UGRD:max wind",                "VGRD:max wind"),
+  ("UGRD:tropopause",              "VGRD:tropopause")
+]
+
+function relativize_angle(thetaAndRef)
+  theta, ref = thetaAndRef
+  mod(theta - ref + π, 2π) - π
+end
+
+for (u_layer_key, v_layer_key) in uv_layers_to_relativize
+  us = layer_to_data[u_layer_key]
+  vs = layer_to_data[v_layer_key]
+
+  polar_vectors   = map(uv_to_r_theta, zip(us, vs))
+  rs              = map(first, storm_motion_polar_vectors)
+  thetas          = map(last,  storm_motion_polar_vectors)
+  relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
+
+  delete!(layer_to_data, u_layer_key)
+  delete!(layer_to_data, v_layer_key)
+
+  r_layer_key     = replace(u_layer_key, r"^U", "R")
+  theta_layer_key = replace(u_layer_key, r"^U", "T")
+
+  layer_to_data[r_layer_key]     = rs
+  layer_to_data[theta_layer_key] = relative_thetas
+end
+
+delete!(layer_to_data, "USTM:u storm motion")
+delete!(layer_to_data, "VSTM:v storm motion")
+
+
+# Rotate storm winds to lat/lon
+
+# http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/tricks.wgrib2
+#
+# (40) How do I get the wind speed and direction? conversion between earth and grid relative winds.
+#
+#      Calculating the wind speed is easy (UGRD^2 + VGRD^2)^0.5
+#   use: wgrib2 IN.grb -wind_speed WND.grb
+#
+#      Calculating the wind direction can be tricky.
+#   For global files, the UGRD is the wind to the east
+#   and VGRD is the wind to the north (earth relative).
+#   You can use: wgrib2 IN.grb -wind_dir WND.grb
+#
+#   For Lambert conformal and polar stereographic files,
+#   UGRD is the wind from grid point (i,j) to (i+1,j).
+#   VGRD is the wind from grid point (i,j) to (i,j+1).
+#   This is call grid relative winds and -wind_dir doesn't work.
+#   However, the -new_grid option can change the winds
+#   to earth relative.  So step 1 is to convert the winds to earth relative.
+#
+#   wgrib2 IN.grb -new_grid_winds earth -new_grid `grid_defn.pl IN.grb` OUT.grb
+#
+#   The script grid_defn.pl returns the definition of the grid defintion of IN.grb
+#   in -new_grid format.      http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2.scripts/
+#
+#   Step 2 is to calculate the wind speed and direction.
+#
+#   wgrib2 OUT.grb -wind_speed WND.grb -wind_dir WND.grb
+
+
+grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
+println(grid_defn)
+
+storm_winds_temp_file = "storm_winds_latlon_aligned_tmp.grib2"
+
+(to_wgrib2, wgrib2) = open(`wgrib2 $grib2_path -i -inv /dev/null -new_grid_winds earth -new_grid $grid_defn $storm_winds_temp_file`, "w")
+
+# storm_wind_layers = [["USTM" "u storm motion"]; ["VSTM" "v storm motion"]]
+# storm_wind_layers_to_fetch = mapslices(desiredLayerToInventoryLine, storm_wind_layers, 2)
+
+ustm_layer_to_fetch = desiredLayerToInventoryLine(["USTM" "u storm motion"])
+vstm_layer_to_fetch = desiredLayerToInventoryLine(["VSTM" "v storm motion"])
+println(to_wgrib2, ustm_layer_to_fetch[1] * ":" * ustm_layer_to_fetch[2])
+println(to_wgrib2, vstm_layer_to_fetch[1] * ":" * vstm_layer_to_fetch[2])
+
+close(to_wgrib2)
+close(wgrib2)
+wait(wgrib2)
+
+(from_wgrib2, wgrib2) = open(`wgrib2 $storm_winds_temp_file -header -inv /dev/null -bin -`)
+
+grid_length         = read(from_wgrib2, UInt32)
+storm_motion_lon_us = read(from_wgrib2, Float32, div(grid_length, 4))
+grid_length_again   = read(from_wgrib2, UInt32)
+
+grid_length         = read(from_wgrib2, UInt32)
+storm_motion_lat_vs = read(from_wgrib2, Float32, div(grid_length, 4))
+grid_length_again   = read(from_wgrib2, UInt32)
+
+# Sanity check that incoming stream is empty
+if !eof(from_wgrib2)
+  error("wgrib2 sending more data than expected!")
+end
+
+storm_motion_polar_vectors2 = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
+storm_motion_rs2     = map(first, storm_motion_polar_vectors2)
+storm_motion_thetas2 = map(last,  storm_motion_polar_vectors2)
+
+println("storm_motion_rs")
+show(stdout_limited, "text/plain", storm_motion_rs)
+println("storm_motion_rs2")
+show(stdout_limited, "text/plain", storm_motion_rs2)
+println("storm_motion_thetas")
+show(stdout_limited, "text/plain", storm_motion_thetas)
+println("storm_motion_thetas2")
+show(stdout_limited, "text/plain", storm_motion_thetas2)
+
+run(`rm $storm_winds_temp_file`)
+
+layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs2
+layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas2
+
 # Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
+
+
