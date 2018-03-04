@@ -4,8 +4,8 @@
 - Downloaded US national boundary shapefile from https://www.nohrsc.noaa.gov/gisdatasets/ (ln_us/ln_us.shp). Apparently this file is CONUS-only, which is what we want.
 - Also obtained states shapefile from https://www.weather.gov/gis/USStates for later use (s_11au16/s_11au16.shp). https://www.weather.gov/gis/USStates has explanation of layers
 - Installed wgrib2 according to https://bovineaerospace.wordpress.com/2017/08/20/how-to-install-wgrib2-in-osx/ except I used "export CC=clang" with "export FC=gfortran". Symlinked to the built binary /Users/brian/Documents/open_source/grib2/wgrib2/wgrib2
-- Imported grid (make grid_coords_only.txt) into GRASS GIS (symlinked so I can start with $ grassgis) along with the CONUS shapefile and instructed it to find the intersection (see grass_gis_grid_conus_intersection.png for settings)
-    - Output file is "grid_xys_inside_conus.txt"; columns are lon,lat,i (not lat lon!) where i is the line number (starting from 1) in grid_coords_only.txt and grid.txt
+- Imported grid (make grid_coords_only.csv) into GRASS GIS (symlinked so I can start with $ grassgis) along with the CONUS shapefile and instructed it to find the intersection (see grass_gis_grid_conus_intersection.png for settings)
+    - Output file is "grid_xys_inside_conus.txt"; columns are lon,lat,i (not lat lon!) where i is the line number (starting from 1) in grid_coords_only.csv and grid.csv
     - "conus_grid_gis.gxw" is just saved workspace settings; refers to layers stored in a GIS workspace elsewhere on my computer
 - Downloaded all +1 hour RUC/RAP forecasts between 2008-11-18 00:00 and 2018-02-15 23:00 to 8TB external disk. 1.4TB used. (Includes previously obtained +2 hour forecasts for 2017-01-01 through 2017-09-30)
 - `wgrib2 -bin` binary output is explained here: http://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/bin_ieee_text_format.html Checking the wgrib2 source (File.c) floats and ints are 4 bytes each (or rather whatever sizeof(float) and sizeof(int) was on compilation). Note there's a "header" int before AND after each grid.
@@ -17,5 +17,8 @@
     - convert UV winds to polar r/theta
     - rotate thetas relative to storm direction
     - tell wgrib2 to rotate the storm winds to lat/lon aligned (changes velocities by <1%; changes to storm angle of course more dramatic)
-    - TODO check whether order of grid points in grid.txt is same as order of data output in binary format
-    -
+
+- cut out grid points within 25 miles of edge of CONUS (expanded conus edge by 1 mile using MMQGIS plugin, polygon->polyline, made 26 mile buffer using MMQGIS. Removed CONUS points inside that buffer zone. CSV export seems not to honor filtering, but using GRASS v.select from inside QGIS is successful in actually removing the hidden points.)
+
+    - TODO weight gridpoints by area covered (for NN training, use weight as probability of use)
+    - TODO check whether order of grid points in grid.csv is same as order of data output in binary format

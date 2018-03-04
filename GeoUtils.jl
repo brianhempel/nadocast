@@ -1,49 +1,9 @@
-# import DataFrames
-# import TimeZones
-# import ECCodes
-# import Distances
+module GeoUtils
+
+export FEET_PER_METER, METERS_PER_MILE, DEGREES_PER_METER
+export distance, distance_and_midpoint, waypoints, distance_to_line
+
 import Proj4
-# import ArchGDAL
-#
-# ArchGDAL.read("rap_130_20170515_0000_001.grb2") do grib2
-#   print(grib2)
-# end
-
-# count = 0
-#
-# function processMessage(m)
-#   if count == 0
-#     for key in ECCodes.keys(m)
-#       print(key * ";")
-#     end
-#     print("\n")
-#   end
-#   for key in ECCodes.keys(m)
-#     print(ECCodes.getstring(m, key) * ";")
-#   end
-#   print("\n")
-#
-#   # print("\n")
-#   # print(ECCodes.getstring(m, "name"))
-#   # print("\n")
-#   # print(ECCodes.getstring(m, "nameECMF"))
-#   # println("-")
-#   global count += 1
-# end
-#
-# ECCodes.withmessages(processMessage, "rap_130_20161225_0000_006.grb2")
-#
-# show(count)
-# print("\n")
-
-# stream, process = open(pipeline(`cat StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz`, `gunzip`))
-# events          = DataFrames.readtable(stream)
-# close(stream)
-#
-# tornadoes = events[events[:EVENT_TYPE] .== "Tornado", :]
-#
-# tornadoes[:start_time] = map((ym, d, t, tz) -> TimeZones.ZonedDateTime(div(ym, 100), mod(ym, 100), d, div(t, 100), mod(t, 100), TimeZones.FixedTimeZone("", 60*60*parse(Int64, tz[4:5]))), tornadoes[:BEGIN_YEARMONTH], tornadoes[:BEGIN_DAY], tornadoes[:BEGIN_TIME], tornadoes[:CZ_TIMEZONE])
-# tornadoes[:end_time]   = map((ym, d, t, tz) -> TimeZones.ZonedDateTime(div(ym, 100), mod(ym, 100), d, div(t, 100), mod(t, 100), TimeZones.FixedTimeZone("", 60*60*parse(Int64, tz[4:5]))), tornadoes[:END_YEARMONTH],   tornadoes[:END_DAY],   tornadoes[:END_TIME],   tornadoes[:CZ_TIMEZONE])
 
 const FEET_PER_METER  = 100.0 / 2.54 / 12.0
 const METERS_PER_MILE = 5280.0 / FEET_PER_METER
@@ -52,8 +12,6 @@ const DEGREES_PER_METER = 360.0 / (6_371_229*2*pi)
 
 # GRIB2 docs says earth shape 6 (in RAP) is "Earth assumed spherical with radius = 6,371,229.0 m"
 # http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
-
-# 201701  21  1723  201701  21  1728  112155  668885  LOUISIANA  22  2017  January  Tornado  C  17  CADDO  SHV  21-JAN-17 17:23:00  CST-6  21-JAN-17 17:28:00  0  0  0  0  75.00K  0.00K  NWS Storm Survey          EF2  2.37  400          3  NW  VIVIAN ARPT  2  W  MYRTIS  32.902  -94.0431  32.9308  -94.0211  A strong upper level low pressure system emerged out across the Southern Plains during the morning and afternoon hours of January 21st. Ahead of this system, unseasonably warm, humid, and unstable air spread northward across much of the Ark-La-Tex from the Gulf of Mexico in advance of this system and associated Pacific cold front. A surface low pressure system also developed along the advancing cold front, with low level winds backing more southeast ahead of the upper level low. Coupled with strong wind shear and instability, scattered severe supercell thunderstorms rapidly developed during the mid and late afternoon hours across portions of extreme Eastern Texas, Southern Arkansas, and Northern Louisiana. The considerable wind shear contributed to rotating updrafts, such that twelve tornadoes touched down across the aforementioned areas. Instances of large hail was also reported with these supercells, given the very cold temperatures aloft. These severe thunderstorms exited the region during the mid evening hours into the Ark-La-Miss region where additional tornadoes and instances of severe thunderstorm damage was reported.  This is a continuation of the Cass County EF-2 tornado. This tornado crossed Cass County Line Road into Western Caddo Parish snapping and uprooting numerous trees along its path. A roof was torn off of a cinder block storage building and shifted a single wide mobile home several feet off of its foundation. Several shingles were ripped of a nearby home. A homeowner stated that 31 trees were down across an acre of property but remarkably, none of the trees fell on a home on that property. Maximum estimated winds along Cass County Road on the Caddo Parish side was 115 mph, with the tornado eventually weakening as it tracked northeast and lifting on Old Atlanta Road just south of Myrtis Texas Line Road.  CSV
 
 # But we'll do our math on an ellipsoid because...it's more correct, I guess.
 
@@ -67,7 +25,6 @@ function distance(lat1, lon1, lat2, lon2)
   distance, _, _ = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
   distance
 end
-
 
 # distance_and_midpoint(32.902, -94.0431, 32.9308, -94.0211)
 function distance_and_midpoint(lat1, lon1, lat2, lon2)
@@ -210,3 +167,4 @@ function distance_to_line(lat, lon, lat1, lon1, lat2, lon2, max_error)
 end
 
 
+end

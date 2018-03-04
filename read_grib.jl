@@ -22,6 +22,10 @@
 # It *does* appear that there are multiple accumulation periods in the forecast (i.e. always a 1-hour period somewhere for all of the above)
 # May look for that.
 
+push!(LOAD_PATH, ".")
+
+import GeoUtils
+
 grib2_path = "rap_130_20170515_0000_001.grb2"
 
 stdout_limited = IOContext(STDOUT, :display_size=>(100,60))
@@ -536,8 +540,9 @@ for (u_layer_key, v_layer_key) in uv_layers_to_relativize
   thetas          = map(last,  storm_motion_polar_vectors)
   relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
 
-  delete!(layer_to_data, u_layer_key)
-  delete!(layer_to_data, v_layer_key)
+  # Don't delete. For the area around metrics around a given point, need to relativize against the point.
+  # delete!(layer_to_data, u_layer_key)
+  # delete!(layer_to_data, v_layer_key)
 
   r_layer_key     = replace(u_layer_key, r"^U", "R")
   theta_layer_key = replace(u_layer_key, r"^U", "T")
@@ -546,8 +551,8 @@ for (u_layer_key, v_layer_key) in uv_layers_to_relativize
   layer_to_data[theta_layer_key] = relative_thetas
 end
 
-delete!(layer_to_data, "USTM:u storm motion")
-delete!(layer_to_data, "VSTM:v storm motion")
+# delete!(layer_to_data, "USTM:u storm motion")
+# delete!(layer_to_data, "VSTM:v storm motion")
 
 
 # Rotate storm winds to lat/lon
@@ -615,24 +620,101 @@ if !eof(from_wgrib2)
   error("wgrib2 sending more data than expected!")
 end
 
-storm_motion_polar_vectors2 = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
-storm_motion_rs2     = map(first, storm_motion_polar_vectors2)
-storm_motion_thetas2 = map(last,  storm_motion_polar_vectors2)
+storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
+storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
+storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vectors_latlon_aligned)
 
 println("storm_motion_rs")
 show(stdout_limited, "text/plain", storm_motion_rs)
 println("storm_motion_rs2")
-show(stdout_limited, "text/plain", storm_motion_rs2)
+show(stdout_limited, "text/plain", storm_motion_rs_latlon_aligned)
 println("storm_motion_thetas")
 show(stdout_limited, "text/plain", storm_motion_thetas)
 println("storm_motion_thetas2")
-show(stdout_limited, "text/plain", storm_motion_thetas2)
+show(stdout_limited, "text/plain", storm_motion_thetas_latlon_aligned)
 
 run(`rm $storm_winds_temp_file`)
 
 layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs2
 layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas2
 
+#
+
 # Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
 
+training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
+training_pts_set = Set{Tuple{Int32,Int32}}(Set())
 
+function lat_lon_to_key(lat, lon)
+  (Int32(round(lat*1000)), Int32(round(lon*1000)))
+end
+
+for i in 1:size(training_pts,1)
+  push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
+end
+
+all_pts = open(grid -> readdlm(grid, ','; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
+
+all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
+
+train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
+
+if size(train_pts,1) != length(training_pts_set)
+  error("Grid error: grid used in $grib2_path does not match grid used to determine training points")
+end
+
+# Grid is W to E, S to N
+
+const grid_width  = Int64(maximum(all_pts[:,1]))
+const grid_height = Int64(maximum(all_pts[:,2]))
+
+function get_grid_i(grid_values_flat, w_to_e_col, s_to_n_row)
+  if w_to_e_col < 1
+    error("Error indexing into grid, asked for column $w_to_e_col")
+  elseif w_to_e_col > grid_width
+    error("Error indexing into grid, asked for column $w_to_e_col")
+  elseif s_to_n_row < 1
+    error("Error indexing into grid, asked for row $s_to_n_row")
+  elseif s_to_n_row > grid_height
+    error("Error indexing into grid, asked for row $s_to_n_row")
+  end
+  grid_width*(s_to_n_row-1) + w_to_e_col
+end
+
+# Estimate area represented by each grid point
+
+point_areas = zeros(grid_width*grid_height,1)
+
+for j = 1:grid_height
+  for i = 1:grid_width
+    flat_i = get_grid_i(all_pts, i, j)
+    lat = all_pts[flat_i,3]
+    lon = all_pts[flat_i,4]
+    # We should never need the area weights on the edges of the grid, but so any kind of handling here is okay.
+    wlon = i > 1           ? all_pts[flat_i-1,4]          : lon
+    elon = i < grid_width  ? all_pts[flat_i+1,4]          : lon
+    slat = j > 1           ? all_pts[flat_i-grid_width,3] : lat
+    nlat = j < grid_height ? all_pts[flat_i+grid_width,3] : lat
+
+    w_distance = GeoUtils.distance(lat, lon, lat, wlon) / 2.0 / GeoUtils.METERS_PER_MILE
+    e_distance = GeoUtils.distance(lat, lon, lat, elon) / 2.0 / GeoUtils.METERS_PER_MILE
+    s_distance = GeoUtils.distance(lat, lon, slat, lon) / 2.0 / GeoUtils.METERS_PER_MILE
+    n_distance = GeoUtils.distance(lat, lon, nlat, lon) / 2.0 / GeoUtils.METERS_PER_MILE
+
+    sw_area = w_distance * s_distance
+    se_area = e_distance * s_distance
+    nw_area = w_distance * n_distance
+    ne_area = e_distance * n_distance
+
+    point_areas[flat_i] = sw_area + se_area + nw_area + ne_area
+  end
+end
+
+all_pts = hcat(all_pts, point_areas)
+
+
+# Transpose features to row per point
+
+
+#
+#
