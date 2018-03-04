@@ -399,12 +399,12 @@ function normalize_line(row)
   return row
 end
 
-show(stdout_limited, "text/plain", inventory_lines)
+# show(stdout_limited, "text/plain", inventory_lines)
 
 inventory_lines_normalized =
   mapslices(normalize_line, inventory_lines, 2)
 
-show(stdout_limited, "text/plain", inventory_lines_normalized)
+# show(stdout_limited, "text/plain", inventory_lines_normalized)
 
 function desiredLayerToInventoryLine(desired)
   desiredAbbrev = desired[1]
@@ -422,7 +422,7 @@ end
 
 layers_to_fetch = mapslices(desiredLayerToInventoryLine, layers, 2)
 
-show(stdout_limited, "text/plain", layers_to_fetch)
+# show(stdout_limited, "text/plain", layers_to_fetch)
 
 layer_to_data = Dict{String,Array{Float64}}()
 
@@ -470,14 +470,14 @@ function uv_to_r_theta(pair)
   (r, theta)
 end
 
-storm_motion_us = layer_to_data["USTM:u storm motion"]
-storm_motion_vs = layer_to_data["VSTM:v storm motion"]
+# storm_motion_us = layer_to_data["USTM:u storm motion"]
+# storm_motion_vs = layer_to_data["VSTM:v storm motion"]
+#
+# storm_motion_polar_vectors = map(uv_to_r_theta, zip(storm_motion_us, storm_motion_vs))
+# storm_motion_rs     = map(first, storm_motion_polar_vectors)
+# storm_motion_thetas = map(last,  storm_motion_polar_vectors)
 
-storm_motion_polar_vectors = map(uv_to_r_theta, zip(storm_motion_us, storm_motion_vs))
-storm_motion_rs     = map(first, storm_motion_polar_vectors)
-storm_motion_thetas = map(last,  storm_motion_polar_vectors)
-
-uv_layers_to_relativize = [
+uv_layers_excluding_storm_motion = [
   ("UGRD:10 m above ground",       "VGRD:10 m above ground"),
   ("UGRD:100 mb",                  "VGRD:100 mb"),
   ("UGRD:120-90 mb above ground",  "VGRD:120-90 mb above ground"),
@@ -526,29 +526,24 @@ uv_layers_to_relativize = [
   ("UGRD:tropopause",              "VGRD:tropopause")
 ]
 
-function relativize_angle(thetaAndRef)
-  theta, ref = thetaAndRef
-  mod(theta - ref + π, 2π) - π
-end
-
-for (u_layer_key, v_layer_key) in uv_layers_to_relativize
+for (u_layer_key, v_layer_key) in uv_layers_excluding_storm_motion
   us = layer_to_data[u_layer_key]
   vs = layer_to_data[v_layer_key]
 
   polar_vectors   = map(uv_to_r_theta, zip(us, vs))
-  rs              = map(first, storm_motion_polar_vectors)
-  thetas          = map(last,  storm_motion_polar_vectors)
-  relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
+  rs              = map(first, polar_vectors) # speeds
+  thetas          = map(last,  polar_vectors) # grid relative angles
 
-  # Don't delete. For the area around metrics around a given point, need to relativize against the point.
-  # delete!(layer_to_data, u_layer_key)
-  # delete!(layer_to_data, v_layer_key)
+  # Will relativize angles against storm motion later. (For a point, relative to storm motion at that point; but for computing area statistics around that point, should be relative to that point as well)
+
+  delete!(layer_to_data, u_layer_key)
+  delete!(layer_to_data, v_layer_key)
 
   r_layer_key     = replace(u_layer_key, r"^U", "R")
-  theta_layer_key = replace(u_layer_key, r"^U", "T")
+  theta_layer_key = replace(v_layer_key, r"^V", "T")
 
   layer_to_data[r_layer_key]     = rs
-  layer_to_data[theta_layer_key] = relative_thetas
+  layer_to_data[theta_layer_key] = thetas
 end
 
 # delete!(layer_to_data, "USTM:u storm motion")
@@ -587,7 +582,7 @@ end
 
 
 grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
-println(grid_defn)
+# println(grid_defn)
 
 storm_winds_temp_file = "storm_winds_latlon_aligned_tmp.grib2"
 
@@ -624,44 +619,26 @@ storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_
 storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
 storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vectors_latlon_aligned)
 
-println("storm_motion_rs")
-show(stdout_limited, "text/plain", storm_motion_rs)
-println("storm_motion_rs2")
-show(stdout_limited, "text/plain", storm_motion_rs_latlon_aligned)
-println("storm_motion_thetas")
-show(stdout_limited, "text/plain", storm_motion_thetas)
-println("storm_motion_thetas2")
-show(stdout_limited, "text/plain", storm_motion_thetas_latlon_aligned)
+# println("storm_motion_rs")
+# show(stdout_limited, "text/plain", storm_motion_rs)
+# println("storm_motion_rs2")
+# show(stdout_limited, "text/plain", storm_motion_rs_latlon_aligned)
+# println("storm_motion_thetas")
+# show(stdout_limited, "text/plain", storm_motion_thetas)
+# println("storm_motion_thetas2")
+# show(stdout_limited, "text/plain", storm_motion_thetas_latlon_aligned)
 
 run(`rm $storm_winds_temp_file`)
 
-layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs2
-layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas2
+layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
+# layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas_latlon_aligned
 
-#
 
-# Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
-
-training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
-training_pts_set = Set{Tuple{Int32,Int32}}(Set())
-
-function lat_lon_to_key(lat, lon)
-  (Int32(round(lat*1000)), Int32(round(lon*1000)))
-end
-
-for i in 1:size(training_pts,1)
-  push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
-end
+# Figure out latlons for grid points
 
 all_pts = open(grid -> readdlm(grid, ','; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
 
 all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
-
-train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
-
-if size(train_pts,1) != length(training_pts_set)
-  error("Grid error: grid used in $grib2_path does not match grid used to determine training points")
-end
 
 # Grid is W to E, S to N
 
@@ -680,6 +657,7 @@ function get_grid_i(grid_values_flat, w_to_e_col, s_to_n_row)
   end
   grid_width*(s_to_n_row-1) + w_to_e_col
 end
+
 
 # Estimate area represented by each grid point
 
@@ -715,6 +693,101 @@ all_pts = hcat(all_pts, point_areas)
 
 # Transpose features to row per point
 
+headers = ["i", "j", "lat", "lon", "sq_miles"]
 
-#
-#
+tranposed_data = zeros(size(all_pts,1), size(all_pts,2) + size(layers,1) - 1)
+tranposed_data[:,1:size(all_pts,2)] = all_pts
+
+out_col = length(headers) + 1
+for layer_i in 1:size(layers,1)
+  abbrev, desc = layers[layer_i,:]
+  # println((abbrev, desc))
+  # desc   = layer[layer_i][2]
+  if abbrev == "UGRD"
+    abbrev = "RGRD"
+  elseif abbrev == "VGRD"
+    abbrev = "TGRD"
+  elseif abbrev == "USTM"
+    abbrev = "RSTM"
+    desc   = "latlon relative storm motion speed"
+  end
+
+  if abbrev == "VSTM"
+    # Don't include absolute direction as a feature.
+  else
+    layer_key = abbrev * ":" * desc
+    push!(headers, layer_key)
+    tranposed_data[:, out_col] = layer_to_data[layer_key]
+    out_col += 1
+  end
+end
+
+println("headers")
+show(stdout_limited, "text/plain", headers)
+println("tranposed_data")
+show(stdout_limited, "text/plain", tranposed_data)
+
+
+
+# Figure out which grid points are for training
+
+training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
+training_pts_set = Set{Tuple{Int32,Int32}}(Set())
+
+function lat_lon_to_key(lat, lon)
+  (Int32(round(lat*1000)), Int32(round(lon*1000)))
+end
+
+for i in 1:size(training_pts,1)
+  push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
+end
+
+train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
+
+if size(train_pts,1) != length(training_pts_set)
+  error("Grid error: grid used in $grib2_path does not match grid used to determine training points")
+end
+
+
+# Build final feature set
+
+# Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
+
+function relativize_angle(thetaAndRef)
+  theta, ref = thetaAndRef
+  mod(theta - ref + π, 2π) - π
+end
+
+# relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
+
+for j = 1:grid_height
+  for i = 1:grid_width
+    flat_i = get_grid_i(all_pts, i, j)
+    lat = all_pts[flat_i,3]
+    lon = all_pts[flat_i,4]
+
+    # skip if not a training point
+
+    # find indices within 25 miles of -30 mins to +30 mins storm path
+    # find indices within 25 miles of -30 mins storm location
+    # find indices within 25 miles of +30 mins storm location
+
+    # for each layer...
+      # if wind layer, relativize angle against storm motion
+      # add to output
+
+      # grab within 25 miles of -30 mins to +30 mins storm path
+      # if wind layer, relativize angle against storm motion
+      # find mean, min, max
+      # add to output
+
+      # grab within 25 miles of -30 mins storm location
+      # if wind layer, relativize angle against storm motion
+      # find mean
+
+      # grab within 25 miles of +30 mins storm location
+      # if wind layer, relativize angle against storm motion
+      # find mean
+      # add gradient to output
+  end
+end
