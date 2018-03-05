@@ -584,7 +584,7 @@ end
 grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
 # println(grid_defn)
 
-storm_winds_temp_file = "storm_winds_latlon_aligned_tmp.grib2"
+storm_winds_temp_file = "storm_winds_latlon_aligned_tmp_$grib2_path"
 
 (to_wgrib2, wgrib2) = open(`wgrib2 $grib2_path -i -inv /dev/null -new_grid_winds earth -new_grid $grid_defn $storm_winds_temp_file`, "w")
 
@@ -628,7 +628,7 @@ storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vector
 # println("storm_motion_thetas2")
 # show(stdout_limited, "text/plain", storm_motion_thetas_latlon_aligned)
 
-run(`rm $storm_winds_temp_file`)
+# run(`rm $storm_winds_temp_file`)
 
 layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
 # layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas_latlon_aligned
@@ -645,7 +645,7 @@ all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 const grid_width  = Int64(maximum(all_pts[:,1]))
 const grid_height = Int64(maximum(all_pts[:,2]))
 
-function get_grid_i(grid_values_flat, w_to_e_col, s_to_n_row)
+function get_grid_i(w_to_e_col, s_to_n_row)
   if w_to_e_col < 1
     error("Error indexing into grid, asked for column $w_to_e_col")
   elseif w_to_e_col > grid_width
@@ -658,6 +658,33 @@ function get_grid_i(grid_values_flat, w_to_e_col, s_to_n_row)
   grid_width*(s_to_n_row-1) + w_to_e_col
 end
 
+function is_on_grid(w_to_e_col, s_to_n_row)
+  if w_to_e_col < 1
+    false
+  elseif w_to_e_col > grid_width
+    false
+  elseif s_to_n_row < 1
+    false
+  elseif s_to_n_row > grid_height
+    false
+  else
+    true
+  end
+end
+
+function get_grid_lat_lon_for_flat_i(flat_i)
+  lat = all_pts[flat_i,3]
+  lon = all_pts[flat_i,4]
+  (lat, lon)
+end
+
+function get_grid_lat_lon_and_flat_i(w_to_e_col, s_to_n_row)
+  flat_i   = get_grid_i(w_to_e_col, s_to_n_row)
+  lat, lon = get_grid_lat_lon_for_flat_i(flat_i)
+  (lat, lon, flat_i)
+end
+
+
 
 # Estimate area represented by each grid point
 
@@ -665,9 +692,7 @@ point_areas = zeros(grid_width*grid_height,1)
 
 for j = 1:grid_height
   for i = 1:grid_width
-    flat_i = get_grid_i(all_pts, i, j)
-    lat = all_pts[flat_i,3]
-    lon = all_pts[flat_i,4]
+    lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
     # We should never need the area weights on the edges of the grid, but so any kind of handling here is okay.
     wlon = i > 1           ? all_pts[flat_i-1,4]          : lon
     elon = i < grid_width  ? all_pts[flat_i+1,4]          : lon
@@ -760,34 +785,113 @@ end
 
 # relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
 
+const ONE_MINUTE = 60.0
+const repeated = Base.Iterators.repeated
+
+# Search outward in squre rings until no more points in region are found.
+#
+# Works for any predicate region that is:
+#  (a) fully connected (not split into disconnected regions)
+#  (b) no "skinny parts" that could slip between grid points
+#
+# Circles and extruded circles are good. (What we use.)
+function square_ring_search(predicate, center_i, center_j)
+  any_found_this_ring     = false
+  still_searching_on_grid = true
+  matching_flat_is = []
+
+  r = 0
+  while still_searching_on_grid && (isempty(matching_flat_is) || any_found_this_ring)
+    any_found_this_ring     = false
+    still_searching_on_grid = false
+
+    # search in this order:
+    #
+    # 4 3 3 3 3
+    # 4       2
+    # 4   •   2
+    # 4       2
+    # 1 1 1 1 2
+
+    if r == 0
+      ring = [(center_i, center_j)]
+    else
+      sw_se = zip(center_i-r:center_i+r-1, repeated(center_j-r))
+      se_ne = zip(repeated(center_i+r), center_j-r:center_j+r-1)
+      ne_nw = zip(center_i+r:-1:center_i-r+1, repeated(center_j+r))
+      nw_sw = zip(repeated(center_i-r), center_j+r:-1:center_j-r+1)
+      ring  = collect(Base.Iterators.flatten((sw_se, se_ne, ne_nw, nw_sw)))
+    end
+
+    println(ring)
+    for ring_i = 1:length(ring)
+      i, j = ring[ring_i]
+      if is_on_grid(i, j)
+        still_searching_on_grid = true
+        lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+        if predicate(lat, lon)
+          any_found_this_ring = true
+          push!(matching_flat_is, flat_i)
+        end
+      end
+    end
+
+    r += 1
+  end
+
+  matching_flat_is
+end
+
 for j = 1:grid_height
+  println(j)
   for i = 1:grid_width
-    flat_i = get_grid_i(all_pts, i, j)
-    lat = all_pts[flat_i,3]
-    lon = all_pts[flat_i,4]
+    lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
 
     # skip if not a training point
+    if lat_lon_to_key(lat, lon) in training_pts_set
 
-    # find indices within 25 miles of -30 mins to +30 mins storm path
-    # find indices within 25 miles of -30 mins storm location
-    # find indices within 25 miles of +30 mins storm location
+      lat_motion = storm_motion_lat_vs[flat_i] # m / s
+      lon_motion = storm_motion_lon_us[flat_i] # m / S
 
-    # for each layer...
-      # if wind layer, relativize angle against storm motion
-      # add to output
+      plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
+      minus_30_mins_lat, minus_30_mins_lon = GeoUtils.integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
 
-      # grab within 25 miles of -30 mins to +30 mins storm path
-      # if wind layer, relativize angle against storm motion
-      # find mean, min, max
-      # add to output
+      # find indices within 25 miles of -30 mins to +30 mins storm path
+      flat_is_within_25mi_and_30_mins_of_storm =
+        square_ring_search((lat, lon) -> GeoUtils.distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon, 1.0) <= 25.0 * GeoUtils.METERS_PER_MILE, i, j)
 
-      # grab within 25 miles of -30 mins storm location
-      # if wind layer, relativize angle against storm motion
-      # find mean
+      # find indices within 25 miles of -30 mins storm location
+      flat_is_within_25mi_of_storm_30_mins_ago =
+        filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
+          candiate_lat, candidate_lon = get_grid_lat_lon_for_flat_i(candidate_flat_i)
+          GeoUtils.distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+        end
 
-      # grab within 25 miles of +30 mins storm location
-      # if wind layer, relativize angle against storm motion
-      # find mean
-      # add gradient to output
+      # find indices within 25 miles of +30 mins storm location
+      flat_is_within_25mi_of_storm_30_mins_from_now =
+        filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
+          candiate_lat, candidate_lon = get_grid_lat_lon_for_flat_i(candidate_flat_i)
+          GeoUtils.distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+        end
+
+      # for each layer...
+        # if wind layer, relativize angle against storm motion
+        # add to output
+
+        # grab within 25 miles of -30 mins to +30 mins storm path
+        # if wind layer, relativize angle against storm motion
+        # find mean, min, max
+        # add to output
+
+        # grab within 25 miles of -30 mins storm location
+        # if wind layer, relativize angle against storm motion
+        # find mean
+
+        # grab within 25 miles of +30 mins storm location
+        # if wind layer, relativize angle against storm motion
+        # find mean
+        # add gradient to output
+
+    end
   end
 end

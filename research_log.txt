@@ -19,6 +19,6 @@
     - tell wgrib2 to rotate the storm winds to lat/lon aligned (changes velocities by <1%; changes to storm angle of course more dramatic)
 
 - cut out grid points within 25 miles of edge of CONUS (expanded conus edge by 1 mile using MMQGIS plugin, polygon->polyline, made 26 mile buffer using MMQGIS. Removed CONUS points inside that buffer zone. CSV export seems not to honor filtering, but using GRASS v.select from inside QGIS is successful in actually removing the hidden points.)
+- estimated area represented by each gridpoint for later use when weighting observations (for NN training, use weight as probability of use)
 
-    - TODO weight gridpoints by area covered (for NN training, use weight as probability of use)
-    - TODO check whether order of grid points in grid.csv is same as order of data output in binary format
+- TODO check whether order of grid points in grid.csv is same as order of data output in binary format

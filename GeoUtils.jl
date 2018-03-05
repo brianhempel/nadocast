@@ -1,7 +1,7 @@
 module GeoUtils
 
 export FEET_PER_METER, METERS_PER_MILE, DEGREES_PER_METER
-export distance, distance_and_midpoint, waypoints, distance_to_line
+export distance, distance_and_midpoint, integrate_velocity, waypoints, distance_to_line
 
 import Proj4
 
@@ -32,6 +32,16 @@ function distance_and_midpoint(lat1, lon1, lat2, lon2)
   midpoint = deepcopy([lon1, lat1]) # call is destructive :(
   Proj4._geod_direct!(wgs84.geod, midpoint, mean([point_1_azimuth,point_2_azimuth]), distance / 2.0)
   (distance, reverse(midpoint))
+end
+
+# Returns endpoint
+function integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
+  dlat = lat_m_per_s * DEGREES_PER_METER
+  dlon = ?????
+  velocity, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon, lat], [lon + dlon, lat + dlat])
+  endpoint = deepcopy([lon, lat]) # call is destructive :(
+  Proj4._geod_direct!(wgs84.geod, endpoint, mean([point_1_azimuth,point_2_azimuth]), velocity * times)
+  reverse(endpoint)
 end
 
 
@@ -141,6 +151,8 @@ function waypoints(lat1, lon1, lat2, lon2, step) # step in meters
 
   return zip(lats, lons)
 end
+
+
 
 
 # max_error assumes triangle inequality holds, which, well, it should for all our queries. Not smart enough to know if it does in general.
