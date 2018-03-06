@@ -36,12 +36,13 @@ end
 
 # Returns endpoint
 function integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
-  dlat = lat_m_per_s * DEGREES_PER_METER
-  dlon = ?????
-  velocity, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon, lat], [lon + dlon, lat + dlat])
-  endpoint = deepcopy([lon, lat]) # call is destructive :(
-  Proj4._geod_direct!(wgs84.geod, endpoint, mean([point_1_azimuth,point_2_azimuth]), velocity * times)
-  reverse(endpoint)
+  # Recall atan2 is (y,x). For geodesics, azimuth is clockwise from north.
+  azimuth = 90.0 - atan2(lat_m_per_s, lon_m_per_s) * 180 / π
+  m_per_s = sqrt(lat_m_per_s^2 + lon_m_per_s^2)
+
+  point = deepcopy([lon, lat]) # call is destructive :(
+  Proj4._geod_direct!(wgs84.geod, point, azimuth, m_per_s * seconds)
+  reverse(point)
 end
 
 

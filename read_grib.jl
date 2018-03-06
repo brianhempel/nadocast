@@ -823,7 +823,6 @@ function square_ring_search(predicate, center_i, center_j)
       ring  = collect(Base.Iterators.flatten((sw_se, se_ne, ne_nw, nw_sw)))
     end
 
-    println(ring)
     for ring_i = 1:length(ring)
       i, j = ring[ring_i]
       if is_on_grid(i, j)
@@ -839,11 +838,13 @@ function square_ring_search(predicate, center_i, center_j)
     r += 1
   end
 
+  # print(" $r ")
+
   matching_flat_is
 end
 
 for j = 1:grid_height
-  println(j)
+  println("$j")
   for i = 1:grid_width
     lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
 
