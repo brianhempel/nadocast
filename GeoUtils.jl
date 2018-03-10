@@ -5,10 +5,14 @@ export distance, distance_and_midpoint, integrate_velocity, waypoints, distance_
 
 import Proj4
 
+const EARTH_RADIUS_METERS = 6_371_229.0
+
 const FEET_PER_METER  = 100.0 / 2.54 / 12.0
 const METERS_PER_MILE = 5280.0 / FEET_PER_METER
 
-const DEGREES_PER_METER = 360.0 / (6_371_229*2*pi)
+const METERS_PER_RADIAN = EARTH_RADIUS_METERS
+const DEGREES_PER_METER = 360.0 / (METERS_PER_RADIAN*2*π)
+const METERS_PER_DEGREE = METERS_PER_RADIAN*2*π / 360.0
 
 # GRIB2 docs says earth shape 6 (in RAP) is "Earth assumed spherical with radius = 6,371,229.0 m"
 # http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-2.shtml
@@ -24,6 +28,139 @@ wgs84.geod = Proj4.geod_geodesic(major_axis, 1-sqrt(1-eccentricity_squared))
 function distance(lat1, lon1, lat2, lon2)
   distance, _, _ = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
   distance
+end
+
+# Dumb flattening method.
+function lightning_distance(lat1, lon1, lat2, lon2)
+  mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
+  dlat     = (lat2 - lat1) / 180.0 * π
+  dlon     = (lon2 - lon1) / 180.0 * π
+
+  EARTH_RADIUS_METERS * √(dlat^2 + (cos(mean_lat)dlon)^2)
+end
+
+# FCC method below with some terms removed, but performs just as well.
+# And way better than haversine for the kinds of distances we are dealing with.
+# Error < 0.005% for the distances we are using.
+# Precondition: longitudes don't cross over (raw lon2-lon1 < 180)
+function instant_distance(lat1, lon1, lat2, lon2)
+  mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
+  dlat     = lat2 - lat1
+  dlon     = lon2 - lon1
+
+  k1 = 111.13209 - 0.56605cos(2*mean_lat)
+  k2 = 111.41513cos(mean_lat) - 0.09455cos(3*mean_lat)
+
+  √((k1*dlat)^2 + (k2*dlon)^2) * 1000.0
+end
+
+# Compared to actual calculation on an ellipsoid, error is greatest when
+# close to the line (since geodesic follows a different path).
+# For the scales we are concerned about, error is always < 0.45%.
+# Precondition: longitudes don't cross over (raw lon2-lon1 < 180)
+function instant_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
+  mean_lat = (lat + lat1 + lat2) / 3.0 / 180.0 * π
+
+  k1 = 111.13209 - 0.56605cos(2*mean_lat)
+  k2 = 111.41513cos(mean_lat) - 0.09455cos(3*mean_lat)
+
+  # Translate so endpoint 1 is the origin.
+  x2 = (lon2 - lon1) * k2
+  y2 = (lat2 - lat1) * k1
+  x  = (lon  - lon1) * k2
+  y  = (lat  - lat1) * k1
+
+  # Unit vector...
+  segment_length = √(x2^2 + y2^2)
+  ux2 = x2 / segment_length
+  uy2 = y2 / segment_length
+
+  # Project onto line
+  distance_from_origin_on_line = x*ux2 + y*uy2
+
+  if distance_from_origin_on_line <= 0.0
+    # Closer to endpoint 1 (the origin)
+    √(x^2 + y^2) * 1000.0
+  elseif distance_from_origin_on_line >= segment_length
+    # Closer to endpoint 2
+    √((x-x2)^2 + (y-y2)^2) * 1000.0
+  else
+    # Closer to somewhere on the line
+    x_proj = ux2 * distance_from_origin_on_line
+    y_proj = uy2 * distance_from_origin_on_line
+
+    √((x-x_proj)^2 + (y-y_proj)^2) * 1000.0
+  end
+end
+
+# On the example grib2 file seems never to be off by more than a tenth of a mile (<0.4% error for our 25mi queries).
+# But doesn't really save any time.
+function instant_integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
+  mean_lat = (lat + lat + lat_m_per_s*seconds/METERS_PER_DEGREE) / 2.0 / 180.0 * π
+
+  k1 = 111.13209 - 0.56605cos(2*mean_lat)
+  k2 = 111.41513cos(mean_lat) - 0.09455cos(3*mean_lat)
+
+  ( lat + lat_m_per_s*seconds/1000.0/k1
+  , lon + lon_m_per_s*seconds/1000.0/k2
+  )
+end
+
+
+# FCC method, per Wikipedia https://en.wikipedia.org/wiki/Geographical_distance#Ellipsoidal_Earth_projected_to_a_plane
+# Surprisingly good! Generally much less than 0.01% error over short distances, and not completely awful over long distances.
+function instantish_distance(lat1, lon1, lat2, lon2)
+  mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
+  dlat     = lat2 - lat1
+  dlon     = lon2 - lon1
+
+  k1 = 111.13209 - 0.56605cos(2*mean_lat) + 0.00120cos(4*mean_lat)
+  k2 = 111.41513cos(mean_lat) - 0.09455cos(3*mean_lat) + 0.00012cos(5*mean_lat)
+
+  √((k1*dlat)^2 + (k2*dlon)^2) * 1000.0
+end
+
+# Haversine distance, per Wikipedia.
+function fast_distance(lat1, lon1, lat2, lon2)
+  lat1 = lat1/180.0*π
+  lat2 = lat2/180.0*π
+  half_dlat = (lat2 - lat1) / 2.0
+  half_dlon = (lon2 - lon1) / 2.0 / 180.0 * π
+
+  2.0asin(√(sin(half_dlat)^2 + cos(lat1)cos(lat2)sin(half_dlon)^2)) * METERS_PER_RADIAN
+end
+
+# Haversine distance for short distances, w/earth sphere radius based on WGS 84 ellipsoid.
+# Not clearly better than Haversine.
+function fastish_distance(lat1, lon1, lat2, lon2)
+  lat1 = lat1/180.0*π
+  lat2 = lat2/180.0*π
+  half_dlat = (lat2 - lat1) / 2.0
+  half_dlon = (lon2 - lon1) / 2.0 / 180.0 * π
+
+  dradians = 2.0asin(√(sin(half_dlat)^2 + cos(lat1)cos(lat2)sin(half_dlon)^2))
+
+  mean_lat = (lat1 + lat2) / 2.0
+  semimajor_r = 6378137
+  lat_flattening = 1.0/298.257223563 * (1.0 - cos(mean_lat))
+
+  dradians * semimajor_r * (1.0 - lat_flattening)
+end
+
+function compare_distances(lat1, lon1, lat2, lon2)
+  best       = distance(lat1, lon1, lat2, lon2)
+  lightning  = lightning_distance(lat1, lon1, lat2, lon2)
+  instant    = instant_distance(lat1, lon1, lat2, lon2)
+  instantish = instantish_distance(lat1, lon1, lat2, lon2)
+  fast       = fast_distance(lat1, lon1, lat2, lon2)
+  fastish    = fastish_distance(lat1, lon1, lat2, lon2)
+
+  ( abs(lightning - best)/best*100.0
+  , abs(instant - best)/best*100.0
+  , abs(instantish - best)/best*100.0
+  , abs(fast - best)/best*100.0
+  , abs(fastish-best)/best*100.0
+  )
 end
 
 # distance_and_midpoint(32.902, -94.0431, 32.9308, -94.0211)
@@ -43,6 +180,17 @@ function integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
   point = deepcopy([lon, lat]) # call is destructive :(
   Proj4._geod_direct!(wgs84.geod, point, azimuth, m_per_s * seconds)
   reverse(point)
+end
+
+
+function compare_integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
+  best_lat, best_lon = integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
+  inst_lat, inst_lon = instant_integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
+
+  error_d = distance(best_lat, best_lon, inst_lat, inst_lon)
+  d       = distance(lat, lon, best_lat, best_lon)
+
+  (error_d / d * 100.0, error_d)
 end
 
 
@@ -177,6 +325,15 @@ function distance_to_line(lat, lon, lat1, lon1, lat2, lon2, max_error)
       distance_to_line(lat, lon, midLat, midLon, lat2, lon2, max_error)
     end
   end
+end
+
+
+function compare_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
+  best      = distance_to_line(lat, lon, lat1, lon1, lat2, lon2, 1.0) # 1 meter
+  instant   = instant_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
+  # one_meter = distance_to_line(lat, lon, lat1, lon1, lat2, lon2, 1.0)
+
+  abs(instant - best)/best*100.0
 end
 
 

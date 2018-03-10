@@ -843,6 +843,57 @@ function square_ring_search(predicate, center_i, center_j)
   matching_flat_is
 end
 
+# A little faster. (Each layer increases by 4 grid points rather than 8, so we have more opportunities to terminate.)
+function diamond_search(predicate, center_i, center_j)
+  any_found_this_diamond  = false
+  still_searching_on_grid = true
+  matching_flat_is = []
+
+  r = 0
+  while still_searching_on_grid && (isempty(matching_flat_is) || any_found_this_diamond)
+    any_found_this_diamond  = false
+    still_searching_on_grid = false
+
+    # search in this order:
+    #
+    #     3
+    #   3   2
+    # 4   •   2
+    #   4   1
+    #     1
+
+    if r == 0
+      diamond = [(center_i, center_j)]
+    else
+      s_e = zip(center_i:center_i+r-1,    center_j-r:center_j-1)
+      e_n = zip(center_i+r:-1:center_i+1, center_j:center_j+r-1)
+      n_w = zip(center_i:-1:center_i-r+1, center_j+r:-1:center_j+1)
+      w_s = zip(center_i-r:center_i-1,    center_j:-1:center_j-r+1)
+      diamond = collect(Base.Iterators.flatten((s_e, e_n, n_w, w_s)))
+    end
+
+    for diamond_i = 1:length(diamond)
+      i, j = diamond[diamond_i]
+      if is_on_grid(i, j)
+        still_searching_on_grid = true
+        lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+        if predicate(lat, lon)
+          any_found_this_diamond = true
+          push!(matching_flat_is, flat_i)
+        end
+      end
+    end
+
+    r += 1
+  end
+
+  # print(" $r ")
+
+  matching_flat_is
+end
+
+# max_error = 0.0
+
 for j = 1:grid_height
   println("$j")
   for i = 1:grid_width
@@ -854,25 +905,54 @@ for j = 1:grid_height
       lat_motion = storm_motion_lat_vs[flat_i] # m / s
       lon_motion = storm_motion_lon_us[flat_i] # m / S
 
+      # Doesn't seem to save any time.
+      # plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.instant_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
+      # minus_30_mins_lat, minus_30_mins_lon = GeoUtils.instant_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
       plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
       minus_30_mins_lat, minus_30_mins_lon = GeoUtils.integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
 
+      # err1, errd1 = GeoUtils.compare_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
+      # err2, errd2 = GeoUtils.compare_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
+      #
+      # if errd1 > GeoUtils.METERS_PER_MILE * .05 || errd2 > GeoUtils.METERS_PER_MILE * .05
+      #   println((err1, err2, errd1/GeoUtils.METERS_PER_MILE, errd2/GeoUtils.METERS_PER_MILE))
+      # end
+
+      # println((minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat,  plus_30_mins_lon))
+
       # find indices within 25 miles of -30 mins to +30 mins storm path
       flat_is_within_25mi_and_30_mins_of_storm =
-        square_ring_search((lat, lon) -> GeoUtils.distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon, 1.0) <= 25.0 * GeoUtils.METERS_PER_MILE, i, j)
+        diamond_search(i, j) do lat, lon
+          # d = GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
+          # if d > 20.0 * GeoUtils.METERS_PER_MILE
+          #   fast_error_pct = GeoUtils.compare_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
+          #   global max_error = max(max_error, fast_error_pct)
+          #   if fast_error_pct > 0.4
+          #     println((fast_error_pct, d, lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon))
+          #   end
+          # end
+          # GeoUtils.distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon, 1.0) <= 25.0 * GeoUtils.METERS_PER_MILE
+          GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+        end
 
       # find indices within 25 miles of -30 mins storm location
       flat_is_within_25mi_of_storm_30_mins_ago =
         filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
           candiate_lat, candidate_lon = get_grid_lat_lon_for_flat_i(candidate_flat_i)
-          GeoUtils.distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+
+          # lightning, instant, instantish, fast, fastish = GeoUtils.compare_distances(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
+          # if instant > 0.004
+          #   d = GeoUtils.distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
+          #   println((d, lightning, instant, instantish, fast, fastish))
+          # end
+          GeoUtils.instant_distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
         end
 
       # find indices within 25 miles of +30 mins storm location
       flat_is_within_25mi_of_storm_30_mins_from_now =
         filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
           candiate_lat, candidate_lon = get_grid_lat_lon_for_flat_i(candidate_flat_i)
-          GeoUtils.distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+          GeoUtils.instant_distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
         end
 
       # for each layer...
@@ -896,3 +976,5 @@ for j = 1:grid_height
     end
   end
 end
+
+# println(max_error)
