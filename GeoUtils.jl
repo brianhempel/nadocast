@@ -167,9 +167,17 @@ end
 function distance_and_midpoint(lat1, lon1, lat2, lon2)
   distance, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
   midpoint = deepcopy([lon1, lat1]) # call is destructive :(
-  Proj4._geod_direct!(wgs84.geod, midpoint, mean([point_1_azimuth,point_2_azimuth]), distance / 2.0)
+  Proj4._geod_direct!(wgs84.geod, midpoint, point_1_azimuth, distance / 2.0)
   (distance, reverse(midpoint))
 end
+
+function ratio_on_segment(lat1, lon1, lat2, lon2, ratio)
+  distance, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
+  ratio_point = deepcopy([lon1, lat1]) # call is destructive :(
+  Proj4._geod_direct!(wgs84.geod, ratio_point, point_1_azimuth, distance * ratio)
+  reverse(ratio_point)
+end
+
 
 # Returns endpoint
 function integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)

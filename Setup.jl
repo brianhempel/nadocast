@@ -1,6 +1,6 @@
 Pkg.update()
 
-Pkg.add("DataFrames")
+# Pkg.add("DataFrames")
 # Pkg.add("CSV")
 # Pkg.add("DelimitedFiles")
 Pkg.add("TimeZones")

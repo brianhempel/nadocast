@@ -25,8 +25,21 @@
 push!(LOAD_PATH, ".")
 
 import GeoUtils
+import TimeZones
 
-grib2_path = "rap_130_20170515_0000_001.grb2"
+utc = TimeZones.tz"UTC"
+
+grib2_path = "rap_130_20170516_2200_001.grb2"
+
+year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_path).captures
+
+valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Base.Dates.Hour(parse(Int64,forcast_hour_str))
+valid_start_time = valid_time - Base.Dates.Minute(30)
+valid_end_time   = valid_time + Base.Dates.Minute(30)
+
+println(valid_start_time," to ",valid_end_time)
+
+
 
 stdout_limited = IOContext(STDOUT, :display_size=>(100,60))
 stdout_limited = IOContext(stdout_limited, :limit=>true)
@@ -461,6 +474,10 @@ end
 # UV to polar
 function uv_to_r_theta(pair)
   u, v = pair
+  u_v_to_r_theta(u, v)
+end
+
+function u_v_to_r_theta(u, v)
   if u == 0.0 && v == 0.0
     return (0.0, 0.0)
   end
@@ -526,25 +543,25 @@ uv_layers_excluding_storm_motion = [
   ("UGRD:tropopause",              "VGRD:tropopause")
 ]
 
-for (u_layer_key, v_layer_key) in uv_layers_excluding_storm_motion
-  us = layer_to_data[u_layer_key]
-  vs = layer_to_data[v_layer_key]
-
-  polar_vectors   = map(uv_to_r_theta, zip(us, vs))
-  rs              = map(first, polar_vectors) # speeds
-  thetas          = map(last,  polar_vectors) # grid relative angles
-
-  # Will relativize angles against storm motion later. (For a point, relative to storm motion at that point; but for computing area statistics around that point, should be relative to that point as well)
-
-  delete!(layer_to_data, u_layer_key)
-  delete!(layer_to_data, v_layer_key)
-
-  r_layer_key     = replace(u_layer_key, r"^U", "R")
-  theta_layer_key = replace(v_layer_key, r"^V", "T")
-
-  layer_to_data[r_layer_key]     = rs
-  layer_to_data[theta_layer_key] = thetas
-end
+# for (u_layer_key, v_layer_key) in uv_layers_excluding_storm_motion
+#   us = layer_to_data[u_layer_key]
+#   vs = layer_to_data[v_layer_key]
+#
+#   polar_vectors   = map(uv_to_r_theta, zip(us, vs))
+#   rs              = map(first, polar_vectors) # speeds
+#   thetas          = map(last,  polar_vectors) # grid relative angles
+#
+#   # Will relativize angles against storm motion later. (For a point, relative to storm motion at that point; but for computing area statistics around that point, should be relative to that point as well)
+#
+#   # delete!(layer_to_data, u_layer_key)
+#   # delete!(layer_to_data, v_layer_key)
+#
+#   r_layer_key     = replace(u_layer_key, r"^U", "R")
+#   theta_layer_key = replace(v_layer_key, r"^V", "T")
+#
+#   layer_to_data[r_layer_key]     = rs
+#   layer_to_data[theta_layer_key] = thetas
+# end
 
 # delete!(layer_to_data, "USTM:u storm motion")
 # delete!(layer_to_data, "VSTM:v storm motion")
@@ -615,9 +632,9 @@ if !eof(from_wgrib2)
   error("wgrib2 sending more data than expected!")
 end
 
-storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
-storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
-storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vectors_latlon_aligned)
+# storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
+# storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
+# storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vectors_latlon_aligned)
 
 # println("storm_motion_rs")
 # show(stdout_limited, "text/plain", storm_motion_rs)
@@ -630,7 +647,7 @@ storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vector
 
 # run(`rm $storm_winds_temp_file`)
 
-layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
+# layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
 # layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas_latlon_aligned
 
 
@@ -718,39 +735,39 @@ all_pts = hcat(all_pts, point_areas)
 
 # Transpose features to row per point
 
-headers = ["i", "j", "lat", "lon", "sq_miles"]
-
-tranposed_data = zeros(size(all_pts,1), size(all_pts,2) + size(layers,1) - 1)
-tranposed_data[:,1:size(all_pts,2)] = all_pts
-
-out_col = length(headers) + 1
-for layer_i in 1:size(layers,1)
-  abbrev, desc = layers[layer_i,:]
-  # println((abbrev, desc))
-  # desc   = layer[layer_i][2]
-  if abbrev == "UGRD"
-    abbrev = "RGRD"
-  elseif abbrev == "VGRD"
-    abbrev = "TGRD"
-  elseif abbrev == "USTM"
-    abbrev = "RSTM"
-    desc   = "latlon relative storm motion speed"
-  end
-
-  if abbrev == "VSTM"
-    # Don't include absolute direction as a feature.
-  else
-    layer_key = abbrev * ":" * desc
-    push!(headers, layer_key)
-    tranposed_data[:, out_col] = layer_to_data[layer_key]
-    out_col += 1
-  end
-end
-
-println("headers")
-show(stdout_limited, "text/plain", headers)
-println("tranposed_data")
-show(stdout_limited, "text/plain", tranposed_data)
+# headers = ["i", "j", "lat", "lon", "sq_miles"]
+#
+# tranposed_data = zeros(size(all_pts,1), size(all_pts,2) + size(layers,1))
+# tranposed_data[:,1:size(all_pts,2)] = all_pts
+#
+# out_col = length(headers) + 1
+# for layer_i in 1:size(layers,1)
+#   abbrev, desc = layers[layer_i,:]
+#   # println((abbrev, desc))
+#   # desc   = layer[layer_i][2]
+#   if abbrev == "UGRD"
+#     abbrev = "RGRD"
+#   elseif abbrev == "VGRD"
+#     abbrev = "TGRD"
+#   elseif abbrev == "USTM"
+#     abbrev = "RSTM"
+#     desc   = "latlon relative storm motion speed"
+#   end
+#
+#   # if abbrev == "VSTM"
+#   #   # Don't include absolute direction as a feature.
+#   # else
+#   layer_key = abbrev * ":" * desc
+#   push!(headers, layer_key)
+#   tranposed_data[:, out_col] = layer_to_data[layer_key]
+#   out_col += 1
+#   # end
+# end
+#
+# println("headers")
+# show(stdout_limited, "text/plain", headers)
+# println("tranposed_data")
+# show(stdout_limited, "text/plain", tranposed_data)
 
 
 
@@ -778,10 +795,14 @@ end
 
 # Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
 
-function relativize_angle(thetaAndRef)
-  theta, ref = thetaAndRef
+function relativize_angle(theta, ref)
   mod(theta - ref + π, 2π) - π
 end
+
+# function relativize_angle(thetaAndRef)
+#   theta, ref = thetaAndRef
+#   mod(theta - ref + π, 2π) - π
+# end
 
 # relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
 
@@ -892,7 +913,77 @@ function diamond_search(predicate, center_i, center_j)
   matching_flat_is
 end
 
+tornado_rows, tornado_headers = readdlm("tornadoes.csv",','; header=true)
+
+start_seconds_col_i, = find(tornado_headers .== "begin_time_seconds")
+end_seconds_col_i,   = find(tornado_headers .== "end_time_seconds")
+start_lat_col_i,     = find(tornado_headers .== "begin_lat")
+start_lon_col_i,     = find(tornado_headers .== "begin_lon")
+end_lat_col_i,       = find(tornado_headers .== "end_lat")
+end_lon_col_i,       = find(tornado_headers .== "end_lon")
+
+valid_start_seconds = Dates.datetime2unix(DateTime(valid_start_time))
+valid_end_seconds   = Dates.datetime2unix(DateTime(valid_end_time))
+
+relevant_tornadoes = tornado_rows[tornado_rows[:, end_seconds_col_i] .> valid_start_seconds, :]
+relevant_tornadoes = relevant_tornadoes[relevant_tornadoes[:, start_seconds_col_i] .< valid_end_seconds,: ]
+
+if size(relevant_tornadoes,1) > 0
+  relevant_tornadoes = mapslices(relevant_tornadoes, 2) do row
+    # tornado_start_time = TimeZones.ZonedDateTime(Dates.unix2datetime(row[start_seconds_col_i]), utc)
+    # tornado_end_time   = TimeZones.ZonedDateTime(Dates.unix2datetime(row[end_seconds_col_i]), utc)
+    row
+  end
+end
+
+tornado_segments = map(1:size(relevant_tornadoes,1)) do i
+  start_seconds = relevant_tornadoes[i, start_seconds_col_i]
+  end_seconds   = relevant_tornadoes[i, end_seconds_col_i]
+  duration      = end_seconds - start_seconds
+  start_lat     = relevant_tornadoes[i, start_lat_col_i]
+  start_lon     = relevant_tornadoes[i, start_lon_col_i]
+  end_lat       = relevant_tornadoes[i, end_lat_col_i]
+  end_lon       = relevant_tornadoes[i, end_lon_col_i]
+
+  if duration == 0
+    ( start_lat
+    , start_lon
+    , end_lat
+    , end_lon
+    )
+  else
+    if start_seconds >= valid_start_seconds
+      seg_start_lat = start_lat
+      seg_start_lon = start_lon
+    else
+      start_ratio = Float64(valid_start_seconds - start_seconds) / duration
+      seg_start_lat, seg_start_lon = GeoUtils.ratio_on_segment(start_lat, start_lon, end_lat, end_lon, start_ratio)
+    end
+
+    if end_seconds <= valid_end_seconds
+      seg_end_lat = end_lat
+      seg_end_lon = end_lon
+    else
+      end_ratio = Float64(valid_end_seconds - start_seconds) / duration
+      seg_end_lat, seg_end_lon = GeoUtils.ratio_on_segment(start_lat, start_lon, end_lat, end_lon, end_ratio)
+    end
+
+    ( seg_start_lat
+    , seg_start_lon
+    , seg_end_lat
+    , seg_end_lon
+    )
+  end
+end
+
+println("relevant tornadoes")
+show(stdout_limited, "text/plain", relevant_tornadoes)
+
+println("tornado segments")
+show(stdout_limited, "text/plain", tornado_segments)
 # max_error = 0.0
+
+out_rows = Array{Float32}[]
 
 for j = 1:grid_height
   println("$j")
@@ -901,6 +992,16 @@ for j = 1:grid_height
 
     # skip if not a training point
     if lat_lon_to_key(lat, lon) in training_pts_set
+
+      is_close_to_tornado = false
+      for (tlat1, tlon1, tlat2, tlon2) in tornado_segments
+        if GeoUtils.instant_distance_to_line(lat, lon, tlat1, tlon1, tlat2, tlon2) <= 25.0 * GeoUtils.METERS_PER_MILE
+          is_close_to_tornado = true
+        end
+      end
+      if is_close_to_tornado
+        print("t")
+      end
 
       lat_motion = storm_motion_lat_vs[flat_i] # m / s
       lon_motion = storm_motion_lon_us[flat_i] # m / S
@@ -955,8 +1056,115 @@ for j = 1:grid_height
           GeoUtils.instant_distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
         end
 
+
+      out_row = Float32[]
+
+      storm_r, storm_theta = u_v_to_r_theta(lon_motion, lat_motion)
+
       # for each layer...
+      for layer_i in 1:size(layers,1)
+        abbrev, desc = layers[layer_i,:]
+        layer_key = abbrev * ":" * desc
+
         # if wind layer, relativize angle against storm motion
+        if abbrev == "UGRD"
+          u_layer_key = layer_key
+          v_layer_key = "V" * u_layer_key[2:length(u_layer_key)
+
+          # Need lat-lon relative u/v
+          # So can compare direction correctly to take mean across multiple grid points
+          # (Whether uv or polar, reference needs to be constant across points for a mean to be meaningful)
+
+          # u_layer = layer_to_data[u_layer_key]
+          # v_layer = layer_to_data[v_layer_key]
+          #
+          # pt_r, pt_theta = u_v_to_r_theta(u_layer[flat_i], v_layer[flat_i])
+          # pt_theta_rel   = relativize_angle(pt_theta, storm_theta)
+          #
+          #
+          # us_around_storm_path       = u_layer[flat_is_within_25mi_and_30_mins_of_storm]
+          # vs_around_storm_path       = v_layer[flat_is_within_25mi_and_30_mins_of_storm]
+          # us_around_30_mins_ago      = u_layer[flat_is_within_25mi_of_storm_30_mins_ago]
+          # vs_around_30_mins_ago      = v_layer[flat_is_within_25mi_of_storm_30_mins_ago]
+          # us_around_30_mins_from_now = u_layer[flat_is_within_25mi_of_storm_30_mins_from_now]
+          # vs_around_30_mins_from_now = v_layer[flat_is_within_25mi_of_storm_30_mins_from_now]
+          #
+          # polar_vectors_around_storm_path = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
+          # rs_around_storm_path            = map(first, polar_vectors_around_storm_path)
+          # thetas_around_storm_path        = map(last,  polar_vectors_around_storm_path)
+
+
+          # u_v_to_r_theta
+          # ustm_layer_to_fetch = desiredLayerToInventoryLine(["USTM" "u storm motion"])
+          # vstm_layer_to_fetch = desiredLayerToInventoryLine(["VSTM" "v storm motion"])
+          # println(to_wgrib2, ustm_layer_to_fetch[1] * ":" * ustm_layer_to_fetch[2])
+          # println(to_wgrib2, vstm_layer_to_fetch[1] * ":" * vstm_layer_to_fetch[2])
+          #
+          # close(to_wgrib2)
+          # close(wgrib2)
+          # wait(wgrib2)
+          #
+          # (from_wgrib2, wgrib2) = open(`wgrib2 $storm_winds_temp_file -header -inv /dev/null -bin -`)
+          #
+          # grid_length         = read(from_wgrib2, UInt32)
+          # storm_motion_lon_us = read(from_wgrib2, Float32, div(grid_length, 4))
+          # grid_length_again   = read(from_wgrib2, UInt32)
+          #
+          # grid_length         = read(from_wgrib2, UInt32)
+          # storm_motion_lat_vs = read(from_wgrib2, Float32, div(grid_length, 4))
+          # grid_length_again   = read(from_wgrib2, UInt32)
+          #
+          # # Sanity check that incoming stream is empty
+          # if !eof(from_wgrib2)
+          #   error("wgrib2 sending more data than expected!")
+          # end
+          #
+          # storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
+          # storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
+          # storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vectors_latlon_aligned)
+
+          # println("storm_motion_rs")
+          # show(stdout_limited, "text/plain", storm_motion_rs)
+          # println("storm_motion_rs2")
+          # show(stdout_limited, "text/plain", storm_motion_rs_latlon_aligned)
+          # println("storm_motion_thetas")
+          # show(stdout_limited, "text/plain", storm_motion_thetas)
+          # println("storm_motion_thetas2")
+          # show(stdout_limited, "text/plain", storm_motion_thetas_latlon_aligned)
+
+          # run(`rm $storm_winds_temp_file`)
+
+          # layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
+          # layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas_latlon_aligned
+
+        elseif abbrev == "TGRD"
+
+        elseif abbrev == "USTM"
+
+        elseif abbrev == "TSTM"
+
+        else
+          layer_data = layer_to_data[layer_key]
+
+          values_around_storm_path       = layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+          values_around_30_mins_ago      = layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+          values_around_30_mins_from_now = layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+
+          # point value
+          # local mean
+          # local min
+          # local max
+          # gradient in storm direction
+
+          push!(out_row, layer_data[flat_i])
+          push!(out_row, mean(values_around_storm_path))
+          push!(out_row, minimum(values_around_storm_path))
+          push!(out_row, maximum(values_around_storm_path))
+          push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
+        end
+
+
+
         # add to output
 
         # grab within 25 miles of -30 mins to +30 mins storm path
@@ -967,12 +1175,13 @@ for j = 1:grid_height
         # grab within 25 miles of -30 mins storm location
         # if wind layer, relativize angle against storm motion
         # find mean
-
         # grab within 25 miles of +30 mins storm location
         # if wind layer, relativize angle against storm motion
         # find mean
         # add gradient to output
+      end
 
+      push!(out_rows, out_rows)
     end
   end
 end

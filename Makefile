@@ -6,6 +6,10 @@
 StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz:
 	curl https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz > StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 
+# Tornado events, 2008 through 2017.
+tornadoes.csv:
+	ruby get_storm_events.rb > tornadoes.csv
+
 setup: 1950-2016_all_tornadoes.csv StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 	julia Setup.jl
 	# julia Test.jl
