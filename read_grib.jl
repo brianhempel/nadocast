@@ -22,10 +22,14 @@
 # It *does* appear that there are multiple accumulation periods in the forecast (i.e. always a 1-hour period somewhere for all of the above)
 # May look for that.
 
+println("Importing libraries...")
+
 push!(LOAD_PATH, ".")
 
 import GeoUtils
 import TimeZones
+
+println("Preparing time...")
 
 utc = TimeZones.tz"UTC"
 
@@ -353,8 +357,104 @@ VVEL:950 mb
 VVEL:975 mb
 VVEL:1000 mb"""), ':', String; header=false, use_mmap=false, quotes=false)
 
+uv_layers = [
+  ("UGRD:10 m above ground",       "VGRD:10 m above ground"),
+  ("UGRD:100 mb",                  "VGRD:100 mb"),
+  ("UGRD:120-90 mb above ground",  "VGRD:120-90 mb above ground"),
+  ("UGRD:125 mb",                  "VGRD:125 mb"),
+  ("UGRD:150 mb",                  "VGRD:150 mb"),
+  ("UGRD:150-120 mb above ground", "VGRD:150-120 mb above ground"),
+  ("UGRD:175 mb",                  "VGRD:175 mb"),
+  ("UGRD:180-150 mb above ground", "VGRD:180-150 mb above ground"),
+  ("UGRD:200 mb",                  "VGRD:200 mb"),
+  ("UGRD:225 mb",                  "VGRD:225 mb"),
+  ("UGRD:250 mb",                  "VGRD:250 mb"),
+  ("UGRD:275 mb",                  "VGRD:275 mb"),
+  ("UGRD:30-0 mb above ground",    "VGRD:30-0 mb above ground"),
+  ("UGRD:300 mb",                  "VGRD:300 mb"),
+  ("UGRD:325 mb",                  "VGRD:325 mb"),
+  ("UGRD:350 mb",                  "VGRD:350 mb"),
+  ("UGRD:375 mb",                  "VGRD:375 mb"),
+  ("UGRD:400 mb",                  "VGRD:400 mb"),
+  ("UGRD:425 mb",                  "VGRD:425 mb"),
+  ("UGRD:450 mb",                  "VGRD:450 mb"),
+  ("UGRD:475 mb",                  "VGRD:475 mb"),
+  ("UGRD:500 mb",                  "VGRD:500 mb"),
+  ("UGRD:525 mb",                  "VGRD:525 mb"),
+  ("UGRD:550 mb",                  "VGRD:550 mb"),
+  ("UGRD:575 mb",                  "VGRD:575 mb"),
+  ("UGRD:60-30 mb above ground",   "VGRD:60-30 mb above ground"),
+  ("UGRD:600 mb",                  "VGRD:600 mb"),
+  ("UGRD:625 mb",                  "VGRD:625 mb"),
+  ("UGRD:650 mb",                  "VGRD:650 mb"),
+  ("UGRD:675 mb",                  "VGRD:675 mb"),
+  ("UGRD:700 mb",                  "VGRD:700 mb"),
+  ("UGRD:725 mb",                  "VGRD:725 mb"),
+  ("UGRD:750 mb",                  "VGRD:750 mb"),
+  ("UGRD:775 mb",                  "VGRD:775 mb"),
+  ("UGRD:800 mb",                  "VGRD:800 mb"),
+  ("UGRD:825 mb",                  "VGRD:825 mb"),
+  ("UGRD:850 mb",                  "VGRD:850 mb"),
+  ("UGRD:875 mb",                  "VGRD:875 mb"),
+  ("UGRD:90-60 mb above ground",   "VGRD:90-60 mb above ground"),
+  ("UGRD:900 mb",                  "VGRD:900 mb"),
+  ("UGRD:925 mb",                  "VGRD:925 mb"),
+  ("UGRD:950 mb",                  "VGRD:950 mb"),
+  ("UGRD:975 mb",                  "VGRD:975 mb"),
+  ("UGRD:1000 mb",                 "VGRD:1000 mb"),
+  ("UGRD:max wind",                "VGRD:max wind"),
+  ("UGRD:tropopause",              "VGRD:tropopause"),
+  ("USTM:u storm motion",          "VSTM:v storm motion")
+]
+
+
+
+# Rotate winds to lat/lon (so we can correctly average them together, etc...)
+
+# http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/tricks.wgrib2
+#
+# (40) How do I get the wind speed and direction? conversion between earth and grid relative winds.
+#
+#      Calculating the wind speed is easy (UGRD^2 + VGRD^2)^0.5
+#   use: wgrib2 IN.grb -wind_speed WND.grb
+#
+#      Calculating the wind direction can be tricky.
+#   For global files, the UGRD is the wind to the east
+#   and VGRD is the wind to the north (earth relative).
+#   You can use: wgrib2 IN.grb -wind_dir WND.grb
+#
+#   For Lambert conformal and polar stereographic files,
+#   UGRD is the wind from grid point (i,j) to (i+1,j).
+#   VGRD is the wind from grid point (i,j) to (i,j+1).
+#   This is call grid relative winds and -wind_dir doesn't work.
+#   However, the -new_grid option can change the winds
+#   to earth relative.  So step 1 is to convert the winds to earth relative.
+#
+#   wgrib2 IN.grb -new_grid_winds earth -new_grid `grid_defn.pl IN.grb` OUT.grb
+#
+#   The script grid_defn.pl returns the definition of the grid defintion of IN.grb
+#   in -new_grid format.      http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2.scripts/
+#
+#   Step 2 is to calculate the wind speed and direction.
+#
+#   wgrib2 OUT.grb -wind_speed WND.grb -wind_dir WND.grb
+
+# wgrib2 rap_130_20170516_2200_001.grb2 -inv /dev/null -new_grid_winds earth -new_grid `perl grid_defn.pl rap_130_20170516_2200_001.grb2` tmp.grb2
+
+println("Aligning winds to latlon...")
+
+grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
+# println(grid_defn)
+
+grib2_winds_latlon_aligned_path = "winds_latlon_aligned_tmp_$grib2_path"
+
+# If you don't redirect inventory to /dev/null, it goes to stdout. No way to turn inventory off.
+run(`wgrib2 $grib2_path -inv /dev/null -new_grid_winds earth -new_grid $grid_defn $grib2_winds_latlon_aligned_path`)
+
+println("Reading inventory lines...")
+
 # Read the inventory of the file so we can corrolate it to figure out which layers we want.
-inventory_lines = open(`wgrib2 $grib2_path -s -n`) do inv
+inventory_lines = open(`wgrib2 $grib2_winds_latlon_aligned_path -s -n`) do inv
   readdlm(inv, ':', String; header=false, use_mmap=false, quotes=false)
 end
 
@@ -385,6 +485,9 @@ end
 #     ]
 #   end
 # end
+
+
+println("Fetching desired layers...")
 
 function normalize_abbrev_and_desc(abbrev, desc)
   if abbrev == "MSTAV"
@@ -440,7 +543,7 @@ layers_to_fetch = mapslices(desiredLayerToInventoryLine, layers, 2)
 layer_to_data = Dict{String,Array{Float64}}()
 
 # If you don't redirect inventory to /dev/null, it goes to stdout. No way to turn inventory off.
-(from_wgrib2, to_wgrib2, wgrib2) = readandwrite(`wgrib2 $grib2_path -i -header -inv /dev/null -bin -`)
+(from_wgrib2, to_wgrib2, wgrib2) = readandwrite(`wgrib2 $grib2_winds_latlon_aligned_path -i -header -inv /dev/null -bin -`)
 
 # Tell wgrib2 which layers we want.
 for layer_i = 1:size(layers_to_fetch,1)
@@ -494,54 +597,6 @@ end
 # storm_motion_rs     = map(first, storm_motion_polar_vectors)
 # storm_motion_thetas = map(last,  storm_motion_polar_vectors)
 
-uv_layers_excluding_storm_motion = [
-  ("UGRD:10 m above ground",       "VGRD:10 m above ground"),
-  ("UGRD:100 mb",                  "VGRD:100 mb"),
-  ("UGRD:120-90 mb above ground",  "VGRD:120-90 mb above ground"),
-  ("UGRD:125 mb",                  "VGRD:125 mb"),
-  ("UGRD:150 mb",                  "VGRD:150 mb"),
-  ("UGRD:150-120 mb above ground", "VGRD:150-120 mb above ground"),
-  ("UGRD:175 mb",                  "VGRD:175 mb"),
-  ("UGRD:180-150 mb above ground", "VGRD:180-150 mb above ground"),
-  ("UGRD:200 mb",                  "VGRD:200 mb"),
-  ("UGRD:225 mb",                  "VGRD:225 mb"),
-  ("UGRD:250 mb",                  "VGRD:250 mb"),
-  ("UGRD:275 mb",                  "VGRD:275 mb"),
-  ("UGRD:30-0 mb above ground",    "VGRD:30-0 mb above ground"),
-  ("UGRD:300 mb",                  "VGRD:300 mb"),
-  ("UGRD:325 mb",                  "VGRD:325 mb"),
-  ("UGRD:350 mb",                  "VGRD:350 mb"),
-  ("UGRD:375 mb",                  "VGRD:375 mb"),
-  ("UGRD:400 mb",                  "VGRD:400 mb"),
-  ("UGRD:425 mb",                  "VGRD:425 mb"),
-  ("UGRD:450 mb",                  "VGRD:450 mb"),
-  ("UGRD:475 mb",                  "VGRD:475 mb"),
-  ("UGRD:500 mb",                  "VGRD:500 mb"),
-  ("UGRD:525 mb",                  "VGRD:525 mb"),
-  ("UGRD:550 mb",                  "VGRD:550 mb"),
-  ("UGRD:575 mb",                  "VGRD:575 mb"),
-  ("UGRD:60-30 mb above ground",   "VGRD:60-30 mb above ground"),
-  ("UGRD:600 mb",                  "VGRD:600 mb"),
-  ("UGRD:625 mb",                  "VGRD:625 mb"),
-  ("UGRD:650 mb",                  "VGRD:650 mb"),
-  ("UGRD:675 mb",                  "VGRD:675 mb"),
-  ("UGRD:700 mb",                  "VGRD:700 mb"),
-  ("UGRD:725 mb",                  "VGRD:725 mb"),
-  ("UGRD:750 mb",                  "VGRD:750 mb"),
-  ("UGRD:775 mb",                  "VGRD:775 mb"),
-  ("UGRD:800 mb",                  "VGRD:800 mb"),
-  ("UGRD:825 mb",                  "VGRD:825 mb"),
-  ("UGRD:850 mb",                  "VGRD:850 mb"),
-  ("UGRD:875 mb",                  "VGRD:875 mb"),
-  ("UGRD:90-60 mb above ground",   "VGRD:90-60 mb above ground"),
-  ("UGRD:900 mb",                  "VGRD:900 mb"),
-  ("UGRD:925 mb",                  "VGRD:925 mb"),
-  ("UGRD:950 mb",                  "VGRD:950 mb"),
-  ("UGRD:975 mb",                  "VGRD:975 mb"),
-  ("UGRD:1000 mb",                 "VGRD:1000 mb"),
-  ("UGRD:max wind",                "VGRD:max wind"),
-  ("UGRD:tropopause",              "VGRD:tropopause")
-]
 
 # for (u_layer_key, v_layer_key) in uv_layers_excluding_storm_motion
 #   us = layer_to_data[u_layer_key]
@@ -567,70 +622,41 @@ uv_layers_excluding_storm_motion = [
 # delete!(layer_to_data, "VSTM:v storm motion")
 
 
-# Rotate storm winds to lat/lon
 
-# http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/tricks.wgrib2
+
+# grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
+# # println(grid_defn)
 #
-# (40) How do I get the wind speed and direction? conversion between earth and grid relative winds.
+# storm_winds_temp_file = "winds_latlon_aligned_tmp_$grib2_path"
 #
-#      Calculating the wind speed is easy (UGRD^2 + VGRD^2)^0.5
-#   use: wgrib2 IN.grb -wind_speed WND.grb
+# (to_wgrib2, wgrib2) = open(`wgrib2 $grib2_path -i -inv /dev/null -new_grid_winds earth -new_grid $grid_defn $storm_winds_temp_file`, "w")
 #
-#      Calculating the wind direction can be tricky.
-#   For global files, the UGRD is the wind to the east
-#   and VGRD is the wind to the north (earth relative).
-#   You can use: wgrib2 IN.grb -wind_dir WND.grb
+# # storm_wind_layers = [["USTM" "u storm motion"]; ["VSTM" "v storm motion"]]
+# # storm_wind_layers_to_fetch = mapslices(desiredLayerToInventoryLine, storm_wind_layers, 2)
 #
-#   For Lambert conformal and polar stereographic files,
-#   UGRD is the wind from grid point (i,j) to (i+1,j).
-#   VGRD is the wind from grid point (i,j) to (i,j+1).
-#   This is call grid relative winds and -wind_dir doesn't work.
-#   However, the -new_grid option can change the winds
-#   to earth relative.  So step 1 is to convert the winds to earth relative.
+# ustm_layer_to_fetch = desiredLayerToInventoryLine(["USTM" "u storm motion"])
+# vstm_layer_to_fetch = desiredLayerToInventoryLine(["VSTM" "v storm motion"])
+# println(to_wgrib2, ustm_layer_to_fetch[1] * ":" * ustm_layer_to_fetch[2])
+# println(to_wgrib2, vstm_layer_to_fetch[1] * ":" * vstm_layer_to_fetch[2])
 #
-#   wgrib2 IN.grb -new_grid_winds earth -new_grid `grid_defn.pl IN.grb` OUT.grb
+# close(to_wgrib2)
+# close(wgrib2)
+# wait(wgrib2)
 #
-#   The script grid_defn.pl returns the definition of the grid defintion of IN.grb
-#   in -new_grid format.      http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2.scripts/
+# (from_wgrib2, wgrib2) = open(`wgrib2 $storm_winds_temp_file -header -inv /dev/null -bin -`)
 #
-#   Step 2 is to calculate the wind speed and direction.
+# grid_length         = read(from_wgrib2, UInt32)
+# storm_motion_lon_us = read(from_wgrib2, Float32, div(grid_length, 4))
+# grid_length_again   = read(from_wgrib2, UInt32)
 #
-#   wgrib2 OUT.grb -wind_speed WND.grb -wind_dir WND.grb
-
-
-grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
-# println(grid_defn)
-
-storm_winds_temp_file = "storm_winds_latlon_aligned_tmp_$grib2_path"
-
-(to_wgrib2, wgrib2) = open(`wgrib2 $grib2_path -i -inv /dev/null -new_grid_winds earth -new_grid $grid_defn $storm_winds_temp_file`, "w")
-
-# storm_wind_layers = [["USTM" "u storm motion"]; ["VSTM" "v storm motion"]]
-# storm_wind_layers_to_fetch = mapslices(desiredLayerToInventoryLine, storm_wind_layers, 2)
-
-ustm_layer_to_fetch = desiredLayerToInventoryLine(["USTM" "u storm motion"])
-vstm_layer_to_fetch = desiredLayerToInventoryLine(["VSTM" "v storm motion"])
-println(to_wgrib2, ustm_layer_to_fetch[1] * ":" * ustm_layer_to_fetch[2])
-println(to_wgrib2, vstm_layer_to_fetch[1] * ":" * vstm_layer_to_fetch[2])
-
-close(to_wgrib2)
-close(wgrib2)
-wait(wgrib2)
-
-(from_wgrib2, wgrib2) = open(`wgrib2 $storm_winds_temp_file -header -inv /dev/null -bin -`)
-
-grid_length         = read(from_wgrib2, UInt32)
-storm_motion_lon_us = read(from_wgrib2, Float32, div(grid_length, 4))
-grid_length_again   = read(from_wgrib2, UInt32)
-
-grid_length         = read(from_wgrib2, UInt32)
-storm_motion_lat_vs = read(from_wgrib2, Float32, div(grid_length, 4))
-grid_length_again   = read(from_wgrib2, UInt32)
-
-# Sanity check that incoming stream is empty
-if !eof(from_wgrib2)
-  error("wgrib2 sending more data than expected!")
-end
+# grid_length         = read(from_wgrib2, UInt32)
+# storm_motion_lat_vs = read(from_wgrib2, Float32, div(grid_length, 4))
+# grid_length_again   = read(from_wgrib2, UInt32)
+#
+# # Sanity check that incoming stream is empty
+# if !eof(from_wgrib2)
+#   error("wgrib2 sending more data than expected!")
+# end
 
 # storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
 # storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
@@ -650,10 +676,11 @@ end
 # layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
 # layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas_latlon_aligned
 
+println("Reading grid latlons...")
 
 # Figure out latlons for grid points
 
-all_pts = open(grid -> readdlm(grid, ','; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
+all_pts = open(grid -> readdlm(grid, ','; header=false), `wgrib2 $grib2_winds_latlon_aligned_path -end -inv /dev/null -gridout -`)
 
 all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 
@@ -703,9 +730,11 @@ end
 
 
 
+println("Estimating point areas...")
+
 # Estimate area represented by each grid point
 
-point_areas = zeros(grid_width*grid_height,1)
+point_areas = zeros(Float32, grid_width*grid_height,1)
 
 for j = 1:grid_height
   for i = 1:grid_width
@@ -737,7 +766,7 @@ all_pts = hcat(all_pts, point_areas)
 
 # headers = ["i", "j", "lat", "lon", "sq_miles"]
 #
-# tranposed_data = zeros(size(all_pts,1), size(all_pts,2) + size(layers,1))
+# tranposed_data = zeros(Float32, size(all_pts,1), size(all_pts,2) + size(layers,1))
 # tranposed_data[:,1:size(all_pts,2)] = all_pts
 #
 # out_col = length(headers) + 1
@@ -770,6 +799,7 @@ all_pts = hcat(all_pts, point_areas)
 # show(stdout_limited, "text/plain", tranposed_data)
 
 
+println("Loading training grid points set...")
 
 # Figure out which grid points are for training
 
@@ -787,17 +817,13 @@ end
 train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
 
 if size(train_pts,1) != length(training_pts_set)
-  error("Grid error: grid used in $grib2_path does not match grid used to determine training points")
+  error("Grid error: grid used in $grib2_winds_latlon_aligned_path does not match grid used to determine training points")
 end
 
 
 # Build final feature set
 
 # Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
-
-function relativize_angle(theta, ref)
-  mod(theta - ref + π, 2π) - π
-end
 
 # function relativize_angle(thetaAndRef)
 #   theta, ref = thetaAndRef
@@ -913,6 +939,9 @@ function diamond_search(predicate, center_i, center_j)
   matching_flat_is
 end
 
+
+println("Loading tornadoes...")
+
 tornado_rows, tornado_headers = readdlm("tornadoes.csv",','; header=true)
 
 start_seconds_col_i, = find(tornado_headers .== "begin_time_seconds")
@@ -983,9 +1012,69 @@ println("tornado segments")
 show(stdout_limited, "text/plain", tornado_segments)
 # max_error = 0.0
 
+println("Consolidating data...")
+regular_layer_order = Tuple{String,String}[]
+
+consolidated_data = zeros(size(layers,1),grid_width*grid_height)
+i = 1
+
+for layer_i in 1:size(layers,1)
+  abbrev, desc = layers[layer_i,:]
+
+  if abbrev == "UGRD" || abbrev == "USTM"
+  elseif abbrev == "VGRD" || abbrev == "VSTM"
+  else
+    layer_key = abbrev * ":" * desc
+    push!(regular_layer_order, (abbrev, desc))
+    consolidated_data[i,:] = layer_to_data[layer_key]
+    i += 1
+  end
+end
+
+wind_layer_order = Tuple{String,String}[]
+
+for layer_i in 1:size(layers,1)
+  abbrev, desc = layers[layer_i,:]
+
+  if abbrev == "UGRD" || abbrev == "USTM"
+    u_abbrev, u_desc = abbrev, desc
+    v_abbrev = "V" * u_abbrev[2:4]
+    v_desc   = abbrev == "USTM" ? "v storm motion" : u_desc
+
+    u_layer_key = u_abbrev * ":" * u_desc
+    v_layer_key = v_abbrev * ":" * v_desc
+
+    push!(wind_layer_order, (u_abbrev, u_desc))
+    consolidated_data[i,:] = layer_to_data[u_layer_key]
+    i += 1
+
+    push!(wind_layer_order, (v_abbrev, v_desc))
+    consolidated_data[i,:] = layer_to_data[v_layer_key]
+    i += 1
+  elseif abbrev == "VGRD" || abbrev == "VSTM"
+  else
+  end
+end
+
+println(i)
+show(stdout_limited, "text/plain", consolidated_data)
+
+
+
+println("Building features...")
+
 out_rows = Array{Float32}[]
 
-for j = 1:grid_height
+storm_motion_lon_us = layer_to_data["USTM:u storm motion"]
+storm_motion_lat_vs = layer_to_data["VSTM:v storm motion"]
+
+function relativize_angle(theta, ref)
+  mod(theta - ref + π, 2π) - π
+end
+
+Profile.init(delay=0.01)
+
+@profile for j = 1:grid_height
   println("$j")
   for i = 1:grid_width
     lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
@@ -1036,6 +1125,8 @@ for j = 1:grid_height
           GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
         end
 
+      # sort!(flat_is_within_25mi_and_30_mins_of_storm) # May help the prefetcher later.
+
       # find indices within 25 miles of -30 mins storm location
       flat_is_within_25mi_of_storm_30_mins_ago =
         filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
@@ -1061,129 +1152,156 @@ for j = 1:grid_height
 
       storm_r, storm_theta = u_v_to_r_theta(lon_motion, lat_motion)
 
-      # for each layer...
-      for layer_i in 1:size(layers,1)
-        abbrev, desc = layers[layer_i,:]
-        layer_key = abbrev * ":" * desc
+      data_at_point = consolidated_data[:, flat_i]
 
-        # if wind layer, relativize angle against storm motion
-        if abbrev == "UGRD"
-          u_layer_key = layer_key
-          v_layer_key = "V" * u_layer_key[2:length(u_layer_key)
+      data_around_storm_path       = consolidated_data[:,flat_is_within_25mi_and_30_mins_of_storm]' # This is still the slowest line--the indexing is really slow for some reason. Cache misses???
+      data_around_30_mins_ago      = data_around_storm_path[indexin(flat_is_within_25mi_of_storm_30_mins_ago, flat_is_within_25mi_and_30_mins_of_storm),:]
+      data_around_30_mins_from_now = data_around_storm_path[indexin(flat_is_within_25mi_of_storm_30_mins_from_now, flat_is_within_25mi_and_30_mins_of_storm),:]
 
-          # Need lat-lon relative u/v
-          # So can compare direction correctly to take mean across multiple grid points
-          # (Whether uv or polar, reference needs to be constant across points for a mean to be meaningful)
+      # for each regular layer...
+      i = 1
+      for _ in regular_layer_order
+        values_around_storm_path       = data_around_storm_path[:,i]
+        values_around_30_mins_ago      = data_around_30_mins_ago[:,i]
+        values_around_30_mins_from_now = data_around_30_mins_from_now[:,i]
 
-          # u_layer = layer_to_data[u_layer_key]
-          # v_layer = layer_to_data[v_layer_key]
-          #
-          # pt_r, pt_theta = u_v_to_r_theta(u_layer[flat_i], v_layer[flat_i])
-          # pt_theta_rel   = relativize_angle(pt_theta, storm_theta)
-          #
-          #
-          # us_around_storm_path       = u_layer[flat_is_within_25mi_and_30_mins_of_storm]
-          # vs_around_storm_path       = v_layer[flat_is_within_25mi_and_30_mins_of_storm]
-          # us_around_30_mins_ago      = u_layer[flat_is_within_25mi_of_storm_30_mins_ago]
-          # vs_around_30_mins_ago      = v_layer[flat_is_within_25mi_of_storm_30_mins_ago]
-          # us_around_30_mins_from_now = u_layer[flat_is_within_25mi_of_storm_30_mins_from_now]
-          # vs_around_30_mins_from_now = v_layer[flat_is_within_25mi_of_storm_30_mins_from_now]
-          #
-          # polar_vectors_around_storm_path = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
-          # rs_around_storm_path            = map(first, polar_vectors_around_storm_path)
-          # thetas_around_storm_path        = map(last,  polar_vectors_around_storm_path)
+        push!(out_row, data_at_point[i])
+        push!(out_row, mean(values_around_storm_path))
+        push!(out_row, minimum(values_around_storm_path))
+        push!(out_row, maximum(values_around_storm_path))
+        push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
 
-
-          # u_v_to_r_theta
-          # ustm_layer_to_fetch = desiredLayerToInventoryLine(["USTM" "u storm motion"])
-          # vstm_layer_to_fetch = desiredLayerToInventoryLine(["VSTM" "v storm motion"])
-          # println(to_wgrib2, ustm_layer_to_fetch[1] * ":" * ustm_layer_to_fetch[2])
-          # println(to_wgrib2, vstm_layer_to_fetch[1] * ":" * vstm_layer_to_fetch[2])
-          #
-          # close(to_wgrib2)
-          # close(wgrib2)
-          # wait(wgrib2)
-          #
-          # (from_wgrib2, wgrib2) = open(`wgrib2 $storm_winds_temp_file -header -inv /dev/null -bin -`)
-          #
-          # grid_length         = read(from_wgrib2, UInt32)
-          # storm_motion_lon_us = read(from_wgrib2, Float32, div(grid_length, 4))
-          # grid_length_again   = read(from_wgrib2, UInt32)
-          #
-          # grid_length         = read(from_wgrib2, UInt32)
-          # storm_motion_lat_vs = read(from_wgrib2, Float32, div(grid_length, 4))
-          # grid_length_again   = read(from_wgrib2, UInt32)
-          #
-          # # Sanity check that incoming stream is empty
-          # if !eof(from_wgrib2)
-          #   error("wgrib2 sending more data than expected!")
-          # end
-          #
-          # storm_motion_polar_vectors_latlon_aligned = map(uv_to_r_theta, zip(storm_motion_lon_us, storm_motion_lat_vs))
-          # storm_motion_rs_latlon_aligned            = map(first, storm_motion_polar_vectors_latlon_aligned)
-          # storm_motion_thetas_latlon_aligned        = map(last,  storm_motion_polar_vectors_latlon_aligned)
-
-          # println("storm_motion_rs")
-          # show(stdout_limited, "text/plain", storm_motion_rs)
-          # println("storm_motion_rs2")
-          # show(stdout_limited, "text/plain", storm_motion_rs_latlon_aligned)
-          # println("storm_motion_thetas")
-          # show(stdout_limited, "text/plain", storm_motion_thetas)
-          # println("storm_motion_thetas2")
-          # show(stdout_limited, "text/plain", storm_motion_thetas_latlon_aligned)
-
-          # run(`rm $storm_winds_temp_file`)
-
-          # layer_to_data["RSTM:latlon relative storm motion speed"] = storm_motion_rs_latlon_aligned
-          # layer_to_data["TSTM:latlon relative storm motion angle"] = storm_motion_thetas_latlon_aligned
-
-        elseif abbrev == "TGRD"
-
-        elseif abbrev == "USTM"
-
-        elseif abbrev == "TSTM"
-
-        else
-          layer_data = layer_to_data[layer_key]
-
-          values_around_storm_path       = layer_data[flat_is_within_25mi_and_30_mins_of_storm]
-          values_around_30_mins_ago      = layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
-          values_around_30_mins_from_now = layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
-
-          # point value
-          # local mean
-          # local min
-          # local max
-          # gradient in storm direction
-
-          push!(out_row, layer_data[flat_i])
-          push!(out_row, mean(values_around_storm_path))
-          push!(out_row, minimum(values_around_storm_path))
-          push!(out_row, maximum(values_around_storm_path))
-          push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
-        end
-
-
-
-        # add to output
-
-        # grab within 25 miles of -30 mins to +30 mins storm path
-        # if wind layer, relativize angle against storm motion
-        # find mean, min, max
-        # add to output
-
-        # grab within 25 miles of -30 mins storm location
-        # if wind layer, relativize angle against storm motion
-        # find mean
-        # grab within 25 miles of +30 mins storm location
-        # if wind layer, relativize angle against storm motion
-        # find mean
-        # add gradient to output
+        i += 1
       end
 
-      push!(out_rows, out_rows)
+      # for each wind layer...
+      for abbrev_desc in wind_layer_order
+        abbrev, _ = abbrev_desc
+        if abbrev[1] == 'U' # Handle u and v layers together, so skip v layers.
+          us_around_storm_path       = data_around_storm_path[:,i]
+          vs_around_storm_path       = data_around_storm_path[:,i+1]
+          us_around_30_mins_ago      = data_around_30_mins_ago[:,i]
+          vs_around_30_mins_ago      = data_around_30_mins_ago[:,i+1]
+          us_around_30_mins_from_now = data_around_30_mins_from_now[:,i]
+          vs_around_30_mins_from_now = data_around_30_mins_from_now[:,i+1]
+
+          # point value
+          r, theta = u_v_to_r_theta(data_at_point[i], data_at_point[i+1])
+          push!(out_row, r)
+          if abbrev != "USTM" # Always relativized to zero
+            push!(out_row, relativize_angle(theta, storm_theta))
+          end
+
+          # local mean
+          u_mean = mean(us_around_storm_path)
+          v_mean = mean(vs_around_storm_path)
+          mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
+          push!(out_row, mean_r)
+          push!(out_row, relativize_angle(mean_theta, storm_theta))
+
+          # local min
+          polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
+          rs     = map(first, polar_vectors)
+          thetas = map(r_theta -> relativize_angle(r_theta[2], storm_theta),  polar_vectors)
+          push!(out_row, minimum(rs))
+          push!(out_row, minimum(thetas))
+
+          # local max
+          push!(out_row, maximum(rs))
+          push!(out_row, maximum(thetas))
+
+          # gradient in storm direction
+          delta_u = mean(us_around_30_mins_from_now) - mean(us_around_30_mins_ago)
+          delta_v = mean(vs_around_30_mins_from_now) - mean(vs_around_30_mins_ago)
+          mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
+          push!(out_row, mean_delta_r)
+          push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+
+          i += 2
+        end
+      end
+
+      # # for each layer...
+      # for layer_i in 1:size(layers,1)
+      #   abbrev, desc = layers[layer_i,:]
+      #   layer_key = abbrev * ":" * desc
+      #
+      #   # if wind layer, relativize angle against storm motion
+      #   if abbrev == "UGRD" || abbrev == "USTM"
+      #     u_layer_key = layer_key
+      #     v_layer_key = abbrev == "UGRD" ? "V" * u_layer_key[2:length(u_layer_key)] : "VSTM:v storm motion"
+      #
+      #     u_layer_data = layer_to_data[u_layer_key]
+      #     v_layer_data = layer_to_data[v_layer_key]
+      #
+      #     us_around_storm_path       = u_layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+      #     vs_around_storm_path       = v_layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+      #     us_around_30_mins_ago      = u_layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+      #     vs_around_30_mins_ago      = v_layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+      #     us_around_30_mins_from_now = u_layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+      #     vs_around_30_mins_from_now = v_layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+      #
+      #     # point value
+      #     r, theta = u_v_to_r_theta(u_layer_data[flat_i], v_layer_data[flat_i])
+      #     push!(out_row, r)
+      #     push!(out_row, relativize_angle(theta, storm_theta))
+      #
+      #     # local mean
+      #     u_mean = mean(us_around_storm_path)
+      #     v_mean = mean(vs_around_storm_path)
+      #     mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
+      #     push!(out_row, mean_r)
+      #     if abbrev != "USTM" # Always relativized to zero
+      #       push!(out_row, relativize_angle(mean_theta, storm_theta))
+      #     end
+      #
+      #     # local min
+      #     polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
+      #     rs     = map(first, polar_vectors)
+      #     thetas = map(r_theta -> relativize_angle(r_theta[2], storm_theta),  polar_vectors)
+      #     push!(out_row, minimum(rs))
+      #     push!(out_row, minimum(thetas))
+      #
+      #     # local max
+      #     push!(out_row, maximum(rs))
+      #     push!(out_row, maximum(thetas))
+      #
+      #     # gradient in storm direction
+      #     delta_u = mean(us_around_30_mins_from_now) - mean(us_around_30_mins_ago)
+      #     delta_v = mean(vs_around_30_mins_from_now) - mean(vs_around_30_mins_ago)
+      #     mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
+      #     push!(out_row, mean_delta_r)
+      #     push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+      #
+      #   elseif abbrev == "VGRD" || abbrev == "VSTM"
+      #
+      #     # Handled above.
+      #
+      #   else
+      #     layer_data = layer_to_data[layer_key]
+      #
+      #     values_around_storm_path       = layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+      #     values_around_30_mins_ago      = layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+      #     values_around_30_mins_from_now = layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+      #
+      #     # point value
+      #     # local mean
+      #     # local min
+      #     # local max
+      #     # gradient in storm direction
+      #
+      #     push!(out_row, layer_data[flat_i])
+      #     push!(out_row, mean(values_around_storm_path))
+      #     push!(out_row, minimum(values_around_storm_path))
+      #     push!(out_row, maximum(values_around_storm_path))
+      #     push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
+      #   end
+      # end
+
+      push!(out_rows, out_row)
     end
   end
 end
 
+Profile.print(format=:flat, noisefloor=2.0, sortedby=:count)
 # println(max_error)
