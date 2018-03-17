@@ -689,6 +689,11 @@ all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 const grid_width  = Int64(maximum(all_pts[:,1]))
 const grid_height = Int64(maximum(all_pts[:,2]))
 
+println("min lat ",minimum(all_pts[:,3]))
+println("max lat ",maximum(all_pts[:,3]))
+println("min lon ",minimum(all_pts[:,4]))
+println("min lon ",maximum(all_pts[:,4]))
+
 const grid_lat_lons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(grid_width*grid_height)) :: Array{Tuple{Float64,Float64},1}
 
 function get_grid_i(w_to_e_col :: Int64, s_to_n_row :: Int64) :: Int64
@@ -732,11 +737,35 @@ end
 
 
 
+println("Loading training grid points set...")
+
+# Figure out which grid points are for training
+
+training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
+training_pts_set = Set{Tuple{Int32,Int32}}(Set())
+
+function lat_lon_to_key(lat :: Float64, lon :: Float64)
+  (Int32(round(lat*1000)), Int32(round(lon*1000)))
+end
+
+for i in 1:size(training_pts,1)
+  push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
+end
+
+train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
+
+if size(train_pts,1) != length(training_pts_set)
+  error("Grid error: grid used in $grib2_winds_latlon_aligned_path does not match grid used to determine training points")
+end
+
+
 println("Estimating point areas...")
 
 # Estimate area represented by each grid point
 
 point_areas = zeros(Float32, grid_width*grid_height,1)
+
+max_point_area = 0.0f0
 
 for j = 1:grid_height
   for i = 1:grid_width
@@ -758,9 +787,14 @@ for j = 1:grid_height
     ne_area = e_distance * n_distance
 
     point_areas[flat_i] = sw_area + se_area + nw_area + ne_area
+
+    if lat_lon_to_key(lat, lon) in training_pts_set && point_areas[flat_i] > max_point_area
+      max_point_area = point_areas[flat_i]
+    end
   end
 end
 
+point_weights = point_areas / max_point_area
 
 # Transpose features to row per point
 
@@ -797,28 +831,6 @@ end
 # show(stdout_limited, "text/plain", headers)
 # println("tranposed_data")
 # show(stdout_limited, "text/plain", tranposed_data)
-
-
-println("Loading training grid points set...")
-
-# Figure out which grid points are for training
-
-training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
-training_pts_set = Set{Tuple{Int32,Int32}}(Set())
-
-function lat_lon_to_key(lat :: Float64, lon :: Float64)
-  (Int32(round(lat*1000)), Int32(round(lon*1000)))
-end
-
-for i in 1:size(training_pts,1)
-  push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
-end
-
-train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
-
-if size(train_pts,1) != length(training_pts_set)
-  error("Grid error: grid used in $grib2_winds_latlon_aligned_path does not match grid used to determine training points")
-end
 
 
 # Build final feature set
@@ -1173,6 +1185,8 @@ Profile.init(delay=0.01)
 
 function makeFeatures(data::Array{Float32,2})
   out_rows = Array{Float32}[]
+  headers  = String[]
+  first_pt = true
 
   for j = 1:grid_height
     println("$j")
@@ -1181,6 +1195,8 @@ function makeFeatures(data::Array{Float32,2})
 
       # skip if not a training point
       if lat_lon_to_key(lat, lon) in training_pts_set
+
+        out_row = Float32[]
 
         is_close_to_tornado = false
         for (tlat1, tlon1, tlat2, tlon2) in tornado_segments
@@ -1200,6 +1216,29 @@ function makeFeatures(data::Array{Float32,2})
         # minus_30_mins_lat, minus_30_mins_lon = GeoUtils.instant_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
         plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.integrate_velocity(lat, lon,  Float64(lat_motion),  Float64(lon_motion), 30*ONE_MINUTE)
         minus_30_mins_lat, minus_30_mins_lon = GeoUtils.integrate_velocity(lat, lon, -Float64(lat_motion), -Float64(lon_motion), 30*ONE_MINUTE)
+
+        push!(out_row, Float32(lat))
+        push!(out_row, Float32(lon))
+        push!(out_row, Float32(lat_motion))
+        push!(out_row, Float32(lon_motion))
+        push!(out_row, Float32(plus_30_mins_lat))
+        push!(out_row, Float32(plus_30_mins_lon))
+        push!(out_row, Float32(minus_30_mins_lat))
+        push!(out_row, Float32(minus_30_mins_lon))
+        push!(out_row, is_close_to_tornado ? 1.0f0 : 0.0f0)
+        push!(out_row, point_weights[flat_i])
+        if first_pt
+          push!(headers, "lat")
+          push!(headers, "lon")
+          push!(headers, "lat_motion")
+          push!(headers, "lon_motion")
+          push!(headers, "plus 30 mins lat")
+          push!(headers, "plus 30 mins lon")
+          push!(headers, "minus 30 mins lat")
+          push!(headers, "minus 30 mins lon")
+          push!(headers, "tornado within 25mi")
+          push!(headers, "training weight")
+        end
 
         # err1, errd1 = GeoUtils.compare_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
         # err2, errd2 = GeoUtils.compare_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
@@ -1230,7 +1269,7 @@ function makeFeatures(data::Array{Float32,2})
         # find indices within 25 miles of -30 mins storm location
         flat_is_within_25mi_of_storm_30_mins_ago =
           filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
-            candiate_lat, candidate_lon = grid_lat_lons[flat_i]
+            candiate_lat, candidate_lon = grid_lat_lons[candidate_flat_i]
 
             # lightning, instant, instantish, fast, fastish = GeoUtils.compare_distances(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
             # if instant > 0.004
@@ -1243,12 +1282,11 @@ function makeFeatures(data::Array{Float32,2})
         # find indices within 25 miles of +30 mins storm location
         flat_is_within_25mi_of_storm_30_mins_from_now =
           filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
-            candiate_lat, candidate_lon = grid_lat_lons[flat_i]
+            candiate_lat, candidate_lon = grid_lat_lons[candidate_flat_i]
             GeoUtils.instant_distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
           end
 
 
-        out_row = Float32[]
 
         storm_r, storm_theta = u_v_to_r_theta(lon_motion, lat_motion)
 
@@ -1261,7 +1299,7 @@ function makeFeatures(data::Array{Float32,2})
 
         # for each regular layer...
         k = 1
-        for _ in regular_layer_order
+        for abbrev_desc in regular_layer_order
           # values_around_storm_path       = data_around_storm_path[k,:]
           # values_around_30_mins_ago      = data_around_30_mins_ago[k,:]
           # values_around_30_mins_from_now = data_around_30_mins_from_now[k,:]
@@ -1272,12 +1310,21 @@ function makeFeatures(data::Array{Float32,2})
           push!(out_row, maximum(@view data_around_storm_path[k,:]))
           push!(out_row, mean(@view data_around_30_mins_from_now[k,:]) - mean(@view data_around_30_mins_ago[k,:]))
 
+          if first_pt
+            abbrev, desc = abbrev_desc
+            push!(headers, abbrev * ":" * desc * ":point")
+            push!(headers, abbrev * ":" * desc * ":storm path mean")
+            push!(headers, abbrev * ":" * desc * ":storm path min")
+            push!(headers, abbrev * ":" * desc * ":storm path max")
+            push!(headers, abbrev * ":" * desc * ":storm path gradient")
+          end
+
           k += 1
         end
 
         # for each wind layer...
         for winds_layer_i in 1:length(wind_layer_order)
-          abbrev, _ = wind_layer_order[winds_layer_i]
+          abbrev, desc = wind_layer_order[winds_layer_i]
           if abbrev[1] == 'U' # Handle u and v layers together, so skip v layers.
             # us_around_storm_path       = data_around_storm_path[k,:]
             # vs_around_storm_path       = data_around_storm_path[k+1,:]
@@ -1288,6 +1335,14 @@ function makeFeatures(data::Array{Float32,2})
             if abbrev != "USTM" # Always relativized to zero
               push!(out_row, relativize_angle(theta, storm_theta))
             end
+            if first_pt
+              if abbrev != "USTM"
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":point")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":point")
+              else
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:point")
+              end
+            end
 
             # local mean
             u_mean = mean(@view data_around_storm_path[k,:])
@@ -1295,6 +1350,15 @@ function makeFeatures(data::Array{Float32,2})
             mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
             push!(out_row, mean_r)
             push!(out_row, relativize_angle(mean_theta, storm_theta))
+            if first_pt
+              if abbrev != "USTM"
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path mean")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path mean")
+              else
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path mean")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path mean")
+              end
+            end
 
             # # local min
             # rs     = polar_winds_around_storm_path[winds_layer_i*2-1, :]
@@ -1329,6 +1393,19 @@ function makeFeatures(data::Array{Float32,2})
             push!(out_row, min_theta)
             push!(out_row, max_r)
             push!(out_row, max_theta)
+            if first_pt
+              if abbrev != "USTM"
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path min")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path min")
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path max")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path max")
+              else
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path min")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path min")
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path max")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path max")
+              end
+            end
 
             # version below is slow...perhaps because of allocations.
             # polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
@@ -1353,6 +1430,15 @@ function makeFeatures(data::Array{Float32,2})
             mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
             push!(out_row, mean_delta_r)
             push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+            if first_pt
+              if abbrev != "USTM"
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path gradient")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path gradient")
+              else
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path gradient")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path gradient")
+              end
+            end
 
             k += 2
           end
@@ -1436,14 +1522,65 @@ function makeFeatures(data::Array{Float32,2})
         # end
 
         push!(out_rows, out_row)
+        first_pt = false
       end
     end
   end
 
-  out_rows
+  (headers, out_rows)
 end
 
-makeFeatures(consolidated_data)
+headers, out_rows = makeFeatures(consolidated_data)
+
+# println(headers)
+
+# open("training.csv", "w") do f
+#   writedlm(f, [headers], ',')
+#   writedlm(f, out_rows[[6607, 14570, 11574, 34094, 12879, 5687, 27445, 7043, 37298, 37411, 11986, 31411, 12133, 8139, 10896, 30805, 16827, 32259, 11552, 9795, 32675, 16649, 21560, 629, 2758, 2046, 21768, 18020, 34494, 20742, 13081, 19156, 27910, 10503, 1756, 37709, 7693, 4233, 10974, 28505, 35292, 17995, 9313, 12762, 37430, 1790, 12494, 34689, 23741, 6236, 17549, 11166, 14494, 25405, 28983, 25011, 20006, 17108, 28070, 1670, 10739, 31648, 15594, 26814, 21439, 16716, 29435, 2441, 27199, 9130, 21846, 7085, 32196, 1456, 26125, 12281, 7683, 30286, 35499, 13931, 4163, 1728, 403, 17275, 22366, 8175, 2672, 31774, 17210, 13522, 35876, 32889, 18157, 28099, 16052, 13984, 36386, 29747, 728, 4622]], ',')
+# end
+
+
+# Requires GMT >=6
+function plot(col_i)
+  header = headers[col_i]
+  println(header)
+  base_name = replace(header, r" |:|/", "_")
+  open(base_name * ".xyz", "w") do f
+    # lon lat val
+    writedlm(f, map(row -> (row[2], row[1], row[col_i]), out_rows), '\t')
+  end
+  run(`gmt sphinterpolate $(base_name * ".xyz") -R-139/-58/17/58 -I1k -Q0 -G$(base_name * ".nc")`)
+  run(`gmt begin $base_name pdf`)
+  run(`gmt grdimage $(base_name * ".nc") -Jl-100/35/33/45/0.3`)
+  run(`gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest`)
+  run(pipeline(`gmt grd2cpt $(base_name * ".nc")`, `gmt colorbar -DjCB`))
+  run(`gmt end`)
+  run(`open $(base_name * ".pdf")`)
+  run(`rm $(base_name * ".xyz")`)
+  run(`rm $(base_name * ".nc")`)
+end
+
+# plot(1076) # point storm speed
+# plot(9) # tornadoes
+# plot(10) # training weight
+# plot(16) # point cape
+# plot(846) # surface tmp
+# plot(847) # surface tmp
+# plot(848) # surface tmp
+# plot(849) # surface tmp
+# plot(850) # surface tmp
+
+
+# gmt nearneighbor cape.xyz -R-139/-58/17/58 -I1k -S15k -Gcape.nc
+# gmt surface cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
+# gmt triangulate cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
+# gmt sphinterpolate cape.xyz -R-139/-58/17/58 -I1k -Q0 -Gcape.nc
+# gmt begin map pdf
+# gmt grdimage cape.nc -Jl-100/35/33/45/0.3
+# gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest
+# gmt end
+# open map.pdf
+
 
 # Profile.print()
 # Profile.print(format=:flat, noisefloor=2.0, sortedby=:count)
