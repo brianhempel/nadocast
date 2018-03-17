@@ -540,7 +540,7 @@ layers_to_fetch = mapslices(desiredLayerToInventoryLine, layers, 2)
 
 # show(stdout_limited, "text/plain", layers_to_fetch)
 
-layer_to_data = Dict{String,Array{Float64}}()
+layer_to_data = Dict{String,Array{Float32}}()
 
 # If you don't redirect inventory to /dev/null, it goes to stdout. No way to turn inventory off.
 (from_wgrib2, to_wgrib2, wgrib2) = readandwrite(`wgrib2 $grib2_winds_latlon_aligned_path -i -header -inv /dev/null -bin -`)
@@ -575,19 +575,19 @@ end
 # Normalize wind angle relative to storm motion (convert to polar: ground speed + relative direction)
 
 # UV to polar
-function uv_to_r_theta(pair)
+function uv_to_r_theta(pair::Tuple{Float32,Float32})::Tuple{Float32,Float32}
   u, v = pair
   u_v_to_r_theta(u, v)
 end
 
-function u_v_to_r_theta(u, v)
+function u_v_to_r_theta(u::Float32, v::Float32)::Tuple{Float32,Float32}
   if u == 0.0 && v == 0.0
     return (0.0, 0.0)
   end
   r     = sqrt(u^2 + v^2)
   theta = atan2(v, u) # Angle, in radians
   theta = mod(theta + π, 2π) - π # Turns π into -π (otherwise a passthrough here)
-  (r, theta)
+  (Float32(r), Float32(theta))
 end
 
 # storm_motion_us = layer_to_data["USTM:u storm motion"]
@@ -689,7 +689,9 @@ all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 const grid_width  = Int64(maximum(all_pts[:,1]))
 const grid_height = Int64(maximum(all_pts[:,2]))
 
-function get_grid_i(w_to_e_col, s_to_n_row)
+const grid_lat_lons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(grid_width*grid_height)) :: Array{Tuple{Float64,Float64},1}
+
+function get_grid_i(w_to_e_col :: Int64, s_to_n_row :: Int64) :: Int64
   if w_to_e_col < 1
     error("Error indexing into grid, asked for column $w_to_e_col")
   elseif w_to_e_col > grid_width
@@ -702,7 +704,7 @@ function get_grid_i(w_to_e_col, s_to_n_row)
   grid_width*(s_to_n_row-1) + w_to_e_col
 end
 
-function is_on_grid(w_to_e_col, s_to_n_row)
+function is_on_grid(w_to_e_col :: Int64, s_to_n_row :: Int64) :: Bool
   if w_to_e_col < 1
     false
   elseif w_to_e_col > grid_width
@@ -716,15 +718,15 @@ function is_on_grid(w_to_e_col, s_to_n_row)
   end
 end
 
-function get_grid_lat_lon_for_flat_i(flat_i)
-  lat = all_pts[flat_i,3]
-  lon = all_pts[flat_i,4]
-  (lat, lon)
-end
+# function get_grid_lat_lon_for_flat_i(flat_i :: Int64) :: Tuple{Float64,Float64}
+#   lat = all_pts[flat_i,3]
+#   lon = all_pts[flat_i,4]
+#   (lat, lon)
+# end
 
-function get_grid_lat_lon_and_flat_i(w_to_e_col, s_to_n_row)
+function get_grid_lat_lon_and_flat_i(w_to_e_col :: Int64, s_to_n_row :: Int64) :: Tuple{Float64,Float64,Int64}
   flat_i   = get_grid_i(w_to_e_col, s_to_n_row)
-  lat, lon = get_grid_lat_lon_for_flat_i(flat_i)
+  lat, lon = grid_lat_lons[flat_i]
   (lat, lon, flat_i)
 end
 
@@ -758,8 +760,6 @@ for j = 1:grid_height
     point_areas[flat_i] = sw_area + se_area + nw_area + ne_area
   end
 end
-
-all_pts = hcat(all_pts, point_areas)
 
 
 # Transpose features to row per point
@@ -806,7 +806,7 @@ println("Loading training grid points set...")
 training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
 training_pts_set = Set{Tuple{Int32,Int32}}(Set())
 
-function lat_lon_to_key(lat, lon)
+function lat_lon_to_key(lat :: Float64, lon :: Float64)
   (Int32(round(lat*1000)), Int32(round(lon*1000)))
 end
 
@@ -842,7 +842,7 @@ const repeated = Base.Iterators.repeated
 #  (b) no "skinny parts" that could slip between grid points
 #
 # Circles and extruded circles are good. (What we use.)
-function square_ring_search(predicate, center_i, center_j)
+function square_ring_search(predicate, center_i :: Int64, center_j :: Int64) :: Array{Int64,1}
   any_found_this_ring     = false
   still_searching_on_grid = true
   matching_flat_is = []
@@ -891,12 +891,13 @@ function square_ring_search(predicate, center_i, center_j)
 end
 
 # A little faster. (Each layer increases by 4 grid points rather than 8, so we have more opportunities to terminate.)
-function diamond_search(predicate, center_i, center_j)
+function diamond_search(predicate, center_i :: Int64, center_j :: Int64) :: Array{Int64,1}
   any_found_this_diamond  = false
   still_searching_on_grid = true
   matching_flat_is = []
 
-  r = 0
+  r = 0 :: Int64
+  # rs = Int64[0]
   while still_searching_on_grid && (isempty(matching_flat_is) || any_found_this_diamond)
     any_found_this_diamond  = false
     still_searching_on_grid = false
@@ -910,17 +911,8 @@ function diamond_search(predicate, center_i, center_j)
     #     1
 
     if r == 0
-      diamond = [(center_i, center_j)]
-    else
-      s_e = zip(center_i:center_i+r-1,    center_j-r:center_j-1)
-      e_n = zip(center_i+r:-1:center_i+1, center_j:center_j+r-1)
-      n_w = zip(center_i:-1:center_i-r+1, center_j+r:-1:center_j+1)
-      w_s = zip(center_i-r:center_i-1,    center_j:-1:center_j-r+1)
-      diamond = collect(Base.Iterators.flatten((s_e, e_n, n_w, w_s)))
-    end
-
-    for diamond_i = 1:length(diamond)
-      i, j = diamond[diamond_i]
+      # diamond = [(center_i, center_j)]
+      i, j = center_i, center_j
       if is_on_grid(i, j)
         still_searching_on_grid = true
         lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
@@ -929,9 +921,76 @@ function diamond_search(predicate, center_i, center_j)
           push!(matching_flat_is, flat_i)
         end
       end
+    else
+      for k = 0:(r-1)
+        i, j = center_i+k, center_j-r+k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+          if predicate(lat, lon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+        i, j = center_i+r-k, center_j+k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+          if predicate(lat, lon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+        i, j = center_i-k, center_j+r-k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+          if predicate(lat, lon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+        i, j = center_i-r+k, center_j-k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+          if predicate(lat, lon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+      end
+      # Too many allocations???
+      # s_e = map(k -> (center_i+k, center_j-r+k), rs)
+      # e_n = map(k -> (center_i+r-k, center_j+k), rs)
+      # n_w = map(k -> (center_i-k, center_j+r-k), rs)
+      # w_s = map(k -> (center_i-r+k, center_j-k), rs)
+      # diamond = [s_e; e_n; n_w; w_s]
+      # s_e = zip(center_i:center_i+r-1,    center_j-r:center_j-1)
+      # e_n = zip(center_i+r:-1:center_i+1, center_j:center_j+r-1)
+      # n_w = zip(center_i:-1:center_i-r+1, center_j+r:-1:center_j+1)
+      # w_s = zip(center_i-r:center_i-1,    center_j:-1:center_j-r+1)
+      # diamond = collect(Base.Iterators.flatten((s_e, e_n, n_w, w_s))) # this line is slow
     end
 
+    # for diamond_i = 1:length(diamond)
+    #   i, j = diamond[diamond_i]
+    #   if is_on_grid(i, j)
+    #     still_searching_on_grid = true
+    #     lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+    #     if predicate(lat, lon)
+    #       any_found_this_diamond = true
+    #       push!(matching_flat_is, flat_i)
+    #     end
+    #   end
+    # end
+
     r += 1
+    # push!(rs, r)
   end
 
   # print(" $r ")
@@ -966,13 +1025,13 @@ if size(relevant_tornadoes,1) > 0
 end
 
 tornado_segments = map(1:size(relevant_tornadoes,1)) do i
-  start_seconds = relevant_tornadoes[i, start_seconds_col_i]
-  end_seconds   = relevant_tornadoes[i, end_seconds_col_i]
+  start_seconds = Int64(relevant_tornadoes[i, start_seconds_col_i])
+  end_seconds   = Int64(relevant_tornadoes[i, end_seconds_col_i])
   duration      = end_seconds - start_seconds
-  start_lat     = relevant_tornadoes[i, start_lat_col_i]
-  start_lon     = relevant_tornadoes[i, start_lon_col_i]
-  end_lat       = relevant_tornadoes[i, end_lat_col_i]
-  end_lon       = relevant_tornadoes[i, end_lon_col_i]
+  start_lat     = Float64(relevant_tornadoes[i, start_lat_col_i])
+  start_lon     = Float64(relevant_tornadoes[i, start_lon_col_i])
+  end_lat       = Float64(relevant_tornadoes[i, end_lat_col_i])
+  end_lon       = Float64(relevant_tornadoes[i, end_lon_col_i])
 
   if duration == 0
     ( start_lat
@@ -1003,7 +1062,7 @@ tornado_segments = map(1:size(relevant_tornadoes,1)) do i
     , seg_end_lon
     )
   end
-end
+end :: Array{Tuple{Float64,Float64,Float64,Float64},1}
 
 println("relevant tornadoes")
 show(stdout_limited, "text/plain", relevant_tornadoes)
@@ -1015,7 +1074,7 @@ show(stdout_limited, "text/plain", tornado_segments)
 println("Consolidating data...")
 regular_layer_order = Tuple{String,String}[]
 
-consolidated_data = zeros(size(layers,1),grid_width*grid_height)
+consolidated_data = zeros(Float32, size(layers,1),grid_width*grid_height)
 i = 1
 
 for layer_i in 1:size(layers,1)
@@ -1033,6 +1092,8 @@ end
 
 wind_layer_order = Tuple{String,String}[]
 
+const first_wind_layer_i = i
+
 for layer_i in 1:size(layers,1)
   abbrev, desc = layers[layer_i,:]
 
@@ -1044,17 +1105,54 @@ for layer_i in 1:size(layers,1)
     u_layer_key = u_abbrev * ":" * u_desc
     v_layer_key = v_abbrev * ":" * v_desc
 
-    push!(wind_layer_order, (u_abbrev, u_desc))
     consolidated_data[i,:] = layer_to_data[u_layer_key]
     i += 1
 
-    push!(wind_layer_order, (v_abbrev, v_desc))
     consolidated_data[i,:] = layer_to_data[v_layer_key]
     i += 1
+
+    push!(wind_layer_order, (u_abbrev, u_desc))
+
   elseif abbrev == "VGRD" || abbrev == "VSTM"
   else
   end
 end
+
+# r_theta_data = zeros(Float32, size(wind_layer_order,1)*2,grid_width*grid_height)
+#
+# # println(first_wind_layer_i)
+# # println(length(wind_layer_order))
+#
+# for winds_layer_i in 1:length(wind_layer_order)
+#   u_data = consolidated_data[first_wind_layer_i+winds_layer_i*2-2,:]
+#   v_data = consolidated_data[first_wind_layer_i+winds_layer_i*2-1,:]
+#
+#   for k in 1:length(u_data)
+#     r, theta = u_v_to_r_theta(u_data[k], v_data[k])
+#     r_theta_data[winds_layer_i*2-1, k] = r
+#     r_theta_data[winds_layer_i*2, k]   = theta
+#   end
+#   # if abbrev == "UGRD" || abbrev == "USTM"
+#   #   u_abbrev, u_desc = abbrev, desc
+#   #   v_abbrev = "V" * u_abbrev[2:4]
+#   #   v_desc   = abbrev == "USTM" ? "v storm motion" : u_desc
+#   #
+#   #   u_layer_key = u_abbrev * ":" * u_desc
+#   #   v_layer_key = v_abbrev * ":" * v_desc
+#   #
+#   #   push!(wind_layer_order, (u_abbrev, u_desc))
+#   #   consolidated_data[i,:] = layer_to_data[u_layer_key]
+#   #   i += 1
+#   #
+#   #   push!(wind_layer_order, (v_abbrev, v_desc))
+#   #   consolidated_data[i,:] = layer_to_data[v_layer_key]
+#   #   i += 1
+#   # elseif abbrev == "VGRD" || abbrev == "VSTM"
+#   # else
+#   # end
+# end
+
+
 
 println(i)
 show(stdout_limited, "text/plain", consolidated_data)
@@ -1063,245 +1161,294 @@ show(stdout_limited, "text/plain", consolidated_data)
 
 println("Building features...")
 
-out_rows = Array{Float32}[]
+storm_motion_lon_us = layer_to_data["USTM:u storm motion"] :: Array{Float32,1}
+storm_motion_lat_vs = layer_to_data["VSTM:v storm motion"] :: Array{Float32,1}
 
-storm_motion_lon_us = layer_to_data["USTM:u storm motion"]
-storm_motion_lat_vs = layer_to_data["VSTM:v storm motion"]
-
-function relativize_angle(theta, ref)
-  mod(theta - ref + π, 2π) - π
+function relativize_angle(theta::Float32, ref::Float32)::Float32
+  Float32(mod(theta - ref + π, 2π) - π)
 end
+
 
 Profile.init(delay=0.01)
 
-@profile for j = 1:grid_height
-  println("$j")
-  for i = 1:grid_width
-    lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+function makeFeatures(data::Array{Float32,2})
+  out_rows = Array{Float32}[]
 
-    # skip if not a training point
-    if lat_lon_to_key(lat, lon) in training_pts_set
+  for j = 1:grid_height
+    println("$j")
+    for i = 1:grid_width
+      lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
 
-      is_close_to_tornado = false
-      for (tlat1, tlon1, tlat2, tlon2) in tornado_segments
-        if GeoUtils.instant_distance_to_line(lat, lon, tlat1, tlon1, tlat2, tlon2) <= 25.0 * GeoUtils.METERS_PER_MILE
-          is_close_to_tornado = true
+      # skip if not a training point
+      if lat_lon_to_key(lat, lon) in training_pts_set
+
+        is_close_to_tornado = false
+        for (tlat1, tlon1, tlat2, tlon2) in tornado_segments
+          if GeoUtils.instant_distance_to_line(lat, lon, tlat1, tlon1, tlat2, tlon2) <= 25.0 * GeoUtils.METERS_PER_MILE
+            is_close_to_tornado = true
+          end
         end
-      end
-      if is_close_to_tornado
-        print("t")
-      end
-
-      lat_motion = storm_motion_lat_vs[flat_i] # m / s
-      lon_motion = storm_motion_lon_us[flat_i] # m / S
-
-      # Doesn't seem to save any time.
-      # plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.instant_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
-      # minus_30_mins_lat, minus_30_mins_lon = GeoUtils.instant_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
-      plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
-      minus_30_mins_lat, minus_30_mins_lon = GeoUtils.integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
-
-      # err1, errd1 = GeoUtils.compare_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
-      # err2, errd2 = GeoUtils.compare_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
-      #
-      # if errd1 > GeoUtils.METERS_PER_MILE * .05 || errd2 > GeoUtils.METERS_PER_MILE * .05
-      #   println((err1, err2, errd1/GeoUtils.METERS_PER_MILE, errd2/GeoUtils.METERS_PER_MILE))
-      # end
-
-      # println((minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat,  plus_30_mins_lon))
-
-      # find indices within 25 miles of -30 mins to +30 mins storm path
-      flat_is_within_25mi_and_30_mins_of_storm =
-        diamond_search(i, j) do lat, lon
-          # d = GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
-          # if d > 20.0 * GeoUtils.METERS_PER_MILE
-          #   fast_error_pct = GeoUtils.compare_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
-          #   global max_error = max(max_error, fast_error_pct)
-          #   if fast_error_pct > 0.4
-          #     println((fast_error_pct, d, lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon))
-          #   end
-          # end
-          # GeoUtils.distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon, 1.0) <= 25.0 * GeoUtils.METERS_PER_MILE
-          GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+        if is_close_to_tornado
+          print("t")
         end
 
-      # sort!(flat_is_within_25mi_and_30_mins_of_storm) # May help the prefetcher later.
+        lat_motion = storm_motion_lat_vs[flat_i] # m / s
+        lon_motion = storm_motion_lon_us[flat_i] # m / S
 
-      # find indices within 25 miles of -30 mins storm location
-      flat_is_within_25mi_of_storm_30_mins_ago =
-        filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
-          candiate_lat, candidate_lon = get_grid_lat_lon_for_flat_i(candidate_flat_i)
+        # Doesn't seem to save any time.
+        # plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.instant_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
+        # minus_30_mins_lat, minus_30_mins_lon = GeoUtils.instant_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
+        plus_30_mins_lat,  plus_30_mins_lon  = GeoUtils.integrate_velocity(lat, lon,  Float64(lat_motion),  Float64(lon_motion), 30*ONE_MINUTE)
+        minus_30_mins_lat, minus_30_mins_lon = GeoUtils.integrate_velocity(lat, lon, -Float64(lat_motion), -Float64(lon_motion), 30*ONE_MINUTE)
 
-          # lightning, instant, instantish, fast, fastish = GeoUtils.compare_distances(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
-          # if instant > 0.004
-          #   d = GeoUtils.distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
-          #   println((d, lightning, instant, instantish, fast, fastish))
-          # end
-          GeoUtils.instant_distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
-        end
+        # err1, errd1 = GeoUtils.compare_integrate_velocity(lat, lon,  lat_motion,  lon_motion, 30*ONE_MINUTE)
+        # err2, errd2 = GeoUtils.compare_integrate_velocity(lat, lon, -lat_motion, -lon_motion, 30*ONE_MINUTE)
+        #
+        # if errd1 > GeoUtils.METERS_PER_MILE * .05 || errd2 > GeoUtils.METERS_PER_MILE * .05
+        #   println((err1, err2, errd1/GeoUtils.METERS_PER_MILE, errd2/GeoUtils.METERS_PER_MILE))
+        # end
 
-      # find indices within 25 miles of +30 mins storm location
-      flat_is_within_25mi_of_storm_30_mins_from_now =
-        filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
-          candiate_lat, candidate_lon = get_grid_lat_lon_for_flat_i(candidate_flat_i)
-          GeoUtils.instant_distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
-        end
+        # println((minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat,  plus_30_mins_lon))
 
-
-      out_row = Float32[]
-
-      storm_r, storm_theta = u_v_to_r_theta(lon_motion, lat_motion)
-
-      data_at_point = consolidated_data[:, flat_i]
-
-      data_around_storm_path       = consolidated_data[:,flat_is_within_25mi_and_30_mins_of_storm]' # This is still the slowest line--the indexing is really slow for some reason. Cache misses???
-      data_around_30_mins_ago      = data_around_storm_path[indexin(flat_is_within_25mi_of_storm_30_mins_ago, flat_is_within_25mi_and_30_mins_of_storm),:]
-      data_around_30_mins_from_now = data_around_storm_path[indexin(flat_is_within_25mi_of_storm_30_mins_from_now, flat_is_within_25mi_and_30_mins_of_storm),:]
-
-      # for each regular layer...
-      i = 1
-      for _ in regular_layer_order
-        values_around_storm_path       = data_around_storm_path[:,i]
-        values_around_30_mins_ago      = data_around_30_mins_ago[:,i]
-        values_around_30_mins_from_now = data_around_30_mins_from_now[:,i]
-
-        push!(out_row, data_at_point[i])
-        push!(out_row, mean(values_around_storm_path))
-        push!(out_row, minimum(values_around_storm_path))
-        push!(out_row, maximum(values_around_storm_path))
-        push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
-
-        i += 1
-      end
-
-      # for each wind layer...
-      for abbrev_desc in wind_layer_order
-        abbrev, _ = abbrev_desc
-        if abbrev[1] == 'U' # Handle u and v layers together, so skip v layers.
-          us_around_storm_path       = data_around_storm_path[:,i]
-          vs_around_storm_path       = data_around_storm_path[:,i+1]
-          us_around_30_mins_ago      = data_around_30_mins_ago[:,i]
-          vs_around_30_mins_ago      = data_around_30_mins_ago[:,i+1]
-          us_around_30_mins_from_now = data_around_30_mins_from_now[:,i]
-          vs_around_30_mins_from_now = data_around_30_mins_from_now[:,i+1]
-
-          # point value
-          r, theta = u_v_to_r_theta(data_at_point[i], data_at_point[i+1])
-          push!(out_row, r)
-          if abbrev != "USTM" # Always relativized to zero
-            push!(out_row, relativize_angle(theta, storm_theta))
+        # find indices within 25 miles of -30 mins to +30 mins storm path
+        flat_is_within_25mi_and_30_mins_of_storm =
+          diamond_search(i, j) do lat, lon
+            # d = GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
+            # if d > 20.0 * GeoUtils.METERS_PER_MILE
+            #   fast_error_pct = GeoUtils.compare_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
+            #   global max_error = max(max_error, fast_error_pct)
+            #   if fast_error_pct > 0.4
+            #     println((fast_error_pct, d, lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon))
+            #   end
+            # end
+            # GeoUtils.distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon, 1.0) <= 25.0 * GeoUtils.METERS_PER_MILE
+            GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
           end
 
-          # local mean
-          u_mean = mean(us_around_storm_path)
-          v_mean = mean(vs_around_storm_path)
-          mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
-          push!(out_row, mean_r)
-          push!(out_row, relativize_angle(mean_theta, storm_theta))
+        # sort!(flat_is_within_25mi_and_30_mins_of_storm) # May help the prefetcher later.
 
-          # local min
-          polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
-          rs     = map(first, polar_vectors)
-          thetas = map(r_theta -> relativize_angle(r_theta[2], storm_theta),  polar_vectors)
-          push!(out_row, minimum(rs))
-          push!(out_row, minimum(thetas))
+        # find indices within 25 miles of -30 mins storm location
+        flat_is_within_25mi_of_storm_30_mins_ago =
+          filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
+            candiate_lat, candidate_lon = grid_lat_lons[flat_i]
 
-          # local max
-          push!(out_row, maximum(rs))
-          push!(out_row, maximum(thetas))
+            # lightning, instant, instantish, fast, fastish = GeoUtils.compare_distances(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
+            # if instant > 0.004
+            #   d = GeoUtils.distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon)
+            #   println((d, lightning, instant, instantish, fast, fastish))
+            # end
+            GeoUtils.instant_distance(candiate_lat, candidate_lon, minus_30_mins_lat, minus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+          end
 
-          # gradient in storm direction
-          delta_u = mean(us_around_30_mins_from_now) - mean(us_around_30_mins_ago)
-          delta_v = mean(vs_around_30_mins_from_now) - mean(vs_around_30_mins_ago)
-          mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
-          push!(out_row, mean_delta_r)
-          push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+        # find indices within 25 miles of +30 mins storm location
+        flat_is_within_25mi_of_storm_30_mins_from_now =
+          filter(flat_is_within_25mi_and_30_mins_of_storm) do candidate_flat_i
+            candiate_lat, candidate_lon = grid_lat_lons[flat_i]
+            GeoUtils.instant_distance(candiate_lat, candidate_lon, plus_30_mins_lat, plus_30_mins_lon) <= 25.0 * GeoUtils.METERS_PER_MILE
+          end
 
-          i += 2
+
+        out_row = Float32[]
+
+        storm_r, storm_theta = u_v_to_r_theta(lon_motion, lat_motion)
+
+        data_at_point = data[:, flat_i]
+
+        data_around_storm_path        = data[:,flat_is_within_25mi_and_30_mins_of_storm]
+        # polar_winds_around_storm_path = r_theta_data[:,flat_is_within_25mi_and_30_mins_of_storm]
+        data_around_30_mins_ago       = data_around_storm_path[:,indexin(flat_is_within_25mi_of_storm_30_mins_ago, flat_is_within_25mi_and_30_mins_of_storm)]
+        data_around_30_mins_from_now  = data_around_storm_path[:,indexin(flat_is_within_25mi_of_storm_30_mins_from_now, flat_is_within_25mi_and_30_mins_of_storm)]
+
+        # for each regular layer...
+        k = 1
+        for _ in regular_layer_order
+          # values_around_storm_path       = data_around_storm_path[k,:]
+          # values_around_30_mins_ago      = data_around_30_mins_ago[k,:]
+          # values_around_30_mins_from_now = data_around_30_mins_from_now[k,:]
+
+          push!(out_row, data_at_point[k])
+          push!(out_row, mean(@view data_around_storm_path[k,:]))
+          push!(out_row, minimum(@view data_around_storm_path[k,:]))
+          push!(out_row, maximum(@view data_around_storm_path[k,:]))
+          push!(out_row, mean(@view data_around_30_mins_from_now[k,:]) - mean(@view data_around_30_mins_ago[k,:]))
+
+          k += 1
         end
+
+        # for each wind layer...
+        for winds_layer_i in 1:length(wind_layer_order)
+          abbrev, _ = wind_layer_order[winds_layer_i]
+          if abbrev[1] == 'U' # Handle u and v layers together, so skip v layers.
+            # us_around_storm_path       = data_around_storm_path[k,:]
+            # vs_around_storm_path       = data_around_storm_path[k+1,:]
+
+            # point value
+            r, theta = u_v_to_r_theta(data_at_point[k], data_at_point[k+1])
+            push!(out_row, r)
+            if abbrev != "USTM" # Always relativized to zero
+              push!(out_row, relativize_angle(theta, storm_theta))
+            end
+
+            # local mean
+            u_mean = mean(@view data_around_storm_path[k,:])
+            v_mean = mean(@view data_around_storm_path[k+1,:])
+            mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
+            push!(out_row, mean_r)
+            push!(out_row, relativize_angle(mean_theta, storm_theta))
+
+            # # local min
+            # rs     = polar_winds_around_storm_path[winds_layer_i*2-1, :]
+            # thetas = polar_winds_around_storm_path[winds_layer_i*2, :]
+            # push!(out_row, minimum(rs))
+            # push!(out_row, minimum(thetas))
+            #
+            # # local max
+            # push!(out_row, maximum(rs))
+            # push!(out_row, maximum(thetas))
+
+
+            min_r, min_theta = u_v_to_r_theta(data_around_storm_path[k,1], data_around_storm_path[k+1,1])
+            max_r, max_theta = min_r, min_theta
+            for l = 2:length(flat_is_within_25mi_and_30_mins_of_storm)
+              r, theta = u_v_to_r_theta(data_around_storm_path[k,l], data_around_storm_path[k+1,l])
+              theta = relativize_angle(theta, storm_theta)
+              if r < min_r
+                min_r = r
+              end
+              if r > max_r
+                max_r = r
+              end
+              if theta < min_theta
+                min_theta = theta
+              end
+              if theta > max_theta
+                max_theta = theta
+              end
+            end
+            push!(out_row, min_r)
+            push!(out_row, min_theta)
+            push!(out_row, max_r)
+            push!(out_row, max_theta)
+
+            # version below is slow...perhaps because of allocations.
+            # polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
+            # rs     = map(first, polar_vectors)
+            # thetas = map(r_theta -> relativize_angle(r_theta[2], storm_theta),  polar_vectors)
+            # push!(out_row, minimum(rs))
+            # push!(out_row, minimum(thetas))
+            #
+            # # local max
+            # push!(out_row, maximum(rs))
+            # push!(out_row, maximum(thetas))
+
+            # us_around_30_mins_ago      = data_around_30_mins_ago[k,:]
+            # vs_around_30_mins_ago      = data_around_30_mins_ago[k+1,:]
+            # us_around_30_mins_from_now = data_around_30_mins_from_now[k,:]
+            # vs_around_30_mins_from_now = data_around_30_mins_from_now[k+1,:]
+
+
+            # gradient in storm direction
+            delta_u = mean(@view data_around_30_mins_from_now[k,:]) - mean(@view data_around_30_mins_ago[k,:])
+            delta_v = mean(@view data_around_30_mins_from_now[k+1,:]) - mean(@view data_around_30_mins_ago[k+1,:])
+            mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
+            push!(out_row, mean_delta_r)
+            push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+
+            k += 2
+          end
+        end
+
+        # # for each layer...
+        # for layer_i in 1:size(layers,1)
+        #   abbrev, desc = layers[layer_i,:]
+        #   layer_key = abbrev * ":" * desc
+        #
+        #   # if wind layer, relativize angle against storm motion
+        #   if abbrev == "UGRD" || abbrev == "USTM"
+        #     u_layer_key = layer_key
+        #     v_layer_key = abbrev == "UGRD" ? "V" * u_layer_key[2:length(u_layer_key)] : "VSTM:v storm motion"
+        #
+        #     u_layer_data = layer_to_data[u_layer_key]
+        #     v_layer_data = layer_to_data[v_layer_key]
+        #
+        #     us_around_storm_path       = u_layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+        #     vs_around_storm_path       = v_layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+        #     us_around_30_mins_ago      = u_layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+        #     vs_around_30_mins_ago      = v_layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+        #     us_around_30_mins_from_now = u_layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+        #     vs_around_30_mins_from_now = v_layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+        #
+        #     # point value
+        #     r, theta = u_v_to_r_theta(u_layer_data[flat_i], v_layer_data[flat_i])
+        #     push!(out_row, r)
+        #     push!(out_row, relativize_angle(theta, storm_theta))
+        #
+        #     # local mean
+        #     u_mean = mean(us_around_storm_path)
+        #     v_mean = mean(vs_around_storm_path)
+        #     mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
+        #     push!(out_row, mean_r)
+        #     if abbrev != "USTM" # Always relativized to zero
+        #       push!(out_row, relativize_angle(mean_theta, storm_theta))
+        #     end
+        #
+        #     # local min
+        #     polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
+        #     rs     = map(first, polar_vectors)
+        #     thetas = map(r_theta -> relativize_angle(r_theta[2], storm_theta),  polar_vectors)
+        #     push!(out_row, minimum(rs))
+        #     push!(out_row, minimum(thetas))
+        #
+        #     # local max
+        #     push!(out_row, maximum(rs))
+        #     push!(out_row, maximum(thetas))
+        #
+        #     # gradient in storm direction
+        #     delta_u = mean(us_around_30_mins_from_now) - mean(us_around_30_mins_ago)
+        #     delta_v = mean(vs_around_30_mins_from_now) - mean(vs_around_30_mins_ago)
+        #     mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
+        #     push!(out_row, mean_delta_r)
+        #     push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+        #
+        #   elseif abbrev == "VGRD" || abbrev == "VSTM"
+        #
+        #     # Handled above.
+        #
+        #   else
+        #     layer_data = layer_to_data[layer_key]
+        #
+        #     values_around_storm_path       = layer_data[flat_is_within_25mi_and_30_mins_of_storm]
+        #     values_around_30_mins_ago      = layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
+        #     values_around_30_mins_from_now = layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
+        #
+        #     # point value
+        #     # local mean
+        #     # local min
+        #     # local max
+        #     # gradient in storm direction
+        #
+        #     push!(out_row, layer_data[flat_i])
+        #     push!(out_row, mean(values_around_storm_path))
+        #     push!(out_row, minimum(values_around_storm_path))
+        #     push!(out_row, maximum(values_around_storm_path))
+        #     push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
+        #   end
+        # end
+
+        push!(out_rows, out_row)
       end
-
-      # # for each layer...
-      # for layer_i in 1:size(layers,1)
-      #   abbrev, desc = layers[layer_i,:]
-      #   layer_key = abbrev * ":" * desc
-      #
-      #   # if wind layer, relativize angle against storm motion
-      #   if abbrev == "UGRD" || abbrev == "USTM"
-      #     u_layer_key = layer_key
-      #     v_layer_key = abbrev == "UGRD" ? "V" * u_layer_key[2:length(u_layer_key)] : "VSTM:v storm motion"
-      #
-      #     u_layer_data = layer_to_data[u_layer_key]
-      #     v_layer_data = layer_to_data[v_layer_key]
-      #
-      #     us_around_storm_path       = u_layer_data[flat_is_within_25mi_and_30_mins_of_storm]
-      #     vs_around_storm_path       = v_layer_data[flat_is_within_25mi_and_30_mins_of_storm]
-      #     us_around_30_mins_ago      = u_layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
-      #     vs_around_30_mins_ago      = v_layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
-      #     us_around_30_mins_from_now = u_layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
-      #     vs_around_30_mins_from_now = v_layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
-      #
-      #     # point value
-      #     r, theta = u_v_to_r_theta(u_layer_data[flat_i], v_layer_data[flat_i])
-      #     push!(out_row, r)
-      #     push!(out_row, relativize_angle(theta, storm_theta))
-      #
-      #     # local mean
-      #     u_mean = mean(us_around_storm_path)
-      #     v_mean = mean(vs_around_storm_path)
-      #     mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
-      #     push!(out_row, mean_r)
-      #     if abbrev != "USTM" # Always relativized to zero
-      #       push!(out_row, relativize_angle(mean_theta, storm_theta))
-      #     end
-      #
-      #     # local min
-      #     polar_vectors = map(uv_to_r_theta, zip(us_around_storm_path, vs_around_storm_path))
-      #     rs     = map(first, polar_vectors)
-      #     thetas = map(r_theta -> relativize_angle(r_theta[2], storm_theta),  polar_vectors)
-      #     push!(out_row, minimum(rs))
-      #     push!(out_row, minimum(thetas))
-      #
-      #     # local max
-      #     push!(out_row, maximum(rs))
-      #     push!(out_row, maximum(thetas))
-      #
-      #     # gradient in storm direction
-      #     delta_u = mean(us_around_30_mins_from_now) - mean(us_around_30_mins_ago)
-      #     delta_v = mean(vs_around_30_mins_from_now) - mean(vs_around_30_mins_ago)
-      #     mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
-      #     push!(out_row, mean_delta_r)
-      #     push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
-      #
-      #   elseif abbrev == "VGRD" || abbrev == "VSTM"
-      #
-      #     # Handled above.
-      #
-      #   else
-      #     layer_data = layer_to_data[layer_key]
-      #
-      #     values_around_storm_path       = layer_data[flat_is_within_25mi_and_30_mins_of_storm]
-      #     values_around_30_mins_ago      = layer_data[flat_is_within_25mi_of_storm_30_mins_ago]
-      #     values_around_30_mins_from_now = layer_data[flat_is_within_25mi_of_storm_30_mins_from_now]
-      #
-      #     # point value
-      #     # local mean
-      #     # local min
-      #     # local max
-      #     # gradient in storm direction
-      #
-      #     push!(out_row, layer_data[flat_i])
-      #     push!(out_row, mean(values_around_storm_path))
-      #     push!(out_row, minimum(values_around_storm_path))
-      #     push!(out_row, maximum(values_around_storm_path))
-      #     push!(out_row, mean(values_around_30_mins_from_now) - mean(values_around_30_mins_ago))
-      #   end
-      # end
-
-      push!(out_rows, out_row)
     end
   end
+
+  out_rows
 end
 
-Profile.print(format=:flat, noisefloor=2.0, sortedby=:count)
+makeFeatures(consolidated_data)
+
+# Profile.print()
+# Profile.print(format=:flat, noisefloor=2.0, sortedby=:count)
+
+# @code_warntype makeFeatures(consolidated_data)
+# @code_warntype u_v_to_r_theta(1.0,2.0)
+
 # println(max_error)

@@ -43,7 +43,7 @@ end
 # And way better than haversine for the kinds of distances we are dealing with.
 # Error < 0.005% for the distances we are using.
 # Precondition: longitudes don't cross over (raw lon2-lon1 < 180)
-function instant_distance(lat1, lon1, lat2, lon2)
+function instant_distance(lat1 :: Float64, lon1 :: Float64, lat2 :: Float64, lon2 :: Float64) :: Float64
   mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
   dlat     = lat2 - lat1
   dlon     = lon2 - lon1
@@ -58,7 +58,7 @@ end
 # close to the line (since geodesic follows a different path).
 # For the scales we are concerned about, error is always < 0.45%.
 # Precondition: longitudes don't cross over (raw lon2-lon1 < 180)
-function instant_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
+function instant_distance_to_line(lat :: Float64, lon :: Float64, lat1 :: Float64, lon1 :: Float64, lat2 :: Float64, lon2 :: Float64) :: Float64
   mean_lat = (lat + lat1 + lat2) / 3.0 / 180.0 * π
 
   k1 = 111.13209 - 0.56605cos(2*mean_lat)
@@ -171,23 +171,23 @@ function distance_and_midpoint(lat1, lon1, lat2, lon2)
   (distance, reverse(midpoint))
 end
 
-function ratio_on_segment(lat1, lon1, lat2, lon2, ratio)
+function ratio_on_segment(lat1 :: Float64, lon1 :: Float64, lat2 :: Float64, lon2 :: Float64, ratio :: Float64) :: Tuple{Float64,Float64}
   distance, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
   ratio_point = deepcopy([lon1, lat1]) # call is destructive :(
   Proj4._geod_direct!(wgs84.geod, ratio_point, point_1_azimuth, distance * ratio)
-  reverse(ratio_point)
+  (ratio_point[2], ratio_point[1])
 end
 
 
 # Returns endpoint
-function integrate_velocity(lat, lon, lat_m_per_s, lon_m_per_s, seconds)
+function integrate_velocity(lat :: Float64, lon :: Float64, lat_m_per_s :: Float64, lon_m_per_s :: Float64, seconds :: Float64) :: Tuple{Float64,Float64}
   # Recall atan2 is (y,x). For geodesics, azimuth is clockwise from north.
   azimuth = 90.0 - atan2(lat_m_per_s, lon_m_per_s) * 180 / π
   m_per_s = sqrt(lat_m_per_s^2 + lon_m_per_s^2)
 
   point = deepcopy([lon, lat]) # call is destructive :(
   Proj4._geod_direct!(wgs84.geod, point, azimuth, m_per_s * seconds)
-  reverse(point)
+  (point[2], point[1])
 end
 
 
