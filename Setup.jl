@@ -7,6 +7,9 @@ Pkg.add("TimeZones")
 # Pkg.add("Distances")
 # Pkg.checkout("Distances") # haversine not in registered package as of 2017-12-30
 
+Pkg.add("Flux")
+# Pkg.test("Flux") # Check things installed correctly
+
 # try
 #   Pkg.clone("https://github.com/MetServiceDev/ECCodes.jl.git")
 # catch exception

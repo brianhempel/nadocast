@@ -22,6 +22,10 @@
 # It *does* appear that there are multiple accumulation periods in the forecast (i.e. always a 1-hour period somewhere for all of the above)
 # May look for that.
 
+if length(ARGS) < 1
+  error("must provide a grib2 file to read")
+end
+
 println("Importing libraries...")
 
 push!(LOAD_PATH, ".")
@@ -33,9 +37,15 @@ println("Preparing time...")
 
 utc = TimeZones.tz"UTC"
 
-grib2_path = "rap_130_20170516_2200_001.grb2"
+grib2_path = ARGS[1] # "rap_130_20170516_2200_001.grb2"
 
-year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_path).captures
+grib2_file_name = last(split(grib2_path, "/"))
+
+grib2_winds_latlon_aligned_path = "tmp/winds_latlon_aligned_tmp_$grib2_file_name"
+
+out_path = "tmp/training_$(replace(grib2_file_name, ".grb2", "")).bindata"
+
+year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_file_name).captures
 
 valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Base.Dates.Hour(parse(Int64,forcast_hour_str))
 valid_start_time = valid_time - Base.Dates.Minute(30)
@@ -441,15 +451,15 @@ uv_layers = [
 
 # wgrib2 rap_130_20170516_2200_001.grb2 -inv /dev/null -new_grid_winds earth -new_grid `perl grid_defn.pl rap_130_20170516_2200_001.grb2` tmp.grb2
 
+# if !isfile(grib2_winds_latlon_aligned_path)
 println("Aligning winds to latlon...")
 
 grid_defn = split(String(read(`perl grid_defn.pl $grib2_path`)))
 # println(grid_defn)
 
-grib2_winds_latlon_aligned_path = "winds_latlon_aligned_tmp_$grib2_path"
-
 # If you don't redirect inventory to /dev/null, it goes to stdout. No way to turn inventory off.
 run(`wgrib2 $grib2_path -inv /dev/null -new_grid_winds earth -new_grid $grid_defn $grib2_winds_latlon_aligned_path`)
+# end
 
 println("Reading inventory lines...")
 
@@ -561,6 +571,11 @@ for layer_i = 1:size(layers_to_fetch,1)
   grid_length       = read(from_wgrib2, UInt32)
   values            = read(from_wgrib2, Float32, div(grid_length, 4))
   grid_length_again = read(from_wgrib2, UInt32)
+
+  if desc == "cloud base" || desc == "cloud top"
+    # Handle undefined
+    values = map((v -> v > 25000.0f0 ? 25000.0f0 : v), values)
+  end
   # println(grid_length)
   # println(values)
   layer_to_data[layer_key] = values
@@ -692,7 +707,7 @@ const grid_height = Int64(maximum(all_pts[:,2]))
 println("min lat ",minimum(all_pts[:,3]))
 println("max lat ",maximum(all_pts[:,3]))
 println("min lon ",minimum(all_pts[:,4]))
-println("min lon ",maximum(all_pts[:,4]))
+println("max lon ",maximum(all_pts[:,4]))
 
 const grid_lat_lons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(grid_width*grid_height)) :: Array{Tuple{Float64,Float64},1}
 
@@ -735,6 +750,7 @@ function get_grid_lat_lon_and_flat_i(w_to_e_col :: Int64, s_to_n_row :: Int64) :
   (lat, lon, flat_i)
 end
 
+open(`rm $grib2_winds_latlon_aligned_path`)
 
 
 println("Loading training grid points set...")
@@ -753,6 +769,11 @@ for i in 1:size(training_pts,1)
 end
 
 train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
+
+println("min training lat ",minimum(train_pts[:,3]))
+println("max training lat ",maximum(train_pts[:,3]))
+println("min training lon ",minimum(train_pts[:,4]))
+println("max training lon ",maximum(train_pts[:,4]))
 
 if size(train_pts,1) != length(training_pts_set)
   error("Grid error: grid used in $grib2_winds_latlon_aligned_path does not match grid used to determine training points")
@@ -1166,8 +1187,8 @@ end
 
 
 
-println(i)
-show(stdout_limited, "text/plain", consolidated_data)
+# println(i)
+# show(stdout_limited, "text/plain", consolidated_data)
 
 
 
@@ -1181,7 +1202,7 @@ function relativize_angle(theta::Float32, ref::Float32)::Float32
 end
 
 
-Profile.init(delay=0.01)
+# Profile.init(delay=0.01)
 
 function makeFeatures(data::Array{Float32,2})
   out_rows = Array{Float32}[]
@@ -1189,7 +1210,7 @@ function makeFeatures(data::Array{Float32,2})
   first_pt = true
 
   for j = 1:grid_height
-    println("$j")
+    # println("$j")
     for i = 1:grid_width
       lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
 
@@ -1204,9 +1225,9 @@ function makeFeatures(data::Array{Float32,2})
             is_close_to_tornado = true
           end
         end
-        if is_close_to_tornado
-          print("t")
-        end
+        # if is_close_to_tornado
+        #   print("t")
+        # end
 
         lat_motion = storm_motion_lat_vs[flat_i] # m / s
         lon_motion = storm_motion_lon_us[flat_i] # m / S
@@ -1544,22 +1565,39 @@ headers, out_rows = makeFeatures(consolidated_data)
 function plot(col_i)
   header = headers[col_i]
   println(header)
-  base_name = replace(header, r" |:|/", "_")
+  base_name = "plots/" * replace(header, r" |:|/", "_")
   open(base_name * ".xyz", "w") do f
     # lon lat val
     writedlm(f, map(row -> (row[2], row[1], row[col_i]), out_rows), '\t')
   end
-  run(`gmt sphinterpolate $(base_name * ".xyz") -R-139/-58/17/58 -I1k -Q0 -G$(base_name * ".nc")`)
-  run(`gmt begin $base_name pdf`)
-  run(`gmt grdimage $(base_name * ".nc") -Jl-100/35/33/45/0.3`)
-  run(`gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest`)
-  run(pipeline(`gmt grd2cpt $(base_name * ".nc")`, `gmt colorbar -DjCB`))
-  run(`gmt end`)
-  run(`open $(base_name * ".pdf")`)
-  run(`rm $(base_name * ".xyz")`)
-  run(`rm $(base_name * ".nc")`)
+  # gmt nearneighbor cape.xyz -R-139/-58/17/58 -I1k -S15k -Gcape.nc
+  # gmt surface cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
+  # gmt triangulate cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
+  # gmt sphinterpolate cape.xyz -R-139/-58/17/58 -I1k -Q0 -Gcape.nc
+  # gmt begin map pdf
+  # gmt grdimage cape.nc -Jl-100/35/33/45/0.3
+  # gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest
+  # gmt end
+  # open map.pdf
+  try
+    run(`gmt sphinterpolate $(base_name * ".xyz") -R-139/-58/17/58 -I1M -Q0 -G$(base_name * ".nc")`)
+    run(`gmt begin $base_name pdf`)
+    run(`gmt grdimage $(base_name * ".nc") -nn -Jl-100/35/33/45/0.3`)
+    run(`gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest`)
+    run(pipeline(`gmt grd2cpt $(base_name * ".nc")`, `gmt colorbar -DjCB`))
+    run(`gmt end`)
+  end
+  try
+    # run(`open $(base_name * ".pdf")`)
+    run(`rm $(base_name * ".xyz")`)
+    run(`rm $(base_name * ".nc")`)
+  end
+  ()
 end
 
+# for col_i in 1:length(headers)
+#   plot(col_i)
+# end
 # plot(1076) # point storm speed
 # plot(9) # tornadoes
 # plot(10) # training weight
@@ -1570,16 +1608,23 @@ end
 # plot(849) # surface tmp
 # plot(850) # surface tmp
 
+out_flat = zeros(Float32, length(out_rows), length(headers))
 
-# gmt nearneighbor cape.xyz -R-139/-58/17/58 -I1k -S15k -Gcape.nc
-# gmt surface cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
-# gmt triangulate cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
-# gmt sphinterpolate cape.xyz -R-139/-58/17/58 -I1k -Q0 -Gcape.nc
-# gmt begin map pdf
-# gmt grdimage cape.nc -Jl-100/35/33/45/0.3
-# gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest
-# gmt end
-# open map.pdf
+for i in 1:length(out_rows)
+  out_flat[i,:] = out_rows[i]
+end
+
+show(stdout_limited, "text/plain", out_flat)
+
+# println("headers")
+# println(headers)
+# println("Max magnitudes per column (to prevent exploding gradients)")
+# println(mapslices(x -> maximum(abs(x)), out_flat, 1))
+
+write(out_path, out_flat)
+
+println("\n")
+println(out_path)
 
 
 # Profile.print()
