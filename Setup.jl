@@ -10,6 +10,8 @@ Pkg.add("TimeZones")
 Pkg.add("Flux")
 # Pkg.test("Flux") # Check things installed correctly
 
+Pkg.add("BSON")
+
 # try
 #   Pkg.clone("https://github.com/MetServiceDev/ECCodes.jl.git")
 # catch exception

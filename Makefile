@@ -28,3 +28,6 @@ grid.csv: rap_130_20170515_0000_001.grb2
 grid_coords_only.csv: grid.csv
 	# GRASS GIS point input can't handle extra whitespace
 	cat grid.csv | ruby -e 'puts STDIN.read.lines.map {|line| line.split(",")[2..3].map(&:strip).join(",")}.join("\n")' > grid_coords_only.csv
+
+prob_colors.cpt:
+	ruby make_color_table.rb > prob_colors.cpt

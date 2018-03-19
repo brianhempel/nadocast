@@ -26,6 +26,8 @@ if length(ARGS) < 1
   error("must provide a grib2 file to read")
 end
 
+IS_TRAINING = !(length(ARGS) > 1 && ARGS[2] == "--all")
+
 println("Importing libraries...")
 
 push!(LOAD_PATH, ".")
@@ -33,26 +35,27 @@ push!(LOAD_PATH, ".")
 import GeoUtils
 import TimeZones
 
-println("Preparing time...")
-
-utc = TimeZones.tz"UTC"
-
 grib2_path = ARGS[1] # "rap_130_20170516_2200_001.grb2"
 
 grib2_file_name = last(split(grib2_path, "/"))
 
 grib2_winds_latlon_aligned_path = "tmp/winds_latlon_aligned_tmp_$grib2_file_name"
 
-out_path = "tmp/training_$(replace(grib2_file_name, ".grb2", "")).bindata"
+out_path = "tmp/$(IS_TRAINING ? "training_" : "")$(replace(grib2_file_name, ".grb2", "")).bindata"
 
-year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_file_name).captures
+if IS_TRAINING
+  println("Preparing time...")
 
-valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Base.Dates.Hour(parse(Int64,forcast_hour_str))
-valid_start_time = valid_time - Base.Dates.Minute(30)
-valid_end_time   = valid_time + Base.Dates.Minute(30)
+  utc = TimeZones.tz"UTC"
 
-println(valid_start_time," to ",valid_end_time)
+  year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_file_name).captures
 
+  valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Base.Dates.Hour(parse(Int64,forcast_hour_str))
+  valid_start_time = valid_time - Base.Dates.Minute(30)
+  valid_end_time   = valid_time + Base.Dates.Minute(30)
+
+  println(valid_start_time," to ",valid_end_time)
+end
 
 
 stdout_limited = IOContext(STDOUT, :display_size=>(100,60))
@@ -753,117 +756,122 @@ end
 open(`rm $grib2_winds_latlon_aligned_path`)
 
 
-println("Loading training grid points set...")
+if IS_TRAINING
+  println("Loading training grid points set...")
 
-# Figure out which grid points are for training
+  # Figure out which grid points are for training
 
-training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
-training_pts_set = Set{Tuple{Int32,Int32}}(Set())
+  training_pts = readdlm("grid_xys_26_miles_inside_1_mile_outside_conus.csv", ','; header=false)[:, 1:2]
+  training_pts_set = Set{Tuple{Int32,Int32}}(Set())
 
-function lat_lon_to_key(lat :: Float64, lon :: Float64)
-  (Int32(round(lat*1000)), Int32(round(lon*1000)))
-end
+  function lat_lon_to_key(lat :: Float64, lon :: Float64)
+    (Int32(round(lat*1000)), Int32(round(lon*1000)))
+  end
 
-for i in 1:size(training_pts,1)
-  push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
-end
+  for i in 1:size(training_pts,1)
+    push!(training_pts_set, lat_lon_to_key(training_pts[i,2], training_pts[i,1]))
+  end
 
-train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
+  train_pts = all_pts[Bool[(lat_lon_to_key(all_pts[i, 3], all_pts[i,4]) in training_pts_set) for i in 1:size(all_pts,1)], :]
 
-println("min training lat ",minimum(train_pts[:,3]))
-println("max training lat ",maximum(train_pts[:,3]))
-println("min training lon ",minimum(train_pts[:,4]))
-println("max training lon ",maximum(train_pts[:,4]))
+  println("min training lat ",minimum(train_pts[:,3]))
+  println("max training lat ",maximum(train_pts[:,3]))
+  println("min training lon ",minimum(train_pts[:,4]))
+  println("max training lon ",maximum(train_pts[:,4]))
 
-if size(train_pts,1) != length(training_pts_set)
-  error("Grid error: grid used in $grib2_winds_latlon_aligned_path does not match grid used to determine training points")
-end
+  if size(train_pts,1) != length(training_pts_set)
+    error("Grid error: grid used in $grib2_winds_latlon_aligned_path does not match grid used to determine training points")
+  end
 
 
-println("Estimating point areas...")
+  println("Estimating point areas...")
 
-# Estimate area represented by each grid point
+  # Estimate area represented by each grid point
 
-point_areas = zeros(Float32, grid_width*grid_height,1)
+  point_areas = zeros(Float32, grid_width*grid_height,1)
 
-max_point_area = 0.0f0
+  max_point_area = 0.0f0
 
-for j = 1:grid_height
-  for i = 1:grid_width
-    lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
-    # We should never need the area weights on the edges of the grid, but so any kind of handling here is okay.
-    wlon = i > 1           ? all_pts[flat_i-1,4]          : lon
-    elon = i < grid_width  ? all_pts[flat_i+1,4]          : lon
-    slat = j > 1           ? all_pts[flat_i-grid_width,3] : lat
-    nlat = j < grid_height ? all_pts[flat_i+grid_width,3] : lat
+  for j = 1:grid_height
+    for i = 1:grid_width
+      lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
+      # We should never need the area weights on the edges of the grid, but so any kind of handling here is okay.
+      wlon = i > 1           ? all_pts[flat_i-1,4]          : lon
+      elon = i < grid_width  ? all_pts[flat_i+1,4]          : lon
+      slat = j > 1           ? all_pts[flat_i-grid_width,3] : lat
+      nlat = j < grid_height ? all_pts[flat_i+grid_width,3] : lat
 
-    w_distance = GeoUtils.distance(lat, lon, lat, wlon) / 2.0 / GeoUtils.METERS_PER_MILE
-    e_distance = GeoUtils.distance(lat, lon, lat, elon) / 2.0 / GeoUtils.METERS_PER_MILE
-    s_distance = GeoUtils.distance(lat, lon, slat, lon) / 2.0 / GeoUtils.METERS_PER_MILE
-    n_distance = GeoUtils.distance(lat, lon, nlat, lon) / 2.0 / GeoUtils.METERS_PER_MILE
+      w_distance = GeoUtils.distance(lat, lon, lat, wlon) / 2.0 / GeoUtils.METERS_PER_MILE
+      e_distance = GeoUtils.distance(lat, lon, lat, elon) / 2.0 / GeoUtils.METERS_PER_MILE
+      s_distance = GeoUtils.distance(lat, lon, slat, lon) / 2.0 / GeoUtils.METERS_PER_MILE
+      n_distance = GeoUtils.distance(lat, lon, nlat, lon) / 2.0 / GeoUtils.METERS_PER_MILE
 
-    sw_area = w_distance * s_distance
-    se_area = e_distance * s_distance
-    nw_area = w_distance * n_distance
-    ne_area = e_distance * n_distance
+      sw_area = w_distance * s_distance
+      se_area = e_distance * s_distance
+      nw_area = w_distance * n_distance
+      ne_area = e_distance * n_distance
 
-    point_areas[flat_i] = sw_area + se_area + nw_area + ne_area
+      point_areas[flat_i] = sw_area + se_area + nw_area + ne_area
 
-    if lat_lon_to_key(lat, lon) in training_pts_set && point_areas[flat_i] > max_point_area
-      max_point_area = point_areas[flat_i]
+      if lat_lon_to_key(lat, lon) in training_pts_set && point_areas[flat_i] > max_point_area
+        max_point_area = point_areas[flat_i]
+      end
     end
   end
+
+  point_weights = point_areas / max_point_area
+
+  # Transpose features to row per point
+
+  # headers = ["i", "j", "lat", "lon", "sq_miles"]
+  #
+  # tranposed_data = zeros(Float32, size(all_pts,1), size(all_pts,2) + size(layers,1))
+  # tranposed_data[:,1:size(all_pts,2)] = all_pts
+  #
+  # out_col = length(headers) + 1
+  # for layer_i in 1:size(layers,1)
+  #   abbrev, desc = layers[layer_i,:]
+  #   # println((abbrev, desc))
+  #   # desc   = layer[layer_i][2]
+  #   if abbrev == "UGRD"
+  #     abbrev = "RGRD"
+  #   elseif abbrev == "VGRD"
+  #     abbrev = "TGRD"
+  #   elseif abbrev == "USTM"
+  #     abbrev = "RSTM"
+  #     desc   = "latlon relative storm motion speed"
+  #   end
+  #
+  #   # if abbrev == "VSTM"
+  #   #   # Don't include absolute direction as a feature.
+  #   # else
+  #   layer_key = abbrev * ":" * desc
+  #   push!(headers, layer_key)
+  #   tranposed_data[:, out_col] = layer_to_data[layer_key]
+  #   out_col += 1
+  #   # end
+  # end
+  #
+  # println("headers")
+  # show(stdout_limited, "text/plain", headers)
+  # println("tranposed_data")
+  # show(stdout_limited, "text/plain", tranposed_data)
+
+
+  # Build final feature set
+
+  # Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
+
+  # function relativize_angle(thetaAndRef)
+  #   theta, ref = thetaAndRef
+  #   mod(theta - ref + π, 2π) - π
+  # end
+
+  # relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
+else
+  training_pts_set = Set{Tuple{Int32,Int32}}(Set())
+  point_weights    = ones(Float32, grid_width*grid_height,1)
 end
-
-point_weights = point_areas / max_point_area
-
-# Transpose features to row per point
-
-# headers = ["i", "j", "lat", "lon", "sq_miles"]
-#
-# tranposed_data = zeros(Float32, size(all_pts,1), size(all_pts,2) + size(layers,1))
-# tranposed_data[:,1:size(all_pts,2)] = all_pts
-#
-# out_col = length(headers) + 1
-# for layer_i in 1:size(layers,1)
-#   abbrev, desc = layers[layer_i,:]
-#   # println((abbrev, desc))
-#   # desc   = layer[layer_i][2]
-#   if abbrev == "UGRD"
-#     abbrev = "RGRD"
-#   elseif abbrev == "VGRD"
-#     abbrev = "TGRD"
-#   elseif abbrev == "USTM"
-#     abbrev = "RSTM"
-#     desc   = "latlon relative storm motion speed"
-#   end
-#
-#   # if abbrev == "VSTM"
-#   #   # Don't include absolute direction as a feature.
-#   # else
-#   layer_key = abbrev * ":" * desc
-#   push!(headers, layer_key)
-#   tranposed_data[:, out_col] = layer_to_data[layer_key]
-#   out_col += 1
-#   # end
-# end
-#
-# println("headers")
-# show(stdout_limited, "text/plain", headers)
-# println("tranposed_data")
-# show(stdout_limited, "text/plain", tranposed_data)
-
-
-# Build final feature set
-
-# Find min/max/mean/start-end-diff within 25mi of +/- 30 min storm motion
-
-# function relativize_angle(thetaAndRef)
-#   theta, ref = thetaAndRef
-#   mod(theta - ref + π, 2π) - π
-# end
-
-# relative_thetas = map(thetaAndRef -> relativize_angle(thetaAndRef), zip(thetas, storm_motion_thetas))
 
 const ONE_MINUTE = 60.0
 const repeated = Base.Iterators.repeated
@@ -1032,77 +1040,82 @@ function diamond_search(predicate, center_i :: Int64, center_j :: Int64) :: Arra
 end
 
 
-println("Loading tornadoes...")
+if IS_TRAINING
+  println("Loading tornadoes...")
 
-tornado_rows, tornado_headers = readdlm("tornadoes.csv",','; header=true)
+  tornado_rows, tornado_headers = readdlm("tornadoes.csv",','; header=true)
 
-start_seconds_col_i, = find(tornado_headers .== "begin_time_seconds")
-end_seconds_col_i,   = find(tornado_headers .== "end_time_seconds")
-start_lat_col_i,     = find(tornado_headers .== "begin_lat")
-start_lon_col_i,     = find(tornado_headers .== "begin_lon")
-end_lat_col_i,       = find(tornado_headers .== "end_lat")
-end_lon_col_i,       = find(tornado_headers .== "end_lon")
+  start_seconds_col_i, = find(tornado_headers .== "begin_time_seconds")
+  end_seconds_col_i,   = find(tornado_headers .== "end_time_seconds")
+  start_lat_col_i,     = find(tornado_headers .== "begin_lat")
+  start_lon_col_i,     = find(tornado_headers .== "begin_lon")
+  end_lat_col_i,       = find(tornado_headers .== "end_lat")
+  end_lon_col_i,       = find(tornado_headers .== "end_lon")
 
-valid_start_seconds = Dates.datetime2unix(DateTime(valid_start_time))
-valid_end_seconds   = Dates.datetime2unix(DateTime(valid_end_time))
+  valid_start_seconds = Dates.datetime2unix(DateTime(valid_start_time))
+  valid_end_seconds   = Dates.datetime2unix(DateTime(valid_end_time))
 
-relevant_tornadoes = tornado_rows[tornado_rows[:, end_seconds_col_i] .> valid_start_seconds, :]
-relevant_tornadoes = relevant_tornadoes[relevant_tornadoes[:, start_seconds_col_i] .< valid_end_seconds,: ]
+  relevant_tornadoes = tornado_rows[tornado_rows[:, end_seconds_col_i] .> valid_start_seconds, :]
+  relevant_tornadoes = relevant_tornadoes[relevant_tornadoes[:, start_seconds_col_i] .< valid_end_seconds,: ]
 
-if size(relevant_tornadoes,1) > 0
-  relevant_tornadoes = mapslices(relevant_tornadoes, 2) do row
-    # tornado_start_time = TimeZones.ZonedDateTime(Dates.unix2datetime(row[start_seconds_col_i]), utc)
-    # tornado_end_time   = TimeZones.ZonedDateTime(Dates.unix2datetime(row[end_seconds_col_i]), utc)
-    row
+  if size(relevant_tornadoes,1) > 0
+    relevant_tornadoes = mapslices(relevant_tornadoes, 2) do row
+      # tornado_start_time = TimeZones.ZonedDateTime(Dates.unix2datetime(row[start_seconds_col_i]), utc)
+      # tornado_end_time   = TimeZones.ZonedDateTime(Dates.unix2datetime(row[end_seconds_col_i]), utc)
+      row
+    end
   end
+
+  tornado_segments = map(1:size(relevant_tornadoes,1)) do i
+    start_seconds = Int64(relevant_tornadoes[i, start_seconds_col_i])
+    end_seconds   = Int64(relevant_tornadoes[i, end_seconds_col_i])
+    duration      = end_seconds - start_seconds
+    start_lat     = Float64(relevant_tornadoes[i, start_lat_col_i])
+    start_lon     = Float64(relevant_tornadoes[i, start_lon_col_i])
+    end_lat       = Float64(relevant_tornadoes[i, end_lat_col_i])
+    end_lon       = Float64(relevant_tornadoes[i, end_lon_col_i])
+
+    if duration == 0
+      ( start_lat
+      , start_lon
+      , end_lat
+      , end_lon
+      )
+    else
+      if start_seconds >= valid_start_seconds
+        seg_start_lat = start_lat
+        seg_start_lon = start_lon
+      else
+        start_ratio = Float64(valid_start_seconds - start_seconds) / duration
+        seg_start_lat, seg_start_lon = GeoUtils.ratio_on_segment(start_lat, start_lon, end_lat, end_lon, start_ratio)
+      end
+
+      if end_seconds <= valid_end_seconds
+        seg_end_lat = end_lat
+        seg_end_lon = end_lon
+      else
+        end_ratio = Float64(valid_end_seconds - start_seconds) / duration
+        seg_end_lat, seg_end_lon = GeoUtils.ratio_on_segment(start_lat, start_lon, end_lat, end_lon, end_ratio)
+      end
+
+      ( seg_start_lat
+      , seg_start_lon
+      , seg_end_lat
+      , seg_end_lon
+      )
+    end
+  end :: Array{Tuple{Float64,Float64,Float64,Float64},1}
+
+  # println("relevant tornadoes")
+  # show(stdout_limited, "text/plain", relevant_tornadoes)
+
+  println("tornado segments")
+  show(stdout_limited, "text/plain", tornado_segments)
+  # max_error = 0.0
+
+else
+  tornado_segments = Tuple{Float64,Float64,Float64,Float64}[]
 end
-
-tornado_segments = map(1:size(relevant_tornadoes,1)) do i
-  start_seconds = Int64(relevant_tornadoes[i, start_seconds_col_i])
-  end_seconds   = Int64(relevant_tornadoes[i, end_seconds_col_i])
-  duration      = end_seconds - start_seconds
-  start_lat     = Float64(relevant_tornadoes[i, start_lat_col_i])
-  start_lon     = Float64(relevant_tornadoes[i, start_lon_col_i])
-  end_lat       = Float64(relevant_tornadoes[i, end_lat_col_i])
-  end_lon       = Float64(relevant_tornadoes[i, end_lon_col_i])
-
-  if duration == 0
-    ( start_lat
-    , start_lon
-    , end_lat
-    , end_lon
-    )
-  else
-    if start_seconds >= valid_start_seconds
-      seg_start_lat = start_lat
-      seg_start_lon = start_lon
-    else
-      start_ratio = Float64(valid_start_seconds - start_seconds) / duration
-      seg_start_lat, seg_start_lon = GeoUtils.ratio_on_segment(start_lat, start_lon, end_lat, end_lon, start_ratio)
-    end
-
-    if end_seconds <= valid_end_seconds
-      seg_end_lat = end_lat
-      seg_end_lon = end_lon
-    else
-      end_ratio = Float64(valid_end_seconds - start_seconds) / duration
-      seg_end_lat, seg_end_lon = GeoUtils.ratio_on_segment(start_lat, start_lon, end_lat, end_lon, end_ratio)
-    end
-
-    ( seg_start_lat
-    , seg_start_lon
-    , seg_end_lat
-    , seg_end_lon
-    )
-  end
-end :: Array{Tuple{Float64,Float64,Float64,Float64},1}
-
-println("relevant tornadoes")
-show(stdout_limited, "text/plain", relevant_tornadoes)
-
-println("tornado segments")
-show(stdout_limited, "text/plain", tornado_segments)
-# max_error = 0.0
 
 println("Consolidating data...")
 regular_layer_order = Tuple{String,String}[]
@@ -1215,7 +1228,7 @@ function makeFeatures(data::Array{Float32,2})
       lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
 
       # skip if not a training point
-      if lat_lon_to_key(lat, lon) in training_pts_set
+      if !IS_TRAINING || (lat_lon_to_key(lat, lon) in training_pts_set)
 
         out_row = Float32[]
 
@@ -1562,51 +1575,26 @@ headers, out_rows = makeFeatures(consolidated_data)
 
 
 # Requires GMT >=6
-function plot(col_i)
-  header = headers[col_i]
-  println(header)
-  base_name = "plots/" * replace(header, r" |:|/", "_")
-  open(base_name * ".xyz", "w") do f
-    # lon lat val
-    writedlm(f, map(row -> (row[2], row[1], row[col_i]), out_rows), '\t')
-  end
-  # gmt nearneighbor cape.xyz -R-139/-58/17/58 -I1k -S15k -Gcape.nc
-  # gmt surface cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
-  # gmt triangulate cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
-  # gmt sphinterpolate cape.xyz -R-139/-58/17/58 -I1k -Q0 -Gcape.nc
-  # gmt begin map pdf
-  # gmt grdimage cape.nc -Jl-100/35/33/45/0.3
-  # gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest
-  # gmt end
-  # open map.pdf
-  try
-    run(`gmt sphinterpolate $(base_name * ".xyz") -R-139/-58/17/58 -I1M -Q0 -G$(base_name * ".nc")`)
-    run(`gmt begin $base_name pdf`)
-    run(`gmt grdimage $(base_name * ".nc") -nn -Jl-100/35/33/45/0.3`)
-    run(`gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest`)
-    run(pipeline(`gmt grd2cpt $(base_name * ".nc")`, `gmt colorbar -DjCB`))
-    run(`gmt end`)
-  end
-  try
-    # run(`open $(base_name * ".pdf")`)
-    run(`rm $(base_name * ".xyz")`)
-    run(`rm $(base_name * ".nc")`)
-  end
-  ()
-end
+# include("PlotMap.jl")
+# function plot_data_col(col_i)
+#   header = headers[col_i]
+#   println(header)
+#   base_path = "plots/" * replace(header, r" |:|/", "_")
+#   plot_map(base_path, map(row -> row[1], out_rows), map(row -> row[2], out_rows), map(row -> row[col_i], out_rows))
+# end
 
 # for col_i in 1:length(headers)
-#   plot(col_i)
+#   plot_data_col(col_i)
 # end
-# plot(1076) # point storm speed
-# plot(9) # tornadoes
-# plot(10) # training weight
-# plot(16) # point cape
-# plot(846) # surface tmp
-# plot(847) # surface tmp
-# plot(848) # surface tmp
-# plot(849) # surface tmp
-# plot(850) # surface tmp
+# plot_data_col(1076) # point storm speed
+# plot_data_col(9) # tornadoes
+# plot_data_col(10) # training weight
+# plot_data_col(16) # point cape
+# plot_data_col(846) # surface tmp
+# plot_data_col(847) # surface tmp
+# plot_data_col(848) # surface tmp
+# plot_data_col(849) # surface tmp
+# plot_data_col(850) # surface tmp
 
 out_flat = zeros(Float32, length(out_rows), length(headers))
 
@@ -1614,7 +1602,7 @@ for i in 1:length(out_rows)
   out_flat[i,:] = out_rows[i]
 end
 
-show(stdout_limited, "text/plain", out_flat)
+# show(stdout_limited, "text/plain", out_flat)
 
 # println("headers")
 # println(headers)
