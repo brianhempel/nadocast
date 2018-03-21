@@ -1299,8 +1299,16 @@ function makeFeatures(data::Array{Float32,2})
 
         # println((minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat,  plus_30_mins_lon))
 
+        # find indices within 50 miles of -30 mins to +30 mins storm path
+        # so the model can learn to compare this point or storm region to the near environment
+        flat_is_within_50mi_and_30_mins_of_storm =
+          diamond_search(i, j) do lat, lon
+            GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon) <= 50.0 * GeoUtils.METERS_PER_MILE
+          end
+
         # find indices within 25 miles of -30 mins to +30 mins storm path
         flat_is_within_25mi_and_30_mins_of_storm =
+          # I'm guessing diamond_search is faster than walking through the flat_is_within_50mi_and_30_mins_of_storm
           diamond_search(i, j) do lat, lon
             # d = GeoUtils.instant_distance_to_line(lat, lon, minus_30_mins_lat, minus_30_mins_lon, plus_30_mins_lat, plus_30_mins_lon)
             # if d > 20.0 * GeoUtils.METERS_PER_MILE
@@ -1342,7 +1350,8 @@ function makeFeatures(data::Array{Float32,2})
 
         data_at_point = data[:, flat_i]
 
-        data_around_storm_path        = data[:,flat_is_within_25mi_and_30_mins_of_storm]
+        more_data_around_storm_path   = data[:,flat_is_within_50mi_and_30_mins_of_storm]
+        data_around_storm_path        = more_data_around_storm_path[:,indexin(flat_is_within_25mi_and_30_mins_of_storm, flat_is_within_50mi_and_30_mins_of_storm)]
         # polar_winds_around_storm_path = r_theta_data[:,flat_is_within_25mi_and_30_mins_of_storm]
         data_around_30_mins_ago       = data_around_storm_path[:,indexin(flat_is_within_25mi_of_storm_30_mins_ago, flat_is_within_25mi_and_30_mins_of_storm)]
         data_around_30_mins_from_now  = data_around_storm_path[:,indexin(flat_is_within_25mi_of_storm_30_mins_from_now, flat_is_within_25mi_and_30_mins_of_storm)]
@@ -1359,6 +1368,7 @@ function makeFeatures(data::Array{Float32,2})
           push!(out_row, minimum(@view data_around_storm_path[k,:]))
           push!(out_row, maximum(@view data_around_storm_path[k,:]))
           push!(out_row, mean(@view data_around_30_mins_from_now[k,:]) - mean(@view data_around_30_mins_ago[k,:]))
+          push!(out_row, mean(@view more_data_around_storm_path[k,:]))
 
           if first_pt
             abbrev, desc = abbrev_desc
@@ -1367,6 +1377,7 @@ function makeFeatures(data::Array{Float32,2})
             push!(headers, abbrev * ":" * desc * ":storm path min")
             push!(headers, abbrev * ":" * desc * ":storm path max")
             push!(headers, abbrev * ":" * desc * ":storm path gradient")
+            push!(headers, abbrev * ":" * desc * ":storm path 50mi mean")
           end
 
           k += 1
@@ -1383,12 +1394,15 @@ function makeFeatures(data::Array{Float32,2})
             r, theta = u_v_to_r_theta(data_at_point[k], data_at_point[k+1])
             push!(out_row, r)
             if abbrev != "USTM" # Always relativized to zero
-              push!(out_row, relativize_angle(theta, storm_theta))
+              relative_theta = relativize_angle(theta, storm_theta)
+              push!(out_row, relative_theta)
+              push!(out_row, abs(relative_theta))
             end
             if first_pt
               if abbrev != "USTM"
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":point")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":point")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":point")
               else
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:point")
               end
@@ -1399,14 +1413,18 @@ function makeFeatures(data::Array{Float32,2})
             v_mean = mean(@view data_around_storm_path[k+1,:])
             mean_r, mean_theta = u_v_to_r_theta(u_mean, v_mean)
             push!(out_row, mean_r)
-            push!(out_row, relativize_angle(mean_theta, storm_theta))
+            relative_theta = relativize_angle(mean_theta, storm_theta)
+            push!(out_row, relative_theta)
+            push!(out_row, abs(relative_theta))
             if first_pt
               if abbrev != "USTM"
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path mean")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path mean")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path mean")
               else
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path mean")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path mean")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path mean")
               end
             end
 
@@ -1443,17 +1461,20 @@ function makeFeatures(data::Array{Float32,2})
             push!(out_row, min_theta)
             push!(out_row, max_r)
             push!(out_row, max_theta)
+            push!(out_row, max(abs(min_theta), abs(max_theta)))
             if first_pt
               if abbrev != "USTM"
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path min")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path min")
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path max")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path max")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path max")
               else
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path min")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path min")
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path max")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path max")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path max")
               end
             end
 
@@ -1479,14 +1500,39 @@ function makeFeatures(data::Array{Float32,2})
             delta_v = mean(@view data_around_30_mins_from_now[k+1,:]) - mean(@view data_around_30_mins_ago[k+1,:])
             mean_delta_r, mean_delta_theta = u_v_to_r_theta(delta_u, delta_v)
             push!(out_row, mean_delta_r)
-            push!(out_row, relativize_angle(mean_delta_theta, storm_theta))
+            relative_mean_delta_theta = relativize_angle(mean_delta_theta, storm_theta)
+            push!(out_row, relative_mean_delta_theta)
+            push!(out_row, abs(relative_mean_delta_theta))
             if first_pt
               if abbrev != "USTM"
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path gradient")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path gradient")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path gradient")
               else
                 push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path gradient")
                 push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path gradient")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path gradient")
+              end
+            end
+
+
+            # 50mi mean
+            u_50mi_mean = mean(@view more_data_around_storm_path[k,:])
+            v_50mi_mean = mean(@view more_data_around_storm_path[k+1,:])
+            mean_50mi_r, mean_50mi_theta = u_v_to_r_theta(u_50mi_mean, v_50mi_mean)
+            push!(out_row, mean_50mi_r)
+            relative_mean_50mi_theta = relativize_angle(mean_50mi_theta, storm_theta)
+            push!(out_row, relative_mean_50mi_theta)
+            push!(out_row, abs(relative_mean_50mi_theta))
+            if first_pt
+              if abbrev != "USTM"
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path 50mi mean")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path 50mi mean")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path 50mi mean")
+              else
+                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path 50mi mean")
+                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path 50mi mean")
+                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path 50mi mean")
               end
             end
 
@@ -1612,18 +1658,22 @@ headers, out_rows = makeFeatures(consolidated_data)
 # plot_data_col(849) # surface tmp
 # plot_data_col(850) # surface tmp
 
-out_flat = zeros(Float32, length(out_rows), length(headers))
+# Put each data point in a column.
+#
+# This allows us to add more data points simply by appending (because Julia is column-major).
+out_flat = zeros(Float32, length(headers), length(out_rows))
 
 for i in 1:length(out_rows)
-  out_flat[i,:] = out_rows[i]
+  out_flat[:,i] = out_rows[i]
 end
 
 # show(stdout_limited, "text/plain", out_flat)
 
 # println("headers")
-# println(headers)
+# map(println, headers)
+# println("\n")
 # println("Max magnitudes per column (to prevent exploding gradients)")
-# println(mapslices(x -> maximum(abs(x)), out_flat, 1))
+# mapslices(x -> println(maximum(abs.(x))), out_flat, 2)
 
 write(out_path, out_flat)
 
