@@ -44,7 +44,7 @@ tmp_data_path = last(split(strip(String(read(data_stream))),"\n")) # last line i
 # If reading grib file okay...
 if endswith(tmp_data_path, ".bindata")
   # println(tmp_data_path)
-  data = read(tmp_data_path, Float32, (151987,1544)) :: Array{Float32, 2}
+  data = read(tmp_data_path, Float32, (122067,1544)) :: Array{Float32, 2}
   open(`rm $tmp_data_path`)
   if any(isnan, data)
     error("contains nans")

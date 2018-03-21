@@ -39,7 +39,7 @@ nan_color = hex_to_rgb("#FF00FF")
   stop1, rgb1 = colors_and_stops[i]
   stop2, rgb2 = colors_and_stops[i+1]
   rgb_low  = rgb1
-  rgb_high = blend(rgb1, rgb2, 0.6)
+  rgb_high = blend(rgb1, rgb2, 0.0)
   puts [
     stop1, rgb_to_cpt(rgb_low),
     stop2, rgb_to_cpt(rgb_high),

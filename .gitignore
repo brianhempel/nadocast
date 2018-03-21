@@ -2,3 +2,5 @@ grassdata/
 inventory_files/
 tmp/
 plots/
+forecasts/
+forecast_grib2s/

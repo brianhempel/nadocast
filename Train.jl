@@ -66,8 +66,6 @@ files_to_process = []
 
 in_flight = []
 
-feature_normalizers = include("NormalizingFactors.jl")
-
 function start_grabbing_more_files()
   for _ = 1:files_to_process_at_a_time
     if length(files_to_process) > 0
@@ -114,6 +112,8 @@ function save_model(blurb, training_loss)
 
   println("Saved as $save_path")
 end
+
+feature_normalizers = include("NormalizingFactors.jl")
 
 last_checkpoint_time = now()
 checkpoint_loss     = 0.0

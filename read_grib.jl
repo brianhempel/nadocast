@@ -28,6 +28,8 @@ end
 
 IS_TRAINING = !(length(ARGS) > 1 && ARGS[2] == "--all")
 
+TORNADO_NEIGHBORHOODS_ONLY = length(ARGS) > 1 && ARGS[2] == "--250mi_tornado_neighborhoods"
+
 println("Importing libraries...")
 
 push!(LOAD_PATH, ".")
@@ -50,9 +52,9 @@ if IS_TRAINING
 
   year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_file_name).captures
 
-  valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Base.Dates.Hour(parse(Int64,forcast_hour_str))
-  valid_start_time = valid_time - Base.Dates.Minute(30)
-  valid_end_time   = valid_time + Base.Dates.Minute(30)
+  valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Dates.Hour(parse(Int64,forcast_hour_str))
+  valid_start_time = valid_time - Dates.Minute(30)
+  valid_end_time   = valid_time + Dates.Minute(30)
 
   println(valid_start_time," to ",valid_end_time)
 end
@@ -1058,13 +1060,13 @@ if IS_TRAINING
   relevant_tornadoes = tornado_rows[tornado_rows[:, end_seconds_col_i] .> valid_start_seconds, :]
   relevant_tornadoes = relevant_tornadoes[relevant_tornadoes[:, start_seconds_col_i] .< valid_end_seconds,: ]
 
-  if size(relevant_tornadoes,1) > 0
-    relevant_tornadoes = mapslices(relevant_tornadoes, 2) do row
-      # tornado_start_time = TimeZones.ZonedDateTime(Dates.unix2datetime(row[start_seconds_col_i]), utc)
-      # tornado_end_time   = TimeZones.ZonedDateTime(Dates.unix2datetime(row[end_seconds_col_i]), utc)
-      row
-    end
-  end
+  # if size(relevant_tornadoes,1) > 0
+  #   relevant_tornadoes = mapslices(relevant_tornadoes, 2) do row
+  #     # tornado_start_time = TimeZones.ZonedDateTime(Dates.unix2datetime(row[start_seconds_col_i]), utc)
+  #     # tornado_end_time   = TimeZones.ZonedDateTime(Dates.unix2datetime(row[end_seconds_col_i]), utc)
+  #     row
+  #   end
+  # end
 
   tornado_segments = map(1:size(relevant_tornadoes,1)) do i
     start_seconds = Int64(relevant_tornadoes[i, start_seconds_col_i])
@@ -1112,9 +1114,10 @@ if IS_TRAINING
   println("tornado segments")
   show(stdout_limited, "text/plain", tornado_segments)
   # max_error = 0.0
-
+  # println(STDERR, tornado_segments)
 else
   tornado_segments = Tuple{Float64,Float64,Float64,Float64}[]
+  # println(STDERR, tornado_segments)
 end
 
 println("Consolidating data...")
@@ -1222,9 +1225,14 @@ function makeFeatures(data::Array{Float32,2})
   headers  = String[]
   first_pt = true
 
-  for j = 1:grid_height
+  # Avoid NaN gradients at the map edges
+  padding = 20
+  x_range = (1 + padding):(grid_width  - padding)
+  y_range = (1 + padding):(grid_height - padding)
+
+  for j = y_range
     # println("$j")
-    for i = 1:grid_width
+    for i = x_range
       lat, lon, flat_i = get_grid_lat_lon_and_flat_i(i, j)
 
       # skip if not a training point
@@ -1233,10 +1241,18 @@ function makeFeatures(data::Array{Float32,2})
         out_row = Float32[]
 
         is_close_to_tornado = false
+        is_in_tornado_neighborhood = false
         for (tlat1, tlon1, tlat2, tlon2) in tornado_segments
-          if GeoUtils.instant_distance_to_line(lat, lon, tlat1, tlon1, tlat2, tlon2) <= 25.0 * GeoUtils.METERS_PER_MILE
+          distance_to_tornado = GeoUtils.instant_distance_to_line(lat, lon, tlat1, tlon1, tlat2, tlon2)
+          if distance_to_tornado <= 25.0 * GeoUtils.METERS_PER_MILE
             is_close_to_tornado = true
           end
+          if distance_to_tornado <= 250.0 * GeoUtils.METERS_PER_MILE
+            is_in_tornado_neighborhood = true
+          end
+        end
+        if TORNADO_NEIGHBORHOODS_ONLY && !is_in_tornado_neighborhood
+          continue
         end
         # if is_close_to_tornado
         #   print("t")

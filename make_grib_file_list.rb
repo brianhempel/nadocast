@@ -52,6 +52,7 @@ hours_with_tornadoes = 0
 file_count           = 0
 
 ONE_MINUTE = 60
+ONE_HOUR   = 60*ONE_MINUTE
 
 Tornado = Struct.new(:start_time, :end_time, :rating, :start_lat, :start_lon, :end_lat, :end_lon)
 
@@ -86,7 +87,7 @@ TRAIN_DATES.product(HOURS_OF_DAY).each do |date, run_hour|
 
   if (File.size(path) rescue 0) >= MIN_FILE_BYTES
 
-    valid_time       = Time.new(date.year, date.month, date.day, run_hour,00,00,"+00:00") + FORECAST_HOUR
+    valid_time       = Time.new(date.year, date.month, date.day, run_hour,00,00,"+00:00") + FORECAST_HOUR*ONE_HOUR
     valid_start_time = valid_time - 30*ONE_MINUTE
     valid_end_time   = valid_time + 30*ONE_MINUTE
 
