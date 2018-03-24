@@ -7,13 +7,17 @@ StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz:
 	curl https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz > StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 
 # Tornado events, 2008 through 2017.
-tornadoes.csv:
+tornadoes:
+	cp tornadoes.csv tornadoes_old.csv
 	ruby get_storm_events.rb > tornadoes.csv
+	sort tornadoes.csv > tornadoes_sorted.csv
+	sort tornadoes_old.csv > tornadoes_old_sorted.csv
+	diff tornadoes_old_sorted.csv tornadoes_sorted.csv; rm tornadoes_old_sorted.csv && rm tornadoes_sorted.csv
+
 
 setup: 1950-2016_all_tornadoes.csv StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 	julia Setup.jl
 	# julia Test.jl
-
 
 get_rap:
 	# See constants in get_rap.rb for setting date range.
