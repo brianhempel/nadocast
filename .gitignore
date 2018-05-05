@@ -4,3 +4,10 @@ tmp/
 plots/
 forecasts/
 forecast_grib2s/
+papers/
+test_grib2s/
+test_plots/
+*.bson
+*.binfeatures
+*.binweights
+*.binlabels

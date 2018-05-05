@@ -1,12 +1,13 @@
+# Doesn't have start and end times: don't use.
 1950-2016_all_tornadoes.csv:
 	# Field descriptions here: http://www.spc.noaa.gov/wcm/data/SPC_severe_database_description.pdf
 	curl http://www.spc.noaa.gov/wcm/data/1950-2016_all_tornadoes.csv > 1950-2016_all_tornadoes.csv
 
-# Start end times and start end lat lons
+# Start end times and start end lat lons. Example file. Use `make tornadoes` below for real.
 StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz:
 	curl https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz > StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 
-# Tornado events, 2008 through 2017.
+# Tornado events, 2008 through 2017. Both start and end times.
 tornadoes:
 	cp tornadoes.csv tornadoes_old.csv
 	ruby get_storm_events.rb > tornadoes.csv
@@ -15,7 +16,7 @@ tornadoes:
 	diff tornadoes_old_sorted.csv tornadoes_sorted.csv; rm tornadoes_old_sorted.csv && rm tornadoes_sorted.csv
 
 
-setup: 1950-2016_all_tornadoes.csv StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
+setup:
 	julia Setup.jl
 	# julia Test.jl
 
@@ -23,11 +24,11 @@ get_rap:
 	# See constants in get_rap.rb for setting date range.
 	ruby get_rap.rb
 
-rap_130_20170515_0000_001.grb2:
-	curl https://nomads.ncdc.noaa.gov/data/rucanl/201705/20170515/rap_130_20170515_0000_001.grb2 > rap_130_20170515_0000_001.grb2
+test_grib2s/rap_130_20170515_0000_001.grb2:
+	curl https://nomads.ncdc.noaa.gov/data/rucanl/201705/20170515/rap_130_20170515_0000_001.grb2 > test_grib2s/rap_130_20170515_0000_001.grb2
 
-grid.csv: rap_130_20170515_0000_001.grb2
-	wgrib2 rap_130_20170515_0000_001.grb2 -end -inv /dev/null -gridout - > grid.csv
+grid.csv: test_grib2s/rap_130_20170515_0000_001.grb2
+	wgrib2 test_grib2s/rap_130_20170515_0000_001.grb2 -end -inv /dev/null -gridout - > grid.csv
 
 grid_coords_only.csv: grid.csv
 	# GRASS GIS point input can't handle extra whitespace
