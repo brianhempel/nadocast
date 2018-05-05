@@ -36,7 +36,7 @@ print %w[
 # ].to_csv
 
 
-(2008..2018).each do |year|
+(2014..2018).each do |year|
   file_name = file_names.grep(/v1\.0_d#{year}_/).last
 
   rows = CSV.parse(`curl #{ROOT_URL + file_name} | gunzip`, headers: true)

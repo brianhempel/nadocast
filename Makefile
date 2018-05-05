@@ -7,13 +7,11 @@
 StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz:
 	curl https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz > StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 
-# Tornado events, 2008 through 2017. Both start and end times.
+# Tornado events, 2014 through 2017. Both start and end times.
 tornadoes:
 	cp tornadoes.csv tornadoes_old.csv
 	ruby get_storm_events.rb > tornadoes.csv
-	sort tornadoes.csv > tornadoes_sorted.csv
-	sort tornadoes_old.csv > tornadoes_old_sorted.csv
-	diff tornadoes_old_sorted.csv tornadoes_sorted.csv; rm tornadoes_old_sorted.csv && rm tornadoes_sorted.csv
+	diff tornadoes_old.csv tornadoes.csv
 
 
 setup:
