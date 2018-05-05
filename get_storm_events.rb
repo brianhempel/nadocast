@@ -36,7 +36,7 @@ print %w[
 # ].to_csv
 
 
-(2008..2017).each do |year|
+(2008..2018).each do |year|
   file_name = file_names.grep(/v1\.0_d#{year}_/).last
 
   rows = CSV.parse(`curl #{ROOT_URL + file_name} | gunzip`, headers: true)
@@ -47,7 +47,7 @@ print %w[
 
   STDERR.puts "#{tornado_rows.count} tornado path pieces in #{year}"
 
-  tornado_rows.each do |row|
+  tornado_rows.map! do |row|
     begin_year_month_str = row["BEGIN_YEARMONTH"]
     begin_day_str        = row["BEGIN_DAY"]
     begin_time_str       = row["BEGIN_TIME"]
@@ -63,7 +63,7 @@ print %w[
     #
     # BEGIN_LAT  BEGIN_LON  END_LAT  END_LON
 
-    print [
+    [
       begin_time.utc.to_s,
       begin_time.utc.to_i,
       # row["BEGIN_DATE_TIME"],
@@ -78,13 +78,10 @@ print %w[
       row["BEGIN_LON"],
       row["END_LAT"],
       row["END_LON"]
-    ].to_csv
+    ]
   end
 
-  # tornadoes = events[events[:EVENT_TYPE] .== "Tornado", :]
-  #
-  # tornadoes[:start_time] = map((ym, d, t, tz) -> TimeZones.ZonedDateTime(div(ym, 100), mod(ym, 100), d, div(t, 100), mod(t, 100), TimeZones.FixedTimeZone("", 60*60*parse(Int64, tz[4:5]))), tornadoes[:BEGIN_YEARMONTH], tornadoes[:BEGIN_DAY], tornadoes[:BEGIN_TIME], tornadoes[:CZ_TIMEZONE])
-  # tornadoes[:end_time]   = map((ym, d, t, tz) -> TimeZones.ZonedDateTime(div(ym, 100), mod(ym, 100), d, div(t, 100), mod(t, 100), TimeZones.FixedTimeZone("", 60*60*parse(Int64, tz[4:5]))), tornadoes[:END_YEARMONTH],   tornadoes[:END_DAY],   tornadoes[:END_TIME],   tornadoes[:CZ_TIMEZONE])
-
-
+  tornado_rows.sort_by(&:first).each do |row|
+    print row.to_csv
+  end
 end
