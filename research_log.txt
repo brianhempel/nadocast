@@ -22,3 +22,16 @@
 - estimated area represented by each gridpoint for later use when weighting observations (for NN training, use weight as probability of use)
 
 - TODO check whether order of grid points in grid.csv is same as order of data output in binary format
+
+
+
+- More convective fields were added to the RAP at 2014-02-25 12UTC, lets focus on dates after that.
+
+- baseline loss (computed correctly) is 0.079 training 0.081 dev using a constant prediction. (+1 hour, 250mi neighborhoods)
+- Most saved +1hour models have bad dev loss numbers on them (notable exception of LightGBM models)
+- Multiplier for bad dev loss to correct for when denominator was point count instead of weight: 1.06059
+- But retesting "4factor_logistic" reveals its dev loss was actually 0.06038, so LightGBM does do better (although LightGBM doesn't weight the dev samples :( )
+
+
+- Tried tons of ML algorithms on +1 forecasts and added lots of features (see headers.txt). LightGBM performs best, but training data really can't be more than 40GB on my machine.
+- Probably limited by precision of the RAP, but we'll see.

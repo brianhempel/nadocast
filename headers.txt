@@ -8,18 +8,36 @@ minus 30 mins lat
 minus 30 mins lon
 tornado within 25mi
 training weight
+4LFTX:180-0 mb above ground:point
+4LFTX:180-0 mb above ground:storm path mean
+4LFTX:180-0 mb above ground:storm path min
+4LFTX:180-0 mb above ground:storm path max
+4LFTX:180-0 mb above ground:storm path gradient
+4LFTX:180-0 mb above ground:storm path 50mi mean
 ABSV:500 mb:point
 ABSV:500 mb:storm path mean
 ABSV:500 mb:storm path min
 ABSV:500 mb:storm path max
 ABSV:500 mb:storm path gradient
 ABSV:500 mb:storm path 50mi mean
+CAPE:180-0 mb above ground:point
+CAPE:180-0 mb above ground:storm path mean
+CAPE:180-0 mb above ground:storm path min
+CAPE:180-0 mb above ground:storm path max
+CAPE:180-0 mb above ground:storm path gradient
+CAPE:180-0 mb above ground:storm path 50mi mean
 CAPE:255-0 mb above ground:point
 CAPE:255-0 mb above ground:storm path mean
 CAPE:255-0 mb above ground:storm path min
 CAPE:255-0 mb above ground:storm path max
 CAPE:255-0 mb above ground:storm path gradient
 CAPE:255-0 mb above ground:storm path 50mi mean
+CAPE:90-0 mb above ground:point
+CAPE:90-0 mb above ground:storm path mean
+CAPE:90-0 mb above ground:storm path min
+CAPE:90-0 mb above ground:storm path max
+CAPE:90-0 mb above ground:storm path gradient
+CAPE:90-0 mb above ground:storm path 50mi mean
 CAPE:surface:point
 CAPE:surface:storm path mean
 CAPE:surface:storm path min
@@ -38,12 +56,24 @@ CICEP:surface:storm path min
 CICEP:surface:storm path max
 CICEP:surface:storm path gradient
 CICEP:surface:storm path 50mi mean
+CIN:180-0 mb above ground:point
+CIN:180-0 mb above ground:storm path mean
+CIN:180-0 mb above ground:storm path min
+CIN:180-0 mb above ground:storm path max
+CIN:180-0 mb above ground:storm path gradient
+CIN:180-0 mb above ground:storm path 50mi mean
 CIN:255-0 mb above ground:point
 CIN:255-0 mb above ground:storm path mean
 CIN:255-0 mb above ground:storm path min
 CIN:255-0 mb above ground:storm path max
 CIN:255-0 mb above ground:storm path gradient
 CIN:255-0 mb above ground:storm path 50mi mean
+CIN:90-0 mb above ground:point
+CIN:90-0 mb above ground:storm path mean
+CIN:90-0 mb above ground:storm path min
+CIN:90-0 mb above ground:storm path max
+CIN:90-0 mb above ground:storm path gradient
+CIN:90-0 mb above ground:storm path 50mi mean
 CIN:surface:point
 CIN:surface:storm path mean
 CIN:surface:storm path min
@@ -68,18 +98,6 @@ DEPR:2 m above ground:storm path min
 DEPR:2 m above ground:storm path max
 DEPR:2 m above ground:storm path gradient
 DEPR:2 m above ground:storm path 50mi mean
-HGT:cloud base:point
-HGT:cloud base:storm path mean
-HGT:cloud base:storm path min
-HGT:cloud base:storm path max
-HGT:cloud base:storm path gradient
-HGT:cloud base:storm path 50mi mean
-HGT:cloud top:point
-HGT:cloud top:storm path mean
-HGT:cloud top:storm path min
-HGT:cloud top:storm path max
-HGT:cloud top:storm path gradient
-HGT:cloud top:storm path 50mi mean
 DPT:2 m above ground:point
 DPT:2 m above ground:storm path mean
 DPT:2 m above ground:storm path min
@@ -98,6 +116,12 @@ GUST:surface:storm path min
 GUST:surface:storm path max
 GUST:surface:storm path gradient
 GUST:surface:storm path 50mi mean
+HCDC:high cloud layer:point
+HCDC:high cloud layer:storm path mean
+HCDC:high cloud layer:storm path min
+HCDC:high cloud layer:storm path max
+HCDC:high cloud layer:storm path gradient
+HCDC:high cloud layer:storm path 50mi mean
 HGT:0C isotherm:point
 HGT:0C isotherm:storm path mean
 HGT:0C isotherm:storm path min
@@ -110,6 +134,12 @@ HGT:100 mb:storm path min
 HGT:100 mb:storm path max
 HGT:100 mb:storm path gradient
 HGT:100 mb:storm path 50mi mean
+HGT:1000 mb:point
+HGT:1000 mb:storm path mean
+HGT:1000 mb:storm path min
+HGT:1000 mb:storm path max
+HGT:1000 mb:storm path gradient
+HGT:1000 mb:storm path 50mi mean
 HGT:125 mb:point
 HGT:125 mb:storm path mean
 HGT:125 mb:storm path min
@@ -320,12 +350,18 @@ HGT:975 mb:storm path min
 HGT:975 mb:storm path max
 HGT:975 mb:storm path gradient
 HGT:975 mb:storm path 50mi mean
-HGT:1000 mb:point
-HGT:1000 mb:storm path mean
-HGT:1000 mb:storm path min
-HGT:1000 mb:storm path max
-HGT:1000 mb:storm path gradient
-HGT:1000 mb:storm path 50mi mean
+HGT:cloud base:point
+HGT:cloud base:storm path mean
+HGT:cloud base:storm path min
+HGT:cloud base:storm path max
+HGT:cloud base:storm path gradient
+HGT:cloud base:storm path 50mi mean
+HGT:cloud top:point
+HGT:cloud top:storm path mean
+HGT:cloud top:storm path min
+HGT:cloud top:storm path max
+HGT:cloud top:storm path gradient
+HGT:cloud top:storm path 50mi mean
 HGT:convective cloud top level:point
 HGT:convective cloud top level:storm path mean
 HGT:convective cloud top level:storm path min
@@ -350,6 +386,12 @@ HGT:lowest level of the wet bulb zero:storm path min
 HGT:lowest level of the wet bulb zero:storm path max
 HGT:lowest level of the wet bulb zero:storm path gradient
 HGT:lowest level of the wet bulb zero:storm path 50mi mean
+HGT:planetary boundary layer:point
+HGT:planetary boundary layer:storm path mean
+HGT:planetary boundary layer:storm path min
+HGT:planetary boundary layer:storm path max
+HGT:planetary boundary layer:storm path gradient
+HGT:planetary boundary layer:storm path 50mi mean
 HGT:surface:point
 HGT:surface:storm path mean
 HGT:surface:storm path min
@@ -374,6 +416,30 @@ HPBL:surface:storm path min
 HPBL:surface:storm path max
 HPBL:surface:storm path gradient
 HPBL:surface:storm path 50mi mean
+LCDC:low cloud layer:point
+LCDC:low cloud layer:storm path mean
+LCDC:low cloud layer:storm path min
+LCDC:low cloud layer:storm path max
+LCDC:low cloud layer:storm path gradient
+LCDC:low cloud layer:storm path 50mi mean
+LFTX:500-1000 mb:point
+LFTX:500-1000 mb:storm path mean
+LFTX:500-1000 mb:storm path min
+LFTX:500-1000 mb:storm path max
+LFTX:500-1000 mb:storm path gradient
+LFTX:500-1000 mb:storm path 50mi mean
+LTNG:surface:point
+LTNG:surface:storm path mean
+LTNG:surface:storm path min
+LTNG:surface:storm path max
+LTNG:surface:storm path gradient
+LTNG:surface:storm path 50mi mean
+MCDC:middle cloud layer:point
+MCDC:middle cloud layer:storm path mean
+MCDC:middle cloud layer:storm path min
+MCDC:middle cloud layer:storm path max
+MCDC:middle cloud layer:storm path gradient
+MCDC:middle cloud layer:storm path 50mi mean
 MSLMA:mean sea level:point
 MSLMA:mean sea level:storm path mean
 MSLMA:mean sea level:storm path min
@@ -386,6 +452,12 @@ MSTAV:0 m underground:storm path min
 MSTAV:0 m underground:storm path max
 MSTAV:0 m underground:storm path gradient
 MSTAV:0 m underground:storm path 50mi mean
+PLPL:255-0 mb above ground:point
+PLPL:255-0 mb above ground:storm path mean
+PLPL:255-0 mb above ground:storm path min
+PLPL:255-0 mb above ground:storm path max
+PLPL:255-0 mb above ground:storm path gradient
+PLPL:255-0 mb above ground:storm path 50mi mean
 POT:2 m above ground:point
 POT:2 m above ground:storm path mean
 POT:2 m above ground:storm path min
@@ -410,6 +482,12 @@ PRES:0C isotherm:storm path min
 PRES:0C isotherm:storm path max
 PRES:0C isotherm:storm path gradient
 PRES:0C isotherm:storm path 50mi mean
+PRES:80 m above ground:point
+PRES:80 m above ground:storm path mean
+PRES:80 m above ground:storm path min
+PRES:80 m above ground:storm path max
+PRES:80 m above ground:storm path gradient
+PRES:80 m above ground:storm path 50mi mean
 PRES:highest tropospheric freezing level:point
 PRES:highest tropospheric freezing level:storm path mean
 PRES:highest tropospheric freezing level:storm path min
@@ -458,6 +536,12 @@ REFD:4000 m above ground:storm path min
 REFD:4000 m above ground:storm path max
 REFD:4000 m above ground:storm path gradient
 REFD:4000 m above ground:storm path 50mi mean
+RETOP:entire atmosphere (considered as a single layer):point
+RETOP:entire atmosphere (considered as a single layer):storm path mean
+RETOP:entire atmosphere (considered as a single layer):storm path min
+RETOP:entire atmosphere (considered as a single layer):storm path max
+RETOP:entire atmosphere (considered as a single layer):storm path gradient
+RETOP:entire atmosphere (considered as a single layer):storm path 50mi mean
 RH:0C isotherm:point
 RH:0C isotherm:storm path mean
 RH:0C isotherm:storm path min
@@ -470,6 +554,12 @@ RH:100 mb:storm path min
 RH:100 mb:storm path max
 RH:100 mb:storm path gradient
 RH:100 mb:storm path 50mi mean
+RH:1000 mb:point
+RH:1000 mb:storm path mean
+RH:1000 mb:storm path min
+RH:1000 mb:storm path max
+RH:1000 mb:storm path gradient
+RH:1000 mb:storm path 50mi mean
 RH:120-90 mb above ground:point
 RH:120-90 mb above ground:storm path mean
 RH:120-90 mb above ground:storm path min
@@ -722,12 +812,6 @@ RH:975 mb:storm path min
 RH:975 mb:storm path max
 RH:975 mb:storm path gradient
 RH:975 mb:storm path 50mi mean
-RH:1000 mb:point
-RH:1000 mb:storm path mean
-RH:1000 mb:storm path min
-RH:1000 mb:storm path max
-RH:1000 mb:storm path gradient
-RH:1000 mb:storm path 50mi mean
 RH:highest tropospheric freezing level:point
 RH:highest tropospheric freezing level:storm path mean
 RH:highest tropospheric freezing level:storm path min
@@ -746,12 +830,30 @@ SPFH:2 m above ground:storm path min
 SPFH:2 m above ground:storm path max
 SPFH:2 m above ground:storm path gradient
 SPFH:2 m above ground:storm path 50mi mean
+SPFH:80 m above ground:point
+SPFH:80 m above ground:storm path mean
+SPFH:80 m above ground:storm path min
+SPFH:80 m above ground:storm path max
+SPFH:80 m above ground:storm path gradient
+SPFH:80 m above ground:storm path 50mi mean
+TCDC:entire atmosphere (considered as a single layer):point
+TCDC:entire atmosphere (considered as a single layer):storm path mean
+TCDC:entire atmosphere (considered as a single layer):storm path min
+TCDC:entire atmosphere (considered as a single layer):storm path max
+TCDC:entire atmosphere (considered as a single layer):storm path gradient
+TCDC:entire atmosphere (considered as a single layer):storm path 50mi mean
 TMP:100 mb:point
 TMP:100 mb:storm path mean
 TMP:100 mb:storm path min
 TMP:100 mb:storm path max
 TMP:100 mb:storm path gradient
 TMP:100 mb:storm path 50mi mean
+TMP:1000 mb:point
+TMP:1000 mb:storm path mean
+TMP:1000 mb:storm path min
+TMP:1000 mb:storm path max
+TMP:1000 mb:storm path gradient
+TMP:1000 mb:storm path 50mi mean
 TMP:120-90 mb above ground:point
 TMP:120-90 mb above ground:storm path mean
 TMP:120-90 mb above ground:storm path min
@@ -950,6 +1052,12 @@ TMP:775 mb:storm path min
 TMP:775 mb:storm path max
 TMP:775 mb:storm path gradient
 TMP:775 mb:storm path 50mi mean
+TMP:80 m above ground:point
+TMP:80 m above ground:storm path mean
+TMP:80 m above ground:storm path min
+TMP:80 m above ground:storm path max
+TMP:80 m above ground:storm path gradient
+TMP:80 m above ground:storm path 50mi mean
 TMP:800 mb:point
 TMP:800 mb:storm path mean
 TMP:800 mb:storm path min
@@ -1004,12 +1112,6 @@ TMP:975 mb:storm path min
 TMP:975 mb:storm path max
 TMP:975 mb:storm path gradient
 TMP:975 mb:storm path 50mi mean
-TMP:1000 mb:point
-TMP:1000 mb:storm path mean
-TMP:1000 mb:storm path min
-TMP:1000 mb:storm path max
-TMP:1000 mb:storm path gradient
-TMP:1000 mb:storm path 50mi mean
 TMP:surface:point
 TMP:surface:storm path mean
 TMP:surface:storm path min
@@ -1034,6 +1136,12 @@ VVEL:100 mb:storm path min
 VVEL:100 mb:storm path max
 VVEL:100 mb:storm path gradient
 VVEL:100 mb:storm path 50mi mean
+VVEL:1000 mb:point
+VVEL:1000 mb:storm path mean
+VVEL:1000 mb:storm path min
+VVEL:1000 mb:storm path max
+VVEL:1000 mb:storm path gradient
+VVEL:1000 mb:storm path 50mi mean
 VVEL:120-90 mb above ground:point
 VVEL:120-90 mb above ground:storm path mean
 VVEL:120-90 mb above ground:storm path min
@@ -1280,27 +1388,6 @@ VVEL:975 mb:storm path min
 VVEL:975 mb:storm path max
 VVEL:975 mb:storm path gradient
 VVEL:975 mb:storm path 50mi mean
-VVEL:1000 mb:point
-VVEL:1000 mb:storm path mean
-VVEL:1000 mb:storm path min
-VVEL:1000 mb:storm path max
-VVEL:1000 mb:storm path gradient
-VVEL:1000 mb:storm path 50mi mean
-RSTM:speed m/s storm motion:point
-RSTM:speed m/s storm motion:storm path mean
-TSTM:angle radians from point storm motion storm motion:storm path mean
-TSTM:absolute value angle radians from point storm motion storm motion:storm path mean
-RSTM:speed m/s storm motion:storm path min
-TSTM:angle radians from point storm motion storm motion:storm path min
-RSTM:speed m/s storm motion:storm path max
-TSTM:angle radians from point storm motion storm motion:storm path max
-TSTM:absolute value angle radians from point storm motion storm motion:storm path max
-RSTM:speed m/s storm motion:storm path gradient
-TSTM:angle radians from point storm motion storm motion:storm path gradient
-TSTM:absolute value angle radians from point storm motion storm motion:storm path gradient
-RSTM:speed m/s storm motion:storm path 50mi mean
-TSTM:angle radians from point storm motion storm motion:storm path 50mi mean
-TSTM:absolute value angle radians from point storm motion storm motion:storm path 50mi mean
 RGRD:speed m/s 10 m above ground:point
 TGRD:angle radians from point storm motion 10 m above ground:point
 TGRD:absolute value angle radians from point storm motion 10 m above ground:point
@@ -1335,6 +1422,23 @@ TGRD:absolute value angle radians from point storm motion 100 mb:storm path grad
 RGRD:speed m/s 100 mb:storm path 50mi mean
 TGRD:angle radians from point storm motion 100 mb:storm path 50mi mean
 TGRD:absolute value angle radians from point storm motion 100 mb:storm path 50mi mean
+RGRD:speed m/s 1000 mb:point
+TGRD:angle radians from point storm motion 1000 mb:point
+TGRD:absolute value angle radians from point storm motion 1000 mb:point
+RGRD:speed m/s 1000 mb:storm path mean
+TGRD:angle radians from point storm motion 1000 mb:storm path mean
+TGRD:absolute value angle radians from point storm motion 1000 mb:storm path mean
+RGRD:speed m/s 1000 mb:storm path min
+TGRD:angle radians from point storm motion 1000 mb:storm path min
+RGRD:speed m/s 1000 mb:storm path max
+TGRD:angle radians from point storm motion 1000 mb:storm path max
+TGRD:absolute value angle radians from point storm motion 1000 mb:storm path max
+RGRD:speed m/s 1000 mb:storm path gradient
+TGRD:angle radians from point storm motion 1000 mb:storm path gradient
+TGRD:absolute value angle radians from point storm motion 1000 mb:storm path gradient
+RGRD:speed m/s 1000 mb:storm path 50mi mean
+TGRD:angle radians from point storm motion 1000 mb:storm path 50mi mean
+TGRD:absolute value angle radians from point storm motion 1000 mb:storm path 50mi mean
 RGRD:speed m/s 120-90 mb above ground:point
 TGRD:angle radians from point storm motion 120-90 mb above ground:point
 TGRD:absolute value angle radians from point storm motion 120-90 mb above ground:point
@@ -1879,6 +1983,23 @@ TGRD:absolute value angle radians from point storm motion 775 mb:storm path grad
 RGRD:speed m/s 775 mb:storm path 50mi mean
 TGRD:angle radians from point storm motion 775 mb:storm path 50mi mean
 TGRD:absolute value angle radians from point storm motion 775 mb:storm path 50mi mean
+RGRD:speed m/s 80 m above ground:point
+TGRD:angle radians from point storm motion 80 m above ground:point
+TGRD:absolute value angle radians from point storm motion 80 m above ground:point
+RGRD:speed m/s 80 m above ground:storm path mean
+TGRD:angle radians from point storm motion 80 m above ground:storm path mean
+TGRD:absolute value angle radians from point storm motion 80 m above ground:storm path mean
+RGRD:speed m/s 80 m above ground:storm path min
+TGRD:angle radians from point storm motion 80 m above ground:storm path min
+RGRD:speed m/s 80 m above ground:storm path max
+TGRD:angle radians from point storm motion 80 m above ground:storm path max
+TGRD:absolute value angle radians from point storm motion 80 m above ground:storm path max
+RGRD:speed m/s 80 m above ground:storm path gradient
+TGRD:angle radians from point storm motion 80 m above ground:storm path gradient
+TGRD:absolute value angle radians from point storm motion 80 m above ground:storm path gradient
+RGRD:speed m/s 80 m above ground:storm path 50mi mean
+TGRD:angle radians from point storm motion 80 m above ground:storm path 50mi mean
+TGRD:absolute value angle radians from point storm motion 80 m above ground:storm path 50mi mean
 RGRD:speed m/s 800 mb:point
 TGRD:angle radians from point storm motion 800 mb:point
 TGRD:absolute value angle radians from point storm motion 800 mb:point
@@ -2032,23 +2153,6 @@ TGRD:absolute value angle radians from point storm motion 975 mb:storm path grad
 RGRD:speed m/s 975 mb:storm path 50mi mean
 TGRD:angle radians from point storm motion 975 mb:storm path 50mi mean
 TGRD:absolute value angle radians from point storm motion 975 mb:storm path 50mi mean
-RGRD:speed m/s 1000 mb:point
-TGRD:angle radians from point storm motion 1000 mb:point
-TGRD:absolute value angle radians from point storm motion 1000 mb:point
-RGRD:speed m/s 1000 mb:storm path mean
-TGRD:angle radians from point storm motion 1000 mb:storm path mean
-TGRD:absolute value angle radians from point storm motion 1000 mb:storm path mean
-RGRD:speed m/s 1000 mb:storm path min
-TGRD:angle radians from point storm motion 1000 mb:storm path min
-RGRD:speed m/s 1000 mb:storm path max
-TGRD:angle radians from point storm motion 1000 mb:storm path max
-TGRD:absolute value angle radians from point storm motion 1000 mb:storm path max
-RGRD:speed m/s 1000 mb:storm path gradient
-TGRD:angle radians from point storm motion 1000 mb:storm path gradient
-TGRD:absolute value angle radians from point storm motion 1000 mb:storm path gradient
-RGRD:speed m/s 1000 mb:storm path 50mi mean
-TGRD:angle radians from point storm motion 1000 mb:storm path 50mi mean
-TGRD:absolute value angle radians from point storm motion 1000 mb:storm path 50mi mean
 RGRD:speed m/s max wind:point
 TGRD:angle radians from point storm motion max wind:point
 TGRD:absolute value angle radians from point storm motion max wind:point
@@ -2083,3 +2187,35 @@ TGRD:absolute value angle radians from point storm motion tropopause:storm path 
 RGRD:speed m/s tropopause:storm path 50mi mean
 TGRD:angle radians from point storm motion tropopause:storm path 50mi mean
 TGRD:absolute value angle radians from point storm motion tropopause:storm path 50mi mean
+RSTM:speed m/s storm motion:point
+RSTM:speed m/s storm motion:storm path mean
+TSTM:angle radians from point storm motion storm motion:storm path mean
+TSTM:absolute value angle radians from point storm motion storm motion:storm path mean
+RSTM:speed m/s storm motion:storm path min
+TSTM:angle radians from point storm motion storm motion:storm path min
+RSTM:speed m/s storm motion:storm path max
+TSTM:angle radians from point storm motion storm motion:storm path max
+TSTM:absolute value angle radians from point storm motion storm motion:storm path max
+RSTM:speed m/s storm motion:storm path gradient
+TSTM:angle radians from point storm motion storm motion:storm path gradient
+TSTM:absolute value angle radians from point storm motion storm motion:storm path gradient
+RSTM:speed m/s storm motion:storm path 50mi mean
+TSTM:angle radians from point storm motion storm motion:storm path 50mi mean
+TSTM:absolute value angle radians from point storm motion storm motion:storm path 50mi mean
+RVCSH:shear magnitude 1/s 6000-0 m above ground:point
+TVCSH:angle radians from point storm motion 6000-0 m above ground:point
+TVCSH:absolute value angle radians from point storm motion 6000-0 m above ground:point
+RVCSH:shear magnitude 1/s 6000-0 m above ground:storm path mean
+TVCSH:angle radians from point storm motion 6000-0 m above ground:storm path mean
+TVCSH:absolute value angle radians from point storm motion 6000-0 m above ground:storm path mean
+RVCSH:shear magnitude 1/s 6000-0 m above ground:storm path min
+TVCSH:angle radians from point storm motion 6000-0 m above ground:storm path min
+RVCSH:shear magnitude 1/s 6000-0 m above ground:storm path max
+TVCSH:angle radians from point storm motion 6000-0 m above ground:storm path max
+TVCSH:absolute value angle radians from point storm motion 6000-0 m above ground:storm path max
+RVCSH:shear magnitude 1/s 6000-0 m above ground:storm path gradient
+TVCSH:angle radians from point storm motion 6000-0 m above ground:storm path gradient
+TVCSH:absolute value angle radians from point storm motion 6000-0 m above ground:storm path gradient
+RVCSH:shear magnitude 1/s 6000-0 m above ground:storm path 50mi mean
+TVCSH:angle radians from point storm motion 6000-0 m above ground:storm path 50mi mean
+TVCSH:absolute value angle radians from point storm motion 6000-0 m above ground:storm path 50mi mean

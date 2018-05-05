@@ -12,6 +12,8 @@ Pkg.add("Flux")
 
 Pkg.add("BSON")
 
+Pkg.clone("https://github.com/Allardvm/LightGBM.jl.git")
+
 # try
 #   Pkg.clone("https://github.com/MetServiceDev/ECCodes.jl.git")
 # catch exception

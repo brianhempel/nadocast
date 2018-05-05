@@ -1,12 +1,11 @@
 require "date"
-require "csv"
+require "digest"
 
 # Prompts for data range and spits out a list of grib files.
 #
 # Usage:
 #
 # $ ruby make_grib_file_list.rb > my_model/train.txt
-
 
 def int_prompt(prompt)
   STDERR.puts prompt
@@ -33,7 +32,13 @@ else
   ONLY_TORNADO_HOURS = false
 end
 
-STDERR.puts "Subsample ratio [0.0-1.0]?"
+STDERR.puts "Dev ratio [0.0-1.0]?"
+DEV_RATIO = Float(gets)
+
+STDERR.puts "Test ratio [0.0-1.0]?"
+TEST_RATIO = Float(gets)
+
+STDERR.puts "Subsample ratio [0.0-1.0]? (non-deterministic)"
 SUBSAMPLE_RATIO = Float(gets)
 
 TRAIN_DATES     = (TRAIN_START_DATE..TRAIN_END_DATE).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
@@ -54,19 +59,13 @@ file_count           = 0
 ONE_MINUTE = 60
 ONE_HOUR   = 60*ONE_MINUTE
 
-Tornado = Struct.new(:start_time, :end_time, :rating, :start_lat, :start_lon, :end_lat, :end_lon)
+valid_times_and_paths = []
 
-TORNADOES = CSV.read("tornadoes.csv").drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, rating_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
-  Tornado.new(
-    Time.at(Integer(start_seconds_str)).utc,
-    Time.at(Integer(end_seconds_str)).utc,
-    rating_str.to_i,
-    Float(start_lat_str),
-    Float(start_lon_str),
-    Float(end_lat_str),
-    Float(end_lon_str),
-  )
+def hash_day_to_float(time)
+  Digest::SHA256.hexdigest(time.utc.strftime("%D")).to_i(16) / ("F"*64).to_i(16).to_f
 end
+
+require("./tornadoes.rb")
 
 TRAIN_DATES.product(HOURS_OF_DAY).each do |date, run_hour|
   year_month        = "%04d%02d"     % [date.year, date.month]
@@ -98,8 +97,7 @@ TRAIN_DATES.product(HOURS_OF_DAY).each do |date, run_hour|
         # max training lat 48.647
         # min training lon -123.95500000000001
         # max training lon -67.89800000000002
-        tornado.start_time < valid_end_time &&
-        tornado.end_time   > valid_start_time &&
+        tornado.on_ground_during(valid_start_time...valid_end_time) &&
         (
           ((24..50).cover?(tornado.start_lat) && (-125..-66).cover?(tornado.start_lon)) ||
           ((24..50).cover?(tornado.end_lat)   && (-125..-66).cover?(tornado.end_lon))
@@ -109,12 +107,33 @@ TRAIN_DATES.product(HOURS_OF_DAY).each do |date, run_hour|
     if !ONLY_TORNADO_HOURS || any_tornadoes
       if rand <= SUBSAMPLE_RATIO
         hours_with_tornadoes += any_tornadoes ? 1 : 0
-        puts path
+        valid_times_and_paths << [valid_time, path]
         file_count += 1
       end
     end
   end
 end
+
+dev_paths =
+  valid_times_and_paths.
+    select { |valid_time, path| hash_day_to_float(valid_time) < DEV_RATIO }.
+    map(&:last)
+
+test_paths =
+  valid_times_and_paths.
+    select { |valid_time, path| hash_day_to_float(valid_time) > 1.0 - TEST_RATIO }.
+    map(&:last)
+
+train_paths = valid_times_and_paths.map(&:last) - dev_paths - test_paths
+
+puts "# Dev Files"
+puts dev_paths.sort.join("\n")
+puts
+puts "# Test Files"
+puts test_paths.sort.join("\n")
+puts
+puts "# Training Files"
+puts train_paths.sort.join("\n")
 
 STDERR.puts "#{hours_with_tornadoes}/#{file_count} hours with tornadoes"
 

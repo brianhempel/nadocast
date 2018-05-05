@@ -15,11 +15,16 @@ function plot_map(base_path, lats, lons, vals)
   # open map.pdf
   try
     run(`gmt sphinterpolate $(base_path * ".xyz") -R-139/-58/17/58 -I1M -Q0 -G$(base_path * ".nc")`)
-    run(`gmt begin $base_path pdf`)
+    # GMT sets internal working directory based on parent pid, so this is fine to run in parallel (by process).
+    run(`gmt begin $base_path.pdf pdf`)
     run(`gmt grdimage $(base_path * ".nc") -nn -Jl-100/35/33/45/0.3 -Cprob_colors.cpt`)
     run(`gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest`)
-    run(`gmt colorbar -DjCB -Cprob_colors.cpt`)
+    # run(`gmt colorbar -DjCB -Cprob_colors.cpt`) # Skip legend for uncalibrated images.
     run(`gmt end`)
+    # run(`convert -density 250 $(base_path * ".pdf") $(base_path * ".png")`) # `convert` utility from ImageMagick
+    # run(`optipng -o2 -strip all $base_path.png`)                            # `optipng` utility
+    run(`rm $(base_path * ".nc")`)
+    run(`rm $(base_path * ".xyz")`)
   end
   try
     # run(`open $(base_path * ".pdf")`)

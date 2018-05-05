@@ -9,7 +9,7 @@ Dir.glob("inventory_files/*/*/*.inv").each do |path|
   inventory = File.read(path).lines.map do |line|
     # 1:0:d=2012051023:HGT:1000 mb:1 hour fcst:
     n, _, _, abbrev, desc, hour = line.split(":")
-    [abbrev, desc] if n
+    [abbrev, desc, hour] if n
   end.compact.sort
 
   filtered_inventory = inventory.map { |fields| fields.join(":") }.join("\n") + "\n"
@@ -45,11 +45,11 @@ puts "### Common Fields ###"
 #
 
 unique_inventories_ignoring_number = unique_inventories.map do |inventory|
-  inventory.map do |abbrev, desc|
-    next(["MSTAV", "0 m underground"]) if abbrev == "MSTAV"
-    next(["USTM", "u storm motion"]) if abbrev == "USTM"
-    next(["VSTM", "v storm motion"]) if abbrev == "VSTM"
-    next(["HLCY", "3000-0 m above ground"]) if abbrev == "HLCY" && desc == "surface"
+  inventory.map do |abbrev, desc, hour|
+    next(["MSTAV", "0 m underground", hour]) if abbrev == "MSTAV"
+    next(["USTM", "u storm motion", hour]) if abbrev == "USTM"
+    next(["VSTM", "v storm motion", hour]) if abbrev == "VSTM"
+    next(["HLCY", "3000-0 m above ground", hour]) if abbrev == "HLCY" && desc == "surface"
     [
       abbrev.gsub(/\bDIST\b/, "HGT"), # Also changed from m to gpm (geo-potential meters); probably not a big deal.
       desc.
@@ -61,31 +61,35 @@ unique_inventories_ignoring_number = unique_inventories.map do |inventory|
         # gsub(/\batmos col\b/, "entire atmosphere (considered as a single layer)").
         gsub(/\bentire atmosphere\z/, "entire atmosphere (considered as a single layer)").
         # gsub(/\b300 cm down\b|\b3 m underground\b/, "surface"). # BGRUN:300 cm down -> BGRUN:surface
-        gsub(/\b3 m underground\b/, "surface") # BGRUN:3 m underground -> BGRUN:surface
+        gsub(/\b3 m underground\b/, "surface"), # BGRUN:3 m underground -> BGRUN:surface
         # gsub(/\bMSL\b/, "mean sea level").
         # gsub(/\bconvect-cld top\b/, "convective cloud top level").
         # gsub(/\bmax e-pot-temp\b/, "maximum equivalent potential temperature").
         # gsub(/\bmax wind level\b/, "max wind").
         # gsub(/\bof wet bulb\b/, "of the wet bulb").
         # gsub(/\bcld\b/, "cloud")
+      hour
     ]
   end
 end
 
-common_inventory = unique_inventories_ignoring_number.reduce { |inv1, inv2| inv1 & inv2 }
+common_inventory =
+  unique_inventories_ignoring_number.
+    reduce { |inv1, inv2| inv1 & inv2 }.
+    select { |abbrev, desc, hour| hour == "1 hour fcst" }
 
-common_inventory.each do |abbrev, desc|
-  puts "#{abbrev}:#{desc}"
+common_inventory.each do |abbrev, desc, hour|
+  puts "#{abbrev}:#{desc}:#{hour}"
 end
 
 puts
 
-puts "### Uncommon Fields ###"
+puts "### Uncommon Or Accumulation Fields ###"
 
 uncommon_fields = unique_inventories_ignoring_number.flat_map do |fields|
   fields - common_inventory
 end.uniq
 
-uncommon_fields.each do |abbrev, desc|
-  puts "#{abbrev}:#{desc}"
+uncommon_fields.each do |abbrev, desc,hour|
+  puts "#{abbrev}:#{desc}:#{hour}"
 end

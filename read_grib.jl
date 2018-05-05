@@ -8,6 +8,7 @@
 # #
 # # Low-level (180-0 mb agl, 90-0 mb agl) CAPE/CIN not added until 2014-02-25-1200. How to handle?? (Estimate for old data??)
 # #
+# # For now, simply only using data after 2014-02-25-1200
 #
 
 
@@ -45,14 +46,19 @@ grib2_winds_latlon_aligned_path = "tmp/winds_latlon_aligned_tmp_$grib2_file_name
 
 out_path = "tmp/$(IS_TRAINING ? "training_" : "")$(replace(grib2_file_name, ".grb2", "")).bindata"
 
+
+forecast_hour_str = match(r"(\d\d)\.gri?b2", grib2_file_name).captures[1]
+
+forecast_hour = parse(Int64, forecast_hour_str)
+
 if IS_TRAINING
   println("Preparing time...")
 
   utc = TimeZones.tz"UTC"
 
-  year_str, month_str, day_str, run_hour_str, forcast_hour_str = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_file_name).captures
+  year_str, month_str, day_str, run_hour_str, _ = match(r"_130_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)00_(\d\d\d)\.grb2", grib2_file_name).captures
 
-  valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Dates.Hour(parse(Int64,forcast_hour_str))
+  valid_time       = TimeZones.ZonedDateTime(parse(Int64,year_str),parse(Int64,month_str),parse(Int64,day_str),parse(Int64,run_hour_str),0,0, utc) + Dates.Hour(forecast_hour)
   valid_start_time = valid_time - Dates.Minute(30)
   valid_end_time   = valid_time + Dates.Minute(30)
 
@@ -64,23 +70,28 @@ stdout_limited = IOContext(STDOUT, :display_size=>(100,60))
 stdout_limited = IOContext(stdout_limited, :limit=>true)
 
 ### Common Fields ###
-layers = readdlm(IOBuffer("""ABSV:500 mb
+layers = readdlm(IOBuffer("""4LFTX:180-0 mb above ground
+ABSV:500 mb
+CAPE:180-0 mb above ground
 CAPE:255-0 mb above ground
+CAPE:90-0 mb above ground
 CAPE:surface
 CFRZR:surface
 CICEP:surface
+CIN:180-0 mb above ground
 CIN:255-0 mb above ground
+CIN:90-0 mb above ground
 CIN:surface
 CRAIN:surface
 CSNOW:surface
 DEPR:2 m above ground
-HGT:cloud base
-HGT:cloud top
 DPT:2 m above ground
 EPOT:surface
 GUST:surface
+HCDC:high cloud layer
 HGT:0C isotherm
 HGT:100 mb
+HGT:1000 mb
 HGT:125 mb
 HGT:150 mb
 HGT:175 mb
@@ -116,21 +127,29 @@ HGT:900 mb
 HGT:925 mb
 HGT:950 mb
 HGT:975 mb
-HGT:1000 mb
+HGT:cloud base
+HGT:cloud top
 HGT:convective cloud top level
 HGT:equilibrium level
 HGT:highest tropospheric freezing level
 HGT:lowest level of the wet bulb zero
+HGT:planetary boundary layer
 HGT:surface
 HLCY:1000-0 m above ground
 HLCY:3000-0 m above ground
 HPBL:surface
+LCDC:low cloud layer
+LFTX:500-1000 mb
+LTNG:surface
+MCDC:middle cloud layer
 MSLMA:mean sea level
 MSTAV:0 m underground
+PLPL:255-0 mb above ground
 POT:2 m above ground
 POT:tropopause
 PRATE:surface
 PRES:0C isotherm
+PRES:80 m above ground
 PRES:highest tropospheric freezing level
 PRES:max wind
 PRES:surface
@@ -139,8 +158,10 @@ PWAT:entire atmosphere (considered as a single layer)
 REFC:entire atmosphere (considered as a single layer)
 REFD:1000 m above ground
 REFD:4000 m above ground
+RETOP:entire atmosphere (considered as a single layer)
 RH:0C isotherm
 RH:100 mb
+RH:1000 mb
 RH:120-90 mb above ground
 RH:125 mb
 RH:150 mb
@@ -183,11 +204,13 @@ RH:900 mb
 RH:925 mb
 RH:950 mb
 RH:975 mb
-RH:1000 mb
 RH:highest tropospheric freezing level
 SNOD:surface
 SPFH:2 m above ground
+SPFH:80 m above ground
+TCDC:entire atmosphere (considered as a single layer)
 TMP:100 mb
+TMP:1000 mb
 TMP:120-90 mb above ground
 TMP:125 mb
 TMP:150 mb
@@ -221,6 +244,7 @@ TMP:700 mb
 TMP:725 mb
 TMP:750 mb
 TMP:775 mb
+TMP:80 m above ground
 TMP:800 mb
 TMP:825 mb
 TMP:850 mb
@@ -230,105 +254,109 @@ TMP:900 mb
 TMP:925 mb
 TMP:950 mb
 TMP:975 mb
-TMP:1000 mb
 TMP:surface
 TMP:tropopause
-USTM:u storm motion
-VSTM:v storm motion
 UGRD:10 m above ground
-VGRD:10 m above ground
 UGRD:100 mb
-VGRD:100 mb
-UGRD:120-90 mb above ground
-VGRD:120-90 mb above ground
-UGRD:125 mb
-VGRD:125 mb
-UGRD:150 mb
-VGRD:150 mb
-UGRD:150-120 mb above ground
-VGRD:150-120 mb above ground
-UGRD:175 mb
-VGRD:175 mb
-UGRD:180-150 mb above ground
-VGRD:180-150 mb above ground
-UGRD:200 mb
-VGRD:200 mb
-UGRD:225 mb
-VGRD:225 mb
-UGRD:250 mb
-VGRD:250 mb
-UGRD:275 mb
-VGRD:275 mb
-UGRD:30-0 mb above ground
-VGRD:30-0 mb above ground
-UGRD:300 mb
-VGRD:300 mb
-UGRD:325 mb
-VGRD:325 mb
-UGRD:350 mb
-VGRD:350 mb
-UGRD:375 mb
-VGRD:375 mb
-UGRD:400 mb
-VGRD:400 mb
-UGRD:425 mb
-VGRD:425 mb
-UGRD:450 mb
-VGRD:450 mb
-UGRD:475 mb
-VGRD:475 mb
-UGRD:500 mb
-VGRD:500 mb
-UGRD:525 mb
-VGRD:525 mb
-UGRD:550 mb
-VGRD:550 mb
-UGRD:575 mb
-VGRD:575 mb
-UGRD:60-30 mb above ground
-VGRD:60-30 mb above ground
-UGRD:600 mb
-VGRD:600 mb
-UGRD:625 mb
-VGRD:625 mb
-UGRD:650 mb
-VGRD:650 mb
-UGRD:675 mb
-VGRD:675 mb
-UGRD:700 mb
-VGRD:700 mb
-UGRD:725 mb
-VGRD:725 mb
-UGRD:750 mb
-VGRD:750 mb
-UGRD:775 mb
-VGRD:775 mb
-UGRD:800 mb
-VGRD:800 mb
-UGRD:825 mb
-VGRD:825 mb
-UGRD:850 mb
-VGRD:850 mb
-UGRD:875 mb
-VGRD:875 mb
-UGRD:90-60 mb above ground
-VGRD:90-60 mb above ground
-UGRD:900 mb
-VGRD:900 mb
-UGRD:925 mb
-VGRD:925 mb
-UGRD:950 mb
-VGRD:950 mb
-UGRD:975 mb
-VGRD:975 mb
 UGRD:1000 mb
-VGRD:1000 mb
+UGRD:120-90 mb above ground
+UGRD:125 mb
+UGRD:150 mb
+UGRD:150-120 mb above ground
+UGRD:175 mb
+UGRD:180-150 mb above ground
+UGRD:200 mb
+UGRD:225 mb
+UGRD:250 mb
+UGRD:275 mb
+UGRD:30-0 mb above ground
+UGRD:300 mb
+UGRD:325 mb
+UGRD:350 mb
+UGRD:375 mb
+UGRD:400 mb
+UGRD:425 mb
+UGRD:450 mb
+UGRD:475 mb
+UGRD:500 mb
+UGRD:525 mb
+UGRD:550 mb
+UGRD:575 mb
+UGRD:60-30 mb above ground
+UGRD:600 mb
+UGRD:625 mb
+UGRD:650 mb
+UGRD:675 mb
+UGRD:700 mb
+UGRD:725 mb
+UGRD:750 mb
+UGRD:775 mb
+UGRD:80 m above ground
+UGRD:800 mb
+UGRD:825 mb
+UGRD:850 mb
+UGRD:875 mb
+UGRD:90-60 mb above ground
+UGRD:900 mb
+UGRD:925 mb
+UGRD:950 mb
+UGRD:975 mb
 UGRD:max wind
-VGRD:max wind
 UGRD:tropopause
+USTM:u storm motion
+VGRD:10 m above ground
+VGRD:100 mb
+VGRD:1000 mb
+VGRD:120-90 mb above ground
+VGRD:125 mb
+VGRD:150 mb
+VGRD:150-120 mb above ground
+VGRD:175 mb
+VGRD:180-150 mb above ground
+VGRD:200 mb
+VGRD:225 mb
+VGRD:250 mb
+VGRD:275 mb
+VGRD:30-0 mb above ground
+VGRD:300 mb
+VGRD:325 mb
+VGRD:350 mb
+VGRD:375 mb
+VGRD:400 mb
+VGRD:425 mb
+VGRD:450 mb
+VGRD:475 mb
+VGRD:500 mb
+VGRD:525 mb
+VGRD:550 mb
+VGRD:575 mb
+VGRD:60-30 mb above ground
+VGRD:600 mb
+VGRD:625 mb
+VGRD:650 mb
+VGRD:675 mb
+VGRD:700 mb
+VGRD:725 mb
+VGRD:750 mb
+VGRD:775 mb
+VGRD:80 m above ground
+VGRD:800 mb
+VGRD:825 mb
+VGRD:850 mb
+VGRD:875 mb
+VGRD:90-60 mb above ground
+VGRD:900 mb
+VGRD:925 mb
+VGRD:950 mb
+VGRD:975 mb
+VGRD:max wind
 VGRD:tropopause
 VIS:surface
+VSTM:v storm motion
+VUCSH:6000-0 m above ground
+VVCSH:6000-0 m above ground
 VVEL:100 mb
+VVEL:1000 mb
 VVEL:120-90 mb above ground
 VVEL:125 mb
 VVEL:150 mb
@@ -369,58 +397,59 @@ VVEL:90-60 mb above ground
 VVEL:900 mb
 VVEL:925 mb
 VVEL:950 mb
-VVEL:975 mb
-VVEL:1000 mb"""), ':', String; header=false, use_mmap=false, quotes=false)
+VVEL:975 mb"""), ':', String; header=false, use_mmap=false, quotes=false)
 
-uv_layers = [
-  ("UGRD:10 m above ground",       "VGRD:10 m above ground"),
-  ("UGRD:100 mb",                  "VGRD:100 mb"),
-  ("UGRD:120-90 mb above ground",  "VGRD:120-90 mb above ground"),
-  ("UGRD:125 mb",                  "VGRD:125 mb"),
-  ("UGRD:150 mb",                  "VGRD:150 mb"),
-  ("UGRD:150-120 mb above ground", "VGRD:150-120 mb above ground"),
-  ("UGRD:175 mb",                  "VGRD:175 mb"),
-  ("UGRD:180-150 mb above ground", "VGRD:180-150 mb above ground"),
-  ("UGRD:200 mb",                  "VGRD:200 mb"),
-  ("UGRD:225 mb",                  "VGRD:225 mb"),
-  ("UGRD:250 mb",                  "VGRD:250 mb"),
-  ("UGRD:275 mb",                  "VGRD:275 mb"),
-  ("UGRD:30-0 mb above ground",    "VGRD:30-0 mb above ground"),
-  ("UGRD:300 mb",                  "VGRD:300 mb"),
-  ("UGRD:325 mb",                  "VGRD:325 mb"),
-  ("UGRD:350 mb",                  "VGRD:350 mb"),
-  ("UGRD:375 mb",                  "VGRD:375 mb"),
-  ("UGRD:400 mb",                  "VGRD:400 mb"),
-  ("UGRD:425 mb",                  "VGRD:425 mb"),
-  ("UGRD:450 mb",                  "VGRD:450 mb"),
-  ("UGRD:475 mb",                  "VGRD:475 mb"),
-  ("UGRD:500 mb",                  "VGRD:500 mb"),
-  ("UGRD:525 mb",                  "VGRD:525 mb"),
-  ("UGRD:550 mb",                  "VGRD:550 mb"),
-  ("UGRD:575 mb",                  "VGRD:575 mb"),
-  ("UGRD:60-30 mb above ground",   "VGRD:60-30 mb above ground"),
-  ("UGRD:600 mb",                  "VGRD:600 mb"),
-  ("UGRD:625 mb",                  "VGRD:625 mb"),
-  ("UGRD:650 mb",                  "VGRD:650 mb"),
-  ("UGRD:675 mb",                  "VGRD:675 mb"),
-  ("UGRD:700 mb",                  "VGRD:700 mb"),
-  ("UGRD:725 mb",                  "VGRD:725 mb"),
-  ("UGRD:750 mb",                  "VGRD:750 mb"),
-  ("UGRD:775 mb",                  "VGRD:775 mb"),
-  ("UGRD:800 mb",                  "VGRD:800 mb"),
-  ("UGRD:825 mb",                  "VGRD:825 mb"),
-  ("UGRD:850 mb",                  "VGRD:850 mb"),
-  ("UGRD:875 mb",                  "VGRD:875 mb"),
-  ("UGRD:90-60 mb above ground",   "VGRD:90-60 mb above ground"),
-  ("UGRD:900 mb",                  "VGRD:900 mb"),
-  ("UGRD:925 mb",                  "VGRD:925 mb"),
-  ("UGRD:950 mb",                  "VGRD:950 mb"),
-  ("UGRD:975 mb",                  "VGRD:975 mb"),
-  ("UGRD:1000 mb",                 "VGRD:1000 mb"),
-  ("UGRD:max wind",                "VGRD:max wind"),
-  ("UGRD:tropopause",              "VGRD:tropopause"),
-  ("USTM:u storm motion",          "VSTM:v storm motion")
-]
+# uv_layers = [
+#   ("UGRD:10 m above ground",       "VGRD:10 m above ground"),
+#   ("UGRD:80 m above ground",       "VGRD:80 m above ground"),
+#   ("UGRD:100 mb",                  "VGRD:100 mb"),
+#   ("UGRD:120-90 mb above ground",  "VGRD:120-90 mb above ground"),
+#   ("UGRD:125 mb",                  "VGRD:125 mb"),
+#   ("UGRD:150 mb",                  "VGRD:150 mb"),
+#   ("UGRD:150-120 mb above ground", "VGRD:150-120 mb above ground"),
+#   ("UGRD:175 mb",                  "VGRD:175 mb"),
+#   ("UGRD:180-150 mb above ground", "VGRD:180-150 mb above ground"),
+#   ("UGRD:200 mb",                  "VGRD:200 mb"),
+#   ("UGRD:225 mb",                  "VGRD:225 mb"),
+#   ("UGRD:250 mb",                  "VGRD:250 mb"),
+#   ("UGRD:275 mb",                  "VGRD:275 mb"),
+#   ("UGRD:30-0 mb above ground",    "VGRD:30-0 mb above ground"),
+#   ("UGRD:300 mb",                  "VGRD:300 mb"),
+#   ("UGRD:325 mb",                  "VGRD:325 mb"),
+#   ("UGRD:350 mb",                  "VGRD:350 mb"),
+#   ("UGRD:375 mb",                  "VGRD:375 mb"),
+#   ("UGRD:400 mb",                  "VGRD:400 mb"),
+#   ("UGRD:425 mb",                  "VGRD:425 mb"),
+#   ("UGRD:450 mb",                  "VGRD:450 mb"),
+#   ("UGRD:475 mb",                  "VGRD:475 mb"),
+#   ("UGRD:500 mb",                  "VGRD:500 mb"),
+#   ("UGRD:525 mb",                  "VGRD:525 mb"),
+#   ("UGRD:550 mb",                  "VGRD:550 mb"),
+#   ("UGRD:575 mb",                  "VGRD:575 mb"),
+#   ("UGRD:60-30 mb above ground",   "VGRD:60-30 mb above ground"),
+#   ("UGRD:600 mb",                  "VGRD:600 mb"),
+#   ("UGRD:625 mb",                  "VGRD:625 mb"),
+#   ("UGRD:650 mb",                  "VGRD:650 mb"),
+#   ("UGRD:675 mb",                  "VGRD:675 mb"),
+#   ("UGRD:700 mb",                  "VGRD:700 mb"),
+#   ("UGRD:725 mb",                  "VGRD:725 mb"),
+#   ("UGRD:750 mb",                  "VGRD:750 mb"),
+#   ("UGRD:775 mb",                  "VGRD:775 mb"),
+#   ("UGRD:800 mb",                  "VGRD:800 mb"),
+#   ("UGRD:825 mb",                  "VGRD:825 mb"),
+#   ("UGRD:850 mb",                  "VGRD:850 mb"),
+#   ("UGRD:875 mb",                  "VGRD:875 mb"),
+#   ("UGRD:90-60 mb above ground",   "VGRD:90-60 mb above ground"),
+#   ("UGRD:900 mb",                  "VGRD:900 mb"),
+#   ("UGRD:925 mb",                  "VGRD:925 mb"),
+#   ("UGRD:950 mb",                  "VGRD:950 mb"),
+#   ("UGRD:975 mb",                  "VGRD:975 mb"),
+#   ("UGRD:1000 mb",                 "VGRD:1000 mb"),
+#   ("UGRD:max wind",                "VGRD:max wind"),
+#   ("UGRD:tropopause",              "VGRD:tropopause"),
+#   ("USTM:u storm motion",          "VSTM:v storm motion"),
+#   ("VUCSH:6000-0 m above ground",  "VVCSH:6000-0 m above ground")
+# ]
 
 
 
@@ -473,34 +502,7 @@ inventory_lines = open(`wgrib2 $grib2_winds_latlon_aligned_path -s -n`) do inv
   readdlm(inv, ':', String; header=false, use_mmap=false, quotes=false)
 end
 
-# unique_inventories_ignoring_number = unique_inventories.map do |inventory|
-#   inventory.map do |abbrev, desc|
-#     next(["MSTAV", "0 m underground"]) if abbrev == "MSTAV"
-#     next(["USTM", "u storm motion"]) if abbrev == "USTM"
-#     next(["VSTM", "v storm motion"]) if abbrev == "VSTM"
-#     next(["HLCY", "3000-0 m above ground"]) if abbrev == "HLCY" && desc == "surface"
-#     [
-#       abbrev.gsub(/\bDIST\b/, "HGT"), # Also changed from m to gpm (geo-potential meters); probably not a big deal.
-#       desc.
-#         gsub("0-6000 m above ground", "6000-0 m above ground").
-#         # gsub(/\bsfc\b/, "surface").
-#         # gsub(/\bgnd\b/, "ground").
-#         # gsub(/\bhigh trop\b/, "highest tropospheric").
-#         # gsub(/\blvl\b|\blev\b/, "level").
-#         # gsub(/\batmos col\b/, "entire atmosphere (considered as a single layer)").
-#         gsub(/\bentire atmosphere\z/, "entire atmosphere (considered as a single layer)").
-#         # gsub(/\b300 cm down\b|\b3 m underground\b/, "surface"). # BGRUN:300 cm down -> BGRUN:surface
-#         gsub(/\b3 m underground\b/, "surface") # BGRUN:3 m underground -> BGRUN:surface
-#         # gsub(/\bMSL\b/, "mean sea level").
-#         # gsub(/\bconvect-cld top\b/, "convective cloud top level").
-#         # gsub(/\bmax e-pot-temp\b/, "maximum equivalent potential temperature").
-#         # gsub(/\bmax wind level\b/, "max wind").
-#         # gsub(/\bof wet bulb\b/, "of the wet bulb").
-#         # gsub(/\bcld\b/, "cloud")
-#     ]
-#   end
-# end
-
+# show(stdout_limited, "text/plain", inventory_lines)
 
 println("Fetching desired layers...")
 
@@ -538,16 +540,17 @@ inventory_lines_normalized =
 # show(stdout_limited, "text/plain", inventory_lines_normalized)
 
 function desiredLayerToInventoryLine(desired)
-  desiredAbbrev = desired[1]
-  desiredDesc   = desired[2]
+  desired_abbrev = desired[1]
+  desired_desc   = desired[2]
+  desired_hour   = "$forecast_hour hour fcst"
   # I hate this language.
   matching_i =
-    findfirst([[desiredAbbrev, desiredDesc] == inventory_lines_normalized[i,4:5] for i=1:size(inventory_lines_normalized,1)])
+    findfirst([[desired_abbrev, desired_desc, desired_hour] == inventory_lines_normalized[i,4:6] for i=1:size(inventory_lines_normalized,1)])
 
   if matching_i > 0
     return inventory_lines_normalized[matching_i, :]
   else
-    error("Could not find inventory_lines_normalized row for $desiredAbbrev $desiredDesc")
+    error("Could not find inventory_lines_normalized row for $desired_abbrev $desired_desc $desired_hour")
   end
 end
 
@@ -577,9 +580,9 @@ for layer_i = 1:size(layers_to_fetch,1)
   values            = read(from_wgrib2, Float32, div(grid_length, 4))
   grid_length_again = read(from_wgrib2, UInt32)
 
-  if desc == "cloud base" || desc == "cloud top"
+  if desc == "cloud base" || desc == "cloud top" || abbrev == "RETOP"
     # Handle undefined
-    values = map((v -> v > 25000.0f0 ? 25000.0f0 : v), values)
+    values = map((v -> (v > 25000.0f0 || v < -1000.0f0) ? 25000.0f0 : v), values)
   end
   # println(grid_length)
   # println(values)
@@ -1129,8 +1132,8 @@ i = 1
 for layer_i in 1:size(layers,1)
   abbrev, desc = layers[layer_i,:]
 
-  if abbrev == "UGRD" || abbrev == "USTM"
-  elseif abbrev == "VGRD" || abbrev == "VSTM"
+  if abbrev == "UGRD" || abbrev == "USTM" || abbrev == "VUCSH"
+  elseif abbrev == "VGRD" || abbrev == "VSTM" || abbrev == "VVCSH"
   else
     layer_key = abbrev * ":" * desc
     push!(regular_layer_order, (abbrev, desc))
@@ -1146,9 +1149,9 @@ const first_wind_layer_i = i
 for layer_i in 1:size(layers,1)
   abbrev, desc = layers[layer_i,:]
 
-  if abbrev == "UGRD" || abbrev == "USTM"
+  if abbrev == "UGRD" || abbrev == "USTM" || abbrev == "VUCSH"
     u_abbrev, u_desc = abbrev, desc
-    v_abbrev = "V" * u_abbrev[2:4]
+    v_abbrev = abbrev == "VUCSH" ? "VVCSH" : "V" * u_abbrev[2:4]
     v_desc   = abbrev == "USTM" ? "v storm motion" : u_desc
 
     u_layer_key = u_abbrev * ":" * u_desc
@@ -1162,7 +1165,7 @@ for layer_i in 1:size(layers,1)
 
     push!(wind_layer_order, (u_abbrev, u_desc))
 
-  elseif abbrev == "VGRD" || abbrev == "VSTM"
+  elseif abbrev == "VGRD" || abbrev == "VSTM" || abbrev == "VVCSH"
   else
   end
 end
@@ -1386,9 +1389,12 @@ function makeFeatures(data::Array{Float32,2})
         # for each wind layer...
         for winds_layer_i in 1:length(wind_layer_order)
           abbrev, desc = wind_layer_order[winds_layer_i]
-          if abbrev[1] == 'U' # Handle u and v layers together, so skip v layers.
+          if abbrev[1] == 'U' || abbrev == "VUCSH" # Handle u and v layers together, so skip v layers.
             # us_around_storm_path       = data_around_storm_path[k,:]
             # vs_around_storm_path       = data_around_storm_path[k+1,:]
+
+            abbrev_root = abbrev == "VUCSH" ? "VCSH" : abbrev[2:4]
+            r_unit      = abbrev == "VUCSH" ? "shear magnitude 1/s" : "speed m/s"
 
             # point value
             r, theta = u_v_to_r_theta(data_at_point[k], data_at_point[k+1])
@@ -1400,11 +1406,11 @@ function makeFeatures(data::Array{Float32,2})
             end
             if first_pt
               if abbrev != "USTM"
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":point")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":point")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":point")
+                push!(headers, "R" * abbrev_root * ":$r_unit "                                              * desc * ":point")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion "                * desc * ":point")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion " * desc * ":point")
               else
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:point")
+                push!(headers, "R" * abbrev_root * ":$r_unit storm motion:point")
               end
             end
 
@@ -1418,13 +1424,13 @@ function makeFeatures(data::Array{Float32,2})
             push!(out_row, abs(relative_theta))
             if first_pt
               if abbrev != "USTM"
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path mean")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path mean")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path mean")
+                push!(headers, "R" * abbrev_root * ":$r_unit "                                              * desc * ":storm path mean")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion "                * desc * ":storm path mean")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion " * desc * ":storm path mean")
               else
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path mean")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path mean")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path mean")
+                push!(headers, "R" * abbrev_root * ":$r_unit storm motion:storm path mean")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion storm motion:storm path mean")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion storm motion:storm path mean")
               end
             end
 
@@ -1464,17 +1470,17 @@ function makeFeatures(data::Array{Float32,2})
             push!(out_row, max(abs(min_theta), abs(max_theta)))
             if first_pt
               if abbrev != "USTM"
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path min")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path min")
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path max")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path max")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path max")
+                push!(headers, "R" * abbrev_root * ":$r_unit "                                              * desc * ":storm path min")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion "                * desc * ":storm path min")
+                push!(headers, "R" * abbrev_root * ":$r_unit "                                              * desc * ":storm path max")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion "                * desc * ":storm path max")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion " * desc * ":storm path max")
               else
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path min")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path min")
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path max")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path max")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path max")
+                push!(headers, "R" * abbrev_root * ":$r_unit storm motion:storm path min")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion storm motion:storm path min")
+                push!(headers, "R" * abbrev_root * ":$r_unit storm motion:storm path max")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion storm motion:storm path max")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion storm motion:storm path max")
               end
             end
 
@@ -1505,13 +1511,13 @@ function makeFeatures(data::Array{Float32,2})
             push!(out_row, abs(relative_mean_delta_theta))
             if first_pt
               if abbrev != "USTM"
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path gradient")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path gradient")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path gradient")
+                push!(headers, "R" * abbrev_root * ":$r_unit "                                              * desc * ":storm path gradient")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion "                * desc * ":storm path gradient")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion " * desc * ":storm path gradient")
               else
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path gradient")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path gradient")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path gradient")
+                push!(headers, "R" * abbrev_root * ":$r_unit storm motion:storm path gradient")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion storm motion:storm path gradient")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion storm motion:storm path gradient")
               end
             end
 
@@ -1526,13 +1532,13 @@ function makeFeatures(data::Array{Float32,2})
             push!(out_row, abs(relative_mean_50mi_theta))
             if first_pt
               if abbrev != "USTM"
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s "               * desc * ":storm path 50mi mean")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion " * desc * ":storm path 50mi mean")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion " * desc * ":storm path 50mi mean")
+                push!(headers, "R" * abbrev_root * ":$r_unit "                                              * desc * ":storm path 50mi mean")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion "                * desc * ":storm path 50mi mean")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion " * desc * ":storm path 50mi mean")
               else
-                push!(headers, "R" * abbrev[2:4] * ":speed m/s storm motion:storm path 50mi mean")
-                push!(headers, "T" * abbrev[2:4] * ":angle radians from point storm motion storm motion:storm path 50mi mean")
-                push!(headers, "T" * abbrev[2:4] * ":absolute value angle radians from point storm motion storm motion:storm path 50mi mean")
+                push!(headers, "R" * abbrev_root * ":$r_unit storm motion:storm path 50mi mean")
+                push!(headers, "T" * abbrev_root * ":angle radians from point storm motion storm motion:storm path 50mi mean")
+                push!(headers, "T" * abbrev_root * ":absolute value angle radians from point storm motion storm motion:storm path 50mi mean")
               end
             end
 

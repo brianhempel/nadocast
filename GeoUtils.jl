@@ -72,8 +72,14 @@ function instant_distance_to_line(lat :: Float64, lon :: Float64, lat1 :: Float6
 
   # Unit vector...
   segment_length = √(x2^2 + y2^2)
-  ux2 = x2 / segment_length
-  uy2 = y2 / segment_length
+
+  if segment_length < 1.0/1000.0 # 1m
+    # Segment is essentially 0 length.
+    return √(x^2 + y^2) * 1000.0
+  else
+    ux2 = x2 / segment_length
+    uy2 = y2 / segment_length
+  end
 
   # Project onto line
   distance_from_origin_on_line = x*ux2 + y*uy2
