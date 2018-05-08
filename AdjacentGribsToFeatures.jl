@@ -454,7 +454,11 @@ VVEL:975 mb"""), ':', String; header=false, use_mmap=false, quotes=false)
 
 
 
-# Rotate winds to lat/lon (so we can correctly average them together, etc...)
+# It's actually not correct to align winds to lat/lon to average them.
+#
+# I think the correct way would be to average the rotation vectors at the center of the earth.
+#
+# But we need lat/lon aligned winds so we can follow the storm motion. So let's roll with it for now.
 
 # http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/tricks.wgrib2
 #
