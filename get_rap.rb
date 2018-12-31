@@ -2,7 +2,7 @@ require "date"
 
 # Modify these constants.
 INV_OR_GRIB    = %w[inv grb2][1]
-DATES          = (Date.new(2017,3,1)..Date.new(2018,4,6)-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
+DATES          = (Date.new(2017,9,6)..Date.new(2018,9,7)-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
 HOURS_OF_DAY   = (0..23).to_a
 FORECAST_HOURS = [1,2,5,6,11,12,17,18] # RAP forcasts 0 - 21 hours ahead (0-18 before fall 2016). +0 is analysis, +1 barely comes out before its valid time, so +2 hours is the first real forecast.
 BASE_URL       = FORECAST_HOURS.max <= 1 ? "https://nomads.ncdc.noaa.gov/data/rucanl" : "https://nomads.ncdc.noaa.gov/data/rap130" # Based a single sample, files in these two folders are identical if they exist in both
@@ -16,7 +16,12 @@ BAD_FILES      = %w[
 # ruc2anl_252_20110601_1100_001.inv
 THREAD_COUNT   = INV_OR_GRIB == "inv" ? 8 : 4
 
+def alt_location(directory)
+  directory.sub(/^\/Volumes\/Tornadoes\//, "/Volumes/Tornadoes2/")
+end
 
+loop { break if Dir.exists?("/Volumes/Tornadoes/");  puts "Waiting for Tornadoes to mount...";  sleep 4 }
+loop { break if Dir.exists?("/Volumes/Tornadoes2/"); puts "Waiting for Tornadoes2 to mount..."; sleep 4 }
 
 forecasts_to_get = DATES.product(HOURS_OF_DAY, FORECAST_HOURS)
 
@@ -51,13 +56,17 @@ threads = THREAD_COUNT.times.map do
       url_to_get        = "#{BASE_URL}/#{year_month}/#{year_month_day}/#{file_name}" # e.g. "https://nomads.ncdc.noaa.gov/data/rap130/201612/20161231/rap_130_20161231_0600_002.grb2"
       directory         = "#{BASE_DIRECTORY}/#{year_month}/#{year_month_day}"
       path              = "#{directory}/#{file_name}"
+      alt_directory     = alt_location(directory)
+      alt_path          = alt_location(path)
 
       system("mkdir -p #{directory} 2> /dev/null")
+      system("mkdir -p #{alt_location(alt_directory)} 2> /dev/null")
       if (File.size(path) rescue 0) < MIN_FILE_BYTES
         puts "#{url_to_get} -> #{path}"
         data = `curl -f -s --show-error #{url_to_get}`
-        if data.size >= MIN_FILE_BYTES
+        if $?.success? && data.size >= MIN_FILE_BYTES
           File.write(path, data)
+          File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
         end
       end
     end

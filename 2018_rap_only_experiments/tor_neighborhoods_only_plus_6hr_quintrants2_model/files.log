@@ -1,0 +1,293 @@
+$ ruby make_grib_file_list.rb > tor_neighborhoods_only_plus_6hr_model/train.txt
+Start year?
+2014
+Start month?
+2
+Start day?
+26
+End year?
+2016
+End month?
+12
+End day?
+31
+Forcast hour (2-18)?
+6
+Only hours with tornadoes (n/y)?
+y
+Dev ratio [0.0-1.0]?
+0
+Test ratio [0.0-1.0]?
+0
+Subsample ratio [0.0-1.0]? (non-deterministic)
+1.0
+1658/1658 hours with tornadoes
+
+(need to manually remove headers)
+
+$ ruby make_grib_file_list.rb
+Start year?
+2017
+Start month?
+1
+Start day?
+1
+End year?
+2017
+End month?
+12
+End day?
+31
+Forcast hour (2-18)?
+6
+Only hours with tornadoes (n/y)?
+y
+Dev ratio [0.0-1.0]?
+0.25
+Test ratio [0.0-1.0]?
+0.25
+Subsample ratio [0.0-1.0]? (non-deterministic)
+1.0
+
+$ ruby make_grib_file_list.rb
+Start year?
+2017
+Start month?
+1
+Start day?
+1
+End year?
+2017
+End month?
+12
+End day?
+31
+Forcast hour (2-18)?
+6
+Only hours with tornadoes (n/y)?
+y
+Dev ratio [0.0-1.0]?
+0.25
+Test ratio [0.0-1.0]?
+0.25
+Subsample ratio [0.0-1.0]? (non-deterministic)
+1.0
+# Dev Files
+...
+
+# Test Files
+...
+
+# Training Files
+...
+
+685/685 hours with tornadoes
+
+
+(make dev.txt/test.txt files manually)
+(add training files manually)
+
+So training is 2014-2-26 through 2016 and half the tornado days in 2017.
+
+julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_model/dev.txt
+
+
+julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_model/train.txt
+
+
+julia TrainGBM.jl tor_neighborhoods_only_plus_6hr_quintrants2_model/lightgbm.jl # LightGBM doesn't need the points shuffled
+
+
+
+# julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_model/dev.txt; julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_model/train.txt; julia TrainGBM.jl tor_neighborhoods_only_plus_6hr_quintrants2_model/lightgbm.jl # LightGBM doesn't need the points shuffled
+
+
+estimator =
+  LightGBM.LGBMBinary(
+    num_iterations = 1000,
+    min_data_in_leaf = 1000, # 1000 did better than 2000 or 5000, 500 is too small
+    # min_sum_hessian_in_leaf = 1000,
+    learning_rate = .07, #
+    early_stopping_round = 20,
+    feature_fraction = .8,
+    bagging_fraction = .8, #
+    bagging_freq = 5,
+    num_leaves = 31, # 15 is too small, 63 is too much
+    is_sparse = false,
+    max_bin = 255,
+    num_threads = 4,
+    is_unbalance = false, # if true, changes the label weights so pos/neg classes have same total weight across dataset when computing loss/gradient; causes WAAY too much probability all over
+    metric = ["binary_logloss"]
+  )
+
+# dev loss 0.06625313480984459
+
+$ ruby read_lightgbm_feature_importance.rb tor_neighborhoods_only_plus_6hr_quintrants2_model/lightgbm_loss_0.0662531.model
+110	HGT:convective cloud top level:56mi mean
+43	LFTX:500-1000 mb:25mi mean
+38	RH:700 mb:56mi mean
+33	CAPE:90-0 mb above ground:point -1hr
+32	HLCY:3000-0 m above ground:56mi mean
+28	CAPE:90-0 mb above ground:25mi mean
+27	LFTX:500-1000 mb:25mi mean storm location -1hr
+27	PRATE:surface:56mi mean
+27	CAPE:90-0 mb above ground:25mi mean -1hr
+26	VVEL:300 mb:56mi mean storm location -1hr
+25	LFTX:500-1000 mb:point
+23	HLCY:3000-0 m above ground:56mi mean -1hr
+22	HLCY:3000-0 m above ground:25mi mean -1hr
+22	CAPE:90-0 mb above ground:56mi mean
+21	PLPL:255-0 mb above ground:56mi mean -1hr
+21	TMP:100 mb:56mi mean -1hr
+21	RH:650 mb:25mi-56mi leftward gradient
+20	CAPE:90-0 mb above ground:25mi mean storm location -1hr
+19	VVEL:700 mb:56mi mean -1hr
+19	RH:450 mb:56mi mean -1hr
+18	HGT:convective cloud top level:56mi mean storm location -1hr
+18	RH:700 mb:25mi-56mi leftward gradient
+18	4LFTX:180-0 mb above ground:point
+17	PRES:max wind:56mi mean -1hr
+16	VVEL:300 mb:56mi mean -1hr
+16	RH:500 mb:56mi mean -1hr
+16	HLCY:1000-0 m above ground:56mi mean
+16	RGRD:speed m/s 650 mb:25mi mean
+16	HLCY:3000-0 m above ground:25mi mean
+16	4LFTX:180-0 mb above ground:56mi mean storm location -1hr
+
+
+
+
+
+
+
+
+
+estimator =
+  LightGBM.LGBMBinary(
+    num_iterations = 1000,
+    min_data_in_leaf = 1000, # 1000 did better than 2000 or 5000, 500 is too small
+    # min_sum_hessian_in_leaf = 1000,
+    learning_rate = .08, # .08 did better than .07
+    early_stopping_round = 20,
+    feature_fraction = .8,
+    bagging_fraction = .8, #
+    bagging_freq = 5,
+    num_leaves = 31, # 15 is too small, 63 is too much
+    is_sparse = false,
+    max_bin = 255,
+    num_threads = 4,
+    is_unbalance = false, # if true, changes the label weights so pos/neg classes have same total weight across dataset when computing loss/gradient; causes WAAY too much probability all over
+    metric = ["binary_logloss"]
+  )
+
+# dev loss 0.0661989193524427
+
+$ ruby read_lightgbm_feature_importance.rb tor_neighborhoods_only_plus_6hr_quintrants2_model/lightgbm_loss_0.0661989.model
+91	HGT:convective cloud top level:56mi mean
+39	LFTX:500-1000 mb:25mi mean
+30	RH:700 mb:56mi mean
+30	CAPE:90-0 mb above ground:point -1hr
+28	CAPE:90-0 mb above ground:25mi mean -1hr
+28	HLCY:3000-0 m above ground:56mi mean
+21	CAPE:90-0 mb above ground:25mi mean
+21	PRATE:surface:56mi mean
+20	RH:650 mb:25mi-56mi leftward gradient
+20	LFTX:500-1000 mb:25mi mean storm location -1hr
+20	4LFTX:180-0 mb above ground:point
+20	VVEL:300 mb:56mi mean storm location -1hr
+19	CAPE:90-0 mb above ground:25mi mean storm location -1hr
+19	CAPE:90-0 mb above ground:56mi mean
+18	HLCY:3000-0 m above ground:56mi mean -1hr
+17	VVEL:700 mb:56mi mean -1hr
+16	4LFTX:180-0 mb above ground:56mi mean storm location -1hr
+16	PRES:max wind:56mi mean -1hr
+16	LFTX:500-1000 mb:point
+15	RH:700 mb:25mi-56mi leftward gradient
+15	4LFTX:180-0 mb above ground:56mi mean
+15	RH:450 mb:56mi mean -1hr
+15	HGT:lowest level of the wet bulb zero:25mi-56mi leftward gradient
+15	PRES:80 m above ground:56mi mean storm location -1hr
+15	TMP:100 mb:56mi mean -1hr
+15	HLCY:1000-0 m above ground:56mi mean
+14	PLPL:255-0 mb above ground:56mi mean
+14	PWAT:entire atmosphere (considered as a single layer):56mi mean
+14	RGRD:speed m/s 650 mb:point
+14	TMP:100 mb:56mi mean
+
+
+
+
+estimator =
+  LightGBM.LGBMBinary(
+    num_iterations = 1000,
+    min_data_in_leaf = 1000, # 1000 did better than 2000 or 5000, 500 is too small
+    # min_sum_hessian_in_leaf = 1000,
+    learning_rate = .08, #
+    early_stopping_round = 20,
+    feature_fraction = .8,
+    bagging_fraction = .8, #
+    bagging_freq = 5,
+    num_leaves = 25, # 15 is too small, 63 is too much; 40 - 0.066334
+    is_sparse = false,
+    max_bin = 255,
+    num_threads = 4,
+    is_unbalance = false, # if true, changes the label weights so pos/neg classes have same total weight across dataset when computing loss/gradient; causes WAAY too much probability all over
+    metric = ["binary_logloss"]
+  )
+
+# dev loss 0.06607885426312127
+
+ ruby read_lightgbm_feature_importance.rb tor_neighborhoods_only_plus_6hr_quintrants2_model/lightgbm_loss_0.0660789.model
+92	HGT:convective cloud top level:56mi mean
+36	LFTX:500-1000 mb:25mi mean
+34	RH:700 mb:56mi mean
+31	CAPE:90-0 mb above ground:point -1hr
+26	HLCY:3000-0 m above ground:56mi mean
+23	PRATE:surface:56mi mean
+23	VVEL:300 mb:56mi mean storm location -1hr
+22	CAPE:90-0 mb above ground:56mi mean
+21	CAPE:90-0 mb above ground:25mi mean
+21	CAPE:90-0 mb above ground:25mi mean -1hr
+20	LFTX:500-1000 mb:25mi mean storm location -1hr
+19	4LFTX:180-0 mb above ground:56mi mean storm location -1hr
+19	CAPE:90-0 mb above ground:25mi mean storm location -1hr
+19	VVEL:700 mb:56mi mean -1hr
+19	RH:450 mb:56mi mean -1hr
+18	RH:700 mb:25mi-56mi leftward gradient
+17	HLCY:3000-0 m above ground:56mi mean -1hr
+17	HLCY:1000-0 m above ground:56mi mean
+17	LFTX:500-1000 mb:point
+16	TMP:350 mb:25mi-56mi leftward gradient
+16	4LFTX:180-0 mb above ground:point
+15	RH:650 mb:25mi-56mi leftward gradient
+15	PLPL:255-0 mb above ground:56mi mean
+14	RGRD:speed m/s 150 mb:56mi mean
+14	TMP:100 mb:56mi mean -1hr
+14	RH:300 mb:56mi mean -1hr
+14	PRES:80 m above ground:56mi mean storm location -1hr
+14	PRES:max wind:56mi mean -1hr
+14	HLCY:3000-0 m above ground:25mi mean -1hr
+13	4LFTX:180-0 mb above ground:25mi mean storm location -1hr
+
+
+
+
+estimator =
+  LightGBM.LGBMBinary(
+    num_iterations = 2000,
+    min_data_in_leaf = 1000, # 1000 did better than 2000 or 5000, 500 is too small
+    # min_sum_hessian_in_leaf = 1000,
+    learning_rate = .01, #
+    early_stopping_round = 100,
+    feature_fraction = .8, # .9 – 0.06654782621229002; .8 – 0.06607885426312127; .7 — 0.06638090709783184
+    bagging_fraction = .8, #
+    bagging_freq = 10,
+    num_leaves = 25, # 15 is too small, 63 is too much; 21 - 0.06660153, 25 - 0.06607885426312127, 28 - 0.06638649215921182, 31 - 0.0661989, 40 - 0.066334
+    is_sparse = false,
+    max_bin = 255,
+    num_threads = 4,
+    is_unbalance = false, # if true, changes the label weights so pos/neg classes have same total weight across dataset when computing loss/gradient; causes WAAY too much probability all over
+    metric = ["binary_logloss"]
+  )
+
+# dev loss 0.06608000745538467

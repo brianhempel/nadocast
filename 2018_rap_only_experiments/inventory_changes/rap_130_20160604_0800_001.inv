@@ -1,0 +1,340 @@
+4LFTX:180-0 mb above ground:1 hour fcst
+ABSV:500 mb:1 hour fcst
+ACPCP:surface:0-1 hour acc fcst
+BGRUN:surface:0-1 hour acc fcst
+CAPE:180-0 mb above ground:1 hour fcst
+CAPE:255-0 mb above ground:1 hour fcst
+CAPE:90-0 mb above ground:1 hour fcst
+CAPE:surface:1 hour fcst
+CFRZR:surface:1 hour fcst
+CICEP:surface:1 hour fcst
+CIN:180-0 mb above ground:1 hour fcst
+CIN:255-0 mb above ground:1 hour fcst
+CIN:90-0 mb above ground:1 hour fcst
+CIN:surface:1 hour fcst
+CRAIN:surface:1 hour fcst
+CSNOW:surface:1 hour fcst
+DEPR:2 m above ground:1 hour fcst
+DPT:2 m above ground:1 hour fcst
+EPOT:surface:1 hour fcst
+GUST:surface:1 hour fcst
+HCDC:high cloud layer:1 hour fcst
+HGT:0C isotherm:1 hour fcst
+HGT:100 mb:1 hour fcst
+HGT:1000 mb:1 hour fcst
+HGT:125 mb:1 hour fcst
+HGT:150 mb:1 hour fcst
+HGT:175 mb:1 hour fcst
+HGT:200 mb:1 hour fcst
+HGT:225 mb:1 hour fcst
+HGT:250 mb:1 hour fcst
+HGT:275 mb:1 hour fcst
+HGT:300 mb:1 hour fcst
+HGT:325 mb:1 hour fcst
+HGT:350 mb:1 hour fcst
+HGT:375 mb:1 hour fcst
+HGT:400 mb:1 hour fcst
+HGT:425 mb:1 hour fcst
+HGT:450 mb:1 hour fcst
+HGT:475 mb:1 hour fcst
+HGT:500 mb:1 hour fcst
+HGT:525 mb:1 hour fcst
+HGT:550 mb:1 hour fcst
+HGT:575 mb:1 hour fcst
+HGT:600 mb:1 hour fcst
+HGT:625 mb:1 hour fcst
+HGT:650 mb:1 hour fcst
+HGT:675 mb:1 hour fcst
+HGT:700 mb:1 hour fcst
+HGT:725 mb:1 hour fcst
+HGT:750 mb:1 hour fcst
+HGT:775 mb:1 hour fcst
+HGT:800 mb:1 hour fcst
+HGT:825 mb:1 hour fcst
+HGT:850 mb:1 hour fcst
+HGT:875 mb:1 hour fcst
+HGT:900 mb:1 hour fcst
+HGT:925 mb:1 hour fcst
+HGT:950 mb:1 hour fcst
+HGT:975 mb:1 hour fcst
+HGT:cloud base:1 hour fcst
+HGT:cloud top:1 hour fcst
+HGT:convective cloud top level:1 hour fcst
+HGT:equilibrium level:1 hour fcst
+HGT:highest tropospheric freezing level:1 hour fcst
+HGT:lowest level of the wet bulb zero:1 hour fcst
+HGT:planetary boundary layer:1 hour fcst
+HGT:surface:1 hour fcst
+HINDEX:surface:1 hour fcst
+HLCY:1000-0 m above ground:1 hour fcst
+HLCY:3000-0 m above ground:1 hour fcst
+HPBL:surface:1 hour fcst
+LCDC:low cloud layer:1 hour fcst
+LFTX:500-1000 mb:1 hour fcst
+LTNG:surface:1 hour fcst
+MCDC:middle cloud layer:1 hour fcst
+MSLMA:mean sea level:1 hour fcst
+MSTAV:surface:1 hour fcst
+NCPCP:surface:0-1 hour acc fcst
+PLPL:255-0 mb above ground:1 hour fcst
+POT:2 m above ground:1 hour fcst
+POT:tropopause:1 hour fcst
+PRATE:surface:1 hour fcst
+PRES:0C isotherm:1 hour fcst
+PRES:80 m above ground:1 hour fcst
+PRES:highest tropospheric freezing level:1 hour fcst
+PRES:max wind:1 hour fcst
+PRES:surface:1 hour fcst
+PRES:tropopause:1 hour fcst
+PTEND:surface:1 hour fcst
+PWAT:entire atmosphere (considered as a single layer):1 hour fcst
+REFC:entire atmosphere (considered as a single layer):1 hour fcst
+REFD:1000 m above ground:1 hour fcst
+REFD:4000 m above ground:1 hour fcst
+RETOP:entire atmosphere (considered as a single layer):1 hour fcst
+RH:0C isotherm:1 hour fcst
+RH:100 mb:1 hour fcst
+RH:1000 mb:1 hour fcst
+RH:120-90 mb above ground:1 hour fcst
+RH:125 mb:1 hour fcst
+RH:150 mb:1 hour fcst
+RH:150-120 mb above ground:1 hour fcst
+RH:175 mb:1 hour fcst
+RH:180-150 mb above ground:1 hour fcst
+RH:2 m above ground:1 hour fcst
+RH:200 mb:1 hour fcst
+RH:225 mb:1 hour fcst
+RH:250 mb:1 hour fcst
+RH:275 mb:1 hour fcst
+RH:30-0 mb above ground:1 hour fcst
+RH:300 mb:1 hour fcst
+RH:325 mb:1 hour fcst
+RH:350 mb:1 hour fcst
+RH:375 mb:1 hour fcst
+RH:400 mb:1 hour fcst
+RH:425 mb:1 hour fcst
+RH:450 mb:1 hour fcst
+RH:475 mb:1 hour fcst
+RH:500 mb:1 hour fcst
+RH:525 mb:1 hour fcst
+RH:550 mb:1 hour fcst
+RH:575 mb:1 hour fcst
+RH:60-30 mb above ground:1 hour fcst
+RH:600 mb:1 hour fcst
+RH:625 mb:1 hour fcst
+RH:650 mb:1 hour fcst
+RH:675 mb:1 hour fcst
+RH:700 mb:1 hour fcst
+RH:725 mb:1 hour fcst
+RH:750 mb:1 hour fcst
+RH:775 mb:1 hour fcst
+RH:800 mb:1 hour fcst
+RH:825 mb:1 hour fcst
+RH:850 mb:1 hour fcst
+RH:875 mb:1 hour fcst
+RH:90-60 mb above ground:1 hour fcst
+RH:900 mb:1 hour fcst
+RH:925 mb:1 hour fcst
+RH:950 mb:1 hour fcst
+RH:975 mb:1 hour fcst
+RH:highest tropospheric freezing level:1 hour fcst
+RHPW:entire atmosphere (considered as a single layer):1 hour fcst
+SBT113:top of atmosphere:1 hour fcst
+SBT114:top of atmosphere:1 hour fcst
+SBT123:top of atmosphere:1 hour fcst
+SBT124:top of atmosphere:1 hour fcst
+SNOD:surface:1 hour fcst
+SPFH:2 m above ground:1 hour fcst
+SPFH:80 m above ground:1 hour fcst
+SSRUN:surface:0-1 hour acc fcst
+TCDC:entire atmosphere (considered as a single layer):1 hour fcst
+TMP:100 mb:1 hour fcst
+TMP:1000 mb:1 hour fcst
+TMP:120-90 mb above ground:1 hour fcst
+TMP:125 mb:1 hour fcst
+TMP:150 mb:1 hour fcst
+TMP:150-120 mb above ground:1 hour fcst
+TMP:175 mb:1 hour fcst
+TMP:180-150 mb above ground:1 hour fcst
+TMP:2 m above ground:1 hour fcst
+TMP:200 mb:1 hour fcst
+TMP:225 mb:1 hour fcst
+TMP:250 mb:1 hour fcst
+TMP:275 mb:1 hour fcst
+TMP:30-0 mb above ground:1 hour fcst
+TMP:300 mb:1 hour fcst
+TMP:325 mb:1 hour fcst
+TMP:350 mb:1 hour fcst
+TMP:375 mb:1 hour fcst
+TMP:400 mb:1 hour fcst
+TMP:425 mb:1 hour fcst
+TMP:450 mb:1 hour fcst
+TMP:475 mb:1 hour fcst
+TMP:500 mb:1 hour fcst
+TMP:525 mb:1 hour fcst
+TMP:550 mb:1 hour fcst
+TMP:575 mb:1 hour fcst
+TMP:60-30 mb above ground:1 hour fcst
+TMP:600 mb:1 hour fcst
+TMP:625 mb:1 hour fcst
+TMP:650 mb:1 hour fcst
+TMP:675 mb:1 hour fcst
+TMP:700 mb:1 hour fcst
+TMP:725 mb:1 hour fcst
+TMP:750 mb:1 hour fcst
+TMP:775 mb:1 hour fcst
+TMP:80 m above ground:1 hour fcst
+TMP:800 mb:1 hour fcst
+TMP:825 mb:1 hour fcst
+TMP:850 mb:1 hour fcst
+TMP:875 mb:1 hour fcst
+TMP:90-60 mb above ground:1 hour fcst
+TMP:900 mb:1 hour fcst
+TMP:925 mb:1 hour fcst
+TMP:950 mb:1 hour fcst
+TMP:975 mb:1 hour fcst
+TMP:surface:1 hour fcst
+TMP:tropopause:1 hour fcst
+UGRD:10 m above ground:1 hour fcst
+UGRD:100 mb:1 hour fcst
+UGRD:1000 mb:1 hour fcst
+UGRD:120-90 mb above ground:1 hour fcst
+UGRD:125 mb:1 hour fcst
+UGRD:150 mb:1 hour fcst
+UGRD:150-120 mb above ground:1 hour fcst
+UGRD:175 mb:1 hour fcst
+UGRD:180-150 mb above ground:1 hour fcst
+UGRD:200 mb:1 hour fcst
+UGRD:225 mb:1 hour fcst
+UGRD:250 mb:1 hour fcst
+UGRD:275 mb:1 hour fcst
+UGRD:30-0 mb above ground:1 hour fcst
+UGRD:300 mb:1 hour fcst
+UGRD:325 mb:1 hour fcst
+UGRD:350 mb:1 hour fcst
+UGRD:375 mb:1 hour fcst
+UGRD:400 mb:1 hour fcst
+UGRD:425 mb:1 hour fcst
+UGRD:450 mb:1 hour fcst
+UGRD:475 mb:1 hour fcst
+UGRD:500 mb:1 hour fcst
+UGRD:525 mb:1 hour fcst
+UGRD:550 mb:1 hour fcst
+UGRD:575 mb:1 hour fcst
+UGRD:60-30 mb above ground:1 hour fcst
+UGRD:600 mb:1 hour fcst
+UGRD:625 mb:1 hour fcst
+UGRD:650 mb:1 hour fcst
+UGRD:675 mb:1 hour fcst
+UGRD:700 mb:1 hour fcst
+UGRD:725 mb:1 hour fcst
+UGRD:750 mb:1 hour fcst
+UGRD:775 mb:1 hour fcst
+UGRD:80 m above ground:1 hour fcst
+UGRD:800 mb:1 hour fcst
+UGRD:825 mb:1 hour fcst
+UGRD:850 mb:1 hour fcst
+UGRD:875 mb:1 hour fcst
+UGRD:90-60 mb above ground:1 hour fcst
+UGRD:900 mb:1 hour fcst
+UGRD:925 mb:1 hour fcst
+UGRD:950 mb:1 hour fcst
+UGRD:975 mb:1 hour fcst
+UGRD:max wind:1 hour fcst
+UGRD:tropopause:1 hour fcst
+USTM:6000-0 m above ground:1 hour fcst
+VGRD:10 m above ground:1 hour fcst
+VGRD:100 mb:1 hour fcst
+VGRD:1000 mb:1 hour fcst
+VGRD:120-90 mb above ground:1 hour fcst
+VGRD:125 mb:1 hour fcst
+VGRD:150 mb:1 hour fcst
+VGRD:150-120 mb above ground:1 hour fcst
+VGRD:175 mb:1 hour fcst
+VGRD:180-150 mb above ground:1 hour fcst
+VGRD:200 mb:1 hour fcst
+VGRD:225 mb:1 hour fcst
+VGRD:250 mb:1 hour fcst
+VGRD:275 mb:1 hour fcst
+VGRD:30-0 mb above ground:1 hour fcst
+VGRD:300 mb:1 hour fcst
+VGRD:325 mb:1 hour fcst
+VGRD:350 mb:1 hour fcst
+VGRD:375 mb:1 hour fcst
+VGRD:400 mb:1 hour fcst
+VGRD:425 mb:1 hour fcst
+VGRD:450 mb:1 hour fcst
+VGRD:475 mb:1 hour fcst
+VGRD:500 mb:1 hour fcst
+VGRD:525 mb:1 hour fcst
+VGRD:550 mb:1 hour fcst
+VGRD:575 mb:1 hour fcst
+VGRD:60-30 mb above ground:1 hour fcst
+VGRD:600 mb:1 hour fcst
+VGRD:625 mb:1 hour fcst
+VGRD:650 mb:1 hour fcst
+VGRD:675 mb:1 hour fcst
+VGRD:700 mb:1 hour fcst
+VGRD:725 mb:1 hour fcst
+VGRD:750 mb:1 hour fcst
+VGRD:775 mb:1 hour fcst
+VGRD:80 m above ground:1 hour fcst
+VGRD:800 mb:1 hour fcst
+VGRD:825 mb:1 hour fcst
+VGRD:850 mb:1 hour fcst
+VGRD:875 mb:1 hour fcst
+VGRD:90-60 mb above ground:1 hour fcst
+VGRD:900 mb:1 hour fcst
+VGRD:925 mb:1 hour fcst
+VGRD:950 mb:1 hour fcst
+VGRD:975 mb:1 hour fcst
+VGRD:max wind:1 hour fcst
+VGRD:tropopause:1 hour fcst
+VIS:surface:1 hour fcst
+VSTM:6000-0 m above ground:1 hour fcst
+VUCSH:6000-0 m above ground:1 hour fcst
+VVCSH:6000-0 m above ground:1 hour fcst
+VVEL:100 mb:1 hour fcst
+VVEL:1000 mb:1 hour fcst
+VVEL:120-90 mb above ground:1 hour fcst
+VVEL:125 mb:1 hour fcst
+VVEL:150 mb:1 hour fcst
+VVEL:150-120 mb above ground:1 hour fcst
+VVEL:175 mb:1 hour fcst
+VVEL:180-150 mb above ground:1 hour fcst
+VVEL:200 mb:1 hour fcst
+VVEL:225 mb:1 hour fcst
+VVEL:250 mb:1 hour fcst
+VVEL:275 mb:1 hour fcst
+VVEL:30-0 mb above ground:1 hour fcst
+VVEL:300 mb:1 hour fcst
+VVEL:325 mb:1 hour fcst
+VVEL:350 mb:1 hour fcst
+VVEL:375 mb:1 hour fcst
+VVEL:400 mb:1 hour fcst
+VVEL:425 mb:1 hour fcst
+VVEL:450 mb:1 hour fcst
+VVEL:475 mb:1 hour fcst
+VVEL:500 mb:1 hour fcst
+VVEL:525 mb:1 hour fcst
+VVEL:550 mb:1 hour fcst
+VVEL:575 mb:1 hour fcst
+VVEL:60-30 mb above ground:1 hour fcst
+VVEL:600 mb:1 hour fcst
+VVEL:625 mb:1 hour fcst
+VVEL:650 mb:1 hour fcst
+VVEL:675 mb:1 hour fcst
+VVEL:700 mb:1 hour fcst
+VVEL:725 mb:1 hour fcst
+VVEL:750 mb:1 hour fcst
+VVEL:775 mb:1 hour fcst
+VVEL:800 mb:1 hour fcst
+VVEL:825 mb:1 hour fcst
+VVEL:850 mb:1 hour fcst
+VVEL:875 mb:1 hour fcst
+VVEL:90-60 mb above ground:1 hour fcst
+VVEL:900 mb:1 hour fcst
+VVEL:925 mb:1 hour fcst
+VVEL:950 mb:1 hour fcst
+VVEL:975 mb:1 hour fcst
+WEASD:surface:0-1 hour acc fcst

@@ -1,0 +1,370 @@
+$ ruby make_grib_file_list.rb > tor_neighborhoods_only_plus_6hr_model/train.txt
+Start year?
+2014
+Start month?
+2
+Start day?
+26
+End year?
+2016
+End month?
+12
+End day?
+31
+Forcast hour (2-18)?
+6
+Only hours with tornadoes (n/y)?
+y
+Dev ratio [0.0-1.0]?
+0
+Test ratio [0.0-1.0]?
+0
+Subsample ratio [0.0-1.0]? (non-deterministic)
+1.0
+1658/1658 hours with tornadoes
+
+(need to manually remove headers)
+
+$ ruby make_grib_file_list.rb
+Start year?
+2017
+Start month?
+1
+Start day?
+1
+End year?
+2017
+End month?
+12
+End day?
+31
+Forcast hour (2-18)?
+6
+Only hours with tornadoes (n/y)?
+y
+Dev ratio [0.0-1.0]?
+0.25
+Test ratio [0.0-1.0]?
+0.25
+Subsample ratio [0.0-1.0]? (non-deterministic)
+1.0
+
+$ ruby make_grib_file_list.rb
+Start year?
+2017
+Start month?
+1
+Start day?
+1
+End year?
+2017
+End month?
+12
+End day?
+31
+Forcast hour (2-18)?
+6
+Only hours with tornadoes (n/y)?
+y
+Dev ratio [0.0-1.0]?
+0.25
+Test ratio [0.0-1.0]?
+0.25
+Subsample ratio [0.0-1.0]? (non-deterministic)
+1.0
+# Dev Files
+...
+
+# Test Files
+...
+
+# Training Files
+...
+
+685/685 hours with tornadoes
+
+
+(make dev.txt/test.txt files manually)
+(add training files manually)
+
+So training is 2014-2-26 through 2016 and half the tornado days in 2017.
+
+julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/dev.txt
+
+julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/train.txt
+
+julia TrainGBM.jl tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/lightgbm.jl # LightGBM doesn't need the points shuffled
+
+
+
+# julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/dev.txt; julia MakeTornadoNeighborhoodsData.jl tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/train.txt; julia TrainGBM.jl tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/lightgbm.jl # LightGBM doesn't need the points shuffled
+
+
+# Only AGL features for wind/tmp/rh
+
+estimator =
+  LightGBM.LGBMBinary(
+    num_iterations = 1000,
+    min_data_in_leaf = 900, # 1000 did better than 2000 or 5000, 500 is too small
+    # min_sum_hessian_in_leaf = 1000,
+    learning_rate = .08, #
+    early_stopping_round = 20,
+    feature_fraction = .8, # .9 – 0.06654782621229002; .8 – 0.06607885426312127; .7 — 0.06638090709783184
+    bagging_fraction = .8, #
+    bagging_freq = 5,
+    num_leaves = 29, # 15 is too small, 63 is too much; 40 - 0.066334
+    is_sparse = false,
+    max_bin = 255,
+    num_threads = 4,
+    is_unbalance = false, # if true, changes the label weights so pos/neg classes have same total weight across dataset when computing loss/gradient; causes WAAY too much probability all over
+    metric = ["binary_logloss"]
+  )
+
+# dev loss 0.06652586401471479
+
+$ ruby read_lightgbm_feature_importance.rb tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/lightgbm.model
+59	LTNG:surface:56mi mean
+45	PRATE:surface:56mi mean
+34	LFTX:500-1000 mb:25mi mean
+28	CAPE:90-0 mb above ground:25mi mean
+28	RH:3000 m above ground computed:56mi mean
+22	CAPE:90-0 mb above ground:point -1hr
+20	CAPE:90-0 mb above ground:25mi mean -1hr
+19	RH:3000 m above ground computed:25mi-56mi leftward gradient
+18	VVEL:min:56mi mean -1hr
+18	HLCY:3000-0 m above ground:56mi mean
+16	RH:6000 m above ground computed:56mi mean -1hr
+15	CAPE:90-0 mb above ground:point
+15	4LFTX:180-0 mb above ground:56mi mean
+15	CAPE:90-0 mb above ground:56mi mean
+15	LFTX:500-1000 mb:point
+14	LFTX:500-1000 mb:25mi mean storm location -1hr
+14	TMP:100 mb:56mi mean -1hr
+13	VVEL:30-0 mb above ground:56mi mean
+13	PRATE:surface:56mi mean storm location -1hr
+13	RVCSH:shear magnitude 1/s 4500-10 m above ground computed:56mi mean -1hr
+12	CIN:90-0 mb above ground:56mi mean
+12	PRES:80 m above ground:56mi mean storm location -1hr
+12	CIN:surface:56mi mean
+12	HGT:lowest level of the wet bulb zero:25mi-56mi leftward gradient
+12	TGRD:angle radians from point storm motion 3000 m above ground computed:25mi-56mi forward gradient
+12	RH:7000 m above ground computed:56mi mean
+12	RVCSH:shear magnitude 1/s 2000-250 m above ground computed:56mi mean storm location -1hr
+11	HLCY:1000-0 m above ground:56mi mean
+11	VVEL:stddev:56mi mean storm location -1hr
+11	VVEL:mean:56mi mean -1hr
+
+
+$ ruby read_lightgbm_feature_importance.rb tor_neighborhoods_only_plus_6hr_quintrants2_plus_kinetics_model/lightgbm.model --grouped
+59	4LFTX:180-0 mb above ground
+20	ABSV:500 mb
+19	CAPE:180-0 mb above ground
+16	CAPE:255-0 mb above ground
+122	CAPE:90-0 mb above ground
+24	CAPE:surface
+24	CIN:180-0 mb above ground
+3	CIN:255-0 mb above ground
+29	CIN:90-0 mb above ground
+19	CIN:surface
+15	CRAIN:surface
+6	DEPR:2 m above ground
+4	DPT:2 m above ground
+14	EPOT:surface
+14	GUST:surface
+8	HCDC:high cloud layer
+35	HGT:100 mb
+9	HGT:1000 mb
+13	HGT:150 mb
+12	HGT:200 mb
+17	HGT:225 mb
+15	HGT:300 mb
+8	HGT:400 mb
+15	HGT:500 mb
+20	HGT:600 mb
+18	HGT:700 mb
+19	HGT:800 mb
+9	HGT:850 mb
+12	HGT:900 mb
+10	HGT:950 mb
+10	HGT:cloud base
+11	HGT:cloud top
+23	HGT:equilibrium level
+40	HGT:lowest level of the wet bulb zero
+14	HGT:planetary boundary layer
+25	HGT:surface
+41	HLCY:1000-0 m above ground
+48	HLCY:3000-0 m above ground
+11	HPBL:surface
+4	LCDC:low cloud layer
+84	LFTX:500-1000 mb
+88	LTNG:surface
+12	MCDC:middle cloud layer
+7	MSLMA:mean sea level
+23	MSTAV:0 m underground
+44	PLPL:255-0 mb above ground
+8	POT:2 m above ground
+26	POT:tropopause
+65	PRATE:surface
+19	PRES:80 m above ground
+29	PRES:max wind
+33	PRES:surface
+29	PRES:tropopause
+31	PWAT:entire atmosphere (considered as a single layer)
+4	REFC:entire atmosphere (considered as a single layer)
+4	REFD:1000 m above ground
+32	REFD:4000 m above ground
+15	RETOP:entire atmosphere (considered as a single layer)
+10	RH:0C isotherm
+19	RH:100 mb
+23	RH:150 mb
+21	RH:200 mb
+13	RH:250 mb
+14	RH:highest tropospheric freezing level
+16	SPFH:2 m above ground
+42	SPFH:80 m above ground
+13	TCDC:entire atmosphere (considered as a single layer)
+45	TMP:100 mb
+31	TMP:125 mb
+23	TMP:150 mb
+13	TMP:175 mb
+22	TMP:200 mb
+10	TMP:250 mb
+8	TMP:surface
+16	TMP:tropopause
+12	VIS:surface
+9	VVEL:100 mb
+16	VVEL:1000 mb
+16	VVEL:200 mb
+17	VVEL:30-0 mb above ground
+21	VVEL:300 mb
+11	VVEL:400 mb
+10	VVEL:500 mb
+10	VVEL:600 mb
+17	VVEL:700 mb
+22	VVEL:800 mb
+11	VVEL:900 mb
+21	VVEL:950 mb
+4	TMP:250 m above ground computed
+7	TMP:500 m above ground computed
+2	TMP:750 m above ground computed
+4	TMP:1000 m above ground computed
+15	TMP:1500 m above ground computed
+14	TMP:2000 m above ground computed
+9	TMP:3000 m above ground computed
+13	TMP:4500 m above ground computed
+11	TMP:5000 m above ground computed
+10	TMP:6000 m above ground computed
+10	TMP:7000 m above ground computed
+16	TMP:8000 m above ground computed
+7	TMP:9000 m above ground computed
+13	TMP:10000 m above ground computed
+20	TMP:11000 m above ground computed
+2	RH:250 m above ground computed
+18	RH:500 m above ground computed
+10	RH:750 m above ground computed
+4	RH:1000 m above ground computed
+19	RH:1500 m above ground computed
+28	RH:2000 m above ground computed
+57	RH:3000 m above ground computed
+29	RH:4500 m above ground computed
+27	RH:5000 m above ground computed
+39	RH:6000 m above ground computed
+26	RH:7000 m above ground computed
+14	RH:8000 m above ground computed
+12	RH:9000 m above ground computed
+19	RH:10000 m above ground computed
+19	RH:11000 m above ground computed
+7	LAPSERATE:500-2 m above ground computed
+6	LAPSERATE:1000-2 m above ground computed
+10	LAPSERATE:500-80 m above ground computed
+7	LAPSERATE:1000-80 m above ground computed
+4	LAPSERATE:2000-2 m above ground computed
+4	LAPSERATE:3000-2 m above ground computed
+4	LAPSERATE:4500-80 m above ground computed
+5	LAPSERATE:6000-80 m above ground computed
+15	LAPSERATE:10000-80 m above ground computed
+6	LAPSERATE:1000-250 m above ground computed
+26	LAPSERATE:2000-250 m above ground computed
+21	LAPSERATE:8000-250 m above ground computed
+22	LAPSERATE:1500-500 m above ground computed
+11	LAPSERATE:3000-500 m above ground computed
+11	LAPSERATE:4500-500 m above ground computed
+30	LAPSERATE:3000-1000 m above ground computed
+57	LAPSERATE:5000-2000 m above ground computed
+17	LAPSERATE:500-700 mb computed
+29	VVEL:min
+12	VVEL:max
+23	VVEL:mean
+27	VVEL:stddev
+23	RGRD:speed m/s 100 mb
+6	TGRD:angle radians from point storm motion 100 mb
+26	RGRD:speed m/s 150 mb
+12	TGRD:angle radians from point storm motion 150 mb
+19	RGRD:speed m/s 200 mb
+3	TGRD:angle radians from point storm motion 200 mb
+10	RGRD:speed m/s 250 mb
+6	TGRD:angle radians from point storm motion 250 mb
+12	RGRD:speed m/s max wind
+4	TGRD:angle radians from point storm motion max wind
+22	RGRD:speed m/s tropopause
+7	TGRD:angle radians from point storm motion tropopause
+24	RSTM:speed m/s storm motion
+16	TSTM:angle radians from point storm motion storm motion
+7	RVCSH:shear magnitude 1/s 6000-0 m above ground
+4	TVCSH:angle radians from point storm motion 6000-0 m above ground
+18	RGRD:speed m/s 250 m above ground computed
+10	TGRD:angle radians from point storm motion 250 m above ground computed
+13	RGRD:speed m/s 500 m above ground computed
+4	TGRD:angle radians from point storm motion 500 m above ground computed
+3	RGRD:speed m/s 750 m above ground computed
+1	TGRD:angle radians from point storm motion 750 m above ground computed
+12	RGRD:speed m/s 1000 m above ground computed
+4	TGRD:angle radians from point storm motion 1000 m above ground computed
+19	RGRD:speed m/s 1500 m above ground computed
+6	TGRD:angle radians from point storm motion 1500 m above ground computed
+21	RGRD:speed m/s 2000 m above ground computed
+4	TGRD:angle radians from point storm motion 2000 m above ground computed
+30	RGRD:speed m/s 3000 m above ground computed
+17	TGRD:angle radians from point storm motion 3000 m above ground computed
+11	RGRD:speed m/s 4500 m above ground computed
+4	TGRD:angle radians from point storm motion 4500 m above ground computed
+9	RGRD:speed m/s 5000 m above ground computed
+2	TGRD:angle radians from point storm motion 5000 m above ground computed
+10	RGRD:speed m/s 6000 m above ground computed
+5	TGRD:angle radians from point storm motion 6000 m above ground computed
+15	RGRD:speed m/s 7000 m above ground computed
+0	TGRD:angle radians from point storm motion 7000 m above ground computed
+10	RGRD:speed m/s 8000 m above ground computed
+5	TGRD:angle radians from point storm motion 8000 m above ground computed
+13	RGRD:speed m/s 9000 m above ground computed
+2	TGRD:angle radians from point storm motion 9000 m above ground computed
+10	RGRD:speed m/s 10000 m above ground computed
+4	TGRD:angle radians from point storm motion 10000 m above ground computed
+4	RGRD:speed m/s 11000 m above ground computed
+4	TGRD:angle radians from point storm motion 11000 m above ground computed
+8	RVCSH:shear magnitude 1/s 6000-10 m above ground computed
+1	TVCSH:angle radians from point storm motion 6000-10 m above ground computed
+21	RVCSH:shear magnitude 1/s 2000-10 m above ground computed
+4	TVCSH:angle radians from point storm motion 2000-10 m above ground computed
+28	RVCSH:shear magnitude 1/s 3000-10 m above ground computed
+4	TVCSH:angle radians from point storm motion 3000-10 m above ground computed
+27	RVCSH:shear magnitude 1/s 4500-10 m above ground computed
+2	TVCSH:angle radians from point storm motion 4500-10 m above ground computed
+17	RVCSH:shear magnitude 1/s 10000-10 m above ground computed
+7	TVCSH:angle radians from point storm motion 10000-10 m above ground computed
+20	RVCSH:shear magnitude 1/s 1000-250 m above ground computed
+6	TVCSH:angle radians from point storm motion 1000-250 m above ground computed
+27	RVCSH:shear magnitude 1/s 2000-250 m above ground computed
+6	TVCSH:angle radians from point storm motion 2000-250 m above ground computed
+28	RVCSH:shear magnitude 1/s 8000-250 m above ground computed
+10	TVCSH:angle radians from point storm motion 8000-250 m above ground computed
+34	RVCSH:shear magnitude 1/s 1500-500 m above ground computed
+4	TVCSH:angle radians from point storm motion 1500-500 m above ground computed
+16	RVCSH:shear magnitude 1/s 3000-500 m above ground computed
+6	TVCSH:angle radians from point storm motion 3000-500 m above ground computed
+18	RVCSH:shear magnitude 1/s 4500-500 m above ground computed
+7	TVCSH:angle radians from point storm motion 4500-500 m above ground computed
+16	RVCSH:shear magnitude 1/s 3000-1000 m above ground computed
+10	TVCSH:angle radians from point storm motion 3000-1000 m above ground computed
+21	RVCSH:shear magnitude 1/s 5000-2000 m above ground computed
+13	TVCSH:angle radians from point storm motion 5000-2000 m above ground computed

@@ -169,6 +169,11 @@ function compare_distances(lat1, lon1, lat2, lon2)
   )
 end
 
+function azimuths(lat1, lon1, lat2, lon2)
+  distance, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
+  (point_1_azimuth, point_2_azimuth)
+end
+
 # distance_and_midpoint(32.902, -94.0431, 32.9308, -94.0211)
 function distance_and_midpoint(lat1, lon1, lat2, lon2)
   distance, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])

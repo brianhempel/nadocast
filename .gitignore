@@ -11,3 +11,4 @@ test_plots/
 *.binfeatures
 *.binweights
 *.binlabels
+gmt.history
