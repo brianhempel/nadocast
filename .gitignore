@@ -12,3 +12,4 @@ test_plots/
 *.binweights
 *.binlabels
 gmt.history
+.ipynb_checkpoints/
