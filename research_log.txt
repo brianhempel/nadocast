@@ -35,3 +35,13 @@
 
 - Tried tons of ML algorithms on +1 forecasts and added lots of features (see headers.txt). LightGBM performs best, but training data really can't be more than 40GB on my machine.
 - Probably limited by precision of the RAP, but we'll see.
+
+
+-- 2019 --
+
+Going to train separate models HREF, SREF, HRRR (hopefully), and RAP and then stack them together. Would like to try convnets, but unlikely to have the computational power needed for training a convnet of sufficient complexity to make it worthwhile.
+
+Also would like not to be memory limited for training boosted decision trees. May have to find a streaming implementation or write my own.
+
+Also going to try to use Julia notebooks to see if that can reduce frustration.
+
