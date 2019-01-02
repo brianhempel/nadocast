@@ -1,3 +1,8 @@
+# add DelimitedFiles # For readdlm
+# add Plots
+# add GDAL
+# add ArchGDAL
+
 # Pkg.update()
 #
 # # Pkg.add("DataFrames")
