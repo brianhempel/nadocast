@@ -1,5 +1,8 @@
 module Grids
 
+import Serialization
+# import JLD # Tried using JLD but there was a problem on read-in, and the written file was 25x times larger than it needed to be.
+
 struct Grid
   height   :: Int64 # Element count
   width    :: Int64 # Element count
@@ -10,6 +13,19 @@ struct Grid
   lat_lons :: Array{Tuple{Float64,Float64}, 1} # Ordering is row-major: W -> E, S -> N
 end
 
+function to_file(path :: String, grid :: Grid)
+  # JLD.save(path, "grid", grid)
+  open(path, "w") do file
+    Serialization.serialize(file, grid)
+  end
+end
+
+function from_file(path :: String) :: Grids.Grid
+  # JLD.load(path, "grid")
+  open(path, "r") do file
+    Serialization.deserialize(file) :: Grids.Grid
+  end
+end
 
 function get_grid_i(grid :: Grid, (s_to_n_row, w_to_e_col) :: Tuple{Int64, Int64}) :: Int64
   if w_to_e_col < 1

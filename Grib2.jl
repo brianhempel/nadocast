@@ -15,7 +15,7 @@ function read_grid(grib2_path) :: Grids.Grid
   #
   # -end means stop after first (sub)message.
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
-  all_pts = open(grid -> DelimitedFiles.readdlm(grid, ',', Float64; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
+  all_pts = open(grid_csv -> DelimitedFiles.readdlm(grid_csv, ',', Float64; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
   all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 
   height = Int64(maximum(all_pts[:,2]))
