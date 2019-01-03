@@ -182,8 +182,13 @@ function distance_and_midpoint(lat1, lon1, lat2, lon2)
   (distance, reverse(midpoint))
 end
 
-function ratio_on_segment(lat1 :: Float64, lon1 :: Float64, lat2 :: Float64, lon2 :: Float64, ratio :: Float64) :: Tuple{Float64,Float64}
+function ratio_on_segment((lat1, lon1) :: Tuple{Float64,Float64}, (lat2, lon2) :: Tuple{Float64,Float64}, ratio :: Float64) :: Tuple{Float64,Float64}
+  Proj4.geod_geodesic(major_axis, 1-sqrt(1-eccentricity_squared)) # Omit this line and you get NaNs below. Compiler bug? Almost certainly.
   distance, point_1_azimuth, point_2_azimuth = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
+  if isnan(point_1_azimuth) || isnan(point_2_azimuth)
+    println("NaN in GeoUtils.ratio_on_segment!")
+    println(((lat1, lon1), (lat2, lon2), distance, point_1_azimuth, point_2_azimuth))
+  end
   ratio_point = deepcopy([lon1, lat1]) # call is destructive :(
   Proj4._geod_direct!(wgs84.geod, ratio_point, point_1_azimuth, distance * ratio)
   (ratio_point[2], ratio_point[1])
