@@ -27,9 +27,9 @@ function read_grid(grib2_path) :: Grids.Grid
   min_lon = minimum(all_pts[:,4])
   max_lon = maximum(all_pts[:,4])
 
-  lat_lons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(width*height)) :: Array{Tuple{Float64,Float64},1}
+  latlons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(width*height)) :: Array{Tuple{Float64,Float64},1}
 
-  Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, lat_lons)
+  Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons)
 end
 
 # Read the inventory.
@@ -118,8 +118,8 @@ function read_layers_data_raw(grib2_path, inventory)
   values
 end
 
-function lat_lon_to_value_no_interpolation(grid, layer_data, (lat, lon))
-  flat_i = Grids.lat_lon_to_closest_grid_i(grid, (lat, lon))
+function latlon_to_value_no_interpolation(grid, layer_data, (lat, lon))
+  flat_i = Grids.latlon_to_closest_grid_i(grid, (lat, lon))
   layer_data[flat_i]
 end
 
@@ -129,7 +129,7 @@ function plot(grid :: Grids.Grid, layer_data :: Array{Float32,1})
   Plots.plot(Plots.heatmap(
     grid.min_lon:resolution_degrees:grid.max_lon,
     grid.min_lat:resolution_degrees:grid.max_lat,
-    (lon, lat) -> lat_lon_to_value_no_interpolation(grid, layer_data, (lat, lon)),
+    (lon, lat) -> latlon_to_value_no_interpolation(grid, layer_data, (lat, lon)),
     fill=true
   ))
 end

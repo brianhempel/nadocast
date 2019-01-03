@@ -23,7 +23,7 @@ const rap_130_grid = Grids.from_file("rap_130_grid.bin") :: Grids.Grid
 const conus_layer_data_on_rap_130_grid = DelimitedFiles.readdlm("conus_on_rap_130_grid.txt", Float32)[:,1] :: Array{Float32,1} # 0.0/1.0 indicator layer of conus
 
 function is_in_conus(latlon :: Tuple{Float64, Float64}) :: Bool
-  flat_i = Grids.lat_lon_to_closest_grid_i(rap_130_grid, latlon)
+  flat_i = Grids.latlon_to_closest_grid_i(rap_130_grid, latlon)
   conus_layer_data_on_rap_130_grid[flat_i] > 0.5f0
 end
 

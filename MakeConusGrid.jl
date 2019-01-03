@@ -30,7 +30,7 @@ function grid_to_conus(grid :: Grids.Grid) :: Array{Float32,1}
       ArchGDAL.getfeature(layer, 0) do feature
         conus = ArchGDAL.getgeom(feature)
         # point = ArchGDAL.createpoint(lon, lat)
-        points = map(latlon -> ArchGDAL.createpoint(latlon[2], latlon[1]), grid.lat_lons) # Possibly a memory leak here.
+        points = map(latlon -> ArchGDAL.createpoint(latlon[2], latlon[1]), grid.latlons) # Possibly a memory leak here.
         map(point -> ArchGDAL.contains(conus, point) ? 1.0f0 : 0.0f0, points)
       end
     end
