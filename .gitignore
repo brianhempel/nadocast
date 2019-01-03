@@ -13,3 +13,4 @@ test_plots/
 *.binlabels
 gmt.history
 .ipynb_checkpoints/
+storm_data/tornadoes_old.csv

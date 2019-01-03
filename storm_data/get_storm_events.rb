@@ -1,5 +1,14 @@
 require "csv"
 
+# Fetches the storm events database from 2014 through the current year
+# and outputs all the tornado events.
+#
+# Uses the storm events database because it has start and end times and locations.
+#
+# The previous year is finalized near the end of Spring of the following year.
+#
+# To run this script, see the Makefile at the project root.
+
 ROOT_URL = "https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
 
 file_names = `curl #{ROOT_URL}`.scan(/StormEvents_details-ftp_v1\.0_d\d\d\d\d_c\d+\.csv\.gz/).uniq
@@ -81,7 +90,7 @@ print %w[
     ]
   end
 
-  tornado_rows.sort_by(&:first).each do |row|
-    print row.to_csv
+  tornado_rows.map(&:to_csv).sort.each do |row_csv_str|
+    print row_csv_str
   end
 end
