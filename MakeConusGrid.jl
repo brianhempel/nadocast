@@ -14,10 +14,11 @@ module MakeConusGrid
 #
 # DelimitedFiles.writedlm("conus_on_rap_130_grid.txt", MakeConusGrid.grid_to_conus(Grib2.read_grid("test_grib2s/rap_130_20180319_1400_012.grb2")))
 
-
-import Grids
 import GDAL
 import ArchGDAL
+
+push!(LOAD_PATH, ".")
+import Grids
 
 # Returns a grid layer of 0.0/1.0 values indicating where CONUS is.
 #

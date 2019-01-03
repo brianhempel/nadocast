@@ -1,6 +1,8 @@
 module Conus
 
 import DelimitedFiles
+
+push!(LOAD_PATH, ".")
 import Grids
 
 # rap_130_grid.bin produced by:

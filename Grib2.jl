@@ -1,7 +1,8 @@
 module Grib2
 
-push!(LOAD_PATH, ".")
 import DelimitedFiles # For readdlm
+
+push!(LOAD_PATH, ".")
 import Plots
 import Grids
 
