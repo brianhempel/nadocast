@@ -294,8 +294,8 @@ function waypoints(lat1, lon1, lat2, lon2, step) # step in meters
   # }
   desicline = geod_geodesicline()
 
-  ccall((:geod_inverseline, Proj4.libproj), Void,
-        (Ptr{Void}, Ptr{Void}, Cdouble, Cdouble, Cdouble, Cdouble, Cuint),
+  ccall((:geod_inverseline, Proj4.libproj), Cvoid,
+        (Ptr{Cvoid}, Ptr{Cvoid}, Cdouble, Cdouble, Cdouble, Cdouble, Cuint),
         pointer_from_objref(desicline), pointer_from_objref(wgs84.geod),
         lat1, lon1, lat2, lon2, GEOD_LATITUDE | GEOD_LONGITUDE)
 
@@ -308,8 +308,8 @@ function waypoints(lat1, lon1, lat2, lon2, step) # step in meters
 
   i = 1
   for degree = range
-    ccall((:geod_genposition, Proj4.libproj), Void,
-          (Ptr{Void}, Cuint, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+    ccall((:geod_genposition, Proj4.libproj), Cvoid,
+          (Ptr{Cvoid}, Cuint, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
           pointer_from_objref(desicline), GEOD_ARCMODE, degree, pointer(lats,i), pointer(lons,i), Ptr{Cdouble}(0), Ptr{Cdouble}(0), Ptr{Cdouble}(0), Ptr{Cdouble}(0), Ptr{Cdouble}(0), Ptr{Cdouble}(0));
 
     i += 1
@@ -323,7 +323,7 @@ end
 
 
 
-# max_error assumes triangle inequality holds, which, well, it should for all our queries. Not smart enough to know if it does in general.
+# max_error assumes triangle inequality holds, which, well, it should for all our queries. I'm not smart enough to know if it does in general.
 # distance_to_line(32.902, -94.0431, 32.902, -94.0431, 32.9308, -94.0211, 1.0)
 function distance_to_line(lat, lon, lat1, lon1, lat2, lon2, max_error)
   d1 = distance(lat, lon, lat1, lon1)
