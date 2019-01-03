@@ -4,6 +4,7 @@ import DelimitedFiles
 
 push!(LOAD_PATH, ".")
 import GeoUtils
+import Grids
 # import TimeZones
 
 # const utc = TimeZones.tz"UTC"
@@ -42,6 +43,26 @@ const tornadoes = begin
 
   mapslices(row_to_tornado, tornado_rows, dims = [2])[:,1]
 end :: Vector{Tornado}
+
+# Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of the tornadoes
+function grid_to_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
+  tornado_segments = tornado_segments_around_time(seconds_from_utc_epoch, seconds_before_and_after)
+
+  is_near_tornado(latlon) = begin
+    is_near = false
+
+    for (tor_latlon1, tor_latlon2) in tornado_segments
+      meters_away = GeoUtils.instant_meters_to_line(latlon, tor_latlon1, tor_latlon2)
+      if meters_away <= miles * GeoUtils.METERS_PER_MILE
+        is_near = true
+      end
+    end
+
+    is_near
+  end
+
+  map(latlon -> is_near_tornado(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
+end
 
 # Returns list of (start_latlon, end_latlon) of where the tornadoes were around during the time period.
 function tornado_segments_around_time(seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}

@@ -58,7 +58,7 @@ end
 # close to the line (since geodesic follows a different path).
 # For the scales we are concerned about, error is always < 0.45%.
 # Precondition: longitudes don't cross over (raw lon2-lon1 < 180)
-function instant_distance_to_line(lat :: Float64, lon :: Float64, lat1 :: Float64, lon1 :: Float64, lat2 :: Float64, lon2 :: Float64) :: Float64
+function instant_meters_to_line((lat, lon) :: Tuple{Float64,Float64}, (lat1, lon1) :: Tuple{Float64,Float64}, (lat2, lon2) :: Tuple{Float64,Float64}) :: Float64
   mean_lat = (lat + lat1 + lat2) / 3.0 / 180.0 * π
 
   k1 = 111.13209 - 0.56605cos(2*mean_lat)
@@ -352,13 +352,13 @@ function distance_to_line(lat, lon, lat1, lon1, lat2, lon2, max_error)
 end
 
 
-function compare_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
-  best      = distance_to_line(lat, lon, lat1, lon1, lat2, lon2, 1.0) # 1 meter
-  instant   = instant_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
-  # one_meter = distance_to_line(lat, lon, lat1, lon1, lat2, lon2, 1.0)
-
-  abs(instant - best)/best*100.0
-end
+# function compare_distance_to_line(lat, lon, lat1, lon1, lat2, lon2)
+#   best      = distance_to_line(lat, lon, lat1, lon1, lat2, lon2, 1.0) # 1 meter
+#   instant   = instant_meters_to_line(lat, lon, lat1, lon1, lat2, lon2)
+#   # one_meter = distance_to_line(lat, lon, lat1, lon1, lat2, lon2, 1.0)
+#
+#   abs(instant - best)/best*100.0
+# end
 
 
 end
