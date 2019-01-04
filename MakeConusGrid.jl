@@ -25,7 +25,7 @@ import Grids
 # Really slow. About 4 hours for the RAP grid. Hence the cached result "conus_on_rap_130_grid.txt".
 function grid_to_conus(grid :: Grids.Grid) :: Array{Float32,1}
   ArchGDAL.registerdrivers() do
-    ArchGDAL.read("geo_regions/geo_layers/ln_us/ln_us.shp") do dataset # Have to use this original file. GDAL is finicky about the geometry created by attempting to simplify it.
+    ArchGDAL.read("geo_regions/ln_us/ln_us.shp") do dataset # Have to use this original file. GDAL is finicky about the geometry created by attempting to simplify it.
       layer = ArchGDAL.getlayer(dataset, 0)
       ArchGDAL.getfeature(layer, 0) do feature
         conus = ArchGDAL.getgeom(feature)
