@@ -2,16 +2,13 @@ module StormEvents
 
 import DelimitedFiles
 
-push!(LOAD_PATH, ".")
+push!(LOAD_PATH, @__DIR__)
 import GeoUtils
 import Grids
-# import TimeZones
-
-# const utc = TimeZones.tz"UTC"
 
 struct Tornado
-  start_seconds_from_utc_epoch :: Int64
-  end_seconds_from_utc_epoch   :: Int64
+  start_seconds_from_epoch_utc :: Int64
+  end_seconds_from_epoch_utc   :: Int64
   duration_seconds             :: Int64
   start_latlon                 :: Tuple{Float64, Float64}
   end_latlon                   :: Tuple{Float64, Float64}
@@ -20,7 +17,7 @@ end
 const tornadoes = begin
   # println("Loading tornadoes...")
 
-  tornado_rows, tornado_headers = DelimitedFiles.readdlm("storm_data/tornadoes.csv",','; header=true)
+  tornado_rows, tornado_headers = DelimitedFiles.readdlm((@__DIR__) * "/storm_data/tornadoes.csv",','; header=true)
 
   tornado_headers = tornado_headers[1,:] # 1x9 array to 9-element vector.
 
@@ -70,15 +67,15 @@ function tornado_segments_around_time(seconds_from_utc_epoch :: Int64, seconds_b
   period_end_seconds   = seconds_from_utc_epoch + seconds_before_and_after
 
   is_relevant_tornado(tornado) = begin
-    tornado.end_seconds_from_utc_epoch   > period_start_seconds &&
-    tornado.start_seconds_from_utc_epoch < period_end_seconds
+    tornado.end_seconds_from_epoch_utc   > period_start_seconds &&
+    tornado.start_seconds_from_epoch_utc < period_end_seconds
   end
 
   relevant_tornadoes = filter(is_relevant_tornado, tornadoes)
 
   tornado_to_segment(tornado) = begin
-    start_seconds = tornado.start_seconds_from_utc_epoch
-    end_seconds   = tornado.end_seconds_from_utc_epoch
+    start_seconds = tornado.start_seconds_from_epoch_utc
+    end_seconds   = tornado.end_seconds_from_epoch_utc
     duration      = tornado.duration_seconds
     start_latlon  = tornado.start_latlon
     end_latlon    = tornado.end_latlon

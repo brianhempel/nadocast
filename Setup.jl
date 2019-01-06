@@ -1,5 +1,6 @@
 # add DelimitedFiles # For readdlm
 # add Plots
+# add JSON
 # add GDAL
 # add ArchGDAL
 # add Proj4 # for GeoUtils geodesics

@@ -1,0 +1,106 @@
+TMP:2 m above ground:hour fcst:prob <273
+TMP:2 m above ground:hour fcst:prob >298.8
+TMP:850 mb:hour fcst:prob <273
+CAPE:surface:hour fcst:prob >250
+CAPE:surface:hour fcst:prob >500
+CAPE:surface:hour fcst:prob >1000
+CAPE:surface:hour fcst:prob >2000
+CAPE:surface:hour fcst:prob >3000
+CAPE:surface:hour fcst:prob >4000
+HLCY:3000-0 m above ground:hour fcst:prob >100
+HLCY:3000-0 m above ground:hour fcst:prob >150
+HLCY:3000-0 m above ground:hour fcst:prob >200
+HLCY:3000-0 m above ground:hour fcst:prob >250
+HLCY:3000-0 m above ground:hour fcst:prob >300
+PLI:30-0 mb above ground:hour fcst:prob <0
+PLI:30-0 mb above ground:hour fcst:prob <-2
+PLI:30-0 mb above ground:hour fcst:prob <-4
+PLI:30-0 mb above ground:hour fcst:prob <-6
+PLI:30-0 mb above ground:hour fcst:prob <-8
+CIN:surface:hour fcst:prob <-50
+CIN:surface:hour fcst:prob <-100
+CIN:surface:hour fcst:prob <-200
+CIN:surface:hour fcst:prob <-300
+CIN:surface:hour fcst:prob <-400
+VIS:surface:hour fcst:prob <402
+VIS:surface:hour fcst:prob <804
+VIS:surface:hour fcst:prob <1609
+VIS:surface:hour fcst:prob <3218
+VIS:surface:hour fcst:prob <4827
+VIS:surface:hour fcst:prob <8046
+VIS:surface:hour fcst:prob <9654
+HGT:cloud ceiling:hour fcst:prob <152.5
+HGT:cloud ceiling:hour fcst:prob <305
+HGT:cloud ceiling:hour fcst:prob <610
+HGT:cloud ceiling:hour fcst:prob <914.6
+HGT:cloud ceiling:hour fcst:prob <1372
+HGT:cloud ceiling:hour fcst:prob <1830
+var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >10
+var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >20
+var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30
+var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >40
+COVTW:entire atmosphere:hour fcst:prob >1000
+COVTW:entire atmosphere:hour fcst:prob >3000
+COVTW:entire atmosphere:hour fcst:prob >5000
+COVTW:entire atmosphere:hour fcst:prob >7000
+COVTW:entire atmosphere:hour fcst:prob >10000
+TCDC:entire atmosphere:hour fcst:prob >=0 <20
+TCDC:entire atmosphere:hour fcst:prob >=20 <50
+TCDC:entire atmosphere:hour fcst:prob >=50 <80
+TCDC:entire atmosphere:hour fcst:prob >=80 <100
+TIPD:900 mb:hour fcst:prob =1
+TIPD:800 mb:hour fcst:prob =1
+TIPD:725 mb:hour fcst:prob =1
+TIPD:650 mb:hour fcst:prob =1
+TIPD:575 mb:hour fcst:prob =1
+TIPD:500 mb:hour fcst:prob =1
+TIPD:400 mb:hour fcst:prob =1
+TPFI:500 mb:hour fcst:prob =1
+TPFI:500 mb:hour fcst:prob =2
+TPFI:500 mb:hour fcst:prob =3
+TPFI:450 mb:hour fcst:prob =1
+TPFI:450 mb:hour fcst:prob =2
+TPFI:450 mb:hour fcst:prob =3
+TPFI:400 mb:hour fcst:prob =1
+TPFI:400 mb:hour fcst:prob =2
+TPFI:400 mb:hour fcst:prob =3
+TPFI:350 mb:hour fcst:prob =1
+TPFI:350 mb:hour fcst:prob =2
+TPFI:350 mb:hour fcst:prob =3
+TPFI:300 mb:hour fcst:prob =1
+TPFI:300 mb:hour fcst:prob =2
+TPFI:300 mb:hour fcst:prob =3
+TPFI:275 mb:hour fcst:prob =1
+TPFI:275 mb:hour fcst:prob =2
+TPFI:275 mb:hour fcst:prob =3
+TPFI:225 mb:hour fcst:prob =1
+TPFI:225 mb:hour fcst:prob =2
+TPFI:225 mb:hour fcst:prob =3
+TPFI:200 mb:hour fcst:prob =1
+TPFI:200 mb:hour fcst:prob =2
+TPFI:200 mb:hour fcst:prob =3
+CRAIN:surface:hour fcst:prob =1
+CFRZR:surface:hour fcst:prob =1
+CICEP:surface:hour fcst:prob =1
+CSNOW:surface:hour fcst:prob =1
+WIND:10 m above ground:hour fcst:prob >12.89
+WIND:10 m above ground:hour fcst:prob >17.5
+WIND:10 m above ground:hour fcst:prob >25.78
+VIS:cloud base:hour fcst:prob =1
+VIS:cloud base:hour fcst:prob =2
+VIS:cloud base:hour fcst:prob =3
+VIS:cloud base:hour fcst:prob =4
+VWSH:0 sigma level:hour fcst:prob >20
+CWORK:0 m above ground:hour fcst:prob >0.016
+CWORK:0 m above ground:hour fcst:prob >0.036
+CWORK:0 m above ground:hour fcst:prob >0.103
+APCP:surface:hour fcst:prob >0.25
+APCP:surface:hour fcst:prob >1.27
+APCP:surface:hour fcst:prob >2.54
+APCP:surface:hour fcst:prob >6.35
+APCP:surface:hour fcst:prob >12.7
+APCP:surface:hour fcst:prob >25.4
+APCP:surface:hour fcst:prob >38.1
+APCP:surface:hour fcst:prob >50.8
+APCP:surface:hour fcst:prob >101.6
+APCP:surface:hour fcst:prob >152.4

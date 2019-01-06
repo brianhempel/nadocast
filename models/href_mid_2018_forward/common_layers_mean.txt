@@ -1,0 +1,59 @@
+CAPE:90-0 mb above ground:hour fcst:wt ens mean
+CAPE:180-0 mb above ground:hour fcst:wt ens mean
+CAPE:surface:hour fcst:wt ens mean
+CIN:90-0 mb above ground:hour fcst:wt ens mean
+CIN:180-0 mb above ground:hour fcst:wt ens mean
+CIN:surface:hour fcst:wt ens mean
+PRMSL:mean sea level:hour fcst:wt ens mean
+HLCY:3000-0 m above ground:hour fcst:wt ens mean
+HGT:250 mb:hour fcst:wt ens mean
+HGT:500 mb:hour fcst:wt ens mean
+HGT:700 mb:hour fcst:wt ens mean
+HGT:850 mb:hour fcst:wt ens mean
+HGT:925 mb:hour fcst:wt ens mean
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean
+UGRD:250 mb:hour fcst:wt ens mean
+UGRD:500 mb:hour fcst:wt ens mean
+UGRD:700 mb:hour fcst:wt ens mean
+UGRD:850 mb:hour fcst:wt ens mean
+UGRD:925 mb:hour fcst:wt ens mean
+VGRD:250 mb:hour fcst:wt ens mean
+VGRD:500 mb:hour fcst:wt ens mean
+VGRD:700 mb:hour fcst:wt ens mean
+VGRD:850 mb:hour fcst:wt ens mean
+VGRD:925 mb:hour fcst:wt ens mean
+VVEL:700 mb:hour fcst:wt ens mean
+TMP:250 mb:hour fcst:wt ens mean
+TMP:500 mb:hour fcst:wt ens mean
+TMP:700 mb:hour fcst:wt ens mean
+TMP:850 mb:hour fcst:wt ens mean
+TMP:925 mb:hour fcst:wt ens mean
+TMP:2 m above ground:hour fcst:wt ens mean
+DPT:500 mb:hour fcst:wt ens mean
+DPT:700 mb:hour fcst:wt ens mean
+DPT:850 mb:hour fcst:wt ens mean
+DPT:925 mb:hour fcst:wt ens mean
+DPT:2 m above ground:hour fcst:wt ens mean
+RH:700 mb:hour fcst:wt ens mean
+PWAT:entire atmosphere:hour fcst:wt ens mean
+VIS:surface:hour fcst:wt ens mean
+HGT:cloud base:hour fcst:wt ens mean
+LCDC:low cloud layer:hour fcst:wt ens mean
+MCDC:middle cloud layer:hour fcst:wt ens mean
+HCDC:high cloud layer:hour fcst:wt ens mean
+TCDC:entire atmosphere:hour fcst:wt ens mean
+CRAIN:surface:hour fcst:wt ens mean
+CFRZR:surface:hour fcst:wt ens mean
+CICEP:surface:hour fcst:wt ens mean
+CSNOW:surface:hour fcst:wt ens mean
+WIND:10 m above ground:hour fcst:wt ens mean
+WIND:850 mb:hour fcst:wt ens mean
+WIND:80 m above ground:hour fcst:wt ens mean
+WIND:925 mb:hour fcst:wt ens mean
+WIND:250 mb:hour fcst:wt ens mean
+VVEL:700-500 mb:hour fcst:wt ens mean
+VWSH:surface:hour fcst:wt ens mean
+HINDEX:surface:hour fcst:wt ens mean
+VWSH:6000-0 m above ground:hour fcst:wt ens mean
+HGT:cloud ceiling:hour fcst:wt ens mean

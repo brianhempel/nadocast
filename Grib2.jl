@@ -1,10 +1,25 @@
 module Grib2
 
 import DelimitedFiles # For readdlm
+import JSON # For reading layer_name_normalization_substitutions.json
 
-push!(LOAD_PATH, ".")
+push!(LOAD_PATH, @__DIR__)
 import Plots
 import Grids
+import Inventories
+
+# Deeply traverse root_path to find grib2 file paths
+function all_grib2_file_paths_in(root_path)
+  grib2_paths = []
+  for (dir_path, _, file_names) in walkdir(root_path)
+    for file_name in file_names
+      if endswith(file_name, ".grb2") || endswith(file_name, ".grib2")
+        push!(grib2_paths, joinpath(dir_path, file_name)) # path to files
+      end
+    end
+  end
+  grib2_paths
+end
 
 # Read grib2 grid.
 #
@@ -32,18 +47,29 @@ function read_grid(grib2_path) :: Grids.Grid
   Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons)
 end
 
-# Read the inventory.
+layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_name_normalization_substitutions.json")) :: Dict{String,Any}
+
+# Read the inventory. Field names are immediately normalized using the substitutions in layer_name_normalization_substitutions.json.
 #
-# Returns 8 column String array (no headers). Columns 4 and 5 are the abbreviation and description.
-#
-# Selected headers: message.submessage, position, -,              abbrev, description,             -,             -,             inventory number
+# Selected headers: message.submessage, position, -,              abbrev, level,                   forecast_time, misc,          inventory number
 # Sample row:       "4",                "956328", "d=2018062900", "CAPE", "180-0 mb above ground", "7 hour fcst", "wt ens mean", "n=4"
-function read_inventory(grib2_path)
+#
+# Probability files have an extra second-to-last column that just says "probability forecast" or "Neighborhood Probability"
+function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
   # -s indicates "simple inventory"
   # -n indicates to add the inventory number
-  open(`wgrib2 $grib2_path -s -n`) do inv
-    DelimitedFiles.readdlm(inv, ':', String; header=false, use_mmap=false, quotes=false)
-  end
+  table =
+    open(`wgrib2 $grib2_path -s -n`) do inv
+      # c.f. find_common_layers.rb
+      normalized_raw_inventory = read(inv, String)
+      for (old, replacement) in layer_name_normalization_substitutions
+        normalized_raw_inventory = replace(normalized_raw_inventory, old => replacement)
+      end
+
+      DelimitedFiles.readdlm(IOBuffer(normalized_raw_inventory), ':', String; header=false, use_mmap=false, quotes=false)
+    end
+
+  mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7]), table, dims = [2])[:,1]
 end
 
 # Read out the given layers into a binary Float32 array.
@@ -51,19 +77,19 @@ end
 # `inventory` is a filtered set of lines from read_inventory above.
 #
 # Returns grid_length by layer_count Float32 array of values.
-function read_layers_data_raw(grib2_path, inventory)
+function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
   # -i says to read the inventory from stdin
   # -headers says to print the layer size before and after
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
   wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin -`, "r+")
 
-  layer_count = size(inventory,1)
+  layer_count = length(inventory)
 
   # Tell wgrib2 which layers we want.
   for layer_i = 1:layer_count
-    layer_to_fetch = inventory[layer_i, :]
+    layer_to_fetch = inventory[layer_i]
     # Only need first two columns (message.submessage and position) plus newline
-    println(wgrib2, layer_to_fetch[1] * ":" * layer_to_fetch[2])
+    println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
   end
   close(wgrib2.in)
 
@@ -75,9 +101,7 @@ function read_layers_data_raw(grib2_path, inventory)
   # Read out the data in those layers.
   # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
   for layer_i = 1:layer_count
-    layer_to_fetch = inventory[layer_i, :]
-    # abbrev, desc      = normalize_abbrev_and_desc(layer_to_fetch[4], layer_to_fetch[5])
-    # layer_key         = abbrev * ":" * desc
+    layer_to_fetch = inventory[layer_i]
 
     if !output_values_initialized
       layer_value_count         = div(read(wgrib2, UInt32), 4)
