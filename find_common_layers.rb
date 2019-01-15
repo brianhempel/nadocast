@@ -40,12 +40,19 @@ inventories =
       end
     end.
     compact.
-    map do |inventory_str|
+    flat_map do |inventory_str|
+      # STDERR.puts inventory_str
+      # STDERR.puts
       inventory_str.
         split("\n").
-        map    { |line| normalize_inventory_line(line) }.
-        select { |line| line =~ /:\d+ hour fcst:/ }. # Skip accumulation fields; for HREF they vary from forecast hour to forecast hour.
-        map    { |line| line.split(":") }.map { |_, _, _, abbrev, desc, x_hours_fcst, prob_level, _| [abbrev, desc, x_hours_fcst.gsub(/\s*\d+\s*/, ""), prob_level] }
+        map      { |line| normalize_inventory_line(line) }.
+        select   { |line| line =~ /:\d+ hour fcst:/ }. # Skip accumulation fields; for HREF they vary from forecast hour to forecast hour.
+        select   { |line| line !~ /:APCP:/ }.          # Skip APCP Total Precipitation fields; for SREF they seem to be off by an hour and mess up the group_by below
+        map      { |line| line.split(":") }.
+        group_by { |_, _, _, _, _, x_hours_fcst, _, _| x_hours_fcst }. # SREF forecasts contain multiple forecast hours in the same file: split them apart.
+        map      { |x_hours_fcst, inventory_lines| inventory_lines }
+    end.map do |inventory_lines|
+      inventory_lines.map { |_, _, _, abbrev, desc, x_hours_fcst, prob_level, _| [abbrev, desc, x_hours_fcst.gsub(/\s*\d+\s*/, ""), prob_level] }
     end
 
 common   = inventories.reduce(:&)

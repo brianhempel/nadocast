@@ -94,13 +94,3 @@ VWSH:0 sigma level:hour fcst:prob >20
 CWORK:0 m above ground:hour fcst:prob >0.016
 CWORK:0 m above ground:hour fcst:prob >0.036
 CWORK:0 m above ground:hour fcst:prob >0.103
-APCP:surface:hour fcst:prob >0.25
-APCP:surface:hour fcst:prob >1.27
-APCP:surface:hour fcst:prob >2.54
-APCP:surface:hour fcst:prob >6.35
-APCP:surface:hour fcst:prob >12.7
-APCP:surface:hour fcst:prob >25.4
-APCP:surface:hour fcst:prob >38.1
-APCP:surface:hour fcst:prob >50.8
-APCP:surface:hour fcst:prob >101.6
-APCP:surface:hour fcst:prob >152.4
