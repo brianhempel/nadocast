@@ -45,3 +45,10 @@ Also would like not to be memory limited for training boosted decision trees. Ma
 
 Also going to try to use Julia notebooks to see if that can reduce frustration.
 
+- Flux.Conv() convolutional layer constructor does not work with Float32 arrays (could hack around if needed: problem seems to be that the constructors make Float64 weights in the model...so wierd in any case)
+
+Just discovered that the SREF "1hrly" forecasts only contain the hours not divisible by three (1,2,4,5,7,8 etc). Going to start to grab the "3hrly" forecasts as well. So 2019-01-09 onward will have 1hrly (out to 38 horus) and 3hrly (out to 87 hours).
+
+- [ ] Update SREF.jl
+
+Why is logistic regression not learning on SREF...(consistant 0.3 validation loss)?

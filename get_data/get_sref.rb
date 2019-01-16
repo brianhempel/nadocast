@@ -4,8 +4,11 @@ require "date"
 # http://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/sref.20180626/09/ensprod/sref.t09z.pgrb212.mean_1hrly.grib2
 
 # Files available 3.5-4hrs after run time
+#
+# 1hrly files contain hours 1-38 not divisible by 3
+# 3hrly files contain hours anl,3-87 divisible by 3
 
-TYPES          = ["mean", "prob"]
+TYPES          = ["mean_1hrly", "mean_3hrly", "prob_1hrly", "prob_3hrly"]
 YMDS           = `curl -s http://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/`.scan(/\bsref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [3, 9, 15, 21]
 BASE_DIRECTORY = "/Volumes/Tornadoes/sref"
@@ -32,9 +35,9 @@ threads = THREAD_COUNT.times.map do
       year_month        = year_month_day[0...6]
       run_hour_str      = "%02d" % [run_hour]
 
-      file_name         = "sref_#{year_month_day}_t#{run_hour_str}z_#{type}_1hrly.grib2"
+      file_name         = "sref_#{year_month_day}_t#{run_hour_str}z_#{type}.grib2"
       next if BAD_FILES.include?(file_name)
-      url_to_get        = "http://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/sref.#{year_month_day}/#{run_hour_str}/ensprod/sref.t#{run_hour_str}z.pgrb212.#{type}_1hrly.grib2"
+      url_to_get        = "http://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/sref.#{year_month_day}/#{run_hour_str}/ensprod/sref.t#{run_hour_str}z.pgrb212.#{type}.grib2"
       directory         = "#{BASE_DIRECTORY}/#{year_month}/#{year_month_day}"
       path              = "#{directory}/#{file_name}"
       alt_directory     = alt_location(directory)
