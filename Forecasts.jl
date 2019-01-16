@@ -1,6 +1,7 @@
 module Forecasts
 
 import Dates
+using Printf
 
 push!(LOAD_PATH, @__DIR__)
 
@@ -41,6 +42,10 @@ function valid_time_in_convective_days_since_epoch_utc(forecast :: Forecast) :: 
   fld(valid_time_in_seconds_since_epoch_utc(forecast) - 12*HOUR, DAY)
 end
 
+function time_title(forecast :: Forecast) :: String
+  @sprintf "%04d-%02d-%02d %02dZ +%d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
+end
+
 
 function grid(forecast :: Forecast) :: Grids.Grid
   if forecast._grid == nothing
@@ -56,12 +61,23 @@ function inventory(forecast :: Forecast) :: Vector{Inventories.InventoryLine}
   forecast._inventory
 end
 
+# If not cached, get but don't cache the data.
+function get_data(forecast :: Forecast) :: Array{Float32,2}
+  if forecast._data == nothing
+    forecast._get_data(forecast)
+  else
+    forecast._data
+  end
+end
+
+# If not cached, get and cache the data.
 function data(forecast :: Forecast) :: Array{Float32,2}
   if forecast._data == nothing
     forecast._data = forecast._get_data(forecast)
   end
   forecast._data
 end
+
 
 # # Note raw data is W -> E, S -> N.
 # #

@@ -1,114 +1,186 @@
 using Flux
 
+import DelimitedFiles
+import Plots
 import Random
 
 push!(LOAD_PATH, (@__DIR__) * "/../..")
-
-# println(LOAD_PATH)
-
 import Conus
 import Forecasts
-import NNTrain
 import StormEvents
+import Grib2
+
+push!(LOAD_PATH, (@__DIR__) * "/../shared")
+import NNTrain
+import TrainingShared
 
 push!(LOAD_PATH, @__DIR__)
 import SREF
 
-MINUTE = 60 # seconds
-
-TORNADO_TIME_WINDOW_HALF_SIZE = 30*MINUTE
-TORNADO_SPACIAL_RADIUS_MILES  = 25.0
-
-function is_relevant_forecast(forecast)
-  for tornado in StormEvents.tornadoes
-    tornado_relevant_time_range =
-      (tornado.start_seconds_from_epoch_utc - TORNADO_TIME_WINDOW_HALF_SIZE + 1):(tornado.end_seconds_from_epoch_utc + TORNADO_TIME_WINDOW_HALF_SIZE - 1)
-
-    if Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in tornado_relevant_time_range
-      return true
-    end
-  end
-  false
-end
-
 all_sref_forecasts = SREF.forecasts()[1:1000]
 
-println("$(length(all_sref_forecasts)) total SREF forecast hour snapshots")
+(grid, conus_on_grid, feature_count, train_forecasts, validation_forecasts, test_forecasts) =
+  TrainingShared.forecasts_grid_conus_on_grid_feature_count_train_validation_test(all_sref_forecasts)
 
-forecasts = filter(is_relevant_forecast, all_sref_forecasts)
-
-println("$(length(forecasts)) relevant forecast hour snapshots")
-
-grid          = Forecasts.grid(forecasts[1])
-feature_count = length(Forecasts.inventory(forecasts[1]))
-
-train_forecasts      = filter(Forecasts.is_train, forecasts)
-validation_forecasts = filter(Forecasts.is_validation, forecasts)
-test_forecasts       = filter(Forecasts.is_test, forecasts)
+conus_on_grid = Float64.(conus_on_grid)
 
 println("$(length(train_forecasts)) for training.")
 println("$(length(validation_forecasts)) for validation.")
 println("$(length(test_forecasts)) for testing.")
 
+normalizing_factors = DelimitedFiles.readdlm((@__DIR__) * "/normalizing_factors.txt", Float64)[:,1] :: Array{Float64,1}
+
 forecasts_remaining_in_epoch = Random.shuffle(train_forecasts)
 
-forecasts_per_minibatch = 10
+forecasts_per_minibatch = 1
 
 # Should return [(X1, Y1), (X2, Y2), ...] where X1,Y1 is minibatch 1 etc...
 #
-# For 2D data, X1 etc should be 4-dimensional (x, y, channels, image in batch) or (y, x, channels, image in batch)
+# For 1D data, X1 should be (channels, item in batch)
 #
-# In our case, it is indeed (x, y, channels, image in batch), although y is south to north.
+# For 2D data, X1 etc should be 4-dimensional (x, y, channels, image in batch) or (y, x, channels, image in batch)
+function reset_epoch()
+  global forecasts_remaining_in_epoch
+  forecasts_remaining_in_epoch = Random.shuffle(train_forecasts)
+end
+
 function get_next_chunk()
   print("Loading chunk")
   global forecasts_remaining_in_epoch
 
-  X = Array{Float32,4}[]
-  Y = Array{Float32,4}[]
+  X = nothing
+  Y = Array{Float64,1}[]
+  # X = Array{Float32,4}[]
+  # Y = Array{Float32,3}[]
   for forecast in Iterators.take(forecasts_remaining_in_epoch, forecasts_per_minibatch)
-    data   = Forecasts.data(forecast)
-    data   = reshape(data, (grid.width, grid.height, :))
-    labels = StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), TORNADO_TIME_WINDOW_HALF_SIZE)
-    labels = reshape(labels, (grid.width, grid.height))
+    data =
+      try
+        Float64.(Forecasts.get_data(forecast)) ./ normalizing_factors' # dims: grid_count by layer_count
+      catch exception
+        if isa(exception, EOFError) || isa(exception, ErrorException)
+          println("Bad SREF Forecast: $(Forecasts.time_title(forecast))")
+          continue
+        else
+          rethrow(exception)
+        end
+      end
 
-    X = cat(X, data,   dims = 4)
-    Y = cat(Y, labels, dims = 3)
+    transposed = collect(data') # dims: layer_count by grid_count
+    # data   = reshape(data, (grid.width, grid.height, :))
+    labels = Float64.(TrainingShared.forecast_labels(grid, forecast))
+    # labels = reshape(labels, (grid.width, grid.height))
+
+    if X == nothing
+      X = transposed
+    else
+      X = hcat(X, transposed)
+    end
+    Y = vcat(Y, labels)
+    # X = cat(X, data,   dims = 4)
+    # Y = cat(Y, labels, dims = 3)
     print(".")
   end
   forecasts_remaining_in_epoch = forecasts_remaining_in_epoch[(forecasts_per_minibatch+1):length(forecasts_remaining_in_epoch)]
   println("done.")
 
-  # Right now, only one minibatch per loading cycle.
-  [(X, Y)]
+  if X != nothing
+    # Right now, only one minibatch per loading cycle.
+    [(X :: Array{Float64,2}, Y)]
+  else
+    []
+  end
 end
 
-conus_on_grid = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
 
+
+glorotuniform32(dims...) = Float32.(Flux.glorot_uniform(dims...))
+
+zeros32(dims...) = Float32.(zeros(dims...))
+minusthree32(dims...)  = zeros32(dims...) .- 3.0f0
+minusfive32(dims...)   = zeros32(dims...) .- 5.0f0
+minusten32(dims...)    = zeros32(dims...) .- 10.0f0
+minusten(dims...)      = zeros(dims...)   .- 10.0
+minustwenty32(dims...) = zeros32(dims...) .- 20.0f0
+
+# logistic_model = Chain(
+#   Conv((1,1), feature_count => 1, σ),
+#   x -> reshape(x, (size(x, 1), size(x, 2), size(x, 4))) # Flatten away the single channel dimension
+# )
 logistic_model = Chain(
-  Conv((1,1), feature_count => 1, σ),
-  x -> reshape(x, (size(x, 1), size(x, 2), size(x, 4))) # Flatten away the single channel dimension
+  # Dense(feature_count, 1, σ, initW = glorotuniform32, initb = minusten32),
+  Dense(feature_count, 1, σ, initb = minusten),
+  x -> reshape(x, length(x)) # Flatten down to 1D (no distinction between hours in a minibatch, just lots of grid points)
 )
 
-loss(x, y) = sum(Flux.binarycrossentropy(logistic_model(x), y) .* reshape(repeat(conus_on_grid, size(y, 3)), size(y)))
+
+losses(x, y) = Flux.binarycrossentropy.(logistic_model(x), y) .* repeat(conus_on_grid, div(length(y), length(conus_on_grid)))
+loss(x, y)   = sum(losses(x, y))
 
 function test_loss(forecasts)
-  test_loss      = 0.0f0
+  test_loss            = 0.0
   point_count_on_conus = sum(conus_on_grid)
   for forecast in forecasts
-    data   = Forecasts.data(forecast)
-    data   = reshape(data, (grid.width, grid.height, :, 1))
-    labels = StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), TORNADO_TIME_WINDOW_HALF_SIZE)
-    labels = reshape(labels, (grid.width, grid.height, 1))
+    # print("Loading $(Forecasts.time_title(forecast))...")
+    data =
+      try
+        Float64.(Forecasts.get_data(forecast)) ./ normalizing_factors'
+      catch exception
+        if isa(exception, EOFError) || isa(exception, ErrorException)
+          println("Bad SREF Forecast: $(Forecasts.time_title(forecast))")
+          continue
+        else
+          rethrow(exception)
+        end
+      end
 
-    test_loss += Tracker.data(loss(data, labels)) / point_count_on_conus
+    # print("transposing...")
+    transposed = collect(data') # dims: layer_count by grid_count
+    # data   = reshape(data, (grid.width, grid.height, :, 1))
+    # print("labeling...")
+    labels = Float64.(TrainingShared.forecast_labels(grid, forecast))
+    # println("done.")
+    # labels_transposed = collect(labels')
+    # labels = reshape(labels, (grid.width, grid.height, 1))
+
+
+    test_loss += Tracker.data(loss(transposed, labels)) / point_count_on_conus
     print(".")
   end
 
   test_loss
 end
 
+learning_rate        = 0.05
+last_validation_loss = nothing
+epoch_n              = 1
+
 while true
+  global last_validation_loss
+  global learning_rate
+  global epoch_n
+
   print("Calculating validation loss")
-  println("Validation loss: $(test_loss(validation_forecasts))")
-  NNTrain.train_one_epoch!(get_next_chunk, loss, params(logistic_model), Descent(0.1))
+  validation_loss = test_loss(validation_forecasts)
+  println("done.")
+  println("Validation loss: $validation_loss")
+  if last_validation_loss != nothing && validation_loss > last_validation_loss
+    learning_rate = learning_rate / 2.0
+    println("New learning rate: $learning_rate")
+  end
+  last_validation_loss = validation_loss
+  NNTrain.train_one_epoch!(get_next_chunk, loss, SGD(params(logistic_model), learning_rate))
+  reset_epoch()
+
+  for forecast in validation_forecasts[1:3]
+    print("Plotting $(Forecasts.time_title(forecast)) (epoch+$(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))s)...")
+    data     = Float64.(Forecasts.get_data(forecast)') ./ normalizing_factors
+    labels   = Float64.(TrainingShared.forecast_labels(grid, forecast))
+    prefix   = "epoch_$(epoch_n)_forecast_$(Forecasts.time_title(forecast))"
+    Plots.png(Grib2.plot(grid, Float32.(Tracker.data(logistic_model(data)))), "$(prefix)_predictions.png")
+    Plots.png(Grib2.plot(grid, Float32.(labels)), "$(prefix)_labels.png")
+    Plots.png(Grib2.plot(grid, Float32.(Tracker.data(losses(data, labels)))), "$(prefix)_losses.png")
+    println("done.")
+  end
+
+  epoch_n += 1
 end

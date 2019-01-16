@@ -81,8 +81,16 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
   # -i says to read the inventory from stdin
   # -headers says to print the layer size before and after
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
-  wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin -`, "r+")
 
+
+  # print("opening wgrib2...")
+  temp_path = tempname()
+  # wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
+  wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
+
+
+
+  # print("asking for layers...")
   layer_count = length(inventory)
 
   # Tell wgrib2 which layers we want.
@@ -92,7 +100,11 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
     println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
   end
   close(wgrib2.in)
+  # print("waiting...")
+  wait(wgrib2)
 
+  # print("reading layers")
+  wgrib2_out = open(temp_path)
   output_values_initialized = false
 
   layer_value_count = UInt32(0)
@@ -104,19 +116,23 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
     layer_to_fetch = inventory[layer_i]
 
     if !output_values_initialized
-      layer_value_count         = div(read(wgrib2, UInt32), 4)
+      layer_value_count         = div(read(wgrib2_out, UInt32), 4)
       values                    = zeros(Float32, (layer_value_count,layer_count))
       output_values_initialized = true
     else
-      this_layer_value_count = div(read(wgrib2, UInt32), 4)
+      this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
       if this_layer_value_count != layer_value_count
         error("value count mismatch, expected $layer_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
       end
     end
 
-    values[:,layer_i] = reinterpret(Float32, read(wgrib2, layer_value_count*4))
+    # Okay, so Julia reading happens to be really slow for Pipes b/c everything is read byte-by-byte, thereby making a bajillion syscalls.
+    #
+    # May be faster to dump the file and then read in the file.
 
-    this_layer_value_count = div(read(wgrib2, UInt32), 4)
+    values[:,layer_i] = reinterpret(Float32, read(wgrib2_out, layer_value_count*4))
+
+    this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
     if this_layer_value_count != layer_value_count
       error("value count mismatch, expected $layer_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
     end
@@ -129,15 +145,23 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
     # println(values)
     # layer_to_data[layer_key] = values
     # println(grid_length_again)
+
+    # print(".")
   end
 
   # Sanity check that incoming stream is empty
-  if !eof(wgrib2.out)
+  if !eof(wgrib2_out)
     error("wgrib2 sending more data than expected!")
   end
+  close(wgrib2_out)
+
+  # print("handling undefineds...")
 
   # Set undefineds to 0 instead of 9.999f20
   map!(v -> v == 9.999f20 ? 0.0f0 : v, values, values)
+
+  # print("removing temp file...")
+  run(`rm $temp_path`)
 
   values
 end

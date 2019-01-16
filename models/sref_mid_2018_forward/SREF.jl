@@ -37,7 +37,7 @@ function reload_forecasts()
 
       year_str, month_str, day_str, run_hour_str = match(r"/sref_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_mean_1hrly.gri?b2", mean_sref_path).captures
 
-      for forecast_hour in 1:38
+      for forecast_hour in filter(hr -> mod(hr, 3) != 0, 1:38) # Need to update to grab 3hrly forecasts as well.
         run_year  = parse(Int64, year_str)
         run_month = parse(Int64, month_str)
         run_day   = parse(Int64, day_str)
@@ -51,8 +51,26 @@ function reload_forecasts()
           mean_inventory = filter(line -> forecast_hour_str == line.forecast_hour_str, Grib2.read_inventory(mean_sref_path))
           prob_inventory = filter(line -> forecast_hour_str == line.forecast_hour_str, Grib2.read_inventory(prob_sref_path))
 
-          mean_inventory_to_use = filter(line -> Inventories.inventory_line_key(line) in common_layers_mean, mean_inventory)
-          prob_inventory_to_use = filter(line -> Inventories.inventory_line_key(line) in common_layers_prob, prob_inventory)
+          mean_layer_key_to_inventory_line(key) = begin
+            i = findfirst(line -> Inventories.inventory_line_key(line) == key, mean_inventory)
+            if i != nothing
+              mean_inventory[i]
+            else
+              throw("SREF forecast $(Forecasts.time_title(forecast)) does not have $key in mean layers: $mean_inventory")
+            end
+          end
+
+          prob_layer_key_to_inventory_line(key) = begin
+            i = findfirst(line -> Inventories.inventory_line_key(line) == key, prob_inventory)
+            if i != nothing
+              prob_inventory[i]
+            else
+              throw("SREF forecast $(Forecasts.time_title(forecast)) does not have $key in prob layers: $prob_inventory")
+            end
+          end
+
+          mean_inventory_to_use = map(mean_layer_key_to_inventory_line, common_layers_mean)
+          prob_inventory_to_use = map(prob_layer_key_to_inventory_line, common_layers_prob)
 
           vcat(mean_inventory_to_use, prob_inventory_to_use)
         end
