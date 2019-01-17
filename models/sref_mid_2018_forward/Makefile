@@ -10,8 +10,8 @@ common_layers_prob.txt:
 normalizing_factors.txt:
 	julia -e 'push!(LOAD_PATH, @__DIR__); import SREF; push!(LOAD_PATH, (@__DIR__) * "/../shared"); import MakeNormalizingFactors; using DelimitedFiles; writedlm("normalizing_factors.txt", MakeNormalizingFactors.calculate_normalizing_factors(SREF.forecasts()))'
 
-train:
+train_logistic:
 	# Some weirdo bug in OpenBLAS "OpenBLAS : Program will terminate because you tried to start too many threads."
 	# https://github.com/xianyi/OpenBLAS/issues/1735
 	# All our slowness is loading time, not BLAS.
-	OPENBLAS_NUM_THREADS=1 julia Train.jl
+	OPENBLAS_NUM_THREADS=1 julia TrainLogistic.jl

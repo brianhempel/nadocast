@@ -7,6 +7,9 @@ import Inventories
 import Grib2
 import Grids
 
+# SREF is on grid 212: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid212.gif
+
+
 _forecasts = []
 
 function forecasts()

@@ -78,7 +78,6 @@ function data(forecast :: Forecast) :: Array{Float32,2}
   forecast._data
 end
 
-
 # # Note raw data is W -> E, S -> N.
 # #
 # # Reinterpretation lets us index it as [x, y, layer]
@@ -98,6 +97,41 @@ end
 
 function is_test(forecast :: Forecast) :: Bool
   mod(valid_time_in_convective_days_since_epoch_utc(forecast), 5) == 1
+end
+
+### Iteration ###
+
+struct UncorruptedForecastsDataIteratorNoCache
+  forecasts :: Vector{Forecasts.Forecast}
+end
+
+function iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
+  UncorruptedForecastsDataIteratorNoCache(forecasts)
+end
+
+function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1)
+  i         = state
+  forecasts = iterator.forecasts
+
+  if i > length(forecasts)
+    return nothing
+  end
+
+  forecast = forecasts[i]
+
+  data =
+    try
+      Forecasts.get_data(forecast)
+    catch exception
+      if isa(exception, EOFError) || isa(exception, ErrorException)
+        println("Bad forecast: $(Forecasts.time_title(forecast))")
+        return Base.iterate(iterator, i+1)
+      else
+        rethrow(exception)
+      end
+    end
+
+  ((forecast, data), i+1)
 end
 
 end # module Forecasts

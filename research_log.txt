@@ -52,3 +52,8 @@ Just discovered that the SREF "1hrly" forecasts only contain the hours not divis
 - [ ] Update SREF.jl
 
 Why is logistic regression not learning on SREF...(consistant 0.3 validation loss)?
+
+Okay got it to learn. Need enough variety of data and an appropriate starting learning rate (neither too high or low).
+
+Also switched to 64bit math to (slightly) reduce likelihood of exploding gradient. May be able to switch back but there's no reason to until we start hitting memory problems. The slow part is wgrib2 data loading ().
+
