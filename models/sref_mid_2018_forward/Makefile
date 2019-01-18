@@ -15,3 +15,9 @@ train_logistic:
 	# https://github.com/xianyi/OpenBLAS/issues/1735
 	# All our slowness is loading time, not BLAS.
 	OPENBLAS_NUM_THREADS=1 julia TrainLogistic.jl
+
+train_gradient_boosted_decision_trees:
+	# Some weirdo bug in OpenBLAS "OpenBLAS : Program will terminate because you tried to start too many threads."
+	# https://github.com/xianyi/OpenBLAS/issues/1735
+	# All our slowness is loading time, not BLAS.
+	OPENBLAS_NUM_THREADS=1 julia TrainGradientBoostedDecisionTrees.jl

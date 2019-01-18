@@ -41,7 +41,7 @@ function forecasts_grid_conus_on_grid_feature_count_train_validation_test(all_fo
   (grid, conus_on_grid, feature_count, train_forecasts, validation_forecasts, test_forecasts)
 end
 
-function forecast_labels(grid, forecast)
+function forecast_labels(grid, forecast) :: Array{Float32,1}
   StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), TORNADO_TIME_WINDOW_HALF_SIZE)
 end
 
