@@ -2,6 +2,9 @@ module Grib2
 
 import DelimitedFiles # For readdlm
 import JSON # For reading layer_name_normalization_substitutions.json
+import Serialization
+
+using TranscodingStreams, CodecZstd
 
 push!(LOAD_PATH, @__DIR__)
 import Plots
@@ -21,12 +24,52 @@ function all_grib2_file_paths_in(root_path)
   grib2_paths
 end
 
+
+### Caching in the local grib2_decoded_cache folder
+
+function cache_path(grib2_path, function_name, more_keying...)
+  more_keying_str = isempty(more_keying) ? "" : string(hash(more_keying))
+  (@__DIR__) * "/grib2_decoded_cache" * replace(grib2_path, r"\.gri?b2$" => "") * "/" * function_name * "_" * more_keying_str
+end
+
+function get_cached(grib2_path, function_name, more_keying...)
+  path = cache_path(grib2_path, function_name, more_keying...)
+  if isfile(path)
+    open(CodecZstd.ZstdDecompressorStream, path, "r") do stream
+      Serialization.deserialize(stream)
+    end
+  else
+    nothing
+  end
+end
+
+function cache_and_return(item, grib2_path, function_name, more_keying...)
+  path = cache_path(grib2_path, function_name, more_keying...)
+
+  mkpath(dirname(path))
+
+  open(CodecZstd.ZstdCompressorStream, path, "w") do stream
+    Serialization.serialize(stream, item)
+  end
+
+  item
+end
+
+
+
+### Grib2 Functions
+
 # Read grib2 grid.
 #
 # Ordering is row-major: W -> E, S -> N
 #
 # Returns a Grid.Grid structure (see Grid.jl) which contains the grid size and the lat-lon coordinates of all grid points.
 function read_grid(grib2_path) :: Grids.Grid
+  cached = get_cached(grib2_path, "read_grid")
+  if cached != nothing
+    return cached
+  end
+
   # Read the grid from the grib file. Returns four columns: row_index, col_index, lat, lon
   #
   # -end means stop after first (sub)message.
@@ -44,10 +87,13 @@ function read_grid(grib2_path) :: Grids.Grid
 
   latlons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(width*height)) :: Array{Tuple{Float64,Float64},1}
 
-  Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons)
+  grid = Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons)
+
+  cache_and_return(grid, grib2_path, "read_grid")
 end
 
 layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_name_normalization_substitutions.json")) :: Dict{String,Any}
+
 
 # Read the inventory. Field names are immediately normalized using the substitutions in layer_name_normalization_substitutions.json.
 #
@@ -56,6 +102,11 @@ layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_na
 #
 # Probability files have an extra second-to-last column that just says "probability forecast" or "Neighborhood Probability"
 function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
+  cached = get_cached(grib2_path, "read_inventory")
+  if cached != nothing
+    return cached
+  end
+
   # -s indicates "simple inventory"
   # -n indicates to add the inventory number
   table =
@@ -69,7 +120,9 @@ function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
       DelimitedFiles.readdlm(IOBuffer(normalized_raw_inventory), ':', String; header=false, use_mmap=false, quotes=false)
     end
 
-  mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7]), table, dims = [2])[:,1]
+  result = mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7]), table, dims = [2])[:,1]
+
+  cache_and_return(result, grib2_path, "read_inventory")
 end
 
 # Read out the given layers into a binary Float32 array.
@@ -78,17 +131,19 @@ end
 #
 # Returns grid_length by layer_count Float32 array of values.
 function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
+  cached = get_cached(grib2_path, "read_layers_data_raw", inventory)
+  if cached != nothing
+    return cached
+  end
+
   # -i says to read the inventory from stdin
   # -headers says to print the layer size before and after
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
-
 
   # print("opening wgrib2...")
   temp_path = tempname()
   # wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
   wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
-
-
 
   # print("asking for layers...")
   layer_count = length(inventory)
@@ -163,8 +218,12 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
   # print("removing temp file...")
   run(`rm $temp_path`)
 
-  values
+  cache_and_return(values, grib2_path, "read_layers_data_raw", inventory)
 end
+
+
+
+### Utility
 
 function latlon_to_value_no_interpolation(grid, layer_data, (lat, lon))
   flat_i = Grids.latlon_to_closest_grid_i(grid, (lat, lon))
@@ -181,5 +240,7 @@ function plot(grid :: Grids.Grid, layer_data :: Array{Float32,1})
     fill=true
   ))
 end
+
+
 
 end # module Grib2

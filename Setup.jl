@@ -5,6 +5,8 @@
 # add ArchGDAL
 # add Proj4 # for GeoUtils geodesics
 # # add JLD
+# add TranscodingStreams
+# add CodecZstd
 
 
 # Pkg.update()
