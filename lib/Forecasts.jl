@@ -106,7 +106,7 @@ struct UncorruptedForecastsDataIteratorNoCache
 end
 
 function iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
-  UncorruptedForecastsDataIteratorNoCache(forecasts)
+  UncorruptedForecastsDataIteratorNoCache(collect(forecasts))
 end
 
 function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1)

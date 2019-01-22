@@ -7,6 +7,12 @@
 # StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz:
 # 	curl https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz > StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
 
+default:
+	cat Makefile
+
+julia:
+	julia --project
+
 # Tornado events, 2014 through the current year. Both start and end times.
 tornadoes:
 	cp storm_data/tornadoes.csv storm_data/tornadoes_old.csv

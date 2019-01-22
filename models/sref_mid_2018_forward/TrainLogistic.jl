@@ -5,7 +5,7 @@ import DelimitedFiles
 import Plots
 import Random
 
-push!(LOAD_PATH, (@__DIR__) * "/../..")
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Conus
 import Forecasts
 import StormEvents
@@ -18,7 +18,7 @@ import TrainingShared
 push!(LOAD_PATH, @__DIR__)
 import SREF
 
-all_sref_forecasts = SREF.forecasts()[1:11:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
+all_sref_forecasts = SREF.forecasts() # [1:11:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
 
 (grid, conus_on_grid, feature_count, train_forecasts, validation_forecasts, test_forecasts) =
   TrainingShared.forecasts_grid_conus_on_grid_feature_count_train_validation_test(all_sref_forecasts)
@@ -159,7 +159,7 @@ while true
   NNTrain.train_one_epoch!(get_next_chunk, loss, SGD(params(logistic_model), learning_rate))
   reset_epoch()
 
-  for forecast in validation_forecasts[[5,10,15]]
+  for forecast in validation_forecasts[[5,10,15,30,40,50]]
     print("Plotting $(Forecasts.time_title(forecast)) (epoch+$(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))s)...")
     data     = Float64.(Forecasts.get_data(forecast)') ./ normalizing_factors
     labels   = Float64.(TrainingShared.forecast_labels(grid, forecast))

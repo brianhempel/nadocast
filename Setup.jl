@@ -5,9 +5,10 @@
 # add ArchGDAL
 # add Proj4 # for GeoUtils geodesics
 # # add JLD
-# add https://github.com/dmlc/XGBoost.jl
+# # add https://github.com/dmlc/XGBoost.jl
 # add TranscodingStreams
 # add CodecZstd
+# dev ../MagicTreeBoosting.jl
 
 
 # Pkg.update()

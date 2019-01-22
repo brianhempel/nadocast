@@ -1,6 +1,6 @@
 module TrainingShared
 
-push!(LOAD_PATH, (@__DIR__) * "/../..")
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Conus
 import Forecasts

@@ -17,7 +17,7 @@ end
 const tornadoes = begin
   # println("Loading tornadoes...")
 
-  tornado_rows, tornado_headers = DelimitedFiles.readdlm((@__DIR__) * "/storm_data/tornadoes.csv",','; header=true)
+  tornado_rows, tornado_headers = DelimitedFiles.readdlm((@__DIR__) * "/../storm_data/tornadoes.csv",','; header=true)
 
   tornado_headers = tornado_headers[1,:] # 1x9 array to 9-element vector.
 
