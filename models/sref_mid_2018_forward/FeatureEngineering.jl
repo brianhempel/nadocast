@@ -152,15 +152,15 @@ function make_data(grid :: Grids.Grid, forecast :: Forecasts.Forecast, data :: A
 
   # Make 0-6km(ish) mean wind.
 
-  mean_wind_10m_to_500mb_us = zeros(Float32, grid_point_count)
-  mean_wind_10m_to_500mb_vs = zeros(Float32, grid_point_count)
+  mean_wind_10m_to_500mb_us = Array{Float32}(undef, grid_point_count)
+  mean_wind_10m_to_500mb_vs = Array{Float32}(undef, grid_point_count)
 
   total_weight = 0.0f0
 
   # Not density weighted, but trying to estimate the depth of the layer represented.
 
-  mean_wind_10m_to_500mb_us .+= get_layer("UGRD:10 m above ground:hour fcst:wt ens mean") .* 0.75f0
-  mean_wind_10m_to_500mb_vs .+= get_layer("VGRD:10 m above ground:hour fcst:wt ens mean") .* 0.75f0
+  mean_wind_10m_to_500mb_us .= get_layer("UGRD:10 m above ground:hour fcst:wt ens mean") .* 0.75f0
+  mean_wind_10m_to_500mb_vs .= get_layer("VGRD:10 m above ground:hour fcst:wt ens mean") .* 0.75f0
   total_weight += 0.75f0
 
   mean_wind_10m_to_500mb_us .+= get_layer("UGRD:850 mb:hour fcst:wt ens mean") .* 1.5f0
@@ -223,14 +223,14 @@ function make_data(grid :: Grids.Grid, forecast :: Forecasts.Forecast, data :: A
     s_to_n_row >= 1 && s_to_n_row <= height
   end
 
-  fifty_mi_forward_is     = zeros(Int64, grid_point_count)
-  fifty_mi_backward_is    = zeros(Int64, grid_point_count)
-  fifty_mi_leftward_is    = zeros(Int64, grid_point_count)
-  fifty_mi_rightward_is   = zeros(Int64, grid_point_count)
-  hundred_mi_forward_is   = zeros(Int64, grid_point_count)
-  hundred_mi_backward_is  = zeros(Int64, grid_point_count)
-  hundred_mi_leftward_is  = zeros(Int64, grid_point_count)
-  hundred_mi_rightward_is = zeros(Int64, grid_point_count)
+  fifty_mi_forward_is     = Array{Int64}(undef, grid_point_count)
+  fifty_mi_backward_is    = Array{Int64}(undef, grid_point_count)
+  fifty_mi_leftward_is    = Array{Int64}(undef, grid_point_count)
+  fifty_mi_rightward_is   = Array{Int64}(undef, grid_point_count)
+  hundred_mi_forward_is   = Array{Int64}(undef, grid_point_count)
+  hundred_mi_backward_is  = Array{Int64}(undef, grid_point_count)
+  hundred_mi_leftward_is  = Array{Int64}(undef, grid_point_count)
+  hundred_mi_rightward_is = Array{Int64}(undef, grid_point_count)
 
   for j in 1:height
     for i in 1:width
