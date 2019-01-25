@@ -24,11 +24,12 @@ wgs84 = Proj4.Projection("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 major_axis, eccentricity_squared = Proj4._get_spheroid_defn(wgs84.rep)
 wgs84.geod = Proj4.geod_geodesic(major_axis, 1-sqrt(1-eccentricity_squared))
 
-# # distance(32.902, -94.0431, 32.9308, -94.0211)
-# function distance(lat1, lon1, lat2, lon2)
-#   distance, _, _ = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
-#   distance
-# end
+# distance(32.902, -94.0431, 32.9308, -94.0211)
+function distance((lat1, lon1) :: Tuple{Float64,Float64}, (lat2, lon2) :: Tuple{Float64,Float64})
+  Proj4.geod_geodesic(major_axis, 1-sqrt(1-eccentricity_squared)) # Omit this line and you get NaNs below. Compiler bug? Almost certainly.
+  distance, _, _ = Proj4._geod_inverse(wgs84.geod, [lon1, lat1], [lon2, lat2])
+  distance
+end
 
 # # Dumb flattening method.
 # function lightning_distance(lat1, lon1, lat2, lon2)
@@ -113,18 +114,18 @@ end
 # end
 
 
-# # FCC method, per Wikipedia https://en.wikipedia.org/wiki/Geographical_distance#Ellipsoidal_Earth_projected_to_a_plane
-# # Surprisingly good! Generally much less than 0.01% error over short distances, and not completely awful over long distances.
-# function instantish_distance(lat1, lon1, lat2, lon2)
-#   mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
-#   dlat     = lat2 - lat1
-#   dlon     = lon2 - lon1
-#
-#   k1 = 111.13209 - 0.56605cos(2*mean_lat) + 0.00120cos(4*mean_lat)
-#   k2 = 111.41513cos(mean_lat) - 0.09455cos(3*mean_lat) + 0.00012cos(5*mean_lat)
-#
-#   √((k1*dlat)^2 + (k2*dlon)^2) * 1000.0
-# end
+# FCC method, per Wikipedia https://en.wikipedia.org/wiki/Geographical_distance#Ellipsoidal_Earth_projected_to_a_plane
+# Surprisingly good! Generally much less than 0.01% error over short distances, and not completely awful over long distances.
+function instantish_distance((lat1, lon1), (lat2, lon2))
+  mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
+  dlat     = lat2 - lat1
+  dlon     = lon2 - lon1
+
+  k1 = 111.13209 - 0.56605cos(2*mean_lat) + 0.00120cos(4*mean_lat)
+  k2 = 111.41513cos(mean_lat) - 0.09455cos(3*mean_lat) + 0.00012cos(5*mean_lat)
+
+  √((k1*dlat)^2 + (k2*dlon)^2) * 1000.0
+end
 
 # # Haversine distance, per Wikipedia.
 # function fast_distance(lat1, lon1, lat2, lon2)

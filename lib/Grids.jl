@@ -3,14 +3,21 @@ module Grids
 import Serialization
 # import JLD # Tried using JLD but there was a problem on read-in, and the written file was 25x times larger than it needed to be.
 
+push!(LOAD_PATH, @__DIR__)
+import GeoUtils
+
 struct Grid
-  height  :: Int64 # Element count
-  width   :: Int64 # Element count
-  min_lat :: Float64
-  max_lat :: Float64
-  min_lon :: Float64
-  max_lon :: Float64
-  latlons :: Array{Tuple{Float64,Float64}, 1} # Ordering is row-major: W -> E, S -> N
+  height               :: Int64 # Element count
+  width                :: Int64 # Element count
+  min_lat              :: Float64
+  max_lat              :: Float64
+  min_lon              :: Float64
+  max_lon              :: Float64
+  latlons              :: Array{Tuple{Float64,Float64}, 1} # Ordering is row-major: W -> E, S -> N
+  point_areas_sq_miles :: Array{Float64, 1}                # Ordering is row-major: W -> E, S -> N
+  point_weights        :: Array{Float64, 1}                # Ordering is row-major: W -> E, S -> N
+  point_heights_miles  :: Array{Float64, 1}                # Ordering is row-major: W -> E, S -> N
+  point_widths_miles   :: Array{Float64, 1}                # Ordering is row-major: W -> E, S -> N
 end
 
 function to_file(path :: String, grid :: Grid)
@@ -198,5 +205,123 @@ function latlon_to_closest_grid_i_search(grid :: Grid, (target_lat, target_lon) 
   end
 end
 
+function diamond_search(predicate, grid :: Grid, center_i :: Int64, center_j :: Int64) :: Vector{Int64}
+  any_found_this_diamond  = false
+  still_searching_on_grid = true
+  matching_flat_is = []
+
+  height  = grid.height
+  width   = grid.width
+  latlons = grid.latlons
+
+  is_on_grid(w_to_e_col, s_to_n_row) = begin
+    w_to_e_col >= 1 && w_to_e_col <= width &&
+    s_to_n_row >= 1 && s_to_n_row <= height
+  end
+
+  get_grid_latlon_and_flat_i(w_to_e_col, s_to_n_row) = begin
+    flat_i = grid.width*(s_to_n_row-1) + w_to_e_col
+    (latlons[flat_i], flat_i)
+  end
+
+  r = 0 :: Int64
+  while still_searching_on_grid && (isempty(matching_flat_is) || any_found_this_diamond)
+    any_found_this_diamond  = false
+    still_searching_on_grid = false
+
+    # search in this order:
+    #
+    #     3
+    #   3   2
+    # 4   •   2
+    #   4   1
+    #     1
+
+    if r == 0
+      i, j = center_i, center_j
+      if is_on_grid(i, j)
+        still_searching_on_grid = true
+        latlon, flat_i = get_grid_latlon_and_flat_i(i, j)
+        if predicate(latlon)
+          any_found_this_diamond = true
+          push!(matching_flat_is, flat_i)
+        end
+      end
+    else
+      for k = 0:(r-1)
+        i, j = center_i+k, center_j-r+k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          latlon, flat_i = get_grid_latlon_and_flat_i(i, j)
+          if predicate(latlon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+        i, j = center_i+r-k, center_j+k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          latlon, flat_i = get_grid_latlon_and_flat_i(i, j)
+          if predicate(latlon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+        i, j = center_i-k, center_j+r-k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          latlon, flat_i = get_grid_latlon_and_flat_i(i, j)
+          if predicate(latlon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+        i, j = center_i-r+k, center_j-k
+        if is_on_grid(i, j)
+          still_searching_on_grid = true
+          latlon, flat_i = get_grid_latlon_and_flat_i(i, j)
+          if predicate(latlon)
+            any_found_this_diamond = true
+            push!(matching_flat_is, flat_i)
+          end
+        end
+
+      end
+    end
+
+    r += 1
+  end
+
+  sort(matching_flat_is)
+end
+
+
+# For each grid point, return the indices of all grid points within so many miles.
+function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
+  radius_is = map(_ -> Int64[], 1:grid.height*grid.width)
+
+  for j in 1:grid.height
+    for i in 1:grid.width
+      flat_i = grid.width*(j-1) + i
+
+      latlon = grid.latlons[flat_i]
+
+      radius_is[flat_i] =
+        diamond_search(grid, i, j) do candidate_latlon
+          GeoUtils.instantish_distance(candidate_latlon, latlon) <= miles * GeoUtils.METERS_PER_MILE
+        end
+    end
+  end
+
+  # Re-allocate to ensure cache locality.
+  for flat_i in 1:length(radius_is)
+    radius_is[flat_i] = radius_is[flat_i][1:length(radius_is[flat_i])]
+  end
+
+  radius_is
+end
 
 end # module Grid

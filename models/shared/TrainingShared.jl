@@ -25,12 +25,11 @@ function is_relevant_forecast(forecast)
   false
 end
 
-# returns (grid, conus_on_grid, feature_count, train_forecasts, validation_forecasts, test_forecasts)
-function forecasts_grid_conus_on_grid_feature_count_train_validation_test(all_forecasts)
+# returns (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
+function forecasts_grid_conus_on_grid_train_validation_test(all_forecasts)
   forecasts = filter(is_relevant_forecast, all_forecasts)
 
   grid          = Forecasts.grid(forecasts[1])
-  feature_count = length(Forecasts.inventory(forecasts[1]))
 
   train_forecasts      = filter(Forecasts.is_train, forecasts)
   validation_forecasts = filter(Forecasts.is_validation, forecasts)
@@ -38,7 +37,7 @@ function forecasts_grid_conus_on_grid_feature_count_train_validation_test(all_fo
 
   conus_on_grid = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
 
-  (grid, conus_on_grid, feature_count, train_forecasts, validation_forecasts, test_forecasts)
+  (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
 end
 
 function forecast_labels(grid, forecast) :: Array{Float32,1}

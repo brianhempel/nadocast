@@ -14,13 +14,22 @@ common_layers_prob.txt:
 	ruby ../../lib/find_common_layers.rb /Volumes/Tornadoes/sref "path =~ /_prob_/" > common_layers_prob.txt
 
 normalizing_factors.txt:
-	julia --project=../.. -e 'push!(LOAD_PATH, @__DIR__); import SREF; push!(LOAD_PATH, (@__DIR__) * "/../shared"); import MakeNormalizingFactors; using DelimitedFiles; writedlm("normalizing_factors.txt", MakeNormalizingFactors.calculate_normalizing_factors(SREF.forecasts()))'
+	julia --project=../.. -e 'push!(LOAD_PATH, @__DIR__); import SREF; push!(LOAD_PATH, (@__DIR__) * "/../shared"); import MakeNormalizingFactors; using DelimitedFiles; writedlm("normalizing_factors.txt", MakeNormalizingFactors.calculate_normalizing_factors(SREF.get_feature_engineered_data, SREF.forecasts()))'
+
+profile_feature_engineering:
+	julia --project=../.. ProfileFeatureEngineering.jl
 
 train_logistic:
 	# Some weirdo bug in OpenBLAS "OpenBLAS : Program will terminate because you tried to start too many threads."
 	# https://github.com/xianyi/OpenBLAS/issues/1735
 	# All our slowness is loading time, not BLAS.
 	OPENBLAS_NUM_THREADS=1 julia --project=../.. TrainLogistic.jl
+
+train_double_logistic:
+	# Some weirdo bug in OpenBLAS "OpenBLAS : Program will terminate because you tried to start too many threads."
+	# https://github.com/xianyi/OpenBLAS/issues/1735
+	# All our slowness is loading time, not BLAS.
+	OPENBLAS_NUM_THREADS=1 julia --project=../.. TrainDoubleLogistic.jl
 
 train_gradient_boosted_decision_trees:
 	julia --project=../.. TrainGradientBoostedDecisionTrees.jl

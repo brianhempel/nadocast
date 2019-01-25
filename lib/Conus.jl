@@ -4,14 +4,9 @@ import DelimitedFiles
 
 push!(LOAD_PATH, @__DIR__)
 import Grids
+import Grib2
 
-# rap_130_grid.bin produced by:
-#
-# import Grids
-# import Grib2
-#
-# Grids.to_file("rap_130_grid.bin", Grib2.read_grid("test_grib2s/rap_130_20180319_1400_012.grb2"))
-const rap_130_grid = Grids.from_file((@__DIR__) * "/rap_130_grid.bin") :: Grids.Grid
+const rap_130_grid = Grib2.read_grid((@__DIR__) * "/../test_grib2s/rap_130_20180319_1400_012.grb2") :: Grids.Grid
 
 # conus_on_rap_130_grid.txt produced by:
 #

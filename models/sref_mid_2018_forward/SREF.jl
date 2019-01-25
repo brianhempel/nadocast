@@ -7,6 +7,9 @@ import Inventories
 import Grib2
 import Grids
 
+push!(LOAD_PATH, @__DIR__)
+import FeatureEngineering
+
 # SREF is on grid 212: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid212.gif
 
 
@@ -20,9 +23,16 @@ function forecasts()
   end
 end
 
-# The acc layers will be skipped below, so this list isn't final.
+function grid()
+  Forecasts.grid(forecasts()[1])
+end
+
 common_layers_mean = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_mean.txt"), String), "\n"))
 common_layers_prob = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_prob.txt"), String), "\n"))
+
+function get_feature_engineered_data(forecast, data)
+  FeatureEngineering.make_data(grid(), forecast, data)
+end
 
 function reload_forecasts()
   sref_paths = Grib2.all_grib2_file_paths_in("/Volumes/Tornadoes/sref")
@@ -32,7 +42,7 @@ function reload_forecasts()
   _forecasts = []
 
   for sref_path in sref_paths
-    # "/Volumes/Tornadoes/sref/201807/20180728/sref.t03z.pgrb212.mean_1hrly.grib2"
+    # "/Volumes/Tornadoes/sref/201807/20180728/sref_20180728_t03z_mean_1hrly.grib2"
 
     if occursin("mean_1hrly", sref_path)
       mean_sref_path = sref_path

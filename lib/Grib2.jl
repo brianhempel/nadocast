@@ -3,11 +3,12 @@ module Grib2
 import DelimitedFiles # For readdlm
 import JSON # For reading layer_name_normalization_substitutions.json
 import Serialization
-
+import Plots
 using TranscodingStreams, CodecZstd
 
 push!(LOAD_PATH, @__DIR__)
-import Plots
+
+import GeoUtils
 import Grids
 import Inventories
 
@@ -87,7 +88,48 @@ function read_grid(grib2_path) :: Grids.Grid
 
   latlons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(width*height)) :: Array{Tuple{Float64,Float64},1}
 
-  grid = Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons)
+  # println("Estimating point areas...")
+
+  # Estimate area represented by each grid point
+
+  point_areas_sq_miles = zeros(Float64, height*width)
+  point_heights_miles  = zeros(Float64, height*width)
+  point_widths_miles   = zeros(Float64, height*width)
+
+  for j = 1:height
+    for i = 1:width
+      flat_i = (j-1)*width + i
+      lat, lon = latlons[flat_i]
+
+      wlon = i > 1      ? latlons[flat_i-1][2]     : -1000.0
+      elon = i < width  ? latlons[flat_i+1][2]     : -1000.0
+      slat = j > 1      ? latlons[flat_i-width][1] : -1000.0
+      nlat = j < height ? latlons[flat_i+width][1] : -1000.0
+
+      w_distance = wlon > -1000.0 ? GeoUtils.distance((lat, lon), (lat, wlon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+      e_distance = elon > -1000.0 ? GeoUtils.distance((lat, lon), (lat, elon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+      s_distance = slat > -1000.0 ? GeoUtils.distance((lat, lon), (slat, lon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+      n_distance = nlat > -1000.0 ? GeoUtils.distance((lat, lon), (nlat, lon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+
+      w_distance = w_distance == 0.0 ? e_distance : w_distance
+      e_distance = e_distance == 0.0 ? w_distance : e_distance
+      s_distance = s_distance == 0.0 ? n_distance : s_distance
+      n_distance = n_distance == 0.0 ? s_distance : n_distance
+
+      sw_area = w_distance * s_distance
+      se_area = e_distance * s_distance
+      nw_area = w_distance * n_distance
+      ne_area = e_distance * n_distance
+
+      point_areas_sq_miles[flat_i] = sw_area + se_area + nw_area + ne_area
+      point_heights_miles[flat_i]  = s_distance + n_distance
+      point_widths_miles[flat_i]   = w_distance + e_distance
+    end
+  end
+
+  point_weights = point_areas_sq_miles / maximum(point_areas_sq_miles)
+
+  grid = Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
 
   cache_and_return(grid, grib2_path, "read_grid")
 end
@@ -230,7 +272,7 @@ function latlon_to_value_no_interpolation(grid, layer_data, (lat, lon))
   layer_data[flat_i]
 end
 
-function plot(grid :: Grids.Grid, layer_data :: Array{Float32,1})
+function plot(grid :: Grids.Grid, layer_data :: Array{<:Number,1})
   resolution_degrees = 0.1
 
   Plots.plot(Plots.heatmap(

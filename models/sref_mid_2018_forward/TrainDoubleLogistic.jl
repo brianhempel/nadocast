@@ -88,28 +88,18 @@ end
 
 
 
-glorotuniform32(dims...) = Float32.(Flux.glorot_uniform(dims...))
-
-zeros32(dims...) = Float32.(zeros(dims...))
-minusthree32(dims...)  = zeros32(dims...) .- 3.0f0
-minusfive32(dims...)   = zeros32(dims...) .- 5.0f0
-minusten32(dims...)    = zeros32(dims...) .- 10.0f0
+minusone(dims...)      = zeros(dims...)   .- 1.0
+minustwo(dims...)      = zeros(dims...)   .- 2.0
 minusfive(dims...)     = zeros(dims...)   .- 5.0
 minusten(dims...)      = zeros(dims...)   .- 10.0
-minustwenty32(dims...) = zeros32(dims...) .- 20.0f0
 
-# logistic_model = Chain(
-#   Conv((1,1), feature_count => 1, σ),
-#   x -> reshape(x, (size(x, 1), size(x, 2), size(x, 4))) # Flatten away the single channel dimension
-# )
-logistic_model = Chain(
-  # Dense(feature_count, 1, σ, initW = glorotuniform32, initb = minusten32),
-  Dense(feature_count, 1, σ, initb = minusfive),
-  x -> reshape(x, length(x)) # Flatten down to 1D (no distinction between hours in a minibatch, just lots of grid points)
+double_logistic_model = Chain(
+  Dense(feature_count, 2, σ, initb = minusone),
+  x -> x[1,:] .* x[2,:]
 )
 
 
-losses(x, y) = Flux.binarycrossentropy.(logistic_model(x), y) .* repeat(conus_on_grid, div(length(y), length(conus_on_grid)))
+losses(x, y) = Flux.binarycrossentropy.(double_logistic_model(x), y) .* repeat(conus_on_grid, div(length(y), length(conus_on_grid)))
 loss(x, y)   = sum(losses(x, y))
 
 function test_loss(forecasts)
@@ -142,7 +132,7 @@ function test_loss(forecasts)
 end
 
 learning_rate        = 0.005
-weight_decay         = 0.1 # As a fraction of learning rate. Affects L1 regularization.
+weight_decay         = 0.4 # As a fraction of learning rate. Affects L1 regularization.
 last_validation_loss = nothing
 epoch_n              = 1
 
@@ -156,13 +146,13 @@ while true
   println("done.")
   println("Validation loss: $validation_loss")
   if last_validation_loss != nothing && validation_loss > last_validation_loss
-    learning_rate = learning_rate * √2/2
+    learning_rate = learning_rate / 2.0
     println("New learning rate: $learning_rate")
   end
   last_validation_loss = validation_loss
-  BSON.@save "logistic_model_epoch_$(epoch_n-1)_validation_loss_$(validation_loss).bson" logistic_model
+  BSON.@save "double_logistic_model_epoch_$(epoch_n-1)_validation_loss_$(validation_loss).bson" double_logistic_model
 
-  sgd_with_weight_decay = Flux.Optimise.optimiser(params(logistic_model), p -> Flux.Optimise.descentweightdecay(p, learning_rate, weight_decay))
+  sgd_with_weight_decay = Flux.Optimise.optimiser(params(double_logistic_model), p -> Flux.Optimise.descentweightdecay(p, learning_rate, weight_decay))
 
   NNTrain.train_one_epoch!(get_next_chunk, loss, sgd_with_weight_decay)
   reset_epoch()
@@ -173,7 +163,7 @@ while true
   #   data     = Float64.(data') ./ normalizing_factors
   #   labels   = Float64.(TrainingShared.forecast_labels(grid, forecast))
   #   prefix   = "epoch_$(epoch_n)_forecast_$(replace(Forecasts.time_title(forecast), " " => "_"))"
-  #   Plots.png(Grib2.plot(grid, Float32.(Tracker.data(logistic_model(data)))), "$(prefix)_predictions.png")
+  #   Plots.png(Grib2.plot(grid, Float32.(Tracker.data(double_logistic_model(data)))), "$(prefix)_predictions.png")
   #   Plots.png(Grib2.plot(grid, Float32.(labels)), "$(prefix)_labels.png")
   #   Plots.png(Grib2.plot(grid, Float32.(Tracker.data(losses(data, labels)))), "$(prefix)_losses.png")
   #   println("done.")
