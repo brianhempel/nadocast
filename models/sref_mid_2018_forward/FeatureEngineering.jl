@@ -120,35 +120,93 @@ function make_data(grid :: Grids.Grid, forecast :: Forecasts.Forecast, data :: A
   fifty_mi_mean_is          = fifty_mi_is(grid)
   unique_hundred_mi_mean_is = unique_hundred_mi_is(grid) # 100mi indices less the 50mi indices
 
-  # data_transposed = data'
+  # 2 at a time: 3.71s per 5 forecasts
+  # 3 at a time: 3.55s per 5 forecasts
+  # 4 at a time: 3.35s per 5 forecasts
+  # 5 at a time: 3.35s per 5 forecasts
+  # 6 at a time: 3.30s per 5 forecasts
+  # 7 at a time: 3.34s per 5 forecasts
+  # 8 at a time: 3.33s per 5 forecasts
 
-  # @inbounds doesn't make this faster but does reduce the number of measured allocations for some reason.
-  # @inbounds for flat_i in 1:grid_point_count
-  #   fifty_mi_indices          = fifty_mi_mean_is[flat_i]
-  #   unique_hundred_mi_indices = unique_hundred_mi_mean_is[flat_i]
-  #
-  #   out[flat_i, fifty_mi_mean_features_range]   = sum((@view data[fifty_mi_indices, :]),          dims = 1) # **
-  #   out[flat_i, hundred_mi_mean_features_range] = sum((@view data[unique_hundred_mi_indices, :]), dims = 1) # ****
-  # end
-  for raw_layer_feature_i in 1:raw_feature_count
-    fifty_mi_mean_feature_i   = raw_layer_feature_i + fifty_mi_mean_features_range.start - 1
-    hundred_mi_mean_feature_i = raw_layer_feature_i + hundred_mi_mean_features_range.start - 1
+  for raw_layer_feature1_i in 1:6:raw_feature_count
+    raw_layer_feature2_i = min(raw_layer_feature1_i + 1, raw_feature_count)
+    raw_layer_feature3_i = min(raw_layer_feature1_i + 2, raw_feature_count)
+    raw_layer_feature4_i = min(raw_layer_feature1_i + 3, raw_feature_count)
+    raw_layer_feature5_i = min(raw_layer_feature1_i + 4, raw_feature_count)
+    raw_layer_feature6_i = min(raw_layer_feature1_i + 5, raw_feature_count)
+    # raw_layer_feature7_i = min(raw_layer_feature1_i + 6, raw_feature_count)
+    # raw_layer_feature8_i = min(raw_layer_feature1_i + 7, raw_feature_count)
+
+    fifty_mi_mean_feature1_i   = raw_layer_feature1_i + fifty_mi_mean_features_range.start - 1
+    fifty_mi_mean_feature2_i   = raw_layer_feature2_i + fifty_mi_mean_features_range.start - 1
+    fifty_mi_mean_feature3_i   = raw_layer_feature3_i + fifty_mi_mean_features_range.start - 1
+    fifty_mi_mean_feature4_i   = raw_layer_feature4_i + fifty_mi_mean_features_range.start - 1
+    fifty_mi_mean_feature5_i   = raw_layer_feature5_i + fifty_mi_mean_features_range.start - 1
+    fifty_mi_mean_feature6_i   = raw_layer_feature6_i + fifty_mi_mean_features_range.start - 1
+    # fifty_mi_mean_feature7_i   = raw_layer_feature7_i + fifty_mi_mean_features_range.start - 1
+    # fifty_mi_mean_feature8_i   = raw_layer_feature8_i + fifty_mi_mean_features_range.start - 1
+
+    hundred_mi_mean_feature1_i = raw_layer_feature1_i + hundred_mi_mean_features_range.start - 1
+    hundred_mi_mean_feature2_i = raw_layer_feature2_i + hundred_mi_mean_features_range.start - 1
+    hundred_mi_mean_feature3_i = raw_layer_feature3_i + hundred_mi_mean_features_range.start - 1
+    hundred_mi_mean_feature4_i = raw_layer_feature4_i + hundred_mi_mean_features_range.start - 1
+    hundred_mi_mean_feature5_i = raw_layer_feature5_i + hundred_mi_mean_features_range.start - 1
+    hundred_mi_mean_feature6_i = raw_layer_feature6_i + hundred_mi_mean_features_range.start - 1
+    # hundred_mi_mean_feature7_i = raw_layer_feature7_i + hundred_mi_mean_features_range.start - 1
+    # hundred_mi_mean_feature8_i = raw_layer_feature8_i + hundred_mi_mean_features_range.start - 1
 
     @inbounds for flat_i in 1:grid_point_count
-      total = 0.0f0
-      n     = 0.0f0
+      total1 = 0.0f0
+      total2 = 0.0f0
+      total3 = 0.0f0
+      total4 = 0.0f0
+      total5 = 0.0f0
+      total6 = 0.0f0
+      # total7 = 0.0f0
+      # total8 = 0.0f0
+      n      = 0.0f0
       for near_i in fifty_mi_mean_is[flat_i]
-        total += data[near_i, raw_layer_feature_i]
-        n     += 1.0f0
+        total1 += data[near_i, raw_layer_feature1_i]
+        total2 += data[near_i, raw_layer_feature2_i]
+        total3 += data[near_i, raw_layer_feature3_i]
+        total4 += data[near_i, raw_layer_feature4_i]
+        total5 += data[near_i, raw_layer_feature5_i]
+        total6 += data[near_i, raw_layer_feature6_i]
+        # total7 += data[near_i, raw_layer_feature7_i]
+        # total8 += data[near_i, raw_layer_feature8_i]
+        n      += 1.0f0
       end
-      out[flat_i, fifty_mi_mean_feature_i] = total / n
+      out[flat_i, fifty_mi_mean_feature1_i] = total1 / n
+      out[flat_i, fifty_mi_mean_feature2_i] = total2 / n
+      out[flat_i, fifty_mi_mean_feature3_i] = total3 / n
+      out[flat_i, fifty_mi_mean_feature4_i] = total4 / n
+      out[flat_i, fifty_mi_mean_feature5_i] = total5 / n
+      out[flat_i, fifty_mi_mean_feature6_i] = total6 / n
+      # out[flat_i, fifty_mi_mean_feature7_i] = total7 / n
+      # out[flat_i, fifty_mi_mean_feature8_i] = total8 / n
       for near_i in unique_hundred_mi_mean_is[flat_i]
-        total += data[near_i, raw_layer_feature_i]
-        n     += 1.0f0
+        total1 += data[near_i, raw_layer_feature1_i]
+        total2 += data[near_i, raw_layer_feature2_i]
+        total3 += data[near_i, raw_layer_feature3_i]
+        total4 += data[near_i, raw_layer_feature4_i]
+        total5 += data[near_i, raw_layer_feature5_i]
+        total6 += data[near_i, raw_layer_feature6_i]
+        # total7 += data[near_i, raw_layer_feature7_i]
+        # total8 += data[near_i, raw_layer_feature8_i]
+        n       += 1.0f0
       end
-      out[flat_i, hundred_mi_mean_feature_i] = total / n
+      out[flat_i, hundred_mi_mean_feature1_i] = total1 / n
+      out[flat_i, hundred_mi_mean_feature2_i] = total2 / n
+      out[flat_i, hundred_mi_mean_feature3_i] = total3 / n
+      out[flat_i, hundred_mi_mean_feature4_i] = total4 / n
+      out[flat_i, hundred_mi_mean_feature5_i] = total5 / n
+      out[flat_i, hundred_mi_mean_feature6_i] = total6 / n
+      # out[flat_i, hundred_mi_mean_feature7_i] = total7 / n
+      # out[flat_i, hundred_mi_mean_feature8_i] = total8 / n
     end
   end
+
+
 
   # Make 0-6km(ish) mean wind.
 
@@ -405,7 +463,7 @@ function make_data(grid :: Grids.Grid, forecast :: Forecasts.Forecast, data :: A
 
 
 
-  # Find layer: the forecast hour.
+  # Final layer: the forecast hour.
   #
   # Only 10 hour resolution. Don't want to overfit.
   out[:, forecast_hour_layer_i] = repeat([Float32(div(forecast.forecast_hour, 10))], grid_point_count)
