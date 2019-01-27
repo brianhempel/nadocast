@@ -63,12 +63,45 @@ function unique_hundred_mi_is(grid :: Grids.Grid) :: Vector{Vector{Int64}}
   _unique_hundred_mi_is
 end
 
-function mean(xs)
-  sum(xs) / length(xs)
-end
-
 function is_wind_key(key)
   replace(key, r"\A[UV]" => "") in vector_wind_layers
+end
+
+feature_block_names = [
+  "",
+  "50mi mean",
+  "100mi mean",
+  "50mi forward grad",
+  "50mi leftward grad",
+  "50mi linestraddling grad",
+  "100mi forward grad",
+  "100mi leftward grad",
+  "100mi linestraddling grad",
+]
+
+leftover_fields = [
+  "div(forecast hour, 10)",
+]
+
+function feature_i_to_name(inventory :: Vector{Inventories.InventoryLine}, feature_i :: Int64) :: String
+  raw_feature_count = length(inventory)
+
+  feature_block_i, feature_i_in_block = divrem(feature_i - 1, raw_feature_count)
+
+  feature_block_i += 1
+  feature_i_in_block += 1
+
+  if feature_block_i >= 1 && feature_block_i <= length(feature_block_names)
+    return Inventories.inventory_line_key(inventory[feature_i_in_block]) * ":" * feature_block_names[feature_block_i]
+  elseif feature_block_i > length(feature_block_names)
+    leftover_feature_i = feature_i - length(feature_block_names)*raw_feature_count
+
+    if leftover_feature_i <= length(leftover_fields)
+      return join([leftover_fields[leftover_feature_i], "calculated", "hour fcst", "calculated", ""], ":")
+    end
+  end
+
+  "Unknown feature $feature_i"
 end
 
 function make_data(grid :: Grids.Grid, forecast :: Forecasts.Forecast, data :: Array{Float32,2}) :: Array{Float32,2}
