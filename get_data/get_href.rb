@@ -945,17 +945,17 @@ TYPES          = ["mean", "prob"]
 YMDS           = `curl -s http://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [00, 06, 12, 18]
 FORECAST_HOURS = (01..36).to_a
-BASE_DIRECTORY = "/Volumes/Tornadoes/href"
+BASE_DIRECTORY = "/Volumes/SREF_HREF_1/href"
 MIN_FILE_BYTES = 20_000_000
 BAD_FILES      = %w[]
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
 
 def alt_location(directory)
-  directory.sub(/^\/Volumes\/Tornadoes\//, "/Volumes/Tornadoes2/")
+  directory.sub(/^\/Volumes\/SREF_HREF_1\//, "/Volumes/SREF_HREF_2/")
 end
 
-loop { break if Dir.exists?("/Volumes/Tornadoes/");  puts "Waiting for Tornadoes to mount...";  sleep 4 }
-loop { break if Dir.exists?("/Volumes/Tornadoes2/"); puts "Waiting for Tornadoes2 to mount..."; sleep 4 }
+loop { break if Dir.exists?("/Volumes/SREF_HREF_1/"); puts "Waiting for SREF_HREF_1 to mount...";  sleep 4 }
+loop { break if Dir.exists?("/Volumes/SREF_HREF_2/"); puts "Waiting for SREF_HREF_2 to mount..."; sleep 4 }
 
 
 # http://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2

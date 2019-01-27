@@ -26,18 +26,19 @@ function is_relevant_forecast(forecast)
 end
 
 # returns (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
-function forecasts_grid_conus_on_grid_train_validation_test(all_forecasts)
+function forecasts_grid_conus_grid_bitmask_train_validation_test(all_forecasts)
   forecasts = filter(is_relevant_forecast, all_forecasts)
 
-  grid          = Forecasts.grid(forecasts[1])
+  grid = Forecasts.grid(forecasts[1])
 
   train_forecasts      = filter(Forecasts.is_train, forecasts)
   validation_forecasts = filter(Forecasts.is_validation, forecasts)
   test_forecasts       = filter(Forecasts.is_test, forecasts)
 
-  conus_on_grid = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
+  conus_on_grid      = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
+  conus_grid_bitmask = (conus_on_grid .== 1.0f0)
 
-  (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
+  (grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts)
 end
 
 function forecast_labels(grid, forecast) :: Array{Float32,1}

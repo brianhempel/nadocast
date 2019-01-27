@@ -23,8 +23,12 @@ function forecasts()
   end
 end
 
+function example_forecast()
+  forecasts()[1]
+end
+
 function grid()
-  Forecasts.grid(forecasts()[1])
+  Forecasts.grid(example_forecast())
 end
 
 common_layers_mean = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_mean.txt"), String), "\n"))
@@ -35,14 +39,15 @@ function get_feature_engineered_data(forecast, data)
 end
 
 function reload_forecasts()
-  sref_paths = Grib2.all_grib2_file_paths_in("/Volumes/Tornadoes/sref")
+  sref_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/sref")
+  # sref_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/sref")
 
   global _forecasts
 
   _forecasts = []
 
   for sref_path in sref_paths
-    # "/Volumes/Tornadoes/sref/201807/20180728/sref_20180728_t03z_mean_1hrly.grib2"
+    # "/Volumes/SREF_HREF_1/sref/201807/20180728/sref_20180728_t03z_mean_1hrly.grib2"
 
     if occursin("mean_1hrly", sref_path)
       mean_sref_path = sref_path

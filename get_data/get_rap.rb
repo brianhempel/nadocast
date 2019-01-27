@@ -6,7 +6,7 @@ DATES          = (Date.new(2017,9,6)..Date.new(2018,9,7)-1).to_a # 2005-10-31 is
 HOURS_OF_DAY   = (0..23).to_a
 FORECAST_HOURS = [1,2,5,6,11,12,17,18] # RAP forcasts 0 - 21 hours ahead (0-18 before fall 2016). +0 is analysis, +1 barely comes out before its valid time, so +2 hours is the first real forecast.
 BASE_URL       = FORECAST_HOURS.max <= 1 ? "https://nomads.ncdc.noaa.gov/data/rucanl" : "https://nomads.ncdc.noaa.gov/data/rap130" # Based a single sample, files in these two folders are identical if they exist in both
-BASE_DIRECTORY = INV_OR_GRIB == "inv" ? "inventory_files" : "/Volumes/Tornadoes/rap"
+BASE_DIRECTORY = INV_OR_GRIB == "inv" ? "inventory_files" : "/Volumes/RAP_1/rap"
 MIN_FILE_BYTES = INV_OR_GRIB == "inv" ? 1000 : 10_000_000
 BAD_FILES      = %w[
   rap_130_20140928_1800_001.inv
@@ -17,11 +17,11 @@ BAD_FILES      = %w[
 THREAD_COUNT   = INV_OR_GRIB == "inv" ? 8 : 4
 
 def alt_location(directory)
-  directory.sub(/^\/Volumes\/Tornadoes\//, "/Volumes/Tornadoes2/")
+  directory.sub(/^\/Volumes\/RAP_1\//, "/Volumes/RAP_2/")
 end
 
-loop { break if Dir.exists?("/Volumes/Tornadoes/");  puts "Waiting for Tornadoes to mount...";  sleep 4 }
-loop { break if Dir.exists?("/Volumes/Tornadoes2/"); puts "Waiting for Tornadoes2 to mount..."; sleep 4 }
+loop { break if Dir.exists?("/Volumes/RAP_1/"); puts "Waiting for RAP_1 to mount...";  sleep 4 }
+loop { break if Dir.exists?("/Volumes/RAP_2/"); puts "Waiting for RAP_2 to mount..."; sleep 4 }
 
 forecasts_to_get = DATES.product(HOURS_OF_DAY, FORECAST_HOURS)
 

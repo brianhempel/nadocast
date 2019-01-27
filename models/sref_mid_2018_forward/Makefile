@@ -8,13 +8,10 @@ remake_common_layers:
 	rm common_layers_mean.txt common_layers_prob.txt; make common_layers_mean.txt common_layers_prob.txt
 
 common_layers_mean.txt:
-	ruby ../../lib/find_common_layers.rb /Volumes/Tornadoes/sref "path =~ /_mean_/" > common_layers_mean.txt
+	ruby ../../lib/find_common_layers.rb /Volumes/SREF_HREF_1/sref "path =~ /_mean_/" > common_layers_mean.txt
 
 common_layers_prob.txt:
-	ruby ../../lib/find_common_layers.rb /Volumes/Tornadoes/sref "path =~ /_prob_/" > common_layers_prob.txt
-
-normalizing_factors.txt:
-	julia --project=../.. -e 'push!(LOAD_PATH, @__DIR__); import SREF; push!(LOAD_PATH, (@__DIR__) * "/../shared"); import MakeNormalizingFactors; using DelimitedFiles; writedlm("normalizing_factors.txt", MakeNormalizingFactors.calculate_normalizing_factors(SREF.get_feature_engineered_data, SREF.forecasts()))'
+	ruby ../../lib/find_common_layers.rb /Volumes/SREF_HREF_1/sref "path =~ /_prob_/" > common_layers_prob.txt
 
 profile_feature_engineering:
 	julia --project=../.. ProfileFeatureEngineering.jl
@@ -33,3 +30,6 @@ train_double_logistic:
 
 train_gradient_boosted_decision_trees:
 	julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+
+train_lasso:
+	julia --project=../.. TrainLasso.jl

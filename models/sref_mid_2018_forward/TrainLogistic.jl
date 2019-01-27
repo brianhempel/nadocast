@@ -1,9 +1,9 @@
 using Flux
 
 import BSON
-import DelimitedFiles
 import Plots
 import Random
+import Statistics
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Conus
@@ -16,133 +16,106 @@ import TrainingShared
 
 push!(LOAD_PATH, @__DIR__)
 import SREF
+import SREFTrainShared
 
-all_sref_forecasts = SREF.forecasts() # [1:11:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
+all_sref_forecasts = SREF.forecasts() # [1:33:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
 
-(grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts) =
-  TrainingShared.forecasts_grid_conus_on_grid_train_validation_test(all_sref_forecasts)
-
-feature_count = size(SREF.get_feature_engineered_data(train_forecasts[1], Forecasts.get_data(train_forecasts[1])), 2)
-
-conus_on_grid = Float64.(conus_on_grid)
+(grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts) =
+  TrainingShared.forecasts_grid_conus_grid_bitmask_train_validation_test(all_sref_forecasts)
 
 println("$(length(train_forecasts)) for training.")
 println("$(length(validation_forecasts)) for validation.")
 println("$(length(test_forecasts)) for testing.")
 
-normalizing_factors = DelimitedFiles.readdlm((@__DIR__) * "/normalizing_factors.txt", Float64)[:,1] :: Array{Float64,1}
+feature_normalization_forecast_sample_count = 100
 
 forecasts_remaining_in_epoch = Random.shuffle(train_forecasts)
 
 forecasts_per_minibatch = 3
 
-# Should return [(X1, Y1), (X2, Y2), ...] where X1,Y1 is minibatch 1 etc...
-#
-# For 1D data, X1 should be (channels, item in batch)
-#
-# For 2D data, X1 etc should be 4-dimensional (x, y, channels, image in batch) or (y, x, channels, image in batch)
 function reset_epoch()
   global forecasts_remaining_in_epoch
   forecasts_remaining_in_epoch = Random.shuffle(train_forecasts)
 end
 
+# Should return [(X1, Y1), (X2, Y2), ...] where X1,Y1 is minibatch 1 etc...
+#
+# For 1D data, X1 should be (channels, item in batch)
 function get_next_chunk()
-  print("Loading chunk")
   global forecasts_remaining_in_epoch
 
-  X = nothing
-  Y = Array{Float64,1}[]
-  # X = Array{Float32,4}[]
-  # Y = Array{Float32,3}[]
   minibatch_forecasts = collect(Iterators.take(forecasts_remaining_in_epoch, forecasts_per_minibatch))
-  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(minibatch_forecasts)
-    data = SREF.get_feature_engineered_data(forecast, data)
 
-    transposed_normalized = Float64.(data') ./ normalizing_factors # dims: layer_count by grid_count
+  (X, y) = SREFTrainShared.get_data_and_labels(grid, conus_grid_bitmask, minibatch_forecasts)
 
-    # transposed = collect(data') # dims: layer_count by grid_count
-    # data   = reshape(data, (grid.width, grid.height, :))
-    labels = Float64.(TrainingShared.forecast_labels(grid, forecast))
-    # labels = reshape(labels, (grid.width, grid.height))
-
-    if X == nothing
-      X = transposed_normalized
-    else
-      X = hcat(X, transposed_normalized)
-    end
-    Y = vcat(Y, labels)
-    # X = cat(X, data,   dims = 4)
-    # Y = cat(Y, labels, dims = 3)
-    print(".")
-  end
   forecasts_remaining_in_epoch = forecasts_remaining_in_epoch[(forecasts_per_minibatch+1):length(forecasts_remaining_in_epoch)]
-  println("done.")
 
-  if X != nothing
-    # Right now, only one minibatch per loading cycle.
-    [(X :: Array{Float64,2}, Y)]
-  else
+  if isempty(y)
     []
+  else
+    # Right now, only one minibatch per loading cycle.
+    [(Float64.(X') :: Array{Float64,2}, y)]
   end
 end
 
 
+print("Normalizing features by sampling $feature_normalization_forecast_sample_count training forecasts")
 
-glorotuniform32(dims...) = Float32.(Flux.glorot_uniform(dims...))
+(sample_X, _) = SREFTrainShared.get_data_and_labels(grid, conus_grid_bitmask, Iterators.take(Random.shuffle(train_forecasts), feature_normalization_forecast_sample_count))
 
-zeros32(dims...) = Float32.(zeros(dims...))
-minusthree32(dims...)  = zeros32(dims...) .- 3.0f0
-minusfive32(dims...)   = zeros32(dims...) .- 5.0f0
-minusten32(dims...)    = zeros32(dims...) .- 10.0f0
+sample_X = Float64.(sample_X')
+
+ε = 1e-10
+
+means         = Statistics.mean(sample_X, dims=2)
+stddevs       = max.(ε, Statistics.std(sample_X, dims=2))
+feature_count = length(means)
+
+sample_X = nothing # freeeeeeee
+
+println("done.")
+
+
+minusone(dims...)      = zeros(dims...)   .- 1.0
+minustwo(dims...)      = zeros(dims...)   .- 2.0
 minusfive(dims...)     = zeros(dims...)   .- 5.0
 minusten(dims...)      = zeros(dims...)   .- 10.0
-minustwenty32(dims...) = zeros32(dims...) .- 20.0f0
 
-# logistic_model = Chain(
-#   Conv((1,1), feature_count => 1, σ),
-#   x -> reshape(x, (size(x, 1), size(x, 2), size(x, 4))) # Flatten away the single channel dimension
-# )
+
+dense_layer = Dense(feature_count, 1, σ, initb = minusfive)
+
 logistic_model = Chain(
-  # Dense(feature_count, 1, σ, initW = glorotuniform32, initb = minusten32),
-  Dense(feature_count, 1, σ, initb = minusfive),
-  x -> reshape(x, length(x)) # Flatten down to 1D (no distinction between hours in a minibatch, just lots of grid points)
+  x -> (x .- means) ./ stddevs,
+  dense_layer,
+  x -> x[1,:]
 )
 
+# Tracker.update!(dense_layer.W, -learning_rate * weight_decay * dense_layer.W)
 
-losses(x, y) = Flux.binarycrossentropy.(logistic_model(x), y) .* repeat(conus_on_grid, div(length(y), length(conus_on_grid)))
-loss(x, y)   = sum(losses(x, y))
+
+losses(x, y) = Flux.binarycrossentropy.(logistic_model(x), y, ϵ = ε)
+loss(x, y)   = sum(losses(x, y)) / length(y)
 
 function test_loss(forecasts)
   test_loss            = 0.0
   forecast_count       = 0.0
-  point_count_on_conus = sum(conus_on_grid)
 
-  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
-    # print("Loading $(Forecasts.time_title(forecast))...")
-    data = SREF.get_feature_engineered_data(forecast, data)
+  for forecast in forecasts
+    (X, y) = SREFTrainShared.get_data_and_labels(grid, conus_grid_bitmask, [forecast])
 
-    transposed_normalized = Float64.(data') ./ normalizing_factors # dims: layer_count by grid_count
+    if isempty(y)
+      continue
+    end
 
-    # print("transposing...")
-    # transposed = collect(data') # dims: layer_count by grid_count
-    # data   = reshape(data, (grid.width, grid.height, :, 1))
-    # print("labeling...")
-    labels = Float64.(TrainingShared.forecast_labels(grid, forecast))
-    # println("done.")
-    # labels_transposed = collect(labels')
-    # labels = reshape(labels, (grid.width, grid.height, 1))
-
-
-    test_loss += Tracker.data(loss(transposed_normalized, labels)) / point_count_on_conus
+    test_loss      += Tracker.data(loss(Float64.(X'), y))
     forecast_count += 1
-    print(".")
   end
 
   test_loss / forecast_count
 end
 
-learning_rate        = 0.005
-weight_decay         = 0.1 # As a fraction of learning rate. Affects L1 regularization.
+learning_rate        = 0.05
+weight_decay         = 0.01 # As a fraction of learning rate. Affects L1 regularization.
 last_validation_loss = nothing
 epoch_n              = 1
 
@@ -156,11 +129,16 @@ while true
   println("done.")
   println("Validation loss: $validation_loss")
   if last_validation_loss != nothing && validation_loss > last_validation_loss
-    learning_rate = learning_rate * √2/2
-    println("New learning rate: $learning_rate")
+    learning_rate = learning_rate / 2.0
+  else
+    learning_rate = learning_rate * 1.1
   end
+  println("New learning rate: $learning_rate")
   last_validation_loss = validation_loss
   BSON.@save "logistic_model_epoch_$(epoch_n-1)_validation_loss_$(validation_loss).bson" logistic_model
+
+
+  println("===== Epoch $epoch_n =====")
 
   sgd_with_weight_decay = Flux.Optimise.optimiser(params(logistic_model), p -> Flux.Optimise.descentweightdecay(p, learning_rate, weight_decay))
 
@@ -170,7 +148,7 @@ while true
   # for forecast in validation_forecasts[[5,10,15,30,40,50]]
   #   print("Plotting $(Forecasts.time_title(forecast)) (epoch+$(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))s)...")
   #   data     = SREF.get_feature_engineered_data(forecast, Forecasts.get_data(forecast))
-  #   data     = Float64.(data') ./ normalizing_factors
+  #   data     = Float64.(data')
   #   labels   = Float64.(TrainingShared.forecast_labels(grid, forecast))
   #   prefix   = "epoch_$(epoch_n)_forecast_$(replace(Forecasts.time_title(forecast), " " => "_"))"
   #   Plots.png(Grib2.plot(grid, Float32.(Tracker.data(logistic_model(data)))), "$(prefix)_predictions.png")
