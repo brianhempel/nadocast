@@ -31,5 +31,5 @@ train_double_logistic:
 train_gradient_boosted_decision_trees:
 	julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 
-train_lasso:
-	julia --project=../.. TrainLasso.jl
+train_elastic_net:
+	julia --project=../.. TrainElasticNet.jl
