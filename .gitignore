@@ -12,6 +12,8 @@ test_plots/
 *.binfeatures
 *.binweights
 *.binlabels
+*.ipynb
+*.model
 gmt.history
 .ipynb_checkpoints/
 storm_data/tornadoes_old.csv
