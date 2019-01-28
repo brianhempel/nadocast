@@ -13,7 +13,7 @@ vector_wind_layers = [
   "GRD:850 mb:hour fcst:wt ens mean",
   "GRD:700 mb:hour fcst:wt ens mean",
   "GRD:600 mb:hour fcst:wt ens mean",
-  "GRD:600 mb:hour fcst:wt ens mean",
+  "GRD:500 mb:hour fcst:wt ens mean",
   "GRD:300 mb:hour fcst:wt ens mean",
   "GRD:250 mb:hour fcst:wt ens mean",
 ]
