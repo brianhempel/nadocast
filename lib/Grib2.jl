@@ -60,13 +60,13 @@ end
 
 ### Grib2 Functions
 
-# Read grib2 grid.
+# Read grib2 grid. Optional integer downsample parameter does what you would expect.
 #
 # Ordering is row-major: W -> E, S -> N
 #
 # Returns a Grid.Grid structure (see Grid.jl) which contains the grid size and the lat-lon coordinates of all grid points.
-function read_grid(grib2_path) :: Grids.Grid
-  cached = get_cached(grib2_path, "read_grid")
+function read_grid(grib2_path; downsample = 1) :: Grids.Grid
+  cached = get_cached(grib2_path, "read_grid_downsample_$(downsample)x")
   if cached != nothing
     return cached
   end
@@ -78,15 +78,48 @@ function read_grid(grib2_path) :: Grids.Grid
   all_pts = open(grid_csv -> DelimitedFiles.readdlm(grid_csv, ',', Float64; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
   all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 
-  height = Int64(maximum(all_pts[:,2]))
-  width  = Int64(maximum(all_pts[:,1]))
+  raw_height = Int64(maximum(all_pts[:,2]))
+  raw_width  = Int64(maximum(all_pts[:,1]))
 
-  min_lat = minimum(all_pts[:,3])
-  max_lat = maximum(all_pts[:,3])
-  min_lon = minimum(all_pts[:,4])
-  max_lon = maximum(all_pts[:,4])
+  downsample_y_range = div(downsample+1,2):downsample:raw_height # 1:1:raw_height or 1:2:raw_height or 2:3:raw_height or 2:4:raw_height
+  downsample_x_range = div(downsample+1,2):downsample:raw_width  # 1:1:raw_width  or 1:2:raw_width  or 2:3:raw_width  or 2:4:raw_width
 
-  latlons = map(flat_i -> (all_pts[flat_i,3], all_pts[flat_i,4]), 1:(width*height)) :: Array{Tuple{Float64,Float64},1}
+  height = length(downsample_y_range)
+  width  = length(downsample_x_range)
+
+  downsampled_pts = zeros(Float64, (height*width, 2))
+
+  downsampled_flat_i = 1
+  for j in downsample_y_range
+    for i in downsample_x_range
+      original_flat_i = raw_width*(j-1) + i
+
+      if isodd(downsample)
+        downsampled_pts[downsampled_flat_i, 1:2] = all_pts[original_flat_i, 3:4]
+      else
+        right_flat_i    = original_flat_i
+        left_flat_i     = raw_width*(j-1) + min(i+1, raw_width)
+        up_right_flat_i = raw_width*(min(j+1,raw_height)-1) + i
+        up_left_flat_i  = raw_width*(min(j+1,raw_height)-1) + min(i+1, raw_width)
+
+        # Dumb flat mean, no sphere math. Should be close enough--always small distances
+        original_flat_is = [right_flat_i, left_flat_i, up_right_flat_i, up_left_flat_i]
+        lat = sum(all_pts[original_flat_is, 3]) / 4
+        lon = sum(all_pts[original_flat_is, 4]) / 4
+
+        downsampled_pts[downsampled_flat_i, 1:2] = [lat, lon]
+      end
+
+      downsampled_flat_i += 1
+    end
+  end
+
+  min_lat = minimum(downsampled_pts[:,1])
+  max_lat = maximum(downsampled_pts[:,1])
+  min_lon = minimum(downsampled_pts[:,2])
+  max_lon = maximum(downsampled_pts[:,2])
+
+  latlons = map(flat_i -> (downsampled_pts[flat_i,1], downsampled_pts[flat_i,2]), 1:(height*width)) :: Array{Tuple{Float64,Float64},1}
 
   # println("Estimating point areas...")
 
@@ -129,9 +162,9 @@ function read_grid(grib2_path) :: Grids.Grid
 
   point_weights = point_areas_sq_miles / maximum(point_areas_sq_miles)
 
-  grid = Grids.Grid(height, width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
+  grid = Grids.Grid(height, width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
 
-  cache_and_return(grid, grib2_path, "read_grid")
+  cache_and_return(grid, grib2_path, "read_grid_downsample_$(downsample)x")
 end
 
 layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_name_normalization_substitutions.json")) :: Dict{String,Any}
@@ -170,10 +203,24 @@ end
 # Read out the given layers into a binary Float32 array.
 #
 # `inventory` is a filtered set of lines from read_inventory above.
+# If downsampling, raw_width and raw_height must be provided.
+#
+# Julia reading happens to be really slow for Pipes b/c everything is read byte-by-byte, thereby making a bajillion syscalls.
+# It's faster to have wgrib2 dump to a file and then read in the file, so that's what the code below does.
 #
 # Returns grid_length by layer_count Float32 array of values.
-function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
-  cached = get_cached(grib2_path, "read_layers_data_raw", inventory)
+function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) :: Array{Float32, 2}
+  if downsample_grid == nothing
+    downsample = 1
+    raw_height = -1
+    raw_width  = -1
+  else
+    downsample = downsample_grid.downsample
+    raw_height = downsample_grid.original_height
+    raw_width  = downsample_grid.original_width
+  end
+
+  cached = get_cached(grib2_path, "read_layers_data_raw_downsample_$(downsample)x", inventory)
   if cached != nothing
     return cached
   end
@@ -204,8 +251,14 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
   wgrib2_out = open(temp_path)
   output_values_initialized = false
 
-  layer_value_count = UInt32(0)
-  values            = Array{Float32,2}[]
+  layer_value_count       = UInt32(0)
+  downsampled_value_count = UInt32(0)
+  values                  = Array{Float32,2}[]
+
+  downsample_y_range      = div(downsample+1,2):downsample:raw_height # 1:1:raw_height or 1:2:raw_height or 2:3:raw_height or 2:4:raw_height
+  downsample_x_range      = div(downsample+1,2):downsample:raw_width  # 1:1:raw_width  or 1:2:raw_width  or 2:3:raw_width  or 2:4:raw_width
+  downsampled_height      = length(downsample_y_range)
+  downsampled_width       = length(downsample_x_range)
 
   # Read out the data in those layers.
   # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
@@ -213,8 +266,15 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
     layer_to_fetch = inventory[layer_i]
 
     if !output_values_initialized
-      layer_value_count         = div(read(wgrib2_out, UInt32), 4)
-      values                    = zeros(Float32, (layer_value_count,layer_count))
+      layer_value_count = div(read(wgrib2_out, UInt32), 4)
+
+      if downsample == 1
+        downsampled_value_count = layer_value_count
+      else
+        downsampled_value_count = downsampled_height*downsampled_width
+      end
+
+      values = zeros(Float32, (downsampled_value_count,layer_count))
       output_values_initialized = true
     else
       this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
@@ -223,16 +283,43 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
       end
     end
 
-    # Okay, so Julia reading happens to be really slow for Pipes b/c everything is read byte-by-byte, thereby making a bajillion syscalls.
-    #
-    # May be faster to dump the file and then read in the file.
+    # Set undefineds to 0 instead of 9.999f20
+    layer_values = map(v -> v == 9.999f20 ? 0.0f0 : v, reinterpret(Float32, read(wgrib2_out, layer_value_count*4)))
 
-    values[:,layer_i] = reinterpret(Float32, read(wgrib2_out, layer_value_count*4))
+    if downsample == 1
+      values[:,layer_i] = layer_values
+    else
+      downleft_delta_i = div(downsample+1,2) - 1
+      upright_delta_i  = downleft_delta_i + downsample - 1
+
+      layer_values_2d = reshape(layer_values, (raw_width, raw_height))
+
+      downsampled_flat_i = 1
+      for j in downsample_y_range
+        for i in downsample_x_range
+          downsampled_value       = 0.0f0
+          downsampled_value_count = 0.0f0
+
+          for j2 in (j - downleft_delta_i):min(j + upright_delta_i, raw_height)
+            for i2 in (i - downleft_delta_i):min(i + upright_delta_i, raw_width)
+              downsampled_value       += layer_values_2d[i2, j2]
+              downsampled_value_count += 1.0f0
+            end
+          end
+
+          values[downsampled_flat_i, layer_i] = downsampled_value / downsampled_value_count
+
+          downsampled_flat_i += 1
+        end
+      end
+    end
 
     this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
     if this_layer_value_count != layer_value_count
       error("value count mismatch, expected $layer_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
     end
+
+
 
     # if desc == "cloud base" || desc == "cloud top" || abbrev == "RETOP"
     #   # Handle undefined
@@ -252,15 +339,10 @@ function read_layers_data_raw(grib2_path, inventory) :: Array{Float32, 2}
   end
   close(wgrib2_out)
 
-  # print("handling undefineds...")
-
-  # Set undefineds to 0 instead of 9.999f20
-  map!(v -> v == 9.999f20 ? 0.0f0 : v, values, values)
-
   # print("removing temp file...")
   run(`rm $temp_path`)
 
-  cache_and_return(values, grib2_path, "read_layers_data_raw", inventory)
+  cache_and_return(values, grib2_path, "read_layers_data_raw_downsample_$(downsample)x", inventory)
 end
 
 

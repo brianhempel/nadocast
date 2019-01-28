@@ -13,14 +13,14 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import TrainingShared
 
 push!(LOAD_PATH, @__DIR__)
-import SREF
+import HREF
 
 model_prefix = "gbdt_$(Dates.now())"
 
-all_sref_forecasts = SREF.forecasts() #[1:11:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
+all_href_forecasts = HREF.forecasts() # [1:33:27856] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
 
 (grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts) =
-  TrainingShared.forecasts_grid_conus_grid_bitmask_train_validation_test(all_sref_forecasts)
+  TrainingShared.forecasts_grid_conus_grid_bitmask_train_validation_test(all_href_forecasts)
 
 
 println("$(length(train_forecasts)) for training.")
@@ -28,14 +28,14 @@ println("$(length(validation_forecasts)) for validation.")
 println("$(length(test_forecasts)) for testing.")
 
 
-forecasts_per_chunk = 350
+forecasts_per_chunk = 400
 bin_split_forecast_sample_count = 100
 
 
 # Returns (X_binned, labels)
 function get_data_and_labels_binned(forecasts, bin_splits)
   transformer(X) = MagicTreeBoosting.apply_bins(X, bin_splits)
-  TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, forecasts, X_transformer = transformer)
+  TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, HREF.get_feature_engineered_data, forecasts, X_transformer = transformer)
 end
 
 
@@ -67,7 +67,7 @@ validation_X_binned, validation_y = (nothing, nothing)
 
 println("Preparing bin splits by sampling $bin_split_forecast_sample_count training forecasts")
 
-(bin_sample_X, _) = TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts), bin_split_forecast_sample_count))
+(bin_sample_X, _) = TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, HREF.get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts), bin_split_forecast_sample_count))
 bin_splits        = MagicTreeBoosting.prepare_bin_splits(bin_sample_X, 255)
 bin_sample_X      = nothing # freeeeeeee
 
@@ -89,68 +89,68 @@ while length(trees) <= 15 / learning_rate
 
   println("===== Epoch $epoch_i =====")
 
+  # trees =
+  #   MagicTreeBoosting.train_on_binned(
+  #     X_binned, y,
+  #     prior_trees             = trees,
+  #     iteration_count         = 5,
+  #     min_data_weight_in_leaf = 30000.0,
+  #     l2_regularization       = 1.0,
+  #     max_leaves              = 4,
+  #     max_depth               = 4,
+  #     max_delta_score         = 5.0,
+  #     learning_rate           = learning_rate,
+  #     feature_fraction        = 0.2,
+  #   )
+  #
+  # if validation_X_binned == nothing
+  #   println("Loading validation data")
+  #   validation_X_binned, validation_y = get_data_and_labels_binned(validation_forecasts, bin_splits)
+  #   println("done.")
+  # end
+  # print("Predicting...")
+  # validation_ŷ    = MagicTreeBoosting.predict_on_binned(validation_X_binned, trees)
+  # validation_loss = sum(MagicTreeBoosting.logloss.(validation_y, validation_ŷ)) / length(validation_y)
+  # println("done.")
+  #
+  # println("Validation loss: $validation_loss")
+
   validation_loss = nothing
 
-  trees =
-    MagicTreeBoosting.train_on_binned(
-      X_binned, y,
-      prior_trees             = trees,
-      iteration_count         = 5,
-      min_data_weight_in_leaf = 30000.0,
-      l2_regularization       = 1.0,
-      max_leaves              = 4,
-      max_depth               = 4,
-      max_delta_score         = 5.0,
-      learning_rate           = learning_rate,
-      feature_fraction        = 0.2,
-    )
+  for chunk_of_forecasts in Iterators.partition(Random.shuffle(train_forecasts), forecasts_per_chunk)
+    X_binned, y = get_data_and_labels_binned(chunk_of_forecasts, bin_splits)
+
+    trees =
+      MagicTreeBoosting.train_on_binned(
+        X_binned, y,
+        prior_trees             = trees,
+        iteration_count         = 3,
+        min_data_weight_in_leaf = 10000.0,
+        l2_regularization       = 1.0,
+        max_leaves              = 10,
+        max_depth               = 5,
+        max_delta_score         = 5.0,
+        learning_rate           = 0.1,
+        feature_fraction        = 0.8,
+      )
+  end
 
   if validation_X_binned == nothing
-    println("Loading validation data")
+    println("Loading validation data...")
     validation_X_binned, validation_y = get_data_and_labels_binned(validation_forecasts, bin_splits)
-    println("done.")
   end
   print("Predicting...")
   validation_ŷ    = MagicTreeBoosting.predict_on_binned(validation_X_binned, trees)
   validation_loss = sum(MagicTreeBoosting.logloss.(validation_y, validation_ŷ)) / length(validation_y)
   println("done.")
 
-  println("Validation loss: $validation_loss")
-
-  # for chunk_of_forecasts in Iterators.partition(Random.shuffle(train_forecasts), forecasts_per_chunk)
-  #   X_binned, y = get_data_and_labels_binned(chunk_of_forecasts, bin_splits)
-  #
-  #   trees =
-  #     MagicTreeBoosting.train_on_binned(
-  #       X_binned, y,
-  #       prior_trees             = trees,
-  #       iteration_count         = 3,
-  #       min_data_weight_in_leaf = 6000.0,
-  #       l2_regularization       = 1.0,
-  #       max_leaves              = 4,
-  #       max_depth               = 4,
-  #       max_delta_score         = 5.0,
-  #       learning_rate           = 0.1,
-  #       feature_fraction        = 0.3,
-  #     )
-  #
-  #   if validation_X_binned == nothing
-  #     println("Loading validation data...")
-  #     validation_X_binned, validation_y = get_data_and_labels_binned(validation_forecasts, bin_splits)
-  #   end
-  #   print("Predicting...")
-  #   validation_ŷ    = MagicTreeBoosting.predict_on_binned(validation_X_binned, trees)
-  #   validation_loss = sum(MagicTreeBoosting.logloss.(validation_y, validation_ŷ)) / length(validation_y)
-  #   println("done.")
-  #
-  #   println("Validation loss after chunk: $validation_loss")
-  # end
+  println("Validation loss after chunk: $validation_loss")
 
   save(epoch_i, validation_loss, bin_splits, trees)
 
   # for forecast in validation_forecasts[[5,10,15,30,40,50]]
   #   print("Plotting $(Forecasts.time_title(forecast)) (epoch+$(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))s)...")
-  #   X = SREF.get_feature_engineered_data(forecast, Forecasts.get_data(forecast))
+  #   X = HREF.get_feature_engineered_data(forecast, Forecasts.get_data(forecast))
   #   y = TrainingShared.forecast_labels(grid, forecast)
   #   ŷ = MagicTreeBoosting.predict(X, bin_splits, trees)
   #   prefix = "$(model_prefix)/epoch_$(epoch_i)_forecast_$(replace(Forecasts.time_title(forecast), " " => "_"))"

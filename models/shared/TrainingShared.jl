@@ -4,7 +4,6 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Conus
 import Forecasts
-# import NNTrain
 import StormEvents
 
 
@@ -25,6 +24,7 @@ function is_relevant_forecast(forecast)
   false
 end
 
+
 # returns (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
 function forecasts_grid_conus_grid_bitmask_train_validation_test(all_forecasts)
   forecasts = filter(is_relevant_forecast, all_forecasts)
@@ -41,8 +41,32 @@ function forecasts_grid_conus_grid_bitmask_train_validation_test(all_forecasts)
   (grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts)
 end
 
+
 function forecast_labels(grid, forecast) :: Array{Float32,1}
   StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), TORNADO_TIME_WINDOW_HALF_SIZE)
 end
+
+
+# get_feature_engineered_data should be a function that takes a forecast and the raw data and returns new data
+# c.f. SREF.get_feature_engineered_data
+function get_data_and_labels(grid, conus_grid_bitmask, get_feature_engineered_data, forecasts; X_transformer = identity)
+  Xs = []
+  Ys = []
+
+  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
+    data = get_feature_engineered_data(forecast, data)
+
+    data_in_conus = data[conus_grid_bitmask, :]
+    labels        = forecast_labels(grid, forecast)[conus_grid_bitmask] :: Array{Float32,1}
+
+    push!(Xs, X_transformer(data_in_conus))
+    push!(Ys, labels)
+
+    print(".")
+  end
+
+  (vcat(Xs...), vcat(Ys...))
+end
+
 
 end # module TrainingShared

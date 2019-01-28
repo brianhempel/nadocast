@@ -6,3 +6,6 @@ common_layers_mean.txt:
 
 common_layers_prob.txt:
 	ruby ../../lib/find_common_layers.rb /Volumes/SREF_HREF_1/href "path =~ /_prob_/" > common_layers_prob.txt
+
+train_gradient_boosted_decision_trees:
+	julia --project=../.. TrainGradientBoostedDecisionTrees.jl

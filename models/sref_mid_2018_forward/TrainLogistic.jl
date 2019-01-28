@@ -16,7 +16,7 @@ import TrainingShared
 
 push!(LOAD_PATH, @__DIR__)
 import SREF
-import SREFTrainShared
+
 
 all_sref_forecasts = SREF.forecasts() # [1:33:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
 
@@ -46,7 +46,7 @@ function get_next_chunk()
 
   minibatch_forecasts = collect(Iterators.take(forecasts_remaining_in_epoch, forecasts_per_minibatch))
 
-  (X, y) = SREFTrainShared.get_data_and_labels(grid, conus_grid_bitmask, minibatch_forecasts)
+  (X, y) = TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, minibatch_forecasts)
 
   forecasts_remaining_in_epoch = forecasts_remaining_in_epoch[(forecasts_per_minibatch+1):length(forecasts_remaining_in_epoch)]
 
@@ -61,7 +61,7 @@ end
 
 print("Normalizing features by sampling $feature_normalization_forecast_sample_count training forecasts")
 
-(sample_X, _) = SREFTrainShared.get_data_and_labels(grid, conus_grid_bitmask, Iterators.take(Random.shuffle(train_forecasts), feature_normalization_forecast_sample_count))
+(sample_X, _) = TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts), feature_normalization_forecast_sample_count))
 
 sample_X = Float64.(sample_X')
 
@@ -101,7 +101,7 @@ function test_loss(forecasts)
   forecast_count       = 0.0
 
   for forecast in forecasts
-    (X, y) = SREFTrainShared.get_data_and_labels(grid, conus_grid_bitmask, [forecast])
+    (X, y) = TrainingShared.get_data_and_labels(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, [forecast])
 
     if isempty(y)
       continue

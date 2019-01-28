@@ -9,6 +9,9 @@ import GeoUtils
 struct Grid
   height               :: Int64 # Element count
   width                :: Int64 # Element count
+  downsample           :: Int64 # 2x 3x 4x etc. (1x is no downsampling)
+  original_height      :: Int64 # Element count before downsampling happened
+  original_width       :: Int64 # Element count before downsampling happened
   min_lat              :: Float64
   max_lat              :: Float64
   min_lon              :: Float64
