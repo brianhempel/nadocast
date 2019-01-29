@@ -327,4 +327,27 @@ function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
   radius_is
 end
 
+# For making 100mi mean is with a 50mi hole cut out of it.
+function radius_grid_is_less_other_is(grid, miles, grid_is_to_subtract) :: Vector{Vector{Int64}}
+  radius_is = Grids.radius_grid_is(grid, miles)
+
+  for flat_i in 1:grid.height*grid.width
+    is_to_subtract = grid_is_to_subtract[flat_i]
+
+    radius_is[flat_i] =
+      filter(radius_is[flat_i]) do i
+        !(i in is_to_subtract)
+      end
+  end
+
+  # Re-allocate to ensure cache locality.
+  # Not sure this makes any difference though.
+  for flat_i in 1:length(radius_is)
+    radius_is[flat_i] = radius_is[flat_i][1:length(radius_is[flat_i])]
+  end
+
+  radius_is
+end
+
+
 end # module Grid

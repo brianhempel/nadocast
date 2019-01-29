@@ -1,3 +1,5 @@
+# julia --project=../.. GBDTFeatureImportance.jl
+
 import MagicTreeBoosting
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
@@ -8,8 +10,8 @@ import SREF
 import FeatureEngineering
 
 
-gbdt_path = "gbdt_2019-01-26T17:22:12.466/epoch_71_356_trees_loss_0.004774756557004337.model"
-# gbdt_path = "gbdt_2019-01-26T17:22:12.466/epoch_100_501_trees_loss_0.00479991953155618.model"
+# gbdt_path = "gbdt_2019-01-26T17:22:12.466/epoch_71_356_trees_loss_0.004774756557004337.model"
+gbdt_path = "gbdt_2019-01-28T09:31:28.654/epoch_42_211_trees_loss_0.004799674883322649.model"
 
 (bin_splits, trees) = MagicTreeBoosting.load(gbdt_path)
 

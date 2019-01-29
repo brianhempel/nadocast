@@ -3,14 +3,12 @@ module HREF
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
-import Inventories
 import Grib2
+import Grids
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import SREFHREFShared
-
-push!(LOAD_PATH, @__DIR__)
-# import FeatureEngineering
+import FeatureEngineeringShared
 
 # HREF is on grid 227: http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID227
 # Natively 1473x1025
@@ -35,12 +33,52 @@ function grid()
   Forecasts.grid(example_forecast())
 end
 
+layer_blocks_to_make = [
+  FeatureEngineeringShared.raw_features_block,
+  FeatureEngineeringShared.twenty_five_mi_mean_block,
+  # FeatureEngineeringShared.fifty_mi_mean_block,
+  # FeatureEngineeringShared.hundred_mi_mean_block,
+  FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
+  FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
+  # FeatureEngineeringShared.twenty_five_mi_linestraddling_gradient_block,
+  # FeatureEngineeringShared.fifty_mi_forward_gradient_block,
+  # FeatureEngineeringShared.fifty_mi_leftward_gradient_block,
+  # FeatureEngineeringShared.fifty_mi_linestraddling_gradient_block,
+  # FeatureEngineeringShared.hundred_mi_forward_gradient_block,
+  # FeatureEngineeringShared.hundred_mi_leftward_gradient_block,
+  # FeatureEngineeringShared.hundred_mi_linestraddling_gradient_block,
+]
+
+function feature_i_to_name(feature_i)
+  inventory = Forecasts.inventory(example_forecast())
+  FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
+end
+
 common_layers_mean = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_mean.txt"), String), "\n"))
 common_layers_prob = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_prob.txt"), String), "\n"))
 
+vector_wind_layers = [
+  "GRD:250 mb:hour fcst:wt ens mean",
+  "GRD:500 mb:hour fcst:wt ens mean",
+  "GRD:700 mb:hour fcst:wt ens mean",
+  "GRD:850 mb:hour fcst:wt ens mean",
+  "GRD:925 mb:hour fcst:wt ens mean",
+]
+
+_twenty_five_mi_mean_is    = Vector{Int64}[] # Grid point indicies within 25mi
+_unique_fifty_mi_mean_is   = Vector{Int64}[] # Grid point indicies within 50mi but not within 25mi
+_unique_hundred_mi_mean_is = Vector{Int64}[] # Grid point indicies within 100mi but not within 50mi
+
 function get_feature_engineered_data(forecast, data)
-  # FeatureEngineering.make_data(grid(), forecast, data)
-  data
+  global _twenty_five_mi_mean_is
+  global _unique_fifty_mi_mean_is
+  global _unique_hundred_mi_mean_is
+
+  _twenty_five_mi_mean_is    = isempty(_twenty_five_mi_mean_is)    ? Grids.radius_grid_is(grid(), 25.0)                                        : _twenty_five_mi_mean_is
+  # _unique_fifty_mi_mean_is   = isempty(_unique_fifty_mi_mean_is)   ? Grids.radius_grid_is_less_other_is(grid(), 50.0, _twenty_five_mi_mean_is) : _unique_fifty_mi_mean_is
+  # _unique_hundred_mi_mean_is = isempty(_unique_hundred_mi_mean_is) ? Grids.radius_grid_is_less_other_is(grid(), 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is)) : _unique_hundred_mi_mean_is
+
+  FeatureEngineeringShared.make_data(grid(), forecast, data, vector_wind_layers, layer_blocks_to_make, _twenty_five_mi_mean_is, _unique_fifty_mi_mean_is, _unique_hundred_mi_mean_is)
 end
 
 function reload_forecasts()
