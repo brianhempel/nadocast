@@ -46,6 +46,14 @@ function time_title(forecast :: Forecast) :: String
   @sprintf "%04d-%02d-%02d %02dZ +%d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
 end
 
+function yyyymmdd_thhz_fhh(forecast :: Forecast) :: String
+  @sprintf "%04d%02d%02d_t%02dz_f%02d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
+end
+
+function yyyymmdd(forecast :: Forecast) :: String
+  @sprintf "%04d%02d%02d" forecast.run_year forecast.run_month forecast.run_day
+end
+
 
 function grid(forecast :: Forecast) :: Grids.Grid
   if forecast._grid == nothing

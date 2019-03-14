@@ -6,6 +6,18 @@ push!(LOAD_PATH, @__DIR__)
 import Grids
 import Grib2
 
+# https://en.wikipedia.org/wiki/List_of_extreme_points_of_the_United_States
+const s_extreme = 24.0
+const n_extreme = 50.0
+const w_extreme = -125.0
+const e_extreme = -66.0
+
+# For excluding Alaska, Hawaii, Puerto Rico tornadoes
+function is_in_conus_bounding_box((lat, lon))
+  lat > s_extreme && lat < n_extreme && lon > w_extreme && lon < e_extreme
+end
+
+
 const rap_130_grid = Grib2.read_grid((@__DIR__) * "/../test_grib2s/rap_130_20180319_1400_012.grb2") :: Grids.Grid
 
 # conus_on_rap_130_grid.txt produced by:

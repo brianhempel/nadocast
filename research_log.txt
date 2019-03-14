@@ -57,3 +57,22 @@ Okay got it to learn. Need enough variety of data and an appropriate starting le
 
 Also switched to 64bit math to (slightly) reduce likelihood of exploding gradient. May be able to switch back but there's no reason to until we start hitting memory problems. The slow part is wgrib2 data loading ().
 
+
+TODO:
+
+- [x] Rename MagicTreeBoosting to something pushable to Github.
+
+- [ ] Not briefly require double memory during data loading (Push features to disk while loading)
+
+- [ ] Try using row-major memory layout data for speed (might be fewer cache misses during histogram building)
+
+- [ ] Switch to 5/1/1 (weekdays/sat/sun) for training/validation/test
+- [ ] Use all all severe report hours (wind/hail/tornado) for train/validation/test
+- [ ] Write the "annealing" for data subsetting/weighting
+- [ ] Try training 1-6, 7-12, 13-18, 19-24, 25-30, 31-39; or 1-6, 7-18, 19-39 hour HREF/SREF sets
+- [ ] Train a stacked model
+- [ ] Calibrate on 20ish random validation days (Saturdays)
+
+- [ ] Build dataset for daily probs
+- [ ] Train it
+- [ ] Calibrate it

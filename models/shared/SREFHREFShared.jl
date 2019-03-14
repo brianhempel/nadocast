@@ -13,6 +13,7 @@ function mean_prob_grib2s_to_forecast(
             common_layers_mean, # List of layer keys
             common_layers_prob; # List of layer keys
             forecast_hour = nothing,
+            grid          = nothing, # After downsampling. Prevents having to reload the grid.
             downsample    = 1
           ) :: Forecasts.Forecast
 
@@ -28,7 +29,13 @@ function mean_prob_grib2s_to_forecast(
     forecast_hour      = parse(Int64, forecast_hour_str)
   end
 
-  get_grid(forecast) = Grib2.read_grid(mean_grib2_path, downsample = downsample) # mean and prob better have the same grid!
+  get_grid(forecast) = begin
+    if grid == nothing
+      Grib2.read_grid(mean_grib2_path, downsample = downsample) # mean and prob better have the same grid!
+    else
+      grid
+    end
+  end
 
   get_inventory(forecast) = begin
     forecast_hour_str = "$forecast_hour hour fcst" # Accumulation fields are already excluded by find_common_layers.rb, so it's okay that we don't look for "acc fcst"

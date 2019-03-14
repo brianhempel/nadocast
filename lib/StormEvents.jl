@@ -3,6 +3,7 @@ module StormEvents
 import DelimitedFiles
 
 push!(LOAD_PATH, @__DIR__)
+import Conus
 import GeoUtils
 import Grids
 
@@ -40,6 +41,12 @@ const tornadoes = begin
 
   mapslices(row_to_tornado, tornado_rows, dims = [2])[:,1]
 end :: Vector{Tornado}
+
+const conus_tornadoes =
+  filter(tornadoes) do tornado
+    # Exclude Alaska, Hawaii, Puerto Rico
+    Conus.is_in_conus_bounding_box(tornado.start_latlon) || Conus.is_in_conus_bounding_box(tornado.end_latlon)
+  end
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of the tornadoes
 function grid_to_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}

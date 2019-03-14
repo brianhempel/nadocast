@@ -1,13 +1,20 @@
 require "csv"
 
+TORNADOES_CSV_PATH = File.expand_path("../tornadoes.csv", __FILE__)
+
 class Tornado < Struct.new(:start_time, :end_time, :rating, :start_lat, :start_lon, :end_lat, :end_lon)
   def on_ground_during(time_range)
     start_time < time_range.end &&
     end_time   > time_range.begin
   end
+
+  def in_conus?
+    ((24..50).cover?(start_lat) && (-125..-66).cover?(start_lon)) ||
+    ((24..50).cover?(end_lat)   && (-125..-66).cover?(end_lon))
+  end
 end
 
-TORNADOES = CSV.read("tornadoes.csv").drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, rating_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
+TORNADOES = CSV.read(TORNADOES_CSV_PATH).drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, rating_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
   Tornado.new(
     Time.at(Integer(start_seconds_str)).utc,
     Time.at(Integer(end_seconds_str)).utc,

@@ -29,7 +29,8 @@ train_double_logistic:
 	OPENBLAS_NUM_THREADS=1 julia --project=../.. TrainDoubleLogistic.jl
 
 train_gradient_boosted_decision_trees:
+	# time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 	JULIA_NUM_THREADS=4 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 
-train_elastic_net:
-	julia --project=../.. TrainElasticNet.jl
+train_elastic_nets:
+	JULIA_NUM_THREADS=4 time julia --project=../.. TrainElasticNets.jl

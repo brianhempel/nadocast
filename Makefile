@@ -28,6 +28,9 @@ add_2018_spc_tornado_reports:
 	ruby merge_csvs.rb tornadoes_old.csv tornadoes_from_spc_storm_reports.csv > tornadoes.csv
 	diff tornadoes_old.csv tornadoes.csv
 
+forecast:
+	julia --project lib/DoPredict.jl
+
 # setup:
 # 	julia Setup.jl
 # 	# julia Test.jl

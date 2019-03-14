@@ -1,4 +1,4 @@
-# Usage: $ ruby find_common_layers.rb path/to/folder [path_filter]
+# Usage: $ ruby find_common_layers.rb path/to/folder [path_filter] [layer_filter]
 #
 # Reads a sample (n=500) of the grib2 inventories deeper than the given directory and outputs the common layers to STDOUT.
 #
@@ -11,8 +11,11 @@ require "json"
 
 NAME_NORMALIZATION_SUBSTITUTIONS = JSON.parse(File.read(File.expand_path("../layer_name_normalization_substitutions.json", __FILE__)))
 
-root_path   = ARGV[0] || (STDERR.puts "Usage: $ ruby find_common_layers.rb path/to/folder [path_filter]"; exit 1)
-path_filter = ARGV[1]
+root_path    = ARGV[0] || (STDERR.puts "Usage: $ ruby find_common_layers.rb path/to/folder [path_filter] [layer_filter]"; exit 1)
+path_filter  = ARGV[1]
+layer_filter = ARGV[2]
+sample_count = 500
+
 
 FileUtils.cd root_path
 
@@ -26,9 +29,11 @@ def normalize_inventory_line(line)
   line
 end
 
+STDERR.print "Sampling #{sample_count} files to find common layers"
+
 inventories =
   grib2_paths.
-    sample(500).
+    sample(sample_count).
     map do |grib2_path|
       STDERR.print "."; STDERR.flush
       inventory = `wgrib2 #{grib2_path} -s -n`
@@ -58,11 +63,25 @@ inventories =
 common   = inventories.reduce(:&)
 uncommon = inventories.reduce(:|) - common
 
+if layer_filter
+  common_filtered = common.select { |abbrev, desc, hours_fcst, prob_level| eval(layer_filter) }
+else
+  common_filtered = common
+end
+rejected_by_filter = common - common_filtered
+
+
 STDERR.puts
-puts common.map { |key_parts| key_parts.join(":") }.join("\n")
+puts common_filtered.map { |key_parts| key_parts.join(":") }.join("\n")
 
 if uncommon.any?
   STDERR.puts
   STDERR.puts "Uncommon layers:"
   STDERR.puts uncommon.map { |key_parts| key_parts.join(":") }.join("\n")
+end
+
+if rejected_by_filter.any?
+  STDERR.puts
+  STDERR.puts "Rejected layers:"
+  STDERR.puts rejected_by_filter.map { |key_parts| key_parts.join(":") }.join("\n")
 end

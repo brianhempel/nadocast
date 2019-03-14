@@ -8,7 +8,7 @@
 # # add https://github.com/dmlc/XGBoost.jl
 # add TranscodingStreams
 # add CodecZstd
-# dev ../MagicTreeBoosting.jl
+# dev ../MemoryConstrainedTreeBoosting.jl
 
 
 # Pkg.update()

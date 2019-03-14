@@ -35,11 +35,11 @@ end
 
 layer_blocks_to_make = [
   FeatureEngineeringShared.raw_features_block,
-  FeatureEngineeringShared.twenty_five_mi_mean_block,
+  # FeatureEngineeringShared.twenty_five_mi_mean_block,
   # FeatureEngineeringShared.fifty_mi_mean_block,
   # FeatureEngineeringShared.hundred_mi_mean_block,
-  FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
-  FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
+  # FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
+  # FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
   # FeatureEngineeringShared.twenty_five_mi_linestraddling_gradient_block,
   # FeatureEngineeringShared.fifty_mi_forward_gradient_block,
   # FeatureEngineeringShared.fifty_mi_leftward_gradient_block,
@@ -74,9 +74,9 @@ function get_feature_engineered_data(forecast, data)
   global _unique_fifty_mi_mean_is
   global _unique_hundred_mi_mean_is
 
-  _twenty_five_mi_mean_is    = isempty(_twenty_five_mi_mean_is)    ? Grids.radius_grid_is(grid(), 25.0)                                        : _twenty_five_mi_mean_is
-  # _unique_fifty_mi_mean_is   = isempty(_unique_fifty_mi_mean_is)   ? Grids.radius_grid_is_less_other_is(grid(), 50.0, _twenty_five_mi_mean_is) : _unique_fifty_mi_mean_is
-  # _unique_hundred_mi_mean_is = isempty(_unique_hundred_mi_mean_is) ? Grids.radius_grid_is_less_other_is(grid(), 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is)) : _unique_hundred_mi_mean_is
+  _twenty_five_mi_mean_is    = isempty(_twenty_five_mi_mean_is)    && FeatureEngineeringShared.twenty_five_mi_mean_block in layer_blocks_to_make ? Grids.radius_grid_is(grid(), 25.0)                                        : _twenty_five_mi_mean_is
+  _unique_fifty_mi_mean_is   = isempty(_unique_fifty_mi_mean_is)   && FeatureEngineeringShared.fifty_mi_mean_block in layer_blocks_to_make       ? Grids.radius_grid_is_less_other_is(grid(), 50.0, _twenty_five_mi_mean_is) : _unique_fifty_mi_mean_is
+  _unique_hundred_mi_mean_is = isempty(_unique_hundred_mi_mean_is) && FeatureEngineeringShared.hundred_mi_mean_block in layer_blocks_to_make     ? Grids.radius_grid_is_less_other_is(grid(), 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is)) : _unique_hundred_mi_mean_is
 
   FeatureEngineeringShared.make_data(grid(), forecast, data, vector_wind_layers, layer_blocks_to_make, _twenty_five_mi_mean_is, _unique_fifty_mi_mean_is, _unique_hundred_mi_mean_is)
 end
@@ -95,7 +95,16 @@ function reload_forecasts()
       mean_href_path = href_path
       prob_href_path = replace(mean_href_path, "z_mean_f" => "z_prob_f")
 
-      forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("href", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, downsample = 3)
+      # Downsampling requires loading (and downsampling) the grid, so this should speed up loading times.
+      # And save some space in our disk cache.
+      grid =
+        if isempty(_forecasts)
+          nothing
+        else
+          Forecasts.grid(_forecasts[1])
+        end
+
+      forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("href", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, grid = grid, downsample = downsample)
 
       push!(_forecasts, forecast)
     end
