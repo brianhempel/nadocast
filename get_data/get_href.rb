@@ -942,7 +942,7 @@ require "date"
 # Files available 2.5hrs after run time
 
 TYPES          = ["mean", "prob"]
-YMDS           = `curl -s http://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
+YMDS           = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [00, 06, 12, 18]
 FORECAST_HOURS = (01..36).to_a
 BASE_DIRECTORY = "/Volumes/SREF_HREF_1/href"
@@ -958,7 +958,7 @@ loop { break if Dir.exists?("/Volumes/SREF_HREF_1/"); puts "Waiting for SREF_HRE
 loop { break if Dir.exists?("/Volumes/SREF_HREF_2/"); puts "Waiting for SREF_HREF_2 to mount..."; sleep 4 }
 
 
-# http://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2
+# https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2
 
 forecasts_to_get = YMDS.product(HOURS_OF_DAY, FORECAST_HOURS, TYPES)
 
@@ -972,7 +972,7 @@ threads = THREAD_COUNT.times.map do
 
       file_name         = "href_conus_#{year_month_day}_t#{run_hour_str}z_#{type}_f#{forecast_hour_str}.grib2"
       next if BAD_FILES.include?(file_name)
-      url_to_get        = "http://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
+      url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
       directory         = "#{BASE_DIRECTORY}/#{year_month}/#{year_month_day}"
       path              = "#{directory}/#{file_name}"
       alt_directory     = alt_location(directory)
