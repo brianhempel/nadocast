@@ -62,11 +62,15 @@ TODO:
 
 - [x] Rename MagicTreeBoosting to something pushable to Github.
 
-- [ ] Not briefly require double memory during data loading (Push features to disk while loading)
+- [x] Upgrade to Julia 1.1.0
+
+- [x] Not briefly require double memory during data loading (Push features to disk while loading)
 
 - [ ] Try using row-major memory layout data for speed (might be fewer cache misses during histogram building)
 
 - [ ] Switch to 5/1/1 (weekdays/sat/sun) for training/validation/test
+- [ ] Use storm reports DB if ready for 2018
+- [ ] Add Jan/Feb 2019 live storm reports
 - [ ] Use all all severe report hours (wind/hail/tornado) for train/validation/test
 - [ ] Write the "annealing" for data subsetting/weighting
 - [ ] Try training 1-6, 7-12, 13-18, 19-24, 25-30, 31-39; or 1-6, 7-18, 19-39 hour HREF/SREF sets

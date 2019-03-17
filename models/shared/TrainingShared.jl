@@ -54,10 +54,33 @@ end
 
 # get_feature_engineered_data should be a function that takes a forecast and the raw data and returns new data
 # c.f. SREF.get_feature_engineered_data
+#
+# concatenating all the forecasts doubles peak memory usage if done in-RAM
+# so we do the concatenation as an on-disk file append
 function get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing)
-  Xs      = []
-  Ys      = []
-  weights = []
+  # Xs      = []
+  # Ys      = []
+  # weights = []
+
+  data_count    = 0
+  feature_count = nothing
+  feature_type  = nothing
+  feature_files = nothing
+  labels_file   = nothing
+  weights_file  = nothing
+
+  loading_tmp_dir = "loading_tmp_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
+  mkpath(loading_tmp_dir)
+
+  concat_path(name)                             = joinpath(loading_tmp_dir, name)
+  open_concat_file(name)                        = open(concat_path(name), "w")
+  read_and_remove_concat_file(name, data_count) = begin
+    buffer = Array{Float32}(undef, data_count)
+    read!(concat_path(name), buffer)
+    # Remove as we go in case we are swapping and need the space.
+    rm(concat_path(name))
+    buffer
+  end
 
   conus_grid_weights = Float32.(grid.point_weights[conus_grid_bitmask])
 
@@ -86,14 +109,56 @@ function get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineere
       X_transformed    = X_transformer(data_in_conus)
     end
 
-    push!(Xs, X_transformed)
-    push!(Ys, labels)
-    push!(weights, forecast_weights)
+    if isnothing(feature_files)
+      feature_count = size(X_transformed,2)
+      feature_type  = typeof(X_transformed[1,1])
+      feature_files =
+        map(1:feature_count) do feature_i
+          open_concat_file("feature_$(feature_i)")
+        end
+      labels_file  = open_concat_file("labels")
+      weights_file = open_concat_file("weights")
+    end
+
+    for feature_i in 1:feature_count
+      write(feature_files[feature_i], X_transformed[:,feature_i])
+    end
+    write(labels_file,  labels)
+    write(weights_file, forecast_weights)
+
+    data_count += length(labels)
+
+    # push!(Xs, X_transformed)
+    # push!(Ys, labels)
+    # push!(weights, forecast_weights)
 
     print(".")
   end
 
-  (vcat(Xs...), vcat(Ys...), vcat(weights...))
+  for feature_i in 1:feature_count
+    close(feature_files[feature_i])
+  end
+  close(labels_file)
+  close(weights_file)
+
+  X       = Array{feature_type}(undef, (data_count, feature_count))
+  Y       = Array{Float32}(undef, data_count)
+  weights = Array{Float32}(undef, data_count)
+
+  for feature_i in 1:feature_count
+    X[:, feature_i] = read_and_remove_concat_file("feature_$(feature_i)", data_count)
+  end
+  Y       = read_and_remove_concat_file("labels", data_count)
+  weights = read_and_remove_concat_file("weights", data_count)
+
+  rm(loading_tmp_dir, recursive = true)
+
+  # @assert vcat(Xs...) == X
+  # @assert vcat(Ys...) == Y
+  # @assert vcat(weights...) == weights2
+
+  # (vcat(Xs...), vcat(Ys...), vcat(weights...))
+  (X, Y, weights)
 end
 
 
