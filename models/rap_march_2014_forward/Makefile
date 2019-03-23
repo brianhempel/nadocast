@@ -5,8 +5,11 @@ common_layers.txt:
 	# Don't include x25 mb and x75 mb layers, just x00 mb and x50 mb.
 	ruby ../../lib/find_common_layers.rb /Volumes/RAP_1/rap "path[/\\d\\d\\d\\d\\d\\d\\d\\d\\//].to_i >= 20140226" "!(desc[/\\A(\d+) mb\\z/, 1] && desc[/\\A(\d+) mb\\z/, 1].to_i % 50 != 0)" > common_layers.txt
 
+profile_feature_engineering:
+	JULIA_NUM_THREADS=4 julia --project=../.. ProfileFeatureEngineering.jl
+
 train_+12_gradient_boosted_decision_trees:
 	FORECAST_HOUR=12 make train_gradient_boosted_decision_trees
 
 train_gradient_boosted_decision_trees:
-	JULIA_NUM_THREADS=3 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+	JULIA_NUM_THREADS=4 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl

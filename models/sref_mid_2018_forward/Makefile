@@ -13,9 +13,6 @@ common_layers_mean.txt:
 common_layers_prob.txt:
 	ruby ../../lib/find_common_layers.rb /Volumes/SREF_HREF_1/sref "path =~ /_prob_/" > common_layers_prob.txt
 
-profile_feature_engineering:
-	julia --project=../.. ProfileFeatureEngineering.jl
-
 train_logistic:
 	# Some weirdo bug in OpenBLAS "OpenBLAS : Program will terminate because you tried to start too many threads."
 	# https://github.com/xianyi/OpenBLAS/issues/1735

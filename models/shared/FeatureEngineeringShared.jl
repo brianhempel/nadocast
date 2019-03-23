@@ -82,6 +82,272 @@ function feature_range(block_i, raw_feature_count)
   (block_i-1)*raw_feature_count+1:block_i*raw_feature_count
 end
 
+function make_mean_part(data, mean_is, total1, total2, total3, total4, raw_layer_feature1_i, raw_layer_feature2_i, raw_layer_feature3_i, raw_layer_feature4_i)
+  @inbounds for near_i in mean_is
+    total1 += data[near_i, raw_layer_feature1_i]
+    total2 += data[near_i, raw_layer_feature2_i]
+    total3 += data[near_i, raw_layer_feature3_i]
+    total4 += data[near_i, raw_layer_feature4_i]
+    # total5 += data[near_i, raw_layer_feature5_i]
+    # total6 += data[near_i, raw_layer_feature6_i]
+    # total7 += data[near_i, raw_layer_feature7_i]
+    # total8 += data[near_i, raw_layer_feature8_i]
+    # n      += 1.0f0
+  end
+
+  (total1, total2, total3, total4)
+end
+
+# Make 25mi, 50mi, and 100mi mean layers
+#
+# Mutates out
+#
+# This is still the majority time-consumer.
+function make_mean_layers(
+    data, out, raw_feature_count, grid_point_count,
+    should_make_twenty_five_mi_mean_block, twenty_five_mi_mean_features_range, twenty_five_mi_mean_is,
+    should_make_fifty_mi_mean_block,       fifty_mi_mean_features_range,       unique_fifty_mi_mean_is,
+    should_make_hundred_mi_mean_block,     hundred_mi_mean_features_range,     unique_hundred_mi_mean_is
+  )
+
+  # SREF numbers:
+  # 2 at a time: 3.71s per 5 forecasts
+  # 3 at a time: 3.55s per 5 forecasts
+  # 4 at a time: 3.35s per 5 forecasts
+  # 5 at a time: 3.35s per 5 forecasts
+  # 6 at a time: 3.30s per 5 forecasts
+  # 7 at a time: 3.34s per 5 forecasts
+  # 8 at a time: 3.33s per 5 forecasts
+
+  # HREF numbers:
+  # 4 at a time: 9.7s per 3
+  # 6 at a time: 9.7s per 3
+  # 8 at a time: 9.8s per 3
+
+  Threads.@threads for raw_layer_feature1_i in 1:4:raw_feature_count
+  # for raw_layer_feature1_i in 1:4:raw_feature_count
+    raw_layer_feature2_i = min(raw_layer_feature1_i + 1, raw_feature_count)
+    raw_layer_feature3_i = min(raw_layer_feature1_i + 2, raw_feature_count)
+    raw_layer_feature4_i = min(raw_layer_feature1_i + 3, raw_feature_count)
+    # raw_layer_feature5_i = min(raw_layer_feature1_i + 4, raw_feature_count)
+    # raw_layer_feature6_i = min(raw_layer_feature1_i + 5, raw_feature_count)
+    # raw_layer_feature7_i = min(raw_layer_feature1_i + 6, raw_feature_count)
+    # raw_layer_feature8_i = min(raw_layer_feature1_i + 7, raw_feature_count)
+
+    if should_make_twenty_five_mi_mean_block
+      twenty_five_mi_mean_feature1_i   = raw_layer_feature1_i + twenty_five_mi_mean_features_range.start - 1
+      twenty_five_mi_mean_feature2_i   = raw_layer_feature2_i + twenty_five_mi_mean_features_range.start - 1
+      twenty_five_mi_mean_feature3_i   = raw_layer_feature3_i + twenty_five_mi_mean_features_range.start - 1
+      twenty_five_mi_mean_feature4_i   = raw_layer_feature4_i + twenty_five_mi_mean_features_range.start - 1
+      # twenty_five_mi_mean_feature5_i   = raw_layer_feature5_i + twenty_five_mi_mean_features_range.start - 1
+      # twenty_five_mi_mean_feature6_i   = raw_layer_feature6_i + twenty_five_mi_mean_features_range.start - 1
+      # twenty_five_mi_mean_feature7_i   = raw_layer_feature7_i + twenty_five_mi_mean_features_range.start - 1
+      # twenty_five_mi_mean_feature8_i   = raw_layer_feature8_i + twenty_five_mi_mean_features_range.start - 1
+    end
+
+    if should_make_fifty_mi_mean_block
+      fifty_mi_mean_feature1_i   = raw_layer_feature1_i + fifty_mi_mean_features_range.start - 1
+      fifty_mi_mean_feature2_i   = raw_layer_feature2_i + fifty_mi_mean_features_range.start - 1
+      fifty_mi_mean_feature3_i   = raw_layer_feature3_i + fifty_mi_mean_features_range.start - 1
+      fifty_mi_mean_feature4_i   = raw_layer_feature4_i + fifty_mi_mean_features_range.start - 1
+      # fifty_mi_mean_feature5_i   = raw_layer_feature5_i + fifty_mi_mean_features_range.start - 1
+      # fifty_mi_mean_feature6_i   = raw_layer_feature6_i + fifty_mi_mean_features_range.start - 1
+      # fifty_mi_mean_feature7_i   = raw_layer_feature7_i + fifty_mi_mean_features_range.start - 1
+      # fifty_mi_mean_feature8_i   = raw_layer_feature8_i + fifty_mi_mean_features_range.start - 1
+    end
+
+    if should_make_hundred_mi_mean_block
+      hundred_mi_mean_feature1_i = raw_layer_feature1_i + hundred_mi_mean_features_range.start - 1
+      hundred_mi_mean_feature2_i = raw_layer_feature2_i + hundred_mi_mean_features_range.start - 1
+      hundred_mi_mean_feature3_i = raw_layer_feature3_i + hundred_mi_mean_features_range.start - 1
+      hundred_mi_mean_feature4_i = raw_layer_feature4_i + hundred_mi_mean_features_range.start - 1
+      # hundred_mi_mean_feature5_i = raw_layer_feature5_i + hundred_mi_mean_features_range.start - 1
+      # hundred_mi_mean_feature6_i = raw_layer_feature6_i + hundred_mi_mean_features_range.start - 1
+      # hundred_mi_mean_feature7_i = raw_layer_feature7_i + hundred_mi_mean_features_range.start - 1
+      # hundred_mi_mean_feature8_i = raw_layer_feature8_i + hundred_mi_mean_features_range.start - 1
+    end
+
+    @inbounds for flat_i in 1:grid_point_count
+      total1 = 0.0f0
+      total2 = 0.0f0
+      total3 = 0.0f0
+      total4 = 0.0f0
+      # total5 = 0.0f0
+      # total6 = 0.0f0
+      # total7 = 0.0f0
+      # total8 = 0.0f0
+      n      = 0.0f0
+      # for near_i in twenty_five_mi_mean_is[flat_i]
+      #   total1 += data[near_i, raw_layer_feature1_i]
+      #   total2 += data[near_i, raw_layer_feature2_i]
+      #   total3 += data[near_i, raw_layer_feature3_i]
+      #   total4 += data[near_i, raw_layer_feature4_i]
+      #   # total5 += data[near_i, raw_layer_feature5_i]
+      #   # total6 += data[near_i, raw_layer_feature6_i]
+      #   # total7 += data[near_i, raw_layer_feature7_i]
+      #   # total8 += data[near_i, raw_layer_feature8_i]
+      #   n      += 1.0f0
+      # end
+      total1, total2, total3, total4 =
+        make_mean_part(
+            data, twenty_five_mi_mean_is[flat_i],
+            total1, total2, total3, total4,
+            raw_layer_feature1_i, raw_layer_feature2_i, raw_layer_feature3_i, raw_layer_feature4_i
+          )
+      n += Float32(length(twenty_five_mi_mean_is[flat_i]))
+      if should_make_twenty_five_mi_mean_block
+        out[flat_i, twenty_five_mi_mean_feature1_i] = total1 / n
+        out[flat_i, twenty_five_mi_mean_feature2_i] = total2 / n
+        out[flat_i, twenty_five_mi_mean_feature3_i] = total3 / n
+        out[flat_i, twenty_five_mi_mean_feature4_i] = total4 / n
+        # out[flat_i, twenty_five_mi_mean_feature5_i] = total5 / n
+        # out[flat_i, twenty_five_mi_mean_feature6_i] = total6 / n
+        # out[flat_i, twenty_five_mi_mean_feature7_i] = total7 / n
+        # out[flat_i, twenty_five_mi_mean_feature8_i] = total8 / n
+      end
+      if should_make_fifty_mi_mean_block || should_make_hundred_mi_mean_block
+        # for near_i in unique_fifty_mi_mean_is[flat_i]
+        #   total1 += data[near_i, raw_layer_feature1_i]
+        #   total2 += data[near_i, raw_layer_feature2_i]
+        #   total3 += data[near_i, raw_layer_feature3_i]
+        #   total4 += data[near_i, raw_layer_feature4_i]
+        #   # total5 += data[near_i, raw_layer_feature5_i]
+        #   # total6 += data[near_i, raw_layer_feature6_i]
+        #   # total7 += data[near_i, raw_layer_feature7_i]
+        #   # total8 += data[near_i, raw_layer_feature8_i]
+        #   n      += 1.0f0
+        # end
+        total1, total2, total3, total4 =
+          make_mean_part(
+              data, unique_fifty_mi_mean_is[flat_i],
+              total1, total2, total3, total4,
+              raw_layer_feature1_i, raw_layer_feature2_i, raw_layer_feature3_i, raw_layer_feature4_i
+            )
+        n += Float32(length(unique_fifty_mi_mean_is[flat_i]))
+        if should_make_fifty_mi_mean_block
+          out[flat_i, fifty_mi_mean_feature1_i] = total1 / n
+          out[flat_i, fifty_mi_mean_feature2_i] = total2 / n
+          out[flat_i, fifty_mi_mean_feature3_i] = total3 / n
+          out[flat_i, fifty_mi_mean_feature4_i] = total4 / n
+          # out[flat_i, fifty_mi_mean_feature5_i] = total5 / n
+          # out[flat_i, fifty_mi_mean_feature6_i] = total6 / n
+          # out[flat_i, fifty_mi_mean_feature7_i] = total7 / n
+          # out[flat_i, fifty_mi_mean_feature8_i] = total8 / n
+        end
+      end
+      if should_make_hundred_mi_mean_block
+        total1, total2, total3, total4 =
+          make_mean_part(
+              data, unique_hundred_mi_mean_is[flat_i],
+              total1, total2, total3, total4,
+              raw_layer_feature1_i, raw_layer_feature2_i, raw_layer_feature3_i, raw_layer_feature4_i
+            )
+        n += Float32(length(unique_hundred_mi_mean_is[flat_i]))
+        # for near_i in unique_hundred_mi_mean_is[flat_i]
+        #   total1 += data[near_i, raw_layer_feature1_i]
+        #   total2 += data[near_i, raw_layer_feature2_i]
+        #   total3 += data[near_i, raw_layer_feature3_i]
+        #   total4 += data[near_i, raw_layer_feature4_i]
+        #   # total5 += data[near_i, raw_layer_feature5_i]
+        #   # total6 += data[near_i, raw_layer_feature6_i]
+        #   # total7 += data[near_i, raw_layer_feature7_i]
+        #   # total8 += data[near_i, raw_layer_feature8_i]
+        #   n       += 1.0f0
+        # end
+        out[flat_i, hundred_mi_mean_feature1_i] = total1 / n
+        out[flat_i, hundred_mi_mean_feature2_i] = total2 / n
+        out[flat_i, hundred_mi_mean_feature3_i] = total3 / n
+        out[flat_i, hundred_mi_mean_feature4_i] = total4 / n
+        # out[flat_i, hundred_mi_mean_feature5_i] = total5 / n
+        # out[flat_i, hundred_mi_mean_feature6_i] = total6 / n
+        # out[flat_i, hundred_mi_mean_feature7_i] = total7 / n
+        # out[flat_i, hundred_mi_mean_feature8_i] = total8 / n
+      end
+    end
+  end
+
+  ()
+end
+
+function uv_normalize(u, v)
+  ε = 1f-8
+  len = √(u^2 + v^2) + ε
+  (u / len, v / len)
+end
+
+# Mutates all the something_is arguments.
+#
+# Once we pull this out into a function then our allocations here go way down...to zero I believe.
+function compute_directional_is(
+    height, width,
+    point_heights_miles, point_widths_miles,
+    mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
+    twenty_five_mi_forward_is, twenty_five_mi_backward_is, twenty_five_mi_leftward_is, twenty_five_mi_rightward_is,
+    fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
+    hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
+  )
+  for j in 1:height
+    for i in 1:width
+      flat_i = width*(j-1) + i
+
+      relative_u, relative_v = uv_normalize(mean_wind_lower_half_atmosphere_us[flat_i], mean_wind_lower_half_atmosphere_vs[flat_i])
+
+      point_height = Float32(point_heights_miles[flat_i])
+      point_width  = Float32(point_widths_miles[flat_i]) # On the SREF grid, point_width and point_height are always nearly equal, <1.0% difference.
+
+      delta_25mi_j  = round(Int64, relative_v * 25.0f0  / point_height)
+      delta_25mi_i  = round(Int64, relative_u * 25.0f0  / point_width)
+      delta_50mi_j  = round(Int64, relative_v * 50.0f0  / point_height)
+      delta_50mi_i  = round(Int64, relative_u * 50.0f0  / point_width)
+      delta_100mi_j = round(Int64, relative_v * 100.0f0 / point_height)
+      delta_100mi_i = round(Int64, relative_u * 100.0f0 / point_width)
+
+      forward_25mi_j    = clamp(j+delta_25mi_j,  1, height)
+      forward_25mi_i    = clamp(i+delta_25mi_i,  1, width)
+      forward_50mi_j    = clamp(j+delta_50mi_j,  1, height)
+      forward_50mi_i    = clamp(i+delta_50mi_i,  1, width)
+      forward_100mi_j   = clamp(j+delta_100mi_j, 1, height)
+      forward_100mi_i   = clamp(i+delta_100mi_i, 1, width)
+
+      backward_25mi_j   = clamp(j-delta_25mi_j,  1, height)
+      backward_25mi_i   = clamp(i-delta_25mi_i,  1, width)
+      backward_50mi_j   = clamp(j-delta_50mi_j,  1, height)
+      backward_50mi_i   = clamp(i-delta_50mi_i,  1, width)
+      backward_100mi_j  = clamp(j-delta_100mi_j, 1, height)
+      backward_100mi_i  = clamp(i-delta_100mi_i, 1, width)
+
+      leftward_25mi_j   = clamp(j+delta_25mi_i,  1, height)
+      leftward_25mi_i   = clamp(i-delta_25mi_j,  1, width)
+      leftward_50mi_j   = clamp(j+delta_50mi_i,  1, height)
+      leftward_50mi_i   = clamp(i-delta_50mi_j,  1, width)
+      leftward_100mi_j  = clamp(j+delta_100mi_i, 1, height)
+      leftward_100mi_i  = clamp(i-delta_100mi_j, 1, width)
+
+      rightward_25mi_j  = clamp(j-delta_25mi_i,  1, height)
+      rightward_25mi_i  = clamp(i+delta_25mi_j,  1, width)
+      rightward_50mi_j  = clamp(j-delta_50mi_i,  1, height)
+      rightward_50mi_i  = clamp(i+delta_50mi_j,  1, width)
+      rightward_100mi_j = clamp(j-delta_100mi_i, 1, height)
+      rightward_100mi_i = clamp(i+delta_100mi_j, 1, width)
+
+      twenty_five_mi_forward_is[flat_i]   = width*(forward_25mi_j-1)    + forward_25mi_i
+      twenty_five_mi_backward_is[flat_i]  = width*(backward_25mi_j-1)   + backward_25mi_i
+      twenty_five_mi_leftward_is[flat_i]  = width*(leftward_25mi_j-1)   + leftward_25mi_i
+      twenty_five_mi_rightward_is[flat_i] = width*(rightward_25mi_j-1)  + rightward_25mi_i
+      fifty_mi_forward_is[flat_i]         = width*(forward_50mi_j-1)    + forward_50mi_i
+      fifty_mi_backward_is[flat_i]        = width*(backward_50mi_j-1)   + backward_50mi_i
+      fifty_mi_leftward_is[flat_i]        = width*(leftward_50mi_j-1)   + leftward_50mi_i
+      fifty_mi_rightward_is[flat_i]       = width*(rightward_50mi_j-1)  + rightward_50mi_i
+      hundred_mi_forward_is[flat_i]       = width*(forward_100mi_j-1)   + forward_100mi_i
+      hundred_mi_backward_is[flat_i]      = width*(backward_100mi_j-1)  + backward_100mi_i
+      hundred_mi_leftward_is[flat_i]      = width*(leftward_100mi_j-1)  + leftward_100mi_i
+      hundred_mi_rightward_is[flat_i]     = width*(rightward_100mi_j-1) + rightward_100mi_i
+    end
+  end
+
+  ()
+end
+
 function make_data(
       grid                      :: Grids.Grid,
       forecast                  :: Forecasts.Forecast,
@@ -120,6 +386,7 @@ function make_data(
   # 100mi forward grad, 100mi leftward grad, 100mi linestraddling grad
   #
   # And then a lone forecast hour field
+  # And maybe feature interaction terms after that
   feature_interaction_terms_count = length(feature_interaction_terms)
 
   out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*raw_feature_count + 1 + feature_interaction_terms_count))
@@ -194,149 +461,18 @@ function make_data(
 
 
 
-  # Make 25mi, 50mi, and 100mi mean layers
-
-  # SREF numbers:
-  # 2 at a time: 3.71s per 5 forecasts
-  # 3 at a time: 3.55s per 5 forecasts
-  # 4 at a time: 3.35s per 5 forecasts
-  # 5 at a time: 3.35s per 5 forecasts
-  # 6 at a time: 3.30s per 5 forecasts
-  # 7 at a time: 3.34s per 5 forecasts
-  # 8 at a time: 3.33s per 5 forecasts
-
-  # HREF numbers:
-  # 4 at a time: 9.7s per 3
-  # 6 at a time: 9.7s per 3
-  # 8 at a time: 9.8s per 3
 
   should_make_twenty_five_mi_mean_block = twenty_five_mi_mean_block in layer_blocks_to_make
   should_make_fifty_mi_mean_block       = fifty_mi_mean_block       in layer_blocks_to_make
-  should_make_hundred_mi_mean_block    = hundred_mi_mean_block     in layer_blocks_to_make
-
+  should_make_hundred_mi_mean_block     = hundred_mi_mean_block     in layer_blocks_to_make
 
   if should_make_twenty_five_mi_mean_block || should_make_fifty_mi_mean_block || should_make_hundred_mi_mean_block
-
-    Threads.@threads for raw_layer_feature1_i in 1:4:raw_feature_count
-      raw_layer_feature2_i = min(raw_layer_feature1_i + 1, raw_feature_count)
-      raw_layer_feature3_i = min(raw_layer_feature1_i + 2, raw_feature_count)
-      raw_layer_feature4_i = min(raw_layer_feature1_i + 3, raw_feature_count)
-      # raw_layer_feature5_i = min(raw_layer_feature1_i + 4, raw_feature_count)
-      # raw_layer_feature6_i = min(raw_layer_feature1_i + 5, raw_feature_count)
-      # raw_layer_feature7_i = min(raw_layer_feature1_i + 6, raw_feature_count)
-      # raw_layer_feature8_i = min(raw_layer_feature1_i + 7, raw_feature_count)
-
-      if should_make_twenty_five_mi_mean_block
-        twenty_five_mi_mean_feature1_i   = raw_layer_feature1_i + twenty_five_mi_mean_features_range.start - 1
-        twenty_five_mi_mean_feature2_i   = raw_layer_feature2_i + twenty_five_mi_mean_features_range.start - 1
-        twenty_five_mi_mean_feature3_i   = raw_layer_feature3_i + twenty_five_mi_mean_features_range.start - 1
-        twenty_five_mi_mean_feature4_i   = raw_layer_feature4_i + twenty_five_mi_mean_features_range.start - 1
-        # twenty_five_mi_mean_feature5_i   = raw_layer_feature5_i + twenty_five_mi_mean_features_range.start - 1
-        # twenty_five_mi_mean_feature6_i   = raw_layer_feature6_i + twenty_five_mi_mean_features_range.start - 1
-        # twenty_five_mi_mean_feature7_i   = raw_layer_feature7_i + twenty_five_mi_mean_features_range.start - 1
-        # twenty_five_mi_mean_feature8_i   = raw_layer_feature8_i + twenty_five_mi_mean_features_range.start - 1
-      end
-
-      if should_make_fifty_mi_mean_block
-        fifty_mi_mean_feature1_i   = raw_layer_feature1_i + fifty_mi_mean_features_range.start - 1
-        fifty_mi_mean_feature2_i   = raw_layer_feature2_i + fifty_mi_mean_features_range.start - 1
-        fifty_mi_mean_feature3_i   = raw_layer_feature3_i + fifty_mi_mean_features_range.start - 1
-        fifty_mi_mean_feature4_i   = raw_layer_feature4_i + fifty_mi_mean_features_range.start - 1
-        # fifty_mi_mean_feature5_i   = raw_layer_feature5_i + fifty_mi_mean_features_range.start - 1
-        # fifty_mi_mean_feature6_i   = raw_layer_feature6_i + fifty_mi_mean_features_range.start - 1
-        # fifty_mi_mean_feature7_i   = raw_layer_feature7_i + fifty_mi_mean_features_range.start - 1
-        # fifty_mi_mean_feature8_i   = raw_layer_feature8_i + fifty_mi_mean_features_range.start - 1
-      end
-
-      if should_make_hundred_mi_mean_block
-        hundred_mi_mean_feature1_i = raw_layer_feature1_i + hundred_mi_mean_features_range.start - 1
-        hundred_mi_mean_feature2_i = raw_layer_feature2_i + hundred_mi_mean_features_range.start - 1
-        hundred_mi_mean_feature3_i = raw_layer_feature3_i + hundred_mi_mean_features_range.start - 1
-        hundred_mi_mean_feature4_i = raw_layer_feature4_i + hundred_mi_mean_features_range.start - 1
-        # hundred_mi_mean_feature5_i = raw_layer_feature5_i + hundred_mi_mean_features_range.start - 1
-        # hundred_mi_mean_feature6_i = raw_layer_feature6_i + hundred_mi_mean_features_range.start - 1
-        # hundred_mi_mean_feature7_i = raw_layer_feature7_i + hundred_mi_mean_features_range.start - 1
-        # hundred_mi_mean_feature8_i = raw_layer_feature8_i + hundred_mi_mean_features_range.start - 1
-      end
-
-      @inbounds for flat_i in 1:grid_point_count
-        total1 = 0.0f0
-        total2 = 0.0f0
-        total3 = 0.0f0
-        total4 = 0.0f0
-        # total5 = 0.0f0
-        # total6 = 0.0f0
-        # total7 = 0.0f0
-        # total8 = 0.0f0
-        n      = 0.0f0
-        for near_i in twenty_five_mi_mean_is[flat_i]
-          total1 += data[near_i, raw_layer_feature1_i]
-          total2 += data[near_i, raw_layer_feature2_i]
-          total3 += data[near_i, raw_layer_feature3_i]
-          total4 += data[near_i, raw_layer_feature4_i]
-          # total5 += data[near_i, raw_layer_feature5_i]
-          # total6 += data[near_i, raw_layer_feature6_i]
-          # total7 += data[near_i, raw_layer_feature7_i]
-          # total8 += data[near_i, raw_layer_feature8_i]
-          n      += 1.0f0
-        end
-        if should_make_twenty_five_mi_mean_block
-          out[flat_i, twenty_five_mi_mean_feature1_i] = total1 / n
-          out[flat_i, twenty_five_mi_mean_feature2_i] = total2 / n
-          out[flat_i, twenty_five_mi_mean_feature3_i] = total3 / n
-          out[flat_i, twenty_five_mi_mean_feature4_i] = total4 / n
-          # out[flat_i, twenty_five_mi_mean_feature5_i] = total5 / n
-          # out[flat_i, twenty_five_mi_mean_feature6_i] = total6 / n
-          # out[flat_i, twenty_five_mi_mean_feature7_i] = total7 / n
-          # out[flat_i, twenty_five_mi_mean_feature8_i] = total8 / n
-        end
-        if should_make_fifty_mi_mean_block || should_make_hundred_mi_mean_block
-          for near_i in unique_fifty_mi_mean_is[flat_i]
-            total1 += data[near_i, raw_layer_feature1_i]
-            total2 += data[near_i, raw_layer_feature2_i]
-            total3 += data[near_i, raw_layer_feature3_i]
-            total4 += data[near_i, raw_layer_feature4_i]
-            # total5 += data[near_i, raw_layer_feature5_i]
-            # total6 += data[near_i, raw_layer_feature6_i]
-            # total7 += data[near_i, raw_layer_feature7_i]
-            # total8 += data[near_i, raw_layer_feature8_i]
-            n      += 1.0f0
-          end
-          if should_make_fifty_mi_mean_block
-            out[flat_i, fifty_mi_mean_feature1_i] = total1 / n
-            out[flat_i, fifty_mi_mean_feature2_i] = total2 / n
-            out[flat_i, fifty_mi_mean_feature3_i] = total3 / n
-            out[flat_i, fifty_mi_mean_feature4_i] = total4 / n
-            # out[flat_i, fifty_mi_mean_feature5_i] = total5 / n
-            # out[flat_i, fifty_mi_mean_feature6_i] = total6 / n
-            # out[flat_i, fifty_mi_mean_feature7_i] = total7 / n
-            # out[flat_i, fifty_mi_mean_feature8_i] = total8 / n
-          end
-        end
-        if should_make_hundred_mi_mean_block
-          for near_i in unique_hundred_mi_mean_is[flat_i]
-            total1 += data[near_i, raw_layer_feature1_i]
-            total2 += data[near_i, raw_layer_feature2_i]
-            total3 += data[near_i, raw_layer_feature3_i]
-            total4 += data[near_i, raw_layer_feature4_i]
-            # total5 += data[near_i, raw_layer_feature5_i]
-            # total6 += data[near_i, raw_layer_feature6_i]
-            # total7 += data[near_i, raw_layer_feature7_i]
-            # total8 += data[near_i, raw_layer_feature8_i]
-            n       += 1.0f0
-          end
-          out[flat_i, hundred_mi_mean_feature1_i] = total1 / n
-          out[flat_i, hundred_mi_mean_feature2_i] = total2 / n
-          out[flat_i, hundred_mi_mean_feature3_i] = total3 / n
-          out[flat_i, hundred_mi_mean_feature4_i] = total4 / n
-          # out[flat_i, hundred_mi_mean_feature5_i] = total5 / n
-          # out[flat_i, hundred_mi_mean_feature6_i] = total6 / n
-          # out[flat_i, hundred_mi_mean_feature7_i] = total7 / n
-          # out[flat_i, hundred_mi_mean_feature8_i] = total8 / n
-        end
-      end
-    end
-
+    make_mean_layers(
+        data, out, raw_feature_count, grid_point_count,
+        should_make_twenty_five_mi_mean_block, twenty_five_mi_mean_features_range, twenty_five_mi_mean_is,
+        should_make_fifty_mi_mean_block,       fifty_mi_mean_features_range,       unique_fifty_mi_mean_is,
+        should_make_hundred_mi_mean_block,     hundred_mi_mean_features_range,     unique_hundred_mi_mean_is
+      )
   end
 
 
@@ -414,16 +550,10 @@ function make_data(
   #       - - -
   #         -
 
-  uv_normalize(u, v) = begin
-    ε = 1f-8
-    len = √(u^2 + v^2) + ε
-    (u / len, v / len)
-  end
-
-  is_on_grid(w_to_e_col, s_to_n_row) = begin
-    w_to_e_col >= 1 && w_to_e_col <= width &&
-    s_to_n_row >= 1 && s_to_n_row <= height
-  end
+  # is_on_grid(w_to_e_col, s_to_n_row) = begin
+  #   w_to_e_col >= 1 && w_to_e_col <= width &&
+  #   s_to_n_row >= 1 && s_to_n_row <= height
+  # end
 
   twenty_five_mi_forward_is   = Array{Int64}(undef, grid_point_count)
   twenty_five_mi_backward_is  = Array{Int64}(undef, grid_point_count)
@@ -438,67 +568,18 @@ function make_data(
   hundred_mi_leftward_is      = Array{Int64}(undef, grid_point_count)
   hundred_mi_rightward_is     = Array{Int64}(undef, grid_point_count)
 
-  for j in 1:height
-    for i in 1:width
-      flat_i = width*(j-1) + i
-
-      relative_u, relative_v = uv_normalize(mean_wind_lower_half_atmosphere_us[flat_i], mean_wind_lower_half_atmosphere_vs[flat_i])
-
-      point_height = Float32(grid.point_heights_miles[flat_i])
-      point_width  = Float32(grid.point_widths_miles[flat_i]) # On the SREF grid, point_width and point_height are always nearly equal, <1.0% difference.
-
-      delta_25mi_j  = round(Int64, relative_v * 25.0f0  / point_height)
-      delta_25mi_i  = round(Int64, relative_u * 25.0f0  / point_width)
-      delta_50mi_j  = round(Int64, relative_v * 50.0f0  / point_height)
-      delta_50mi_i  = round(Int64, relative_u * 50.0f0  / point_width)
-      delta_100mi_j = round(Int64, relative_v * 100.0f0 / point_height)
-      delta_100mi_i = round(Int64, relative_u * 100.0f0 / point_width)
-
-      forward_25mi_j    = clamp(j+delta_25mi_j,  1, height)
-      forward_25mi_i    = clamp(i+delta_25mi_i,  1, width)
-      forward_50mi_j    = clamp(j+delta_50mi_j,  1, height)
-      forward_50mi_i    = clamp(i+delta_50mi_i,  1, width)
-      forward_100mi_j   = clamp(j+delta_100mi_j, 1, height)
-      forward_100mi_i   = clamp(i+delta_100mi_i, 1, width)
-
-      backward_25mi_j   = clamp(j-delta_25mi_j,  1, height)
-      backward_25mi_i   = clamp(i-delta_25mi_i,  1, width)
-      backward_50mi_j   = clamp(j-delta_50mi_j,  1, height)
-      backward_50mi_i   = clamp(i-delta_50mi_i,  1, width)
-      backward_100mi_j  = clamp(j-delta_100mi_j, 1, height)
-      backward_100mi_i  = clamp(i-delta_100mi_i, 1, width)
-
-      leftward_25mi_j   = clamp(j+delta_25mi_i,  1, height)
-      leftward_25mi_i   = clamp(i-delta_25mi_j,  1, width)
-      leftward_50mi_j   = clamp(j+delta_50mi_i,  1, height)
-      leftward_50mi_i   = clamp(i-delta_50mi_j,  1, width)
-      leftward_100mi_j  = clamp(j+delta_100mi_i, 1, height)
-      leftward_100mi_i  = clamp(i-delta_100mi_j, 1, width)
-
-      rightward_25mi_j  = clamp(j-delta_25mi_i,  1, height)
-      rightward_25mi_i  = clamp(i+delta_25mi_j,  1, width)
-      rightward_50mi_j  = clamp(j-delta_50mi_i,  1, height)
-      rightward_50mi_i  = clamp(i+delta_50mi_j,  1, width)
-      rightward_100mi_j = clamp(j-delta_100mi_i, 1, height)
-      rightward_100mi_i = clamp(i+delta_100mi_j, 1, width)
-
-      twenty_five_mi_forward_is[flat_i]   = width*(forward_25mi_j-1)    + forward_25mi_i
-      twenty_five_mi_backward_is[flat_i]  = width*(backward_25mi_j-1)   + backward_25mi_i
-      twenty_five_mi_leftward_is[flat_i]  = width*(leftward_25mi_j-1)   + leftward_25mi_i
-      twenty_five_mi_rightward_is[flat_i] = width*(rightward_25mi_j-1)  + rightward_25mi_i
-      fifty_mi_forward_is[flat_i]         = width*(forward_50mi_j-1)    + forward_50mi_i
-      fifty_mi_backward_is[flat_i]        = width*(backward_50mi_j-1)   + backward_50mi_i
-      fifty_mi_leftward_is[flat_i]        = width*(leftward_50mi_j-1)   + leftward_50mi_i
-      fifty_mi_rightward_is[flat_i]       = width*(rightward_50mi_j-1)  + rightward_50mi_i
-      hundred_mi_forward_is[flat_i]      = width*(forward_100mi_j-1)   + forward_100mi_i
-      hundred_mi_backward_is[flat_i]     = width*(backward_100mi_j-1)  + backward_100mi_i
-      hundred_mi_leftward_is[flat_i]     = width*(leftward_100mi_j-1)  + leftward_100mi_i
-      hundred_mi_rightward_is[flat_i]    = width*(rightward_100mi_j-1) + rightward_100mi_i
-    end
-  end
+  compute_directional_is(
+      height, width,
+      grid.point_heights_miles, grid.point_widths_miles,
+      mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
+      twenty_five_mi_forward_is, twenty_five_mi_backward_is, twenty_five_mi_leftward_is, twenty_five_mi_rightward_is,
+      fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
+      hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
+    )
 
   if should_make_twenty_five_mi_mean_block
     Threads.@threads for raw_layer_feature_i in 1:raw_feature_count
+    # for raw_layer_feature_i in 1:raw_feature_count
       twenty_five_mi_mean_feature_i = raw_layer_feature_i + twenty_five_mi_mean_features_range.start - 1
 
       twenty_five_mi_forward_vals   = @view out[twenty_five_mi_forward_is,   twenty_five_mi_mean_feature_i]
@@ -525,6 +606,7 @@ function make_data(
 
   if should_make_fifty_mi_mean_block
     Threads.@threads for raw_layer_feature_i in 1:raw_feature_count
+    # for raw_layer_feature_i in 1:raw_feature_count
       fifty_mi_mean_feature_i = raw_layer_feature_i + fifty_mi_mean_features_range.start - 1
 
       fifty_mi_forward_vals   = @view out[fifty_mi_forward_is,   fifty_mi_mean_feature_i]
@@ -551,6 +633,7 @@ function make_data(
 
   if should_make_hundred_mi_mean_block
     Threads.@threads for raw_layer_feature_i in 1:raw_feature_count
+    # for raw_layer_feature_i in 1:raw_feature_count
       hundred_mi_mean_feature_i = raw_layer_feature_i + hundred_mi_mean_features_range.start - 1
 
       hundred_mi_forward_vals   = @view out[hundred_mi_forward_is,   hundred_mi_mean_feature_i]
@@ -613,20 +696,22 @@ function make_data(
   # Center wind vectors around 0-6km(ish) mean wind
   # Rotate winds to align to the ~500m - ~5500m shear vector (inspired by Bunker's storm motion, which we are not calculating yet)
 
-  rotate_and_perhaps_center_uv_layers(u_i, v_i, should_center) = begin
+  # Save some allocations by using a pre-existing scratch_us and scratch_vs
+  rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, u_i, v_i, should_center) = begin
     if should_center
-      us = out[:, u_i] .- mean_wind_lower_half_atmosphere_us
-      vs = out[:, v_i] .- mean_wind_lower_half_atmosphere_vs
+      scratch_us .= out[:, u_i] .- mean_wind_lower_half_atmosphere_us
+      scratch_vs .= out[:, v_i] .- mean_wind_lower_half_atmosphere_vs
     else
-      us = out[:, u_i] # Don't use @view because u and v are each used in the calculation of the other
-      vs = out[:, v_i]
+      scratch_us .= out[:, u_i] # Don't use @view because u and v are each used in the calculation of the other
+      scratch_vs .= out[:, v_i]
     end
 
-    out[:, u_i] = (us .* rot_coses) .- (vs .* rot_sines)
-    out[:, v_i] = (us .* rot_sines) .+ (vs .* rot_coses)
+    out[:, u_i] = (scratch_us .* rot_coses) .- (scratch_vs .* rot_sines)
+    out[:, v_i] = (scratch_us .* rot_sines) .+ (scratch_vs .* rot_coses)
   end
 
   Threads.@threads for wind_layer_key in vector_wind_layers
+  # for wind_layer_key in vector_wind_layers
     if wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
       layer_key_u = "VUCSH:6000-0 m above ground:hour fcst:"
       layer_key_v = "VVCSH:6000-0 m above ground:hour fcst:"
@@ -644,78 +729,81 @@ function make_data(
     raw_layer_u_i = feature_key_to_i[layer_key_u]
     raw_layer_v_i = feature_key_to_i[layer_key_v]
 
-    rotate_and_perhaps_center_uv_layers(raw_layer_u_i, raw_layer_v_i, true)
+    scratch_us = Array{Float32}(undef, grid_point_count)
+    scratch_vs = Array{Float32}(undef, grid_point_count)
+
+    rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, raw_layer_u_i, raw_layer_v_i, true)
 
     if twenty_five_mi_mean_block in layer_blocks_to_make
       twenty_five_mi_mean_u_i = raw_layer_u_i + twenty_five_mi_mean_features_range.start - 1
       twenty_five_mi_mean_v_i = raw_layer_v_i + twenty_five_mi_mean_features_range.start - 1
-      rotate_and_perhaps_center_uv_layers(twenty_five_mi_mean_u_i, twenty_five_mi_mean_v_i, true)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_mean_u_i, twenty_five_mi_mean_v_i, true)
     end
 
     if fifty_mi_mean_block in layer_blocks_to_make
       fifty_mi_mean_u_i = raw_layer_u_i + fifty_mi_mean_features_range.start - 1
       fifty_mi_mean_v_i = raw_layer_v_i + fifty_mi_mean_features_range.start - 1
-      rotate_and_perhaps_center_uv_layers(fifty_mi_mean_u_i, fifty_mi_mean_v_i, true)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_mean_u_i, fifty_mi_mean_v_i, true)
     end
 
     if hundred_mi_mean_block in layer_blocks_to_make
       hundred_mi_mean_u_i = raw_layer_u_i + hundred_mi_mean_features_range.start - 1
       hundred_mi_mean_v_i = raw_layer_v_i + hundred_mi_mean_features_range.start - 1
-      rotate_and_perhaps_center_uv_layers(hundred_mi_mean_u_i, hundred_mi_mean_v_i, true)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_mean_u_i, hundred_mi_mean_v_i, true)
     end
 
     if twenty_five_mi_forward_gradient_block in layer_blocks_to_make
       twenty_five_mi_forward_gradient_u_i = raw_layer_u_i + twenty_five_mi_forward_gradient_range.start - 1
       twenty_five_mi_forward_gradient_v_i = raw_layer_v_i + twenty_five_mi_forward_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(twenty_five_mi_forward_gradient_u_i, twenty_five_mi_forward_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_forward_gradient_u_i, twenty_five_mi_forward_gradient_v_i, false)
     end
 
     if twenty_five_mi_leftward_gradient_block in layer_blocks_to_make
       twenty_five_mi_leftward_gradient_u_i = raw_layer_u_i + twenty_five_mi_leftward_gradient_range.start - 1
       twenty_five_mi_leftward_gradient_v_i = raw_layer_v_i + twenty_five_mi_leftward_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(twenty_five_mi_leftward_gradient_u_i, twenty_five_mi_leftward_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_leftward_gradient_u_i, twenty_five_mi_leftward_gradient_v_i, false)
     end
 
     if twenty_five_mi_linestraddling_gradient_block in layer_blocks_to_make
       twenty_five_mi_linestraddling_gradient_u_i = raw_layer_u_i + twenty_five_mi_linestraddling_gradient_range.start - 1
       twenty_five_mi_linestraddling_gradient_v_i = raw_layer_v_i + twenty_five_mi_linestraddling_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(twenty_five_mi_linestraddling_gradient_u_i, twenty_five_mi_linestraddling_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_linestraddling_gradient_u_i, twenty_five_mi_linestraddling_gradient_v_i, false)
     end
 
     if fifty_mi_forward_gradient_block in layer_blocks_to_make
       fifty_mi_forward_gradient_u_i = raw_layer_u_i + fifty_mi_forward_gradient_range.start - 1
       fifty_mi_forward_gradient_v_i = raw_layer_v_i + fifty_mi_forward_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(fifty_mi_forward_gradient_u_i, fifty_mi_forward_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_forward_gradient_u_i, fifty_mi_forward_gradient_v_i, false)
     end
 
     if fifty_mi_leftward_gradient_block in layer_blocks_to_make
       fifty_mi_leftward_gradient_u_i = raw_layer_u_i + fifty_mi_leftward_gradient_range.start - 1
       fifty_mi_leftward_gradient_v_i = raw_layer_v_i + fifty_mi_leftward_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(fifty_mi_leftward_gradient_u_i, fifty_mi_leftward_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_leftward_gradient_u_i, fifty_mi_leftward_gradient_v_i, false)
     end
 
     if fifty_mi_linestraddling_gradient_block in layer_blocks_to_make
       fifty_mi_linestraddling_gradient_u_i = raw_layer_u_i + fifty_mi_linestraddling_gradient_range.start - 1
       fifty_mi_linestraddling_gradient_v_i = raw_layer_v_i + fifty_mi_linestraddling_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(fifty_mi_linestraddling_gradient_u_i, fifty_mi_linestraddling_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_linestraddling_gradient_u_i, fifty_mi_linestraddling_gradient_v_i, false)
     end
 
     if hundred_mi_forward_gradient_block in layer_blocks_to_make
       hundred_mi_forward_gradient_u_i = raw_layer_u_i + hundred_mi_forward_gradient_range.start - 1
       hundred_mi_forward_gradient_v_i = raw_layer_v_i + hundred_mi_forward_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(hundred_mi_forward_gradient_u_i, hundred_mi_forward_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_forward_gradient_u_i, hundred_mi_forward_gradient_v_i, false)
     end
 
     if hundred_mi_leftward_gradient_block in layer_blocks_to_make
       hundred_mi_leftward_gradient_u_i      = raw_layer_u_i + hundred_mi_leftward_gradient_range.start - 1
       hundred_mi_leftward_gradient_v_i      = raw_layer_v_i + hundred_mi_leftward_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(hundred_mi_leftward_gradient_u_i, hundred_mi_leftward_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_leftward_gradient_u_i, hundred_mi_leftward_gradient_v_i, false)
     end
 
     if hundred_mi_linestraddling_gradient_block in layer_blocks_to_make
       hundred_mi_linestraddling_gradient_u_i = raw_layer_u_i + hundred_mi_linestraddling_gradient_range.start - 1
       hundred_mi_linestraddling_gradient_v_i = raw_layer_v_i + hundred_mi_linestraddling_gradient_range.start - 1
-      rotate_and_perhaps_center_uv_layers(hundred_mi_linestraddling_gradient_u_i, hundred_mi_linestraddling_gradient_v_i, false)
+      rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_linestraddling_gradient_u_i, hundred_mi_linestraddling_gradient_v_i, false)
     end
   end
 
