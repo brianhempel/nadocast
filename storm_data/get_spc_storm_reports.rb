@@ -7,7 +7,7 @@ require "csv"
 # Dates are "convective days" i.e. 12Z - 12Z.
 #
 # Fetches tornadoes from SPC storm reports. Does not separate start/end time and
-# is a less precies data source. But, the storm reports are available immediately
+# is a less precise data source. But, the storm reports are available immediately
 # and they're still online during the current gov't shutdown (cough cough).
 #
 # To run this script, see the Makefile at the project root.
@@ -43,6 +43,8 @@ print %w[
 (start_date..end_date).each do |date|
   yymmdd = "%02d%02d%02d" % [date.year % 100, date.month, date.day]
 
+  STDERR.puts "https://www.spc.noaa.gov/climo/reports/#{yymmdd}_rpts_filtered.csv"
+
   day_reports_csv_str = `curl https://www.spc.noaa.gov/climo/reports/#{yymmdd}_rpts_filtered.csv`
   day_reports_csv_str.gsub!('"', 'inch') # SPC CSV doesn't quote fields so " for "inch" messes us up.
 
@@ -61,9 +63,9 @@ print %w[
     time = Time.new(date.year, date.month, date.day, 0,0,0, "+00:00") + hour*HOUR + minute*MINUTE
 
     [
-      time.to_s,  # begin_time_str
+      time.to_s.gsub("+0000", "UTC"),  # begin_time_str
       time.to_i,  # begin_time_seconds
-      time.to_s,  # end_time_str
+      time.to_s.gsub("+0000", "UTC"),  # end_time_str
       time.to_i,  # end_time_seconds
       "-1",       # f_scale
       row["Lat"], # begin_lat

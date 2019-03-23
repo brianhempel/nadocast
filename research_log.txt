@@ -72,8 +72,8 @@ TODO:
 - [x] Speed up feature engineering by pulling different portions into functions. Small functions sped up the tree booster.
 
 - [x] Switch to 5/1/1 (weekdays/sat/sun) for training/validation/test
-- [ ] Use storm reports DB if ready for 2018
-- [ ] Add Jan/Feb/March 2019 live storm reports
+- [x] Use storm reports DB if ready for 2018
+- [x] Add Jan/Feb/March 2019 live storm reports
 - [ ] Use all all severe report hours (wind/hail/tornado) for train/validation/test
 - [ ] Write the "annealing" for data subsetting/weighting
 - [ ] Train +2hr RAP

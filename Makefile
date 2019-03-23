@@ -25,13 +25,12 @@ tornadoes:
 	diff storm_data/tornadoes_old.csv storm_data/tornadoes.csv
 
 # In case of gov't shutdown or non-final storm events database, we can use SPC storm reports.
-add_2018_spc_tornado_reports:
-	rm ~/.julia/compiled/v1.0/StormEvents.ji # Tornadoes are a constant in this file so it will need to be recompiled.
-	cd storm_data
-	cp tornadoes.csv tornadoes_old.csv
-	ruby get_spc_storm_reports.rb 2017-12-31 2019-01-01 > tornadoes_from_spc_storm_reports.csv
-	ruby merge_csvs.rb tornadoes_old.csv tornadoes_from_spc_storm_reports.csv > tornadoes.csv
-	diff tornadoes_old.csv tornadoes.csv
+add_2019_spc_tornado_reports:
+	cp storm_data/tornadoes.csv storm_data/tornadoes_old.csv
+	ruby storm_data/get_spc_storm_reports.rb 2019-01-01 2019-03-17 > storm_data/tornadoes_from_spc_storm_reports.csv
+	ruby storm_data/merge_csvs.rb storm_data/tornadoes_old.csv storm_data/tornadoes_from_spc_storm_reports.csv > storm_data/tornadoes.csv
+	rm storm_data/tornadoes_from_spc_storm_reports.csv
+	diff storm_data/tornadoes_old.csv storm_data/tornadoes.csv
 
 forecast:
 	julia --project lib/DoPredict.jl
