@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require "date"
 require File.expand_path("../../storm_data/tornadoes.rb", __FILE__)
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require "date"
 
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/
