@@ -48,9 +48,11 @@ print %w[
 (2014..Time.now.year).each do |year|
   file_name = file_names.grep(/v1\.0_d#{year}_/).last
 
+  next unless file_name
+
   rows = CSV.parse(`curl #{ROOT_URL + file_name} | gunzip`, headers: true)
 
-  STDERR.puts "Event types: #{rows.map { |row| row["EVENT_TYPE"] }.uniq.sort}"
+  # STDERR.puts "Event types: #{rows.map { |row| row["EVENT_TYPE"] }.uniq.sort}"
 
   tornado_rows = rows.select { |row| row["EVENT_TYPE"].strip == "Tornado" }
 

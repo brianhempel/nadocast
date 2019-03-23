@@ -15,7 +15,7 @@ TORNADO_TIME_WINDOW_HALF_SIZE = 30*MINUTE
 TORNADO_SPACIAL_RADIUS_MILES  = 25.0
 
 function is_relevant_forecast(forecast)
-  for tornado in StormEvents.conus_tornadoes
+  for tornado in StormEvents.conus_tornadoes()
     tornado_relevant_time_range =
       (tornado.start_seconds_from_epoch_utc - TORNADO_TIME_WINDOW_HALF_SIZE + 1):(tornado.end_seconds_from_epoch_utc + TORNADO_TIME_WINDOW_HALF_SIZE - 1)
 

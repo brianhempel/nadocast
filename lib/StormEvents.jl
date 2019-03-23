@@ -15,38 +15,56 @@ struct Tornado
   end_latlon                   :: Tuple{Float64, Float64}
 end
 
-const tornadoes = begin
-  # println("Loading tornadoes...")
+_tornadoes       = nothing
+_conus_tornadoes = nothing
 
-  tornado_rows, tornado_headers = DelimitedFiles.readdlm((@__DIR__) * "/../storm_data/tornadoes.csv",','; header=true)
+function tornadoes() :: Vector{Tornado}
+  global _tornadoes
 
-  tornado_headers = tornado_headers[1,:] # 1x9 array to 9-element vector.
+  if isnothing(_tornadoes)
+    _tornadoes = begin
+      println("Loading tornadoes...")
 
-  start_seconds_col_i = findfirst(isequal("begin_time_seconds"), tornado_headers)
-  end_seconds_col_i   = findfirst(isequal("end_time_seconds"), tornado_headers)
-  start_lat_col_i     = findfirst(isequal("begin_lat"), tornado_headers)
-  start_lon_col_i     = findfirst(isequal("begin_lon"), tornado_headers)
-  end_lat_col_i       = findfirst(isequal("end_lat"), tornado_headers)
-  end_lon_col_i       = findfirst(isequal("end_lon"), tornado_headers)
+      tornado_rows, tornado_headers = DelimitedFiles.readdlm((@__DIR__) * "/../storm_data/tornadoes.csv",','; header=true)
 
-  row_to_tornado(row) = begin
-    start_seconds = row[start_seconds_col_i]
-    end_seconds   = row[end_seconds_col_i]
-    duration      = end_seconds - start_seconds
-    start_latlon  = (row[start_lat_col_i], row[start_lon_col_i])
-    end_latlon    = (row[end_lat_col_i],   row[end_lon_col_i])
+      tornado_headers = tornado_headers[1,:] # 1x9 array to 9-element vector.
 
-    Tornado(start_seconds, end_seconds, duration, start_latlon, end_latlon)
+      start_seconds_col_i = findfirst(isequal("begin_time_seconds"), tornado_headers)
+      end_seconds_col_i   = findfirst(isequal("end_time_seconds"), tornado_headers)
+      start_lat_col_i     = findfirst(isequal("begin_lat"), tornado_headers)
+      start_lon_col_i     = findfirst(isequal("begin_lon"), tornado_headers)
+      end_lat_col_i       = findfirst(isequal("end_lat"), tornado_headers)
+      end_lon_col_i       = findfirst(isequal("end_lon"), tornado_headers)
+
+      row_to_tornado(row) = begin
+        start_seconds = row[start_seconds_col_i]
+        end_seconds   = row[end_seconds_col_i]
+        duration      = end_seconds - start_seconds
+        start_latlon  = (row[start_lat_col_i], row[start_lon_col_i])
+        end_latlon    = (row[end_lat_col_i],   row[end_lon_col_i])
+
+        Tornado(start_seconds, end_seconds, duration, start_latlon, end_latlon)
+      end
+
+      mapslices(row_to_tornado, tornado_rows, dims = [2])[:,1]
+    end
   end
 
-  mapslices(row_to_tornado, tornado_rows, dims = [2])[:,1]
-end :: Vector{Tornado}
+  _tornadoes
+end
 
-const conus_tornadoes =
-  filter(tornadoes) do tornado
-    # Exclude Alaska, Hawaii, Puerto Rico
-    Conus.is_in_conus_bounding_box(tornado.start_latlon) || Conus.is_in_conus_bounding_box(tornado.end_latlon)
+function conus_tornadoes() :: Vector{Tornado}
+  global _conus_tornadoes
+
+  if isnothing(_conus_tornadoes)
+    _conus_tornadoes = filter(tornadoes()) do tornado
+      # Exclude Alaska, Hawaii, Puerto Rico
+      Conus.is_in_conus_bounding_box(tornado.start_latlon) || Conus.is_in_conus_bounding_box(tornado.end_latlon)
+    end
   end
+
+  _conus_tornadoes
+end
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of the tornadoes
 function grid_to_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
@@ -78,7 +96,7 @@ function tornado_segments_around_time(seconds_from_utc_epoch :: Int64, seconds_b
     tornado.start_seconds_from_epoch_utc < period_end_seconds
   end
 
-  relevant_tornadoes = filter(is_relevant_tornado, tornadoes)
+  relevant_tornadoes = filter(is_relevant_tornado, tornadoes())
 
   tornado_to_segment(tornado) = begin
     start_seconds = tornado.start_seconds_from_epoch_utc

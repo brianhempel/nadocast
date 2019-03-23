@@ -19,7 +19,9 @@ notebook:
 # Tornado events, 2014 through the current year. Both start and end times.
 tornadoes:
 	cp storm_data/tornadoes.csv storm_data/tornadoes_old.csv
-	ruby storm_data/get_storm_events.rb > storm_data/tornadoes.csv
+	ruby storm_data/get_storm_events.rb > storm_data/tornadoes_downloaded.csv
+	ruby storm_data/merge_csvs.rb storm_data/tornadoes_downloaded.csv storm_data/tornadoes_downloaded.csv > storm_data/tornadoes.csv # The merge deduplicates and sorts
+	rm storm_data/tornadoes_downloaded.csv
 	diff storm_data/tornadoes_old.csv storm_data/tornadoes.csv
 
 # In case of gov't shutdown or non-final storm events database, we can use SPC storm reports.
