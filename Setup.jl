@@ -1,3 +1,21 @@
+# sudo apt update
+# sudo apt install openssh-server
+# sudo apt install vim
+# vim ~/.ssh/authorized_keys
+# sudo apt install screen
+# sudo apt install exfat-fuse exfat-utils
+# sudo apt install ruby
+# sudo ln -s /media/brian /Volumes
+# sudo apt install git
+# ssh-keygen
+# cat ~/.ssh/id_rsa.pub (upload to https://github.com/settings/keys)
+# git clone git@github.com:brianhempel/nadocast.git
+# cd nadocast
+# sudo apt install curl
+# crontab get_data/crontab.cron
+
+
+
 # add DelimitedFiles # For readdlm
 # add Plots
 # add JSON

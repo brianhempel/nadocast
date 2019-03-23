@@ -66,15 +66,29 @@ TODO:
 
 - [x] Not briefly require double memory during data loading (Push features to disk while loading)
 
-- [ ] Try using row-major memory layout data for speed (might be fewer cache misses during histogram building)
+- [x] Try using row-major memory layout data for speed (might be fewer cache misses during histogram building).
+        It's 3x slower and I'm not sure I can speed it up enough.
 
-- [ ] Switch to 5/1/1 (weekdays/sat/sun) for training/validation/test
+- [x] Speed up feature engineering by pulling different portions into functions. Small functions sped up the tree booster.
+
+- [x] Switch to 5/1/1 (weekdays/sat/sun) for training/validation/test
 - [ ] Use storm reports DB if ready for 2018
 - [ ] Add Jan/Feb 2019 live storm reports
 - [ ] Use all all severe report hours (wind/hail/tornado) for train/validation/test
 - [ ] Write the "annealing" for data subsetting/weighting
+- [ ] Train +2hr RAP
+- [ ] Train +6hr RAP
+- [ ] Train +12hr RAP
+- [ ] Train +18hr RAP
+- [ ] Train +2hr HRRR
+- [ ] Train +6hr HRRR
+- [ ] Train +12hr HRRR
+- [ ] Train +18hr HRRR
+- [ ] Train SREF
+- [ ] Train HREF
 - [ ] Try training 1-6, 7-12, 13-18, 19-24, 25-30, 31-39; or 1-6, 7-18, 19-39 hour HREF/SREF sets
 - [ ] Train a stacked model
+- [ ] Try training 1-6, 7-12, 13-18, 19-24, 25-30, 31-39; or 1-6, 7-18, 19-39 hour stacked models
 - [ ] Calibrate on 20ish random validation days (Saturdays)
 
 - [ ] Build dataset for daily probs

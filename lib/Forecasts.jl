@@ -99,12 +99,23 @@ function is_train(forecast :: Forecast) :: Bool
   !is_validation(forecast) && !is_test(forecast)
 end
 
+
+# 0 == Thursday  in convective days (just starts as 12Z of the UTC day).
+# 1 == Friday    in convective days (just starts as 12Z of the UTC day).
+# 2 == Saturday  in convective days (just starts as 12Z of the UTC day).
+# 3 == Sunday    in convective days (just starts as 12Z of the UTC day).
+# 4 == Monday    in convective days (just starts as 12Z of the UTC day).
+# 5 == Tuesday   in convective days (just starts as 12Z of the UTC day).
+# 6 == Wednesday in convective days (just starts as 12Z of the UTC day).
+
+# Saturdays
 function is_validation(forecast :: Forecast) :: Bool
-  mod(valid_time_in_convective_days_since_epoch_utc(forecast), 5) == 0
+  mod(valid_time_in_convective_days_since_epoch_utc(forecast), 7) == 2
 end
 
+# Sundays
 function is_test(forecast :: Forecast) :: Bool
-  mod(valid_time_in_convective_days_since_epoch_utc(forecast), 5) == 1
+  mod(valid_time_in_convective_days_since_epoch_utc(forecast), 7) == 3
 end
 
 ### Iteration ###

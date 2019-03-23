@@ -13,6 +13,9 @@ default:
 julia:
 	julia --project
 
+notebook:
+	jupyter lab
+
 # Tornado events, 2014 through the current year. Both start and end times.
 tornadoes:
 	cp storm_data/tornadoes.csv storm_data/tornadoes_old.csv
