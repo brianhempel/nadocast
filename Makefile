@@ -16,21 +16,14 @@ julia:
 notebook:
 	jupyter lab
 
-# Tornado events, 2014 through the current year. Both start and end times.
-tornadoes:
-	cp storm_data/tornadoes.csv storm_data/tornadoes_old.csv
-	ruby storm_data/get_storm_events.rb > storm_data/tornadoes_downloaded.csv
-	ruby storm_data/merge_csvs.rb storm_data/tornadoes_downloaded.csv storm_data/tornadoes_downloaded.csv > storm_data/tornadoes.csv # The merge deduplicates and sorts
-	rm storm_data/tornadoes_downloaded.csv
-	diff storm_data/tornadoes_old.csv storm_data/tornadoes.csv
-
-# In case of gov't shutdown or non-final storm events database, we can use SPC storm reports.
-add_2019_spc_tornado_reports:
-	cp storm_data/tornadoes.csv storm_data/tornadoes_old.csv
-	ruby storm_data/get_spc_storm_reports.rb 2019-01-01 2019-03-17 > storm_data/tornadoes_from_spc_storm_reports.csv
-	ruby storm_data/merge_csvs.rb storm_data/tornadoes_old.csv storm_data/tornadoes_from_spc_storm_reports.csv > storm_data/tornadoes.csv
-	rm storm_data/tornadoes_from_spc_storm_reports.csv
-	diff storm_data/tornadoes_old.csv storm_data/tornadoes.csv
+# Tornado, wind, and hail events, 2014 through the current year.
+# As many as possible from the storm events database, then fill in more recent times with the SPC storm reports.
+storm_events:
+	ruby storm_data/get_storm_events.rb storm_data/tornadoes_downloaded.csv storm_data/wind_events_downloaded.csv storm_data/hail_events_downloaded.csv --add_spc_storm_reports
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/tornadoes_downloaded.csv > storm_data/tornadoes.csv # The merge deduplicates and sorts
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/wind_events_downloaded.csv > storm_data/wind_events.csv # The merge deduplicates and sorts
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/hail_events_downloaded.csv > storm_data/hail_events.csv # The merge deduplicates and sorts
+	rm storm_data/tornadoes_downloaded.csv storm_data/wind_events_downloaded.csv storm_data/hail_events_downloaded.csv
 
 forecast:
 	julia --project lib/DoPredict.jl
