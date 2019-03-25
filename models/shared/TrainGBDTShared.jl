@@ -167,10 +167,15 @@ function train_with_coordinate_descent_hyperparameter_search(
       end
     end
 
+    initial_score = begin
+      probability = sum(y .* weights) / sum(weights)
+      log(probability / (1-probability)) # inverse sigmoid
+    end
+
     try
       MemoryConstrainedTreeBoosting.train_on_binned(
         X_binned, y;
-        prior_trees        = MemoryConstrainedTreeBoosting.Tree[MemoryConstrainedTreeBoosting.Leaf(-6.5)],
+        prior_trees        = MemoryConstrainedTreeBoosting.Tree[MemoryConstrainedTreeBoosting.Leaf(initial_score)],
         weights            = weights,
         iteration_count    = Int64(round(30 / config[:learning_rate])),
         iteration_callback = iteration_callback,
