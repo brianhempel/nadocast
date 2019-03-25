@@ -11,15 +11,49 @@ import StormEvents
 
 MINUTE = 60 # seconds
 
-TORNADO_TIME_WINDOW_HALF_SIZE = 30*MINUTE
-TORNADO_SPACIAL_RADIUS_MILES  = 25.0
+EVENT_TIME_WINDOW_HALF_SIZE  = 30*MINUTE
+TORNADO_SPACIAL_RADIUS_MILES = 25.0
 
+
+function is_train(forecast :: Forecasts.Forecast) :: Bool
+  !is_validation(forecast) && !is_test(forecast)
+end
+
+# 0 == Thursday  in convective days (just starts as 12Z of the UTC day).
+# 1 == Friday    in convective days (just starts as 12Z of the UTC day).
+# 2 == Saturday  in convective days (just starts as 12Z of the UTC day).
+# 3 == Sunday    in convective days (just starts as 12Z of the UTC day).
+# 4 == Monday    in convective days (just starts as 12Z of the UTC day).
+# 5 == Tuesday   in convective days (just starts as 12Z of the UTC day).
+# 6 == Wednesday in convective days (just starts as 12Z of the UTC day).
+
+# Saturdays
+function is_validation(forecast :: Forecasts.Forecast) :: Bool
+  mod(Forecasts.valid_time_in_convective_days_since_epoch_utc(forecast), 7) == 2
+end
+
+# Sundays
+function is_test(forecast :: Forecasts.Forecast) :: Bool
+  mod(Forecasts.valid_time_in_convective_days_since_epoch_utc(forecast), 7) == 3
+end
+
+
+# Use all forecasts in which there is a tornado, wind, or hail event.
+# (Though we are only looking for tornadoes for now.)
 function is_relevant_forecast(forecast)
-  for tornado in StormEvents.conus_tornadoes()
-    tornado_relevant_time_range =
-      (tornado.start_seconds_from_epoch_utc - TORNADO_TIME_WINDOW_HALF_SIZE + 1):(tornado.end_seconds_from_epoch_utc + TORNADO_TIME_WINDOW_HALF_SIZE - 1)
+  forecast_is_within_time_window_of_events(StormEvents.conus_events(), forecast)
+end
 
-    if Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in tornado_relevant_time_range
+function forecast_is_tornado_hour(forecast)
+  forecast_is_within_time_window_of_events(StormEvents.conus_tornadoes(), forecast)
+end
+
+function forecast_is_within_time_window_of_events(events, forecast)
+  for event in events
+    event_relevant_time_range =
+      (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE + 1):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
+
+    if Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in event_relevant_time_range
       return true
     end
   end
@@ -29,6 +63,7 @@ end
 
 # returns (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
 function forecasts_grid_conus_grid_bitmask_train_validation_test(all_forecasts; forecast_hour_range = 1:10000)
+  # This filtering here is probably pretty slow.
   forecasts =
     filter(all_forecasts) do forecast
       (forecast.forecast_hour in forecast_hour_range) && is_relevant_forecast(forecast)
@@ -36,9 +71,9 @@ function forecasts_grid_conus_grid_bitmask_train_validation_test(all_forecasts; 
 
   grid = Forecasts.grid(forecasts[1])
 
-  train_forecasts      = filter(Forecasts.is_train, forecasts)
-  validation_forecasts = filter(Forecasts.is_validation, forecasts)
-  test_forecasts       = filter(Forecasts.is_test, forecasts)
+  train_forecasts      = filter(is_train, forecasts)
+  validation_forecasts = filter(is_validation, forecasts)
+  test_forecasts       = filter(is_test, forecasts)
 
   conus_on_grid      = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
   conus_grid_bitmask = (conus_on_grid .== 1.0f0)
@@ -48,7 +83,7 @@ end
 
 
 function forecast_labels(grid, forecast) :: Array{Float32,1}
-  StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), TORNADO_TIME_WINDOW_HALF_SIZE)
+  StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
 

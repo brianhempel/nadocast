@@ -24,7 +24,9 @@ function train_with_coordinate_descent_hyperparameter_search(
   (grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_grid_conus_grid_bitmask_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
 
-  println("$(length(train_forecasts)) for training.")
+  train_forecasts_with_tornadoes = filter(TrainingShared.forecast_is_tornado_hour, train_forecasts)
+
+  println("$(length(train_forecasts)) for training. ($(length(train_forecasts_with_tornadoes)) with tornadoes.)")
   println("$(length(validation_forecasts)) for validation.")
   println("$(length(test_forecasts)) for testing.")
 
@@ -35,23 +37,6 @@ function train_with_coordinate_descent_hyperparameter_search(
     TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
   end
 
-  # # Returns (X_binned_compressed, labels, weights)
-  # get_data_labels_weights_binned_compressed(forecasts, bin_splits) = begin
-  #   ys                = Vector{Float32}[]
-  #   weightss          = Vector{Float32}[]
-  #   binned_compressed = nothing
-  #   for forcast_chunk in Iterators.partition(forecasts, 10)
-  #     (X_chunk, labels, weights) = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, forcast_chunk, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
-  #
-  #     binned_compressed = MemoryConstrainedTreeBoosting.bin_and_compress(X_chunk, bin_splits, prior_data = binned_compressed)
-  #
-  #     push!(ys, labels)
-  #     push!(weightss, weights)
-  #   end
-  #
-  #   (MemoryConstrainedTreeBoosting.finalize_loading(binned_compressed), vcat(ys...), vcat(weightss...))
-  # end
-
   save(validation_loss, bin_splits, trees) = begin
     try
       mkdir("$(model_prefix)")
@@ -60,9 +45,9 @@ function train_with_coordinate_descent_hyperparameter_search(
     MemoryConstrainedTreeBoosting.save("$(model_prefix)/$(length(trees))_trees_loss_$(validation_loss).model", bin_splits, trees)
   end
 
-  println("Preparing bin splits by sampling $bin_split_forecast_sample_count training forecasts")
+  println("Preparing bin splits by sampling $bin_split_forecast_sample_count training tornado hour forecasts")
 
-  (bin_sample_X, _, _) = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts), bin_split_forecast_sample_count))
+  (bin_sample_X, _, _) = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count))
   bin_splits           = MemoryConstrainedTreeBoosting.prepare_bin_splits(bin_sample_X)
   bin_sample_X         = nothing # freeeeeeee
 
