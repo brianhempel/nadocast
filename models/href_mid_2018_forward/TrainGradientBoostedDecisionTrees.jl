@@ -6,7 +6,7 @@ import TrainGBDTShared
 push!(LOAD_PATH, @__DIR__)
 import HREF
 
-model_prefix = "gbdt_$(Dates.now())"
+model_prefix = "gbdt_$(replace(repr(Dates.now()), ":" => "."))"
 
 all_href_forecasts  = HREF.forecasts() # [1:77:27856]
 forecast_hour_range = 1:36             # HREF files come out 2-3 hours after run time

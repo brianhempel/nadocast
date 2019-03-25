@@ -19,7 +19,7 @@ push!(LOAD_PATH, @__DIR__)
 import HREF
 
 
-model_prefix = "elastic_net_$(Dates.now())"
+model_prefix = "elastic_net_$(replace(repr(Dates.now()), ":" => "."))"
 
 all_href_forecasts = HREF.forecasts() # [1:55:27856] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
 

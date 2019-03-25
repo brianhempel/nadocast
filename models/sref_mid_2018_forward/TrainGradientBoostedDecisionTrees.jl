@@ -16,7 +16,7 @@ push!(LOAD_PATH, @__DIR__)
 import SREF
 
 
-model_prefix = "gbdt_$(Dates.now())"
+model_prefix = "gbdt_$(replace(repr(Dates.now()), ":" => "."))"
 
 all_sref_forecasts  = SREF.forecasts()[1:33:21034]
 forecast_hour_range = 1:87 # 4:39             # SREF files come out 3-4 hours after run time

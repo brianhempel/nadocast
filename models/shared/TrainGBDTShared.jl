@@ -7,13 +7,75 @@ import MemoryConstrainedTreeBoosting
 push!(LOAD_PATH, @__DIR__)
 import TrainingShared
 
+
 struct EarlyStop <: Exception
 end
 
+
+# If we had infinite memory, we could train on all datapoints with all the forecast hours.
+# However, we don't.
+# Instead we include each datapoint with some probability (basal_inclusion_probability), and
+# multiply the weight of that point by the inverse of that probability (a point included with
+# probability 0.1 has its weight multiplied by 10).
+#
+# Positively labeled points are always included with probability 1.
+#
+# This is a crude mechanism for subsetting and weighting, so we train in multiple rounds
+# of "annealing", increasing the resolution in areas more likely to contain positive
+# labels (tornadoes). We use the most recently trained model and use the formula
+# max(basal_inclusion_probability, prediction_from_last_model*prediction_inclusion_multiplier)
+# as the inclusion probability for negatively labeled points. (But validation data uses only
+# basal_inclusion_probability for inclusion probability of negatively labeled points.)
+function train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(forecasts; annealing_rounds = 3, basal_inclusion_probability :: Float32, prediction_inclusion_multiplier :: Float32, config...)
+
+  # Validation and Round 1 training
+  X_and_labels_to_basal_inclusion_probabilities(X, labels) = begin
+    map(1:size(X,1)) do i
+      max(basal_inclusion_probability, labels[i])
+    end
+  end
+
+  last_model_path = nothing
+
+  for annealing_round_i in 1:annealing_rounds
+    println("\nAnnealing round $annealing_round_i of $annealing_rounds...\n")
+
+    if isnothing(last_model_path)
+      last_model_path = train_with_coordinate_descent_hyperparameter_search(
+          forecasts;
+          training_X_and_labels_to_inclusion_probabilities   = X_and_labels_to_basal_inclusion_probabilities,
+          validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_basal_inclusion_probabilities,
+          config...
+        )
+    else
+      last_model_bin_splits, last_model_trees = MemoryConstrainedTreeBoosting.load(last_model_path)
+
+      X_and_labels_to_refined_inclusion_probabilities(X, labels) = begin
+        predictions = MemoryConstrainedTreeBoosting.predict(X, last_model_bin_splits, last_model_trees)
+
+        map(1:size(X,1)) do i
+          max(basal_inclusion_probability, predictions[i]*prediction_inclusion_multiplier, labels[i])
+        end
+      end
+
+      last_model_path = train_with_coordinate_descent_hyperparameter_search(
+          forecasts;
+          training_X_and_labels_to_inclusion_probabilities   = X_and_labels_to_refined_inclusion_probabilities,
+          validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_basal_inclusion_probabilities,
+          config...
+        )
+    end
+  end
+
+  last_model_path
+end
+
+# Returns path to best trained model
 function train_with_coordinate_descent_hyperparameter_search(
     forecasts;
     forecast_hour_range = 1:10000,
-    X_and_labels_to_inclusion_probabilities = nothing,
+    training_X_and_labels_to_inclusion_probabilities   = nothing,
+    validation_X_and_labels_to_inclusion_probabilities = nothing,
     model_prefix = "",
     get_feature_engineered_data = nothing,
     bin_split_forecast_sample_count = 100,
@@ -32,11 +94,12 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   # Returns (X_binned, labels, weights)
-  get_data_labels_weights_binned(forecasts, bin_splits) = begin
+  get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
     TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
   end
 
+  # Returns path
   save(validation_loss, bin_splits, trees) = begin
     try
       mkdir("$(model_prefix)")
@@ -55,14 +118,15 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   println("Loading training data")
-  X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits)
-  println("done.")
+  X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities)
+  println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
 
   println("Loading validation data")
-  validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits)
-  println("done.")
+  validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities)
+  println("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.")
 
 
+  best_model_path = nothing
   best_loss = Inf32
 
   try_config(; config...) = begin
@@ -94,7 +158,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       end
 
       if validation_loss < best_loss
-        save(validation_loss, bin_splits, trees)
+        best_model_path = save(validation_loss, bin_splits, trees)
         best_loss = validation_loss
       end
 
@@ -124,6 +188,8 @@ function train_with_coordinate_descent_hyperparameter_search(
   end
 
   TrainingShared.coordinate_descent_hyperparameter_search(try_config; configs...)
+
+  best_model_path
 end
 
 end # module TrainGBDTShared

@@ -20,7 +20,7 @@ push!(LOAD_PATH, @__DIR__)
 import SREF
 
 
-model_prefix = "elastic_net_$(Dates.now())"
+model_prefix = "elastic_net_$(replace(repr(Dates.now()), ":" => "."))"
 
 all_sref_forecasts = SREF.forecasts() # [1:99:21034] # Skip a bunch: more diversity, since there's always multiple forecasts for the same valid time
 

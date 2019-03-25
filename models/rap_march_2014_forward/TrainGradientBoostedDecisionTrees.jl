@@ -8,27 +8,26 @@ import RAP
 
 forecast_hour = parse(Int64, ENV["FORECAST_HOUR"])
 
-model_prefix = "gbdt_f$(forecast_hour)_$(Dates.now())"
+model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
 
 rap_forecasts = RAP.forecasts()
-# rap_forecasts = rap_forecasts[1:20:length(rap_forecasts)] # Subset the data
+rap_forecasts = rap_forecasts[1:400:length(rap_forecasts)] # Subset the data
 forecast_hour_range = forecast_hour:forecast_hour
 
-X_and_labels_to_inclusion_probabilities(X, labels) = begin
-  map(1:size(X,1)) do i
-    max(0.03f0, labels[i])
-  end
-end
 
 # Best so far Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.05,:max_leaves=>10,:l2_regularization=>3.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>10000.0)
 
-TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
+TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
     rap_forecasts;
     forecast_hour_range = forecast_hour_range,
-    X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities,
     model_prefix = model_prefix,
     get_feature_engineered_data = RAP.get_feature_engineered_data,
-    bin_split_forecast_sample_count = 50,
+
+    annealing_rounds = 3,
+    basal_inclusion_probability = 0.01f0,
+    prediction_inclusion_multiplier = 10.0f0,
+
+    bin_split_forecast_sample_count = 5,
     max_iterations_without_improvement = 20,
 
     min_data_weight_in_leaf = [10.0, 15.0, 20.0, 35.0, 50.0, 70.0, 100.0, 150.0, 200.0, 350.0, 500.0, 700.0, 1000.0, 1500.0, 2000.0, 3500.0, 5000.0, 7000.0, 10000.0, 15000.0, 20000.0, 35000.0, 50000.0, 70000.0, 100000.0, 150000.0, 200000.0, 350000.0, 500000.0, 700000.0, 1000000.0, 1500000.0, 2000000.0, 3500000.0, 5000000.0, 7000000.0, 10000000.0],

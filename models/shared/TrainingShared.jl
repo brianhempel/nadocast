@@ -107,10 +107,10 @@ function get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineere
   loading_tmp_dir = "loading_tmp_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   mkpath(loading_tmp_dir)
 
-  concat_path(name)                             = joinpath(loading_tmp_dir, name)
-  open_concat_file(name)                        = open(concat_path(name), "w")
-  read_and_remove_concat_file(name, data_count) = begin
-    buffer = Array{Float32}(undef, data_count)
+  concat_path(name)                                = joinpath(loading_tmp_dir, name)
+  open_concat_file(name)                           = open(concat_path(name), "w")
+  read_and_remove_concat_file(name, data_count, T) = begin
+    buffer = Array{T}(undef, data_count)
     read!(concat_path(name), buffer)
     # Remove as we go in case we are swapping and need the space.
     rm(concat_path(name))
@@ -181,10 +181,10 @@ function get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineere
   weights = Array{Float32}(undef, data_count)
 
   for feature_i in 1:feature_count
-    X[:, feature_i] = read_and_remove_concat_file("feature_$(feature_i)", data_count)
+    X[:, feature_i] = read_and_remove_concat_file("feature_$(feature_i)", data_count, feature_type)
   end
-  Y       = read_and_remove_concat_file("labels", data_count)
-  weights = read_and_remove_concat_file("weights", data_count)
+  Y       = read_and_remove_concat_file("labels", data_count, Float32)
+  weights = read_and_remove_concat_file("weights", data_count, Float32)
 
   rm(loading_tmp_dir, recursive = true)
 
