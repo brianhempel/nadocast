@@ -12,4 +12,4 @@ train_+12_gradient_boosted_decision_trees:
 	FORECAST_HOUR=12 make train_gradient_boosted_decision_trees
 
 train_gradient_boosted_decision_trees:
-	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+	ulimit -n 8192; JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
