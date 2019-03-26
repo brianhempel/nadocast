@@ -18,7 +18,7 @@ function is_in_conus_bounding_box((lat, lon))
 end
 
 
-const rap_130_grid = Grib2.read_grid((@__DIR__) * "/../test_grib2s/rap_130_20180319_1400_012.grb2") :: Grids.Grid
+const rap_130_grid = Grib2.read_grid((@__DIR__) * "/rap_130_one_field_for_grid.grb2") :: Grids.Grid
 
 # conus_on_rap_130_grid.txt produced by:
 #
