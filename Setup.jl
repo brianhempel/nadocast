@@ -13,6 +13,29 @@
 # cd nadocast
 # sudo apt install curl
 # crontab get_data/crontab.cron
+#
+# curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
+# sudo apt install gcc
+# sudo apt install make
+# sudo apt install gfortran
+# cd grib2/
+# CC=gcc FC=gfortran make  # CC=gcc-8 FC=gfortran-8 make on my Mac
+# mkdir ~/bin
+# ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
+# echo 'shell -$SHELL' >> ~/.screenrc
+# echo 'export PATH=$HOME/bin:$PATH' >> ~/.bash_profile
+# source ~/.bash_profile
+# wgrib2 -config
+#
+# cd ~
+# curl https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz | tar -xvz
+# ln -s $(pwd)/julia-1.1.0/bin/julia ~/bin/julia
+#
+# cd ~/nadocast
+# git pull --rebase
+# echo 'import Pkg; Pkg.instantiate()' | julia --project=.
+# echo 'export CORE_COUNT=12' >> ~/.bash_profile
+# source ~/.bash_profile
 
 
 
