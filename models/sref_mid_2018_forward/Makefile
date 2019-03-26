@@ -27,7 +27,7 @@ train_double_logistic:
 
 train_gradient_boosted_decision_trees:
 	# time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
-	JULIA_NUM_THREADS=4 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 
 train_elastic_nets:
-	JULIA_NUM_THREADS=4 time julia --project=../.. TrainElasticNets.jl
+	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainElasticNets.jl

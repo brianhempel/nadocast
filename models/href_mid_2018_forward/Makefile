@@ -11,7 +11,7 @@ profile_feature_engineering:
 	julia --project=../.. ProfileFeatureEngineering.jl
 
 train_gradient_boosted_decision_trees:
-	JULIA_NUM_THREADS=4 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 
 train_elastic_net:
-	JULIA_NUM_THREADS=4 time julia --project=../.. TrainElasticNet.jl
+	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainElasticNet.jl
