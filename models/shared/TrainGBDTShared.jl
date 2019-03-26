@@ -23,14 +23,12 @@ import TrainingShared
 # max(basal_inclusion_probability, prediction_from_last_model*prediction_inclusion_multiplier)
 # as the inclusion probability for negatively labeled points. (But validation data uses only
 # basal_inclusion_probability for inclusion probability of negatively labeled points.)
-function train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(forecasts; annealing_rounds = 3, basal_inclusion_probability :: Float32, prediction_inclusion_multiplier :: Float32, config...)
+function train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(forecasts; annealing_rounds = 3, basal_inclusion_probability :: Float32, prediction_inclusion_multiplier :: Float32, validation_inclusion_probability :: Float32, config...)
 
-  # Validation and Round 1 training
-  X_and_labels_to_basal_inclusion_probabilities(X, labels) = begin
+  X_and_labels_to_validation_inclusion_probabilities(X, labels) =
     map(1:size(X,1)) do i
-      max(basal_inclusion_probability, labels[i])
+      max(validation_inclusion_probability, labels[i])
     end
-  end
 
   last_model_path = nothing
 
@@ -38,10 +36,15 @@ function train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_
     println("\nAnnealing round $annealing_round_i of $annealing_rounds...\n")
 
     if isnothing(last_model_path)
+      X_and_labels_to_basal_inclusion_probabilities(X, labels) =
+        map(1:size(X,1)) do i
+          max(basal_inclusion_probability, labels[i])
+        end
+
       last_model_path = train_with_coordinate_descent_hyperparameter_search(
           forecasts;
           training_X_and_labels_to_inclusion_probabilities   = X_and_labels_to_basal_inclusion_probabilities,
-          validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_basal_inclusion_probabilities,
+          validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_validation_inclusion_probabilities,
           config...
         )
     else
@@ -58,7 +61,7 @@ function train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_
       last_model_path = train_with_coordinate_descent_hyperparameter_search(
           forecasts;
           training_X_and_labels_to_inclusion_probabilities   = X_and_labels_to_refined_inclusion_probabilities,
-          validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_basal_inclusion_probabilities,
+          validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_validation_inclusion_probabilities,
           config...
         )
     end

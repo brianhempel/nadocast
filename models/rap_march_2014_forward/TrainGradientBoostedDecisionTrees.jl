@@ -25,7 +25,8 @@ TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperpar
 
     annealing_rounds = 3,
     basal_inclusion_probability = 0.01f0,
-    prediction_inclusion_multiplier = 10.0f0,
+    prediction_inclusion_multiplier = 1000.0f0,
+    validation_inclusion_probability = 0.10f0,
 
     bin_split_forecast_sample_count = 5,
     max_iterations_without_improvement = 20,
