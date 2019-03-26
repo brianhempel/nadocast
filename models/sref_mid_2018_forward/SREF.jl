@@ -31,24 +31,24 @@ function grid()
   Forecasts.grid(example_forecast())
 end
 
-# layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
+layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
-# For elasticnet models:
-layer_blocks_to_make = [
-  FeatureEngineeringShared.raw_features_block,
-  # FeatureEngineeringShared.twenty_five_mi_mean_block,
-  FeatureEngineeringShared.fifty_mi_mean_block,
-  # FeatureEngineeringShared.hundred_mi_mean_block,
-  # FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
-  # FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
-  # FeatureEngineeringShared.twenty_five_mi_linestraddling_gradient_block,
-  FeatureEngineeringShared.fifty_mi_forward_gradient_block,
-  FeatureEngineeringShared.fifty_mi_leftward_gradient_block,
-  FeatureEngineeringShared.fifty_mi_linestraddling_gradient_block,
-  # FeatureEngineeringShared.hundred_mi_forward_gradient_block,
-  # FeatureEngineeringShared.hundred_mi_leftward_gradient_block,
-  # FeatureEngineeringShared.hundred_mi_linestraddling_gradient_block,
-]
+# # For elasticnet models:
+# layer_blocks_to_make = [
+#   FeatureEngineeringShared.raw_features_block,
+#   # FeatureEngineeringShared.twenty_five_mi_mean_block,
+#   FeatureEngineeringShared.fifty_mi_mean_block,
+#   # FeatureEngineeringShared.hundred_mi_mean_block,
+#   # FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
+#   # FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
+#   # FeatureEngineeringShared.twenty_five_mi_linestraddling_gradient_block,
+#   FeatureEngineeringShared.fifty_mi_forward_gradient_block,
+#   FeatureEngineeringShared.fifty_mi_leftward_gradient_block,
+#   FeatureEngineeringShared.fifty_mi_linestraddling_gradient_block,
+#   # FeatureEngineeringShared.hundred_mi_forward_gradient_block,
+#   # FeatureEngineeringShared.hundred_mi_leftward_gradient_block,
+#   # FeatureEngineeringShared.hundred_mi_linestraddling_gradient_block,
+# ]
 
 # # For reduced elasticnet models:
 # layer_blocks_to_make = [

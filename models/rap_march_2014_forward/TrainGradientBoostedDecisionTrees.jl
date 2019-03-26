@@ -7,12 +7,13 @@ push!(LOAD_PATH, @__DIR__)
 import RAP
 
 forecast_hour = parse(Int64, ENV["FORECAST_HOUR"])
+forecast_hour_range = forecast_hour:forecast_hour
 
 model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
 
 rap_forecasts = RAP.forecasts()
-rap_forecasts = rap_forecasts[1:400:length(rap_forecasts)] # Subset the data
-forecast_hour_range = forecast_hour:forecast_hour
+rap_forecasts = rap_forecasts[1:200:length(rap_forecasts)] # Subset the data
+
 
 
 # Best so far Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.05,:max_leaves=>10,:l2_regularization=>3.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>10000.0)
