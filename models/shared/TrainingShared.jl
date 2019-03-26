@@ -10,6 +10,7 @@ import StormEvents
 
 
 MINUTE = 60 # seconds
+HOUR   = 60*MINUTE
 
 EVENT_TIME_WINDOW_HALF_SIZE  = 30*MINUTE
 TORNADO_SPACIAL_RADIUS_MILES = 25.0
@@ -37,27 +38,64 @@ function is_test(forecast :: Forecasts.Forecast) :: Bool
   mod(Forecasts.valid_time_in_convective_days_since_epoch_utc(forecast), 7) == 3
 end
 
+_conus_event_hours_in_seconds_from_epoch_utc = nothing
+
+function conus_event_hours_in_seconds_from_epoch_utc()
+  global _conus_event_hours_in_seconds_from_epoch_utc
+
+  if isnothing(_conus_event_hours_in_seconds_from_epoch_utc)
+    _conus_event_hours_in_seconds_from_epoch_utc = Set{Int64}()
+
+    for event in StormEvents.conus_events()
+      event_time_range =
+        (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
+
+      for hour_from_epoch in fld(event_time_range.start, HOUR):fld(event_time_range.stop, HOUR)
+        hour_second = hour_from_epoch*HOUR
+        if hour_second in event_time_range
+          push!(_conus_event_hours_in_seconds_from_epoch_utc, hour_second)
+        end
+      end
+    end
+  end
+
+  _conus_event_hours_in_seconds_from_epoch_utc
+end
+
+
+_conus_tornado_hours_in_seconds_from_epoch_utc = nothing
+
+function conus_tornado_hours_in_seconds_from_epoch_utc()
+  global _conus_tornado_hours_in_seconds_from_epoch_utc
+
+  if isnothing(_conus_tornado_hours_in_seconds_from_epoch_utc)
+    _conus_tornado_hours_in_seconds_from_epoch_utc = Set{Int64}()
+
+    for event in StormEvents.tornadoes()
+      event_time_range =
+        (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
+
+      for hour_from_epoch in fld(event_time_range.start, HOUR):fld(event_time_range.stop, HOUR)
+        hour_second = hour_from_epoch*HOUR
+        if hour_second in event_time_range
+          push!(_conus_tornado_hours_in_seconds_from_epoch_utc, hour_second)
+        end
+      end
+    end
+  end
+
+  _conus_tornado_hours_in_seconds_from_epoch_utc
+end
+
 
 # Use all forecasts in which there is a tornado, wind, or hail event.
 # (Though we are only looking for tornadoes for now.)
 function is_relevant_forecast(forecast)
-  forecast_is_within_time_window_of_events(StormEvents.conus_events(), forecast)
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_event_hours_in_seconds_from_epoch_utc()
 end
 
 function forecast_is_tornado_hour(forecast)
-  forecast_is_within_time_window_of_events(StormEvents.conus_tornadoes(), forecast)
-end
-
-function forecast_is_within_time_window_of_events(events, forecast)
-  for event in events
-    event_relevant_time_range =
-      (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
-
-    if Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in event_relevant_time_range
-      return true
-    end
-  end
-  false
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_tornado_hours_in_seconds_from_epoch_utc()
 end
 
 
