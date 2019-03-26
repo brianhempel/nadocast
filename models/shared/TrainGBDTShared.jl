@@ -8,9 +8,6 @@ push!(LOAD_PATH, @__DIR__)
 import TrainingShared
 
 
-struct EarlyStop <: Exception
-end
-
 
 # If we had infinite memory, we could train on all datapoints with all the forecast hours.
 # However, we don't.
@@ -130,64 +127,36 @@ function train_with_coordinate_descent_hyperparameter_search(
   best_loss = Inf32
 
   try_config(; config...) = begin
-    validation_scores = nothing
 
-    best_loss_for_config           = Inf32
-    iterations_without_improvement = 0
+    best_loss_for_config = Inf32
+
+    callback_to_track_validation_loss =
+      MemoryConstrainedTreeBoosting.make_callback_to_track_validation_loss(
+          validation_X_binned, validation_y;
+          validation_weights                 = validation_weights,
+          max_iterations_without_improvement = max_iterations_without_improvement
+        )
 
     iteration_callback(trees) = begin
-      new_tree = last(trees)
-
-      if validation_scores == nothing
-        validation_scores = MemoryConstrainedTreeBoosting.predict_on_binned(validation_X_binned, trees, output_raw_scores = true)
-      else
-        # print("Predicting...")
-        validation_scores = MemoryConstrainedTreeBoosting.predict_on_binned(validation_X_binned, [new_tree], starting_scores = validation_scores, output_raw_scores = true)
-      end
-      validation_ŷ      = MemoryConstrainedTreeBoosting.σ.(validation_scores)
-      validation_loss   = sum(MemoryConstrainedTreeBoosting.logloss.(validation_y, validation_ŷ) .* validation_weights) / sum(validation_weights)
-      # println("done.")
-
+      validation_loss = callback_to_track_validation_loss(trees)
 
       if validation_loss < best_loss_for_config
-        best_loss_for_config           = validation_loss
-        iterations_without_improvement = 0
-        print("\rValidation loss: $validation_loss    ")
-      else
-        iterations_without_improvement += 1
+        best_loss_for_config = validation_loss
       end
 
       if validation_loss < best_loss
         best_model_path = save(validation_loss, bin_splits, trees)
         best_loss = validation_loss
       end
-
-      if iterations_without_improvement >= max_iterations_without_improvement
-        throw(EarlyStop())
-      end
     end
 
-    initial_score = begin
-      probability = sum(y .* weights) / sum(weights)
-      log(probability / (1-probability)) # inverse sigmoid
-    end
-
-    try
-      MemoryConstrainedTreeBoosting.train_on_binned(
-        X_binned, y;
-        prior_trees        = MemoryConstrainedTreeBoosting.Tree[MemoryConstrainedTreeBoosting.Leaf(initial_score)],
-        weights            = weights,
-        iteration_count    = Int64(round(30 / config[:learning_rate])),
-        iteration_callback = iteration_callback,
-        config...
-      )
-    catch expection
-      println()
-      if isa(expection, EarlyStop)
-      else
-        rethrow()
-      end
-    end
+    MemoryConstrainedTreeBoosting.train_on_binned(
+      X_binned, y;
+      weights            = weights,
+      iteration_count    = Int64(round(30 / config[:learning_rate])),
+      iteration_callback = iteration_callback,
+      config...
+    )
 
     best_loss_for_config
   end
