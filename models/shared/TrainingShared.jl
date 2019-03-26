@@ -51,7 +51,7 @@ end
 function forecast_is_within_time_window_of_events(events, forecast)
   for event in events
     event_relevant_time_range =
-      (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE + 1):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
+      (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
 
     if Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in event_relevant_time_range
       return true
