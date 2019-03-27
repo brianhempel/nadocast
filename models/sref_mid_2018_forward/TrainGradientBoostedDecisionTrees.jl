@@ -18,6 +18,11 @@ sref_forecasts = SREF.forecasts()
 # Best (loss = 0.00480496), for SREF tornado hours, with 50mi features
 # Dict{Symbol,Real}(:max_depth=>4,:max_delta_score=>5.0,:learning_rate=>0.03,:max_leaves=>6,:l2_regularization=>3.0,:feature_fraction=>0.5,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>150000.0)
 
+# All features, all hours with some storm event:
+# Best hyperparameters (loss = 0.001402743):
+# Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.07,:max_leaves=>10,:l2_regularization=>20.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>15000.0)
+# 32:48:23 elapsed
+
 TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
     sref_forecasts;
     forecast_hour_range = forecast_hour_range,

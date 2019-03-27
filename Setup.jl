@@ -37,6 +37,10 @@
 # echo 'export CORE_COUNT=12' >> ~/.bash_profile
 # source ~/.bash_profile
 
+# cd models/sref_mid_2018_forward/
+# make train_gradient_boosted_decision_trees
+
+
 
 
 # add DelimitedFiles # For readdlm
