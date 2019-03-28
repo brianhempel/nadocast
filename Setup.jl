@@ -5,6 +5,9 @@
 # sudo apt install screen
 # sudo apt install exfat-fuse exfat-utils
 # sudo apt install ruby
+
+# Apparently you need to be logged in graphically in order for the HDs to automount
+
 # sudo ln -s /media/brian /Volumes
 # sudo apt install git
 # ssh-keygen
@@ -40,7 +43,8 @@
 # cd models/sref_mid_2018_forward/
 # make train_gradient_boosted_decision_trees
 
-
+# cd nadocast/models/href_mid_2018_forward/
+# make train_gradient_boosted_decision_trees
 
 
 # add DelimitedFiles # For readdlm
