@@ -11,7 +11,7 @@ forecast_hour_range = 1:36 # HREF files come out 2-3 hours after run time
 
 model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
 
-href_forecasts = HREF.forecasts() # [1:77:27856]
+href_forecasts = HREF.forecasts()
 # href_forecasts = href_forecasts[1:100:length(href_forecasts)] # Subset the data
 
 # (no multithreading)
@@ -23,6 +23,12 @@ href_forecasts = HREF.forecasts() # [1:77:27856]
 
 # somehow it's better with multithreading...?? Oh, made the change so grids are shared--that may be it. Now only 10.5 w/validation uncompressed. Still 55s per tree...the caching isn't helping.
 # delta compression + consolidation: 4.5 gigs after training loaded, 6 gigs after validation loaded, 60s per tree (4x multithreaded, including validation; caching may be helping here)
+
+# Validation size: (32119850 * 1847 = 59,325,362,950 byte validation)
+# Annealing round 1 (26673508 * 1847 = 49,265,969,276 bytes training): loss = 0.0012652115 with Dict{Symbol,Real}(:max_depth=>4,:max_delta_score=>5.0,:learning_rate=>0.07,:max_leaves=>6,:l2_regularization=>3.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>10000.0)
+# Annealing round 2 (35392152 * 1847 = 65,369,304,744 bytes training): loss = 0.0012822518 with Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.07,:max_leaves=>10,:l2_regularization=>3.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>10000.0)
+# Annealing round 3 (35605258 * 1847 = 65,762,911,526 bytes training): loss = 0.0012793123 with Dict{Symbol,Real}(:max_depth=>4,:max_delta_score=>3.0,:learning_rate=>0.05,:max_leaves=>6,:l2_regularization=>2.0,:feature_fraction=>0.7,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>15000.0)
+# Annealing: 143:13:46 elapsed
 
 TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
     href_forecasts;

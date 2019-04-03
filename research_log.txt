@@ -75,7 +75,7 @@ TODO:
 - [x] Use storm reports DB if ready for 2018
 - [x] Add Jan/Feb/March 2019 live storm reports
 - [x] Use all all severe report hours (wind/hail/tornado) for train/validation/test
-- [ ] Write the "annealing" for data subsetting/weighting
+- [x] Write the "annealing" for data subsetting/weighting
 - [ ] Train +2hr RAP
 - [ ] Train +6hr RAP
 - [ ] Train +12hr RAP
@@ -84,8 +84,8 @@ TODO:
 - [ ] Train +6hr HRRR
 - [ ] Train +12hr HRRR
 - [ ] Train +18hr HRRR
-- [ ] Train SREF
-- [ ] Train HREF
+- [x] Train SREF
+- [x] Train HREF
 - [ ] Try training 1-6, 7-12, 13-18, 19-24, 25-30, 31-39; or 1-6, 7-18, 19-39 hour HREF/SREF sets
 - [ ] Train a stacked model
 - [ ] Try training 1-6, 7-12, 13-18, 19-24, 25-30, 31-39; or 1-6, 7-18, 19-39 hour stacked models
