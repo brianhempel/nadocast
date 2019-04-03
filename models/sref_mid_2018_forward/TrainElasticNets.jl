@@ -55,7 +55,7 @@ println("$(length(test_forecasts)) for testing.")
 #
 # X_transformer(X) = Float64.(@view X[:, feature_is])
 
-feature_normalization_forecast_sample_count = 100
+feature_normalization_forecast_sample_count = 200
 
 print("Normalizing features by sampling $feature_normalization_forecast_sample_count training forecasts")
 
@@ -92,23 +92,24 @@ X_transformer(X) = Float64.((X .- means) ./ stddevs)
 println("done.")
 
 
-print("Preparing pre-predictor for data inclusion...")
-import MemoryConstrainedTreeBoosting
+# print("Preparing pre-predictor for data inclusion...")
+# import MemoryConstrainedTreeBoosting
+#
+# gbdt_model_path = (@__DIR__) * "/gbdt_2019-02-10T02-13-53.803_50mi_features_slightly_better/100_trees_loss_0.00498328331702105.model"
+# # gbdt_model_path = (@__DIR__) * "/gbdt_2019-02-03T23-25-46.315_25mi_50mi_100mi_0.2_features_weighted/175_trees_loss_0.0049027752388540475.model"
+#
+# bin_splits, trees = MemoryConstrainedTreeBoosting.load(gbdt_model_path)
+#
+# X_and_labels_to_inclusion_probabilities(X, labels) = begin
+#   ŷ = MemoryConstrainedTreeBoosting.predict(X, bin_splits, trees)
+#   losses = MemoryConstrainedTreeBoosting.logloss.(labels, ŷ)
+#   map(1:size(X,1)) do i
+#     max(0.01, losses[i]*100, labels[i])
+#   end
+# end
+# println("done.")
 
-gbdt_model_path = (@__DIR__) * "/gbdt_2019-02-10T02-13-53.803_50mi_features_slightly_better/100_trees_loss_0.00498328331702105.model"
-# gbdt_model_path = (@__DIR__) * "/gbdt_2019-02-03T23-25-46.315_25mi_50mi_100mi_0.2_features_weighted/175_trees_loss_0.0049027752388540475.model"
-
-bin_splits, trees = MemoryConstrainedTreeBoosting.load(gbdt_model_path)
-
-X_and_labels_to_inclusion_probabilities(X, labels) = begin
-  ŷ = MemoryConstrainedTreeBoosting.predict(X, bin_splits, trees)
-  losses = MemoryConstrainedTreeBoosting.logloss.(labels, ŷ)
-  map(1:size(X,1)) do i
-    max(0.01, losses[i]*100, labels[i])
-  end
-end
-println("done.")
-
+X_and_labels_to_inclusion_probabilities(X, labels) = map(label -> max(0.05, label), labels)
 
 
 print("Loading training data")
@@ -119,7 +120,7 @@ println("done.")
 
 
 println("Loading validation data")
-validation_X_and_labels_to_inclusion_probabilities(X, labels) = map(label -> max(0.2, label), labels)
+validation_X_and_labels_to_inclusion_probabilities(X, labels) = map(label -> max(0.05, label), labels)
 
 validation_X, validation_y, validation_weights = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, validation_forecasts, X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = validation_X_and_labels_to_inclusion_probabilities)
 
