@@ -84,10 +84,10 @@ sample_X = nothing # freeeeeeee
 # )
 #
 #
-# X_transformer(X) = begin
-#   Float64.(((X .- means) ./ stddevs)[:, features_is])
-# end
-X_transformer(X) = Float64.((X .- means) ./ stddevs)
+X_transformer(X) = begin
+  Float64.(((X .- means) ./ stddevs)[:, features_is])
+end
+# X_transformer(X) = Float64.((X .- means) ./ stddevs)
 
 println("done.")
 
@@ -114,6 +114,8 @@ X_and_labels_to_inclusion_probabilities(X, labels) = map(label -> max(0.05, labe
 
 print("Loading training data")
 X, y, weights = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, train_forecasts, X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
+y       = Float64.(y)
+weights = Float64.(weights)
 
 y = [(1.0 .- y) y]
 println("done.")
@@ -123,6 +125,8 @@ println("Loading validation data")
 validation_X_and_labels_to_inclusion_probabilities(X, labels) = map(label -> max(0.05, label), labels)
 
 validation_X, validation_y, validation_weights = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, SREF.get_feature_engineered_data, validation_forecasts, X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = validation_X_and_labels_to_inclusion_probabilities)
+validation_y       = Float64.(validation_y)
+validation_weights = Float64.(validation_weights)
 
 validation_y = [(1.0 .- validation_y) validation_y]
 println("done.")
