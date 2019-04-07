@@ -28,7 +28,7 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
 
   # This filtering takes five minutes.
   forecasts_to_get =
-    DATES.product(RUN_HOURS, FORECAST_HOURS).filter do |date, run_hour, forecast_hour|
+    DATES.product(RUN_HOURS, FORECAST_HOURS).select do |date, run_hour, forecast_hour|
       valid_time = Time.utc(date.year, date.month, date.day, run_hour) + forecast_hour*HOUR
       valid_start_time = valid_time - 30*MINUTE
       valid_end_time   = valid_time + 30*MINUTE
