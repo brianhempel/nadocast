@@ -84,10 +84,10 @@ sample_X = nothing # freeeeeeee
 # )
 #
 #
-X_transformer(X) = begin
-  Float64.(((X .- means) ./ stddevs)[:, features_is])
-end
-# X_transformer(X) = Float64.((X .- means) ./ stddevs)
+# X_transformer(X) = begin
+#   Float64.(((X .- means) ./ stddevs)[:, features_is])
+# end
+X_transformer(X) = Float64.((X .- means) ./ stddevs)
 
 println("done.")
 
