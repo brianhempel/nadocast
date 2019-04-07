@@ -43,9 +43,8 @@
 # cd models/sref_mid_2018_forward/
 # make train_gradient_boosted_decision_trees
 
-# cd nadocast/models/href_mid_2018_forward/
+# cd ~/nadocast/models/href_mid_2018_forward/
 # make train_gradient_boosted_decision_trees
-
 
 # add DelimitedFiles # For readdlm
 # add Plots

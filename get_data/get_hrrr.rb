@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "date"
-require File.expand_path("../../storm_data/tornadoes.rb", __FILE__)
+require File.expand_path("../../storm_data/storm_events.rb", __FILE__)
 
 FROM_ARCHIVE = (ARGV[0] == "--from-archive")
 
@@ -22,7 +22,7 @@ end
 loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
 loop { break if Dir.exists?("/Volumes/HRRR_2/"); puts "Waiting for HRRR_2 to mount..."; sleep 4 }
 
-if FROM_ARCHIVE # Tornado hours only, for now. Would be 12TB for all +2 +6 +12 +18 forecasts.
+if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +12 +18 forecasts.
   # https://pando-rgw01.chpc.utah.edu/hrrr/sfc/20180101/hrrr.t00z.wrfsfcf00.grib2
   DATES = (Date.new(2016,7,15)..Date.today).to_a
 
@@ -32,8 +32,8 @@ if FROM_ARCHIVE # Tornado hours only, for now. Would be 12TB for all +2 +6 +12 +
       valid_time = Time.utc(date.year, date.month, date.day, run_hour) + forecast_hour*HOUR
       valid_start_time = valid_time - 30*MINUTE
       valid_end_time   = valid_time + 30*MINUTE
-      TORNADOES.any? do |tornado|
-        tornado.on_ground_during(valid_start_time...valid_end_time) && tornado.in_conus?
+      STORM_EVENTS.any? do |storm_event|
+        storm_event.on_ground_during(valid_start_time...valid_end_time) && storm_event.in_conus?
       end
     end.map do |date, run_hour, forecast_hour|
       ["%04d%02d%02d" % [date.year, date.month, date.day], run_hour, forecast_hour]

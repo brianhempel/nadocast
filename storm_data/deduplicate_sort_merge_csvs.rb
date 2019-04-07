@@ -1,4 +1,4 @@
-# Used when adding SPC storm reports to tornadoes.rb.
+# Used when adding SPC storm reports to tornadoes.csv.
 #
 # Merge any number of CSVs.
 #
