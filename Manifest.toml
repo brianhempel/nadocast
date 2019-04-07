@@ -20,9 +20,9 @@ version = "0.3.0"
 
 [[BSON]]
 deps = ["Profile", "Test"]
-git-tree-sha1 = "a129b7717ee8aa8b41b973ce5e9dae97050d7825"
+git-tree-sha1 = "6453cef4f9cb8ded8e28e4d6d12e11e20eb692ea"
 uuid = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
-version = "0.2.2"
+version = "0.2.3"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -149,9 +149,9 @@ version = "0.2.4"
 
 [[FileIO]]
 deps = ["Pkg", "Random", "Test"]
-git-tree-sha1 = "c94b0787956629036fb2b20fccde9e52b89d079a"
+git-tree-sha1 = "da32159d4a2e526338506685e280e39ed2f18961"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.0.5"
+version = "1.0.6"
 
 [[FixedPointNumbers]]
 deps = ["Test"]
@@ -176,22 +176,24 @@ uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
 version = "1.1.1"
 
 [[GLMNet]]
-deps = ["Distributed", "Distributions", "Libdl", "Printf", "Random", "SparseArrays", "StatsBase"]
-path = "../GLMNet.jl"
+deps = ["BinaryProvider", "Distributed", "Distributions", "Libdl", "Printf", "Random", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "275eff0f6a5013f4e587775c9e4a57b5df1ba38c"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaStats/GLMNet.jl"
 uuid = "8d5ece8b-de18-5317-b113-243142960cc6"
 version = "0.4.1+"
 
 [[GR]]
 deps = ["Base64", "DelimitedFiles", "LinearAlgebra", "Pkg", "Printf", "Random", "Serialization", "Sockets", "Test"]
-git-tree-sha1 = "41bd911efffb56957b45366770eaaa443de3f782"
+git-tree-sha1 = "08c4fc28ae58479f93616d5df164ab6b73541f2d"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.38.1"
+version = "0.39.0"
 
 [[GeoInterface]]
-deps = ["RecipesBase"]
-git-tree-sha1 = "59d34b371abfeda6a876e7d5ad5a12ac45faf252"
+deps = ["RecipesBase", "Test"]
+git-tree-sha1 = "0c0c0bf9c79b10e48aa089e78ac504ebc43db3a0"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "0.4.0"
+version = "0.4.1"
 
 [[Graphics]]
 deps = ["Colors", "Compat", "NaNMath"]
@@ -351,9 +353,9 @@ version = "0.3.0"
 
 [[PlotUtils]]
 deps = ["Colors", "Dates", "Printf", "Random", "Reexport", "Test"]
-git-tree-sha1 = "fd28f30a294a38ec847de95d8ac7ac916ccd7c06"
+git-tree-sha1 = "5da9a79a138db46558e6e08f649865b4c1f1ce93"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "0.5.5"
+version = "0.5.7"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FixedPointNumbers", "GR", "JSON", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "Reexport", "Requires", "Showoff", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "Test", "UUIDs"]
