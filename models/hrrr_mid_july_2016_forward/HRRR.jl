@@ -132,7 +132,7 @@ function reload_forecasts()
   for hrrr_path in hrrr_paths
     # "/Volumes/HRRR_1/hrrr/201607/20160715/hrrr_conus_sfc_20160715_t08z_f12.grib2"
 
-    year_str, month_str, day_str, run_hour_str, forecast_hour_str = match(r"/hrrr_conus_sfc_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_g(\d\d)\.gri?b2", hrrr_path).captures
+    year_str, month_str, day_str, run_hour_str, forecast_hour_str = match(r"/hrrr_conus_sfc_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_f(\d\d)\.gri?b2", hrrr_path).captures
 
     run_year      = parse(Int64, year_str)
     run_month     = parse(Int64, month_str)
