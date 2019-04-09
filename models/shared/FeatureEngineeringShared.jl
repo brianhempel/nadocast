@@ -491,26 +491,25 @@ function make_data(
     mean_wind_lower_half_atmosphere_us .= get_layer("UGRD:10 m above ground:hour fcst:wt ens mean")
     mean_wind_lower_half_atmosphere_vs .= get_layer("VGRD:10 m above ground:hour fcst:wt ens mean")
     total_weight += 1.0f0
-  elseif "GRD:925 mb:hour fcst:wt ens mean" in vector_wind_layers
-    # HREF
-    mean_wind_lower_half_atmosphere_us .= get_layer("UGRD:925 mb:hour fcst:wt ens mean")
-    mean_wind_lower_half_atmosphere_vs .= get_layer("VGRD:925 mb:hour fcst:wt ens mean")
-    total_weight += 1.0f0
   elseif "GRD:10 m above ground:hour fcst:" in vector_wind_layers
-    # RAP
+    # RAP, HRRR
     mean_wind_lower_half_atmosphere_us .= get_layer("UGRD:10 m above ground:hour fcst:")
     mean_wind_lower_half_atmosphere_vs .= get_layer("VGRD:10 m above ground:hour fcst:")
     total_weight += 1.0f0
+  else
+    # HREF
+    fill!(mean_wind_lower_half_atmosphere_us, 0.0f0)
+    fill!(mean_wind_lower_half_atmosphere_vs, 0.0f0)
   end
 
-  for mb in 950:-50:500
+  for mb in 950:-25:500
     if "GRD:$mb mb:hour fcst:wt ens mean" in vector_wind_layers
       # HREF/SREF
       mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:wt ens mean")
       mean_wind_lower_half_atmosphere_vs .+= get_layer("VGRD:$mb mb:hour fcst:wt ens mean")
       total_weight += 1.0f0
     elseif "GRD:$mb mb:hour fcst:" in vector_wind_layers
-      # RAP
+      # RAP, HRRR
       mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:")
       mean_wind_lower_half_atmosphere_vs .+= get_layer("VGRD:$mb mb:hour fcst:")
       total_weight += 1.0f0
@@ -675,12 +674,18 @@ function make_data(
     mean_wind_lower_atmosphere_vs  = 0.75f0 .* get_layer("VGRD:925 mb:hour fcst:wt ens mean")  .+  0.25f0 .* get_layer("VGRD:850 mb:hour fcst:wt ens mean")
     mean_wind_middle_atmosphere_us = 0.25f0 .* get_layer("UGRD:700 mb:hour fcst:wt ens mean")  .+  0.75f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean")
     mean_wind_middle_atmosphere_vs = 0.25f0 .* get_layer("VGRD:700 mb:hour fcst:wt ens mean")  .+  0.75f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean")
-  else
+  elseif "GRD:950 mb:hour fcst:" in vector_wind_layers
     # RAP
     mean_wind_lower_atmosphere_us  = 0.5f0 .* (get_layer("UGRD:80 m above ground:hour fcst:") .+ get_layer("UGRD:950 mb:hour fcst:"))
     mean_wind_lower_atmosphere_vs  = 0.5f0 .* (get_layer("VGRD:80 m above ground:hour fcst:") .+ get_layer("VGRD:950 mb:hour fcst:"))
     mean_wind_middle_atmosphere_us = 0.5f0 .* (get_layer("UGRD:600 mb:hour fcst:")            .+ get_layer("UGRD:500 mb:hour fcst:"))
     mean_wind_middle_atmosphere_vs = 0.5f0 .* (get_layer("VGRD:600 mb:hour fcst:")            .+ get_layer("VGRD:500 mb:hour fcst:"))
+  else
+    # HRRR
+    mean_wind_lower_atmosphere_us  = 0.5f0 .* (get_layer("UGRD:80 m above ground:hour fcst:") .+ get_layer("UGRD:925 mb:hour fcst:"))
+    mean_wind_lower_atmosphere_vs  = 0.5f0 .* (get_layer("VGRD:80 m above ground:hour fcst:") .+ get_layer("VGRD:925 mb:hour fcst:"))
+    mean_wind_middle_atmosphere_us = 0.25f0 .* get_layer("UGRD:700 mb:hour fcst:")  .+  0.75f0 .* get_layer("UGRD:500 mb:hour fcst:")
+    mean_wind_middle_atmosphere_vs = 0.25f0 .* get_layer("VGRD:700 mb:hour fcst:")  .+  0.75f0 .* get_layer("VGRD:500 mb:hour fcst:")
   end
 
   mean_wind_angles = atan.(mean_wind_middle_atmosphere_vs .- mean_wind_lower_atmosphere_vs, mean_wind_middle_atmosphere_us .- mean_wind_lower_atmosphere_us)
