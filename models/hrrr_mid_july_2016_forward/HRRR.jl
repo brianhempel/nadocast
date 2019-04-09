@@ -21,6 +21,10 @@ import FeatureEngineeringShared
 #         LatSP 0.000000 LonSP 0.000000
 #         North Pole (1799 x 1059) Dx 3000.000000 m Dy 3000.000000 m mode 8
 
+# Uncommon layers:
+# UGRD:300 mb:hour fcst:
+# VGRD:300 mb:hour fcst:
+# USWRF:top of atmosphere:hour fcst:
 
 _forecasts = []
 downsample = 3
