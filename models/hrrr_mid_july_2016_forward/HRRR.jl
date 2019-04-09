@@ -62,7 +62,7 @@ vector_wind_layers = [
   "GRD:925 mb:hour fcst:",
   "GRD:1000 mb:hour fcst:",
   "GRD:80 m above ground:hour fcst:",
-  "GRD:10 m above ground:hour fcst:"
+  "GRD:10 m above ground:hour fcst:",
   "STM:6000-0 m above ground:hour fcst:",
   "VCSH:1000-0 m above ground:hour fcst:", # VUCSH:1000-0 m above ground:hour fcst: and VVCSH:1000-0 m above ground:hour fcst: (special handling in FeatureEngineeringShared)
   "VCSH:6000-0 m above ground:hour fcst:", # VUCSH:6000-0 m above ground:hour fcst: and VVCSH:6000-0 m above ground:hour fcst: (special handling in FeatureEngineeringShared)
