@@ -63,7 +63,7 @@
 # make -j install
 
 # make forecast
-# scp nadocaster:~/nadocast/forecasts remote_forecasts
+# scp -r nadocaster:~/nadocast/forecasts remote_forecasts
 
 
 
