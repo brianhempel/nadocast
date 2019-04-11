@@ -27,7 +27,7 @@ function plot_map(base_path, grid, vals)
   open(base_path * ".sh", "w") do f
     println(f, "gmt sphinterpolate $base_path.xyz -R-139/-58/17/58 -I1M -Q0 -G$base_path.nc")
 
-    println(f, "gmt begin $base_path.pdf pdf")
+    println(f, "gmt begin $base_path pdf")
     println(f, "gmt grdimage $base_path.nc -nn -Jl-100/35/33/45/0.3 -C$colors_path")
     println(f, "gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest")
     println(f, "gmt end")

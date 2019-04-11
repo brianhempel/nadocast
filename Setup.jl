@@ -46,6 +46,29 @@
 # cd ~/nadocast/models/href_mid_2018_forward/
 # make train_gradient_boosted_decision_trees
 
+# cd ~
+# git clone https://github.com/GenericMappingTools/gmt.git
+# cd gmt
+# sudo apt install cmake ninja-build libcurl4-gnutls-dev libnetcdf-dev libgdal-dev libfftw3-dev libpcre3-dev liblapack-dev ghostscript curl
+# mkdir coastlines
+# COASTLINEDIR=$(pwd)/coastlines ./ci/download-coastlines.sh
+# rm -r ~/cache-gshhg-dcw
+# cp cmake/ConfigUserTemplate.cmake cmake/ConfigUser.cmake
+# echo "set (DCW_ROOT \"$(pwd)/coastlines\")" >> cmake/ConfigUser.cmake
+# echo "set (GSHHG_ROOT \"$(pwd)/coastlines\")" >> cmake/ConfigUser.cmake
+# mkdir build
+# cd build
+# cmake -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+# make -j
+# make -j install
+
+# make forecast
+# scp nadocaster:~/nadocast/forecasts remote_forecasts
+
+
+
+
+
 # add DelimitedFiles # For readdlm
 # add Plots
 # add JSON

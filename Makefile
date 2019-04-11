@@ -26,7 +26,7 @@ storm_events:
 	rm storm_data/tornadoes_downloaded.csv storm_data/wind_events_downloaded.csv storm_data/hail_events_downloaded.csv
 
 forecast:
-	julia --project lib/DoPredict.jl
+	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project lib/DoPredict.jl
 
 # setup:
 # 	julia Setup.jl
