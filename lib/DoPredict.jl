@@ -11,7 +11,7 @@ import SREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_mid_2018_forward")
 import HREF
 
-sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_2019-02-12T01-09-27.817_50mi_features_tuned/245_trees_loss_0.00480496.model"
+sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model"
 
 all_sref_forecasts = SREF.forecasts()
 
@@ -40,7 +40,7 @@ sref_bin_splits, sref_trees = MemoryConstrainedTreeBoosting.load(sref_model_path
 
 
 
-href_model_path = (@__DIR__) * "/../models/href_mid_2018_forward/gbdt_2019-02-12T18-32-12.912_rotation_invariant_winds_grid_weighted_tuned/490_trees_loss_0.004568996.model"
+href_model_path = (@__DIR__) * "/../models/href_mid_2018_forward/gbdt_f1-36_2019-03-28T13.34.42.186/99_trees_annealing_round_1_loss_0.0012652115.model"
 
 all_href_forecasts = HREF.forecasts()
 
