@@ -1,5 +1,9 @@
 import MemoryConstrainedTreeBoosting
 
+# To predict the past, set FORECAST_DATE=2019-4-7 in the environment:
+#
+# $ FORECAST_DATE=2019-4-7 make forecast
+
 push!(LOAD_PATH, @__DIR__)
 import Forecasts
 import Grids
@@ -15,9 +19,16 @@ sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019
 
 all_sref_forecasts = SREF.forecasts()
 
-sref_last_run_time_seconds = maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_sref_forecasts))
+sref_run_time_seconds =
+  if haskey(ENV, "FORECAST_DATE")
+    # Use 9z SREF and 6z HREF, both should be out before 12z
+    year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
+    Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 9)
+  else
+    maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_sref_forecasts))
+  end
 
-sref_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) == sref_last_run_time_seconds, all_sref_forecasts)
+sref_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) == sref_run_time_seconds, all_sref_forecasts)
 
 # out_dir = (@__DIR__) * "/../forecasts/$(Forecasts.yyyymmdd(forecasts_to_plot[1]))/"
 # mkpath(out_dir)
@@ -44,13 +55,20 @@ href_model_path = (@__DIR__) * "/../models/href_mid_2018_forward/gbdt_f1-36_2019
 
 all_href_forecasts = HREF.forecasts()
 
-href_last_run_time_seconds = maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_href_forecasts))
+href_run_time_seconds =
+  if haskey(ENV, "FORECAST_DATE")
+    # Use 9z SREF and 6z HREF, both should be out before 12z
+    year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
+    Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 6)
+  else
+    maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_href_forecasts))
+  end
 
-href_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) == href_last_run_time_seconds, all_href_forecasts)
+href_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) == href_run_time_seconds, all_href_forecasts)
 
 href_bin_splits, href_trees = MemoryConstrainedTreeBoosting.load(href_model_path)
 
-if href_last_run_time_seconds > sref_last_run_time_seconds
+if href_run_time_seconds > sref_run_time_seconds
   out_dir = (@__DIR__) * "/../forecasts/$(Forecasts.yyyymmdd(href_forecasts_to_plot[1]))/"
 else
   out_dir = (@__DIR__) * "/../forecasts/$(Forecasts.yyyymmdd(sref_forecasts_to_plot[1]))/"

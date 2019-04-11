@@ -30,8 +30,12 @@ mutable struct Forecast
     new(run_year, run_month, run_day, run_hour, forecast_hour, nothing, nothing, nothing, get_grid, get_inventory, get_data)
 end
 
+function run_time_in_seconds_since_epoch_utc(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64) :: Int64
+  Int64(Dates.datetime2unix(Dates.DateTime(run_year, run_month, run_day, run_hour)))
+end
+
 function run_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
-  Int64(Dates.datetime2unix(Dates.DateTime(forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour)))
+  run_time_in_seconds_since_epoch_utc(forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour)
 end
 
 function valid_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
