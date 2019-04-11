@@ -21,9 +21,9 @@ all_sref_forecasts = SREF.forecasts()
 
 sref_run_time_seconds =
   if haskey(ENV, "FORECAST_DATE")
-    # Use 9z SREF and 6z HREF, both should be out before 12z
+    # Use 3z SREF and 6z HREF, both should be out before 12z
     year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
-    Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 9)
+    Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 3)
   else
     maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_sref_forecasts))
   end
