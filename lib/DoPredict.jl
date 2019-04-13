@@ -93,7 +93,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   perhaps_sref_forecast = filter(sref_forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) == valid_time_seconds, sref_forecasts_to_plot)
 
   for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(perhaps_sref_forecast)
-    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_sref_" * Forecasts.yyyymmdd_thhz_fhh(sref_forecast) * ""
+    sref_weight = 1.0 - HREF_WEIGHT
+
+    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_weight_$(HREF_WEIGHT)_sref_" * Forecasts.yyyymmdd_thhz_fhh(sref_forecast) * "_weight_$(sref_weight)"
     println(path)
 
     sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
@@ -108,7 +110,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
         sref_predictions[sref_grid_i]
       end
 
-    mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* (1.0 - HREF_WEIGHT))
+    mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
 
     push!(paths, path)
 
