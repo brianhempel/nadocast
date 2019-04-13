@@ -15,6 +15,15 @@ import SREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_mid_2018_forward")
 import HREF
 
+
+HREF_WEIGHT =
+  if haskey(ENV, "HREF_WEIGHT")
+    parse(Int64, ENV["HREF_WEIGHT"])
+  else
+    0.5
+  end
+
+
 sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model"
 
 all_sref_forecasts = SREF.forecasts()
@@ -99,7 +108,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
         sref_predictions[sref_grid_i]
       end
 
-    mean_predictions = (href_predictions .+ sref_predictions_upsampled) .* 0.5
+    mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* (1.0 - HREF_WEIGHT))
 
     push!(paths, path)
 
