@@ -25,9 +25,9 @@ TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperpar
     get_feature_engineered_data = RAP.get_feature_engineered_data,
 
     annealing_rounds = 3,
-    basal_inclusion_probability = 0.067f0,
+    basal_inclusion_probability = 0.05f0,
     prediction_inclusion_multiplier = 1000.0f0,
-    validation_inclusion_probability = 0.33f0,
+    validation_inclusion_probability = 0.25f0,
 
     bin_split_forecast_sample_count = 200,
     max_iterations_without_improvement = 20,
