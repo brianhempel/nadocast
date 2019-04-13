@@ -18,7 +18,7 @@ import HREF
 
 HREF_WEIGHT =
   if haskey(ENV, "HREF_WEIGHT")
-    parse(Int64, ENV["HREF_WEIGHT"])
+    parse(Float32, ENV["HREF_WEIGHT"])
   else
     0.5
   end
