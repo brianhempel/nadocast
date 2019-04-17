@@ -123,11 +123,10 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       if !isnothing(period_inverse_prediction)
         period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
         period_prediction = 1.0 .- period_inverse_prediction
-        PlotMap.plot_map(period_path, period_grid, period_prediction)
+        PlotMap.plot_map(period_path, Forecasts.grid(href_forecast), period_prediction)
         push!(paths, period_path)
       end
       period_inverse_prediction              = 1.0 .- Float64.(mean_predictions)
-      period_grid                            = Forecasts.grid(href_forecast)
       href_run_time_str                      = Forecasts.yyyymmdd_thhz(href_forecast)
       sref_run_time_str                      = Forecasts.yyyymmdd_thhz(sref_forecast)
       period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
@@ -146,7 +145,7 @@ end
 
 period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
 period_prediction = 1.0 .- period_inverse_prediction
-PlotMap.plot_map(period_path, period_grid, period_prediction)
+PlotMap.plot_map(period_path, Forecasts.grid(href_forecasts_to_plot[1]), period_prediction)
 push!(paths, period_path)
 
 
