@@ -42,6 +42,10 @@ function valid_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
   run_time_in_seconds_since_epoch_utc(forecast) + forecast.forecast_hour*HOUR
 end
 
+function valid_utc_datetime(forecast :: Forecast) :: Dates.DateTime
+  Dates.unix2datetime(valid_time_in_seconds_since_epoch_utc(forecast))
+end
+
 function valid_time_in_convective_days_since_epoch_utc(forecast :: Forecast) :: Int64
   fld(valid_time_in_seconds_since_epoch_utc(forecast) - 12*HOUR, DAY)
 end
@@ -50,8 +54,17 @@ function time_title(forecast :: Forecast) :: String
   @sprintf "%04d-%02d-%02d %02dZ +%d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
 end
 
+function valid_yyyymmdd_hhz(forecast :: Forecast) :: String
+  utc_datetime = valid_utc_datetime(forecast)
+  @sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime)
+end
+
 function yyyymmdd_thhz_fhh(forecast :: Forecast) :: String
   @sprintf "%04d%02d%02d_t%02dz_f%02d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
+end
+
+function yyyymmdd_thhz(forecast :: Forecast) :: String
+  @sprintf "%04d%02d%02d_t%02dz" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour
 end
 
 function yyyymmdd(forecast :: Forecast) :: String

@@ -86,6 +86,13 @@ mkpath(out_dir)
 
 paths = []
 
+period_inverse_prediction              = nothing
+period_grid                            = nothing
+period_convective_days_since_epoch_utc = nothing
+period_start_str                       = nothing
+href_run_time_str                      = nothing
+sref_run_time_str                      = nothing
+
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
 
   valid_time_seconds = Forecasts.valid_time_in_seconds_since_epoch_utc(href_forecast)
@@ -112,11 +119,36 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
 
+    if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
+      if !isnothing(period_inverse_prediction)
+        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
+        period_prediction = 1.0 .- period_inverse_prediction
+        PlotMap.plot_map(period_path, period_grid, period_prediction)
+        push!(paths, period_path)
+      end
+      period_inverse_prediction              = 1.0 .- Float64.(mean_predictions)
+      period_grid                            = Forecasts.grid(href_forecast)
+      href_run_time_str                      = Forecasts.yyyymmdd_thhz(href_forecast)
+      sref_run_time_str                      = Forecasts.yyyymmdd_thhz(sref_forecast)
+      period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
+      period_start_str                       = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+      period_stop_str                        = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+    else
+      period_inverse_prediction .*= (1.0 .- Float64.(mean_predictions))
+      period_stop_str             = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+    end
+
     push!(paths, path)
 
     PlotMap.plot_map(path, Forecasts.grid(href_forecast), mean_predictions)
   end
 end
+
+period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
+period_prediction = 1.0 .- period_inverse_prediction
+PlotMap.plot_map(period_path, period_grid, period_prediction)
+push!(paths, period_path)
+
 
 last_href_valid_time_seconds = maximum(map(Forecasts.valid_time_in_seconds_since_epoch_utc, href_forecasts_to_plot))
 longer_range_sref_forecasts = filter(sref_forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) > last_href_valid_time_seconds, sref_forecasts_to_plot)
