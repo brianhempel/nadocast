@@ -87,9 +87,9 @@ mkpath(out_dir)
 paths = []
 
 period_inverse_prediction              = nothing
-period_grid                            = nothing
 period_convective_days_since_epoch_utc = nothing
 period_start_str                       = nothing
+period_stop_str                        = nothing
 href_run_time_str                      = nothing
 sref_run_time_str                      = nothing
 
@@ -119,17 +119,16 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
 
-    # Trying to work around a compiler bug
     global period_inverse_prediction
-    global period_grid
     global period_convective_days_since_epoch_utc
     global period_start_str
+    global period_stop_str
     global href_run_time_str
     global sref_run_time_str
 
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
-        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
+        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)_$(period_start_str)_to_$(period_stop_str)"
         period_prediction = 1.0 .- period_inverse_prediction
         PlotMap.plot_map(period_path, Forecasts.grid(href_forecast), period_prediction)
         push!(paths, period_path)
@@ -151,7 +150,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   end
 end
 
-period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
+period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)_$(period_start_str)_to_$(period_stop_str)"
 period_prediction = 1.0 .- period_inverse_prediction
 PlotMap.plot_map(period_path, Forecasts.grid(href_forecasts_to_plot[1]), period_prediction)
 push!(paths, period_path)
