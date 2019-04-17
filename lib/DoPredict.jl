@@ -119,6 +119,14 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
 
+    # Trying to work around a compiler bug
+    global period_inverse_prediction
+    global period_grid
+    global period_convective_days_since_epoch_utc
+    global period_start_str
+    global href_run_time_str
+    global sref_run_time_str
+
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
         period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(sref_weight)_$(period_start_str)_to_$(period_stop_str)"
