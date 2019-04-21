@@ -98,7 +98,7 @@ end
 def generic_forecast_hour_str(forecast_hour_str)
   # "11-12" => "one hour long"
   forecast_hour_str.gsub(/^\d+-\d+\s+hour/) do |range_str|
-    start, stop = range_str.split(/[\- ]/)[1..2].map(&:to_i)
+    start, stop = range_str.split(/[\- ]/)[0..1].map(&:to_i)
     int_to_english(stop - start) + " hour long"
   end.gsub(/\s*\d+\s*/, "") # "7 hour fcst" => "hour fcst"
 end
