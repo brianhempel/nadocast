@@ -38,10 +38,9 @@ function mean_prob_grib2s_to_forecast(
   end
 
   get_inventory(forecast) = begin
-    forecast_hour_str = "$forecast_hour hour fcst" # Accumulation fields are already excluded by find_common_layers.rb, so it's okay that we don't look for "acc fcst"
     # Somewhat inefficient that each hour must trigger wgrib2 on the same file...could add another layer of caching here.
-    mean_inventory = filter(line -> forecast_hour_str == line.forecast_hour_str, Grib2.read_inventory(mean_grib2_path))
-    prob_inventory = filter(line -> forecast_hour_str == line.forecast_hour_str, Grib2.read_inventory(prob_grib2_path))
+    mean_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(mean_grib2_path))
+    prob_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(prob_grib2_path))
 
     mean_layer_key_to_inventory_line(key) = begin
       i = findfirst(line -> Inventories.inventory_line_key(line) == key, mean_inventory)

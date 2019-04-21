@@ -31,6 +31,86 @@ end
 
 STDERR.print "Sampling #{sample_count} files to find common layers"
 
+# c.f. Inventories.jl
+ENGLISH_NUMBERS = {
+  0  => "zero",
+  1  => "one",
+  2  => "two",
+  3  => "three",
+  4  => "four",
+  5  => "five",
+  6  => "six",
+  7  => "seven",
+  8  => "eight",
+  9  => "nine",
+  10 => "ten",
+  11 => "eleven",
+  12 => "twelve",
+  13 => "thirteen",
+  14 => "fourteen",
+  15 => "fifteen",
+  16 => "sixteen",
+  17 => "seventeen",
+  18 => "eighteen",
+  19 => "nineteen",
+  20 => "twenty",
+  30 => "thirty",
+  40 => "fourty",
+  50 => "fifty",
+  60 => "sixty",
+  70 => "seventy",
+  80 => "eighty",
+  90 => "ninety",
+}
+
+def int_to_english(n, elide_zero: false)
+  if n < 0
+    "negative " + int_to_english(-n)
+  elsif n == 0 && elide_zero
+    ""
+  elsif n >= 1_000_000_000_000
+    trillions, rest = n.divmod(1_000_000_000_000)
+    int_to_english(trillions) + " trillion " + int_to_english(rest, elide_zero: true)
+  elsif n >= 1_000_000_000
+    billions, rest = n.divmod(1_000_000_000)
+    int_to_english(billions) + " billion " + int_to_english(rest, elide_zero: true)
+  elsif n >= 1_000_000
+    millions, rest = n.divmod(1_000_000)
+    int_to_english(millions) + " million " + int_to_english(rest, elide_zero: true)
+  elsif n >= 1_000
+    thousands, rest = n.divmod(1_000)
+    int_to_english(thousands) + " thousand " + int_to_english(rest, elide_zero: true)
+  elsif n >= 100
+    hundreds, rest = n.divmod(100)
+    int_to_english(hundreds) + " hundred " + int_to_english(rest, elide_zero: true)
+  elsif ENGLISH_NUMBERS[n]
+    ENGLISH_NUMBERS[n]
+  else # 21 <= n <= 99 and n not divisible by 10
+    tens, rest = n.divmod(10)
+    ENGLISH_NUMBERS[tens*10] + "-" + ENGLISH_NUMBERS[rest]
+  end.strip
+end
+
+# "7 hour fcst" => "hour fcst"
+# "11-12 hour acc fcst" => "one hour long acc fcst"
+# "11-12 hour max fcst" => "one hour long max fcst"
+# c.f. Inventories.jl
+def generic_forecast_hour_str(forecast_hour_str)
+  # "11-12" => "one hour long"
+  forecast_hour_str.gsub(/^\d+-\d+\s+hour/) do |range_str|
+    start, stop = range_str.split(/[\- ]/)[1..2].map(&:to_i)
+    int_to_english(stop - start) + " hour long"
+  end.gsub(/\s*\d+\s*/, "") # "7 hour fcst" => "hour fcst"
+end
+
+# "7 hour fcst" => 7
+# "11-12 hour acc fcst" => 12
+# "11-12 hour max fcst" => 12
+# c.f. Inventories.jl
+def extract_forecast_hour(forecast_hour_str)
+  Integer(forecast_hour_str[/(\d+) hour (\w+ )?fcst/, 1])
+end
+
 inventories =
   grib2_paths.
     sample(sample_count).
@@ -51,13 +131,13 @@ inventories =
       inventory_str.
         split("\n").
         map      { |line| normalize_inventory_line(line) }.
-        select   { |line| line =~ /:\d+ hour fcst:/ }. # Skip accumulation fields; for HREF they vary from forecast hour to forecast hour.
-        select   { |line| line !~ /:APCP:/ }.          # Skip APCP Total Precipitation fields; for SREF they seem to be off by an hour and mess up the group_by below
+        select   { |line| line =~ /:(\d+-)?\d+ hour (\w+ )?fcst:/ }. # Exclude "0-1 day acc fcst"
+        # select   { |line| line !~ /:APCP:/ }.          # Skip APCP Total Precipitation fields; for SREF they seem to be off by an hour and mess up the group_by below
         map      { |line| line.split(":") }.
-        group_by { |_, _, _, _, _, x_hours_fcst, _, _| x_hours_fcst }. # SREF forecasts contain multiple forecast hours in the same file: split them apart.
+        group_by { |_, _, _, _, _, x_hours_fcst_str, _, _| extract_forecast_hour(x_hours_fcst_str) }. # SREF forecasts contain multiple forecast hours in the same file: split them apart.
         map      { |x_hours_fcst, inventory_lines| inventory_lines }
     end.map do |inventory_lines|
-      inventory_lines.map { |_, _, _, abbrev, desc, x_hours_fcst, prob_level, _| [abbrev, desc, x_hours_fcst.gsub(/\s*\d+\s*/, ""), prob_level] }
+      inventory_lines.map { |_, _, _, abbrev, desc, x_hours_fcst_str, prob_level, _| [abbrev, desc, generic_forecast_hour_str(x_hours_fcst_str), prob_level] }
     end
 
 common   = inventories.reduce(:&)
