@@ -4,10 +4,7 @@ VIL:entire atmosphere:hour fcst:
 VIS:surface:hour fcst:
 REFD:1000 m above ground:hour fcst:
 REFD:4000 m above ground:hour fcst:
-REFD:263 K level:hour fcst:
 GUST:surface:hour fcst:
-UGRD:250 mb:hour fcst:
-VGRD:250 mb:hour fcst:
 HGT:500 mb:hour fcst:
 TMP:500 mb:hour fcst:
 DPT:500 mb:hour fcst:
@@ -31,37 +28,34 @@ TMP:1000 mb:hour fcst:
 DPT:1000 mb:hour fcst:
 UGRD:1000 mb:hour fcst:
 VGRD:1000 mb:hour fcst:
-MSLMA:mean sea level:hour fcst:
+DZDT:0.5-0.8 sigma layer:one hour long ave fcst:
 HGT:1000 mb:hour fcst:
-LTNG:entire atmosphere:hour fcst:
+MAXREF:1000 m above ground:one hour long max fcst:
+MXUPHL:5000-2000 m above ground:one hour long max fcst:
+TCOLG:entire atmosphere:one hour long max fcst:
 UGRD:80 m above ground:hour fcst:
 VGRD:80 m above ground:hour fcst:
 PRES:surface:hour fcst:
 HGT:surface:hour fcst:
 TMP:surface:hour fcst:
 MSTAV:0 m underground:hour fcst:
-CNWAT:surface:hour fcst:
 WEASD:surface:hour fcst:
 SNOWC:surface:hour fcst:
 SNOD:surface:hour fcst:
 TMP:2 m above ground:hour fcst:
-POT:2 m above ground:hour fcst:
 SPFH:2 m above ground:hour fcst:
 DPT:2 m above ground:hour fcst:
-RH:2 m above ground:hour fcst:
 UGRD:10 m above ground:hour fcst:
 VGRD:10 m above ground:hour fcst:
+WIND:10 m above ground:one hour long max fcst:
 CPOFP:surface:hour fcst:
 PRATE:surface:hour fcst:
+APCP:surface:one hour long acc fcst:
+WEASD:surface:one hour long acc fcst:
 CSNOW:surface:hour fcst:
 CICEP:surface:hour fcst:
 CFRZR:surface:hour fcst:
 CRAIN:surface:hour fcst:
-SFCR:surface:hour fcst:
-FRICV:surface:hour fcst:
-SHTFL:surface:hour fcst:
-LHTFL:surface:hour fcst:
-GFLUX:surface:hour fcst:
 VGTYP:surface:hour fcst:
 LFTX:500-1000 mb:hour fcst:
 CAPE:surface:hour fcst:
@@ -78,11 +72,6 @@ PRES:cloud top:hour fcst:
 HGT:cloud top:hour fcst:
 ULWRF:top of atmosphere:hour fcst:
 DSWRF:surface:hour fcst:
-DLWRF:surface:hour fcst:
-USWRF:surface:hour fcst:
-ULWRF:surface:hour fcst:
-VBDSF:surface:hour fcst:
-VDDSF:surface:hour fcst:
 HLCY:3000-0 m above ground:hour fcst:
 HLCY:1000-0 m above ground:hour fcst:
 USTM:6000-0 m above ground:hour fcst:
@@ -91,14 +80,6 @@ VUCSH:1000-0 m above ground:hour fcst:
 VVCSH:1000-0 m above ground:hour fcst:
 VUCSH:6000-0 m above ground:hour fcst:
 VVCSH:6000-0 m above ground:hour fcst:
-HGT:0C isotherm:hour fcst:
-RH:0C isotherm:hour fcst:
-PRES:0C isotherm:hour fcst:
-HGT:highest tropospheric freezing level:hour fcst:
-RH:highest tropospheric freezing level:hour fcst:
-PRES:highest tropospheric freezing level:hour fcst:
-HGT:263 K level:hour fcst:
-HGT:253 K level:hour fcst:
 4LFTX:180-0 mb above ground:hour fcst:
 CAPE:180-0 mb above ground:hour fcst:
 CIN:180-0 mb above ground:hour fcst:
@@ -110,10 +91,5 @@ CAPE:255-0 mb above ground:hour fcst:
 CIN:255-0 mb above ground:hour fcst:
 HGT:equilibrium level:hour fcst:
 PLPL:255-0 mb above ground:hour fcst:
-RHPW:entire atmosphere:hour fcst:
 LAND:surface:hour fcst:
 ICEC:surface:hour fcst:
-SBT123:top of atmosphere:hour fcst:
-SBT124:top of atmosphere:hour fcst:
-SBT113:top of atmosphere:hour fcst:
-SBT114:top of atmosphere:hour fcst:
