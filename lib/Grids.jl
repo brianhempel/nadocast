@@ -383,10 +383,10 @@ function get_interpolating_upsampler(low_res_grid, high_res_grid)
     close_low_res_grid_is = nearby_low_res_grid_is[closest_low_res_i]
     close_low_res_grid_i_distance_squared = _latlon_euclidean_distance_squared(low_res_grid.latlons[closest_low_res_i], latlon)
 
-    ne_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] >= latlon[0] && low_res_grid.latlons[low_res_i][1] >= latlon[1], close_low_res_grid_is)
-    nw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] >= latlon[0] && low_res_grid.latlons[low_res_i][1] <  latlon[1], close_low_res_grid_is)
-    se_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] <  latlon[0] && low_res_grid.latlons[low_res_i][1] >= latlon[1], close_low_res_grid_is)
-    sw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] <  latlon[0] && low_res_grid.latlons[low_res_i][1] <  latlon[1], close_low_res_grid_is)
+    ne_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][1] >= latlon[1] && low_res_grid.latlons[low_res_i][2] >= latlon[2], close_low_res_grid_is)
+    nw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][1] >= latlon[1] && low_res_grid.latlons[low_res_i][2] <  latlon[2], close_low_res_grid_is)
+    se_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][1] <  latlon[1] && low_res_grid.latlons[low_res_i][2] >= latlon[2], close_low_res_grid_is)
+    sw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][1] <  latlon[1] && low_res_grid.latlons[low_res_i][2] <  latlon[2], close_low_res_grid_is)
 
     (lat, lon) = grid.latlons[flat_i]
 
