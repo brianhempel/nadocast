@@ -388,8 +388,6 @@ function get_interpolating_upsampler(low_res_grid, high_res_grid)
     se_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][1] <  latlon[1] && low_res_grid.latlons[low_res_i][2] >= latlon[2], close_low_res_grid_is)
     sw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][1] <  latlon[1] && low_res_grid.latlons[low_res_i][2] <  latlon[2], close_low_res_grid_is)
 
-    (lat, lon) = grid.latlons[flat_i]
-
     # "distances"
     ne_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), ne_low_res_is)
     nw_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), nw_low_res_is)
