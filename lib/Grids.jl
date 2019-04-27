@@ -398,28 +398,28 @@ function get_interpolating_upsampler(low_res_grid, high_res_grid)
       if isempty(ne_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
-        findmin(ne_distances_is)
+        minimum(ne_distances_is)
       end
 
     nw_distance_squared, nw_i =
       if isempty(nw_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
-        findmin(nw_distances_is)
+        minimum(nw_distances_is)
       end
 
     se_distance_squared, se_i =
       if isempty(se_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
-        findmin(se_distances_is)
+        minimum(se_distances_is)
       end
 
     sw_distance_squared, sw_i =
       if isempty(sw_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
-        findmin(sw_distances_is)
+        minimum(sw_distances_is)
       end
 
     ne_inverse_distance = 1.0 / (0.00000001 + √ne_distance_squared)
