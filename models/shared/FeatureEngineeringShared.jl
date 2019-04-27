@@ -350,8 +350,8 @@ end
 
 function make_data(
       grid                      :: Grids.Grid,
-      inventory                 :: Vector{Inventories.InventoryLine}
-      forecast_hour             :: Int64
+      inventory                 :: Vector{Inventories.InventoryLine},
+      forecast_hour             :: Int64,
       data                      :: Array{Float32,2},
       vector_wind_layers        :: Vector{String},
       layer_blocks_to_make      :: Vector{Int64}, # List of indices. See top of this file.
