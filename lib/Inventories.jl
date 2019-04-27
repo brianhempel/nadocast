@@ -13,8 +13,13 @@ end
 
 # c.f. extract_forecast_hour in find_common_layers.rg
 function forecast_hour(line :: InventoryLine) :: Int64
-  hour_str, _ = match(r"(\d+) hour (\w+ )?fcst", line.forecast_hour_str).captures
-  parse(Int64, hour_str)
+  try
+    hour_str, _ = match(r"(\d+) hour (\w+ )?fcst", line.forecast_hour_str).captures
+    parse(Int64, hour_str)
+  catch exception
+    println("Bad line.forecast_hour_str: $(line.forecast_hour_str)")
+    rethrow(exception)
+  end
 end
 
 english_numbers = Dict(
