@@ -395,28 +395,28 @@ function get_interpolating_upsampler(low_res_grid, high_res_grid)
     sw_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), sw_low_res_is)
 
     ne_distance_squared, ne_i =
-      if is_empty(ne_distances_is)
+      if isempty(ne_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
         findmin(ne_distances_is)
       end
 
     nw_distance_squared, nw_i =
-      if is_empty(nw_distances_is)
+      if isempty(nw_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
         findmin(nw_distances_is)
       end
 
     se_distance_squared, se_i =
-      if is_empty(se_distances_is)
+      if isempty(se_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
         findmin(se_distances_is)
       end
 
     sw_distance_squared, sw_i =
-      if is_empty(sw_distances_is)
+      if isempty(sw_distances_is)
         (close_low_res_grid_i_distance_squared, closest_low_res_i)
       else
         findmin(sw_distances_is)
