@@ -177,7 +177,7 @@ end
 
 # @sync doesn't seem to work; poll until subprocesses are done.
 for path in paths
-  while !isfile(path * ".pdf")
+  while !isfile(path * ".pdf") || isfile(path * ".sh")
     sleep(1)
   end
 end
