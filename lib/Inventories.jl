@@ -16,6 +16,8 @@ function forecast_hour(line :: InventoryLine) :: Int64
   try
     if line.forecast_hour_str == "anl"
       return 0
+    elseif occursin(" day ", line.forecast_hour_str) # "0-1 day acc fcst" We don't use these yet.
+      return -1
     end
     hour_str, _ = match(r"(\d+) hour (\w+ )?fcst", line.forecast_hour_str).captures
     parse(Int64, hour_str)
@@ -87,6 +89,7 @@ end
 # "7 hour fcst" => "hour fcst"
 # "11-12 hour acc fcst" => "one hour long acc fcst"
 # "11-12 hour max fcst" => "one hour long max fcst"
+# "0-1 day acc fcst" => "- day acc fcst" we aren't using these fields yet
 # c.f. find_common_layers.rb
 function generic_forecast_hour_str(forecast_hour_str)
   # "11-12" => "one hour long"
