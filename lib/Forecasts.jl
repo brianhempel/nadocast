@@ -137,12 +137,12 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
     try
       Forecasts.get_data(forecast)
     catch exception
-      # if isa(exception, EOFError) || isa(exception, ErrorException)
-      #   println("Bad forecast: $(Forecasts.time_title(forecast))")
-      #   return Base.iterate(iterator, i+1)
-      # else
+      if isa(exception, EOFError) || isa(exception, ErrorException)
+        println("Bad forecast: $(Forecasts.time_title(forecast))")
+        return Base.iterate(iterator, i+1)
+      else
         rethrow(exception)
-      # end
+      end
     end
 
   ((forecast, data), i+1)
