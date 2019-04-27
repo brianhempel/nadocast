@@ -208,6 +208,9 @@ function latlon_to_closest_grid_i_search(grid :: Grid, (target_lat, target_lon) 
   end
 end
 
+# Searches gridpoints outward in a diamond shape from the given center until
+# (a) it starts finding points matching the predicate, and after that until
+# (b) it adds a layer to the diamond and finds no new points matching the predicate
 function diamond_search(predicate, grid :: Grid, center_i :: Int64, center_j :: Int64) :: Vector{Int64}
   any_found_this_diamond  = false
   still_searching_on_grid = true
@@ -361,5 +364,92 @@ function get_upsampler(low_res_grid, high_res_grid)
 
   upsampler
 end
+
+function _latlon_euclidean_distance_squared((lat1, lon1), (lat2, lon2))
+  (lat2-lat1)^2 + (lon2-lon1)^2
+end
+
+# Returns a function that takes a single layer and upsamples it to the higher resolution grid.
+#
+# May have artifacts at the edges.
+#
+# Not really bilinear or bicubic, but not blocky.
+function get_interpolating_upsampler(low_res_grid, high_res_grid)
+  low_res_grid_spacing_miles = max(maximum(low_res_grid.point_heights_miles), maximum(low_res_grid.point_widths_miles))
+  nearby_low_res_grid_is     = radius_grid_is(low_res_grid, 3.0 * low_res_grid_spacing_miles)
+
+  low_res_grid_is_and_weights_on_high_res_grid = map(high_res_grid.latlons) do latlon
+    closest_low_res_i = Grids.latlon_to_closest_grid_i(low_res_grid, latlon)
+    close_low_res_grid_is = nearby_low_res_grid_is[closest_low_res_i]
+    close_low_res_grid_i_distance_squared = _latlon_euclidean_distance_squared(low_res_grid.latlons[closest_low_res_i], latlon)
+
+    ne_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] >= latlon[0] && low_res_grid.latlons[low_res_i][1] >= latlon[1], close_low_res_grid_is)
+    nw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] >= latlon[0] && low_res_grid.latlons[low_res_i][1] <  latlon[1], close_low_res_grid_is)
+    se_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] <  latlon[0] && low_res_grid.latlons[low_res_i][1] >= latlon[1], close_low_res_grid_is)
+    sw_low_res_is = filter(low_res_i -> low_res_grid.latlons[low_res_i][0] <  latlon[0] && low_res_grid.latlons[low_res_i][1] <  latlon[1], close_low_res_grid_is)
+
+    (lat, lon) = grid.latlons[flat_i]
+
+    # "distances"
+    ne_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), ne_low_res_is)
+    nw_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), nw_low_res_is)
+    se_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), se_low_res_is)
+    sw_distances_is = map(low_res_i -> (_latlon_euclidean_distance_squared(low_res_grid.latlons[low_res_i], latlon), low_res_i), sw_low_res_is)
+
+    ne_distance_squared, ne_i =
+      if is_empty(ne_distances_is)
+        (close_low_res_grid_i_distance_squared, closest_low_res_i)
+      else
+        findmin(ne_distances_is)
+      end
+
+    nw_distance_squared, nw_i =
+      if is_empty(nw_distances_is)
+        (close_low_res_grid_i_distance_squared, closest_low_res_i)
+      else
+        findmin(nw_distances_is)
+      end
+
+    se_distance_squared, se_i =
+      if is_empty(se_distances_is)
+        (close_low_res_grid_i_distance_squared, closest_low_res_i)
+      else
+        findmin(se_distances_is)
+      end
+
+    sw_distance_squared, sw_i =
+      if is_empty(sw_distances_is)
+        (close_low_res_grid_i_distance_squared, closest_low_res_i)
+      else
+        findmin(sw_distances_is)
+      end
+
+    ne_inverse_distance = 1.0 / (0.00000001 + √ne_distance_squared)
+    nw_inverse_distance = 1.0 / (0.00000001 + √nw_distance_squared)
+    se_inverse_distance = 1.0 / (0.00000001 + √se_distance_squared)
+    sw_inverse_distance = 1.0 / (0.00000001 + √sw_distance_squared)
+
+    total_inverse_distance = ne_inverse_distance + nw_inverse_distance + se_inverse_distance + sw_inverse_distance
+
+    ne_weight = Float32(ne_inverse_distance / total_inverse_distance)
+    nw_weight = Float32(nw_inverse_distance / total_inverse_distance)
+    se_weight = Float32(se_inverse_distance / total_inverse_distance)
+    sw_weight = Float32(sw_inverse_distance / total_inverse_distance)
+
+    ( [ne_i,      nw_i,      se_i,      sw_i]
+    , [ne_weight, nw_weight, se_weight, sw_weight]
+    )
+  end
+
+  upsampler(low_res_layer) = begin
+    map(low_res_grid_is_and_weights_on_high_res_grid) do low_res_is_and_weights
+      low_res_is, low_res_weights = low_res_is_and_weights
+      sum(low_res_layer[low_res_is] .* low_res_weights)
+    end
+  end
+
+  upsampler
+end
+
 
 end # module Grids
