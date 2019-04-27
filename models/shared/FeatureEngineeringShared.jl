@@ -350,7 +350,8 @@ end
 
 function make_data(
       grid                      :: Grids.Grid,
-      forecast                  :: Forecasts.Forecast,
+      inventory                 :: Vector{Inventories.InventoryLine}
+      forecast_hour             :: Int64
       data                      :: Array{Float32,2},
       vector_wind_layers        :: Vector{String},
       layer_blocks_to_make      :: Vector{Int64}, # List of indices. See top of this file.
@@ -359,7 +360,6 @@ function make_data(
       unique_hundred_mi_mean_is :: Vector{Vector{Int64}};  # If not using, pass an empty vector.
       feature_interaction_terms = []
     ) :: Array{Float32,2}
-  inventory = Forecasts.inventory(forecast)
 
   feature_keys = map(Inventories.inventory_line_key, inventory)
 
@@ -817,7 +817,7 @@ function make_data(
   # Extra layer: the forecast hour.
   #
   # Only 10 hour resolution. Don't want to overfit.
-  out[:, forecast_hour_layer_i] = repeat([Float32(div(forecast.forecast_hour, 10))], grid_point_count)
+  out[:, forecast_hour_layer_i] = repeat([Float32(div(forecast_hour, 10))], grid_point_count)
 
   # Now any interaction terms (multiplication of previously computed terms; computed in order so an interaction term could use a prior interaction term.)
   for interaction_terms_i in 1:length(feature_interaction_terms)

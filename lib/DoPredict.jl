@@ -93,6 +93,8 @@ period_stop_str                        = nothing
 href_run_time_str                      = nothing
 sref_run_time_str                      = nothing
 
+sref_to_href_layer_upsampler = Grids.get_upsampler(SREF.grid(), HREF.grid())
+
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
 
   valid_time_seconds = Forecasts.valid_time_in_seconds_since_epoch_utc(href_forecast)
@@ -111,11 +113,11 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     sref_predictions = MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees)
     href_predictions = MemoryConstrainedTreeBoosting.predict(href_data, href_bin_splits, href_trees)
 
-    sref_predictions_upsampled =
-      map(Forecasts.grid(href_forecast).latlons) do latlon
-        sref_grid_i = Grids.latlon_to_closest_grid_i(SREF.grid(), latlon)
-        sref_predictions[sref_grid_i]
-      end
+    sref_predictions_upsampled = sref_to_href_layer_upsampler(sref_predictions)
+      # map(Forecasts.grid(href_forecast).latlons) do latlon
+      #   sref_grid_i = Grids.latlon_to_closest_grid_i(SREF.grid(), latlon)
+      #   sref_predictions[sref_grid_i]
+      # end
 
     mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
 

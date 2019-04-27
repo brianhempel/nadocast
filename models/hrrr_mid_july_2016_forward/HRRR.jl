@@ -1,7 +1,5 @@
 module HRRR
 
-import Dates
-
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
@@ -81,7 +79,7 @@ function get_feature_engineered_data(forecast, data)
   _unique_fifty_mi_mean_is   = isempty(_unique_fifty_mi_mean_is)   ? Grids.radius_grid_is_less_other_is(grid(), 50.0, _twenty_five_mi_mean_is)                                  : _unique_fifty_mi_mean_is
   _unique_hundred_mi_mean_is = isempty(_unique_hundred_mi_mean_is) ? Grids.radius_grid_is_less_other_is(grid(), 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is)) : _unique_hundred_mi_mean_is
 
-  FeatureEngineeringShared.make_data(grid(), forecast, data, vector_wind_layers, layer_blocks_to_make, _twenty_five_mi_mean_is, _unique_fifty_mi_mean_is, _unique_hundred_mi_mean_is)
+  FeatureEngineeringShared.make_data(grid(), Forecasts.inventory(forecast), forecast.forecast_hour, data, vector_wind_layers, layer_blocks_to_make, _twenty_five_mi_mean_is, _unique_fifty_mi_mean_is, _unique_hundred_mi_mean_is)
 end
 
 function reload_forecasts()
