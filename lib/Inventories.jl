@@ -14,6 +14,9 @@ end
 # c.f. extract_forecast_hour in find_common_layers.rg
 function forecast_hour(line :: InventoryLine) :: Int64
   try
+    if line.forecast_hour_str == "anl"
+      return 0
+    end
     hour_str, _ = match(r"(\d+) hour (\w+ )?fcst", line.forecast_hour_str).captures
     parse(Int64, hour_str)
   catch exception
