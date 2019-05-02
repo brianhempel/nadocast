@@ -353,6 +353,8 @@ function radius_grid_is_less_other_is(grid, miles, grid_is_to_subtract) :: Vecto
 end
 
 # Returns a function that takes a single layer and upsamples it to the higher resolution grid.
+#
+# Nearest neighbor. It's blocky.
 function get_upsampler(low_res_grid, high_res_grid)
   low_res_grid_is_on_high_res_grid = map(high_res_grid.latlons) do latlon
     Grids.latlon_to_closest_grid_i(low_res_grid, latlon)

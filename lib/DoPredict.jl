@@ -93,7 +93,6 @@ period_stop_str                        = nothing
 href_run_time_str                      = nothing
 sref_run_time_str                      = nothing
 
-# sref_to_href_layer_upsampler = Grids.get_upsampler(SREF.grid(), HREF.grid())
 sref_to_href_layer_upsampler = Grids.get_interpolating_upsampler(SREF.grid(), HREF.grid())
 
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
