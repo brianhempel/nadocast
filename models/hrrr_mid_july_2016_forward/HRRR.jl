@@ -125,7 +125,9 @@ function reload_forecasts()
         if i != nothing
           inventory[i]
         else
-          throw("HRRR forecast $(Forecasts.time_title(forecast)) does not have $key: $inventory")
+          exception = Inventories.FieldMissing("HRRR forecast $(Forecasts.time_title(forecast))", key, inventory)
+          
+          throw(exception)
         end
       end
 

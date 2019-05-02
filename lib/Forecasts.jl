@@ -140,6 +140,9 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
       if isa(exception, EOFError) || isa(exception, ErrorException)
         println("Bad forecast: $(Forecasts.time_title(forecast))")
         return Base.iterate(iterator, i+1)
+      elseif isa(exception, Inventories.FieldMissing)
+        println(exception)
+        return Base.iterate(iterator, i+1)
       else
         rethrow(exception)
       end
