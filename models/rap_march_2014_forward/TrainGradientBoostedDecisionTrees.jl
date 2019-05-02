@@ -16,7 +16,12 @@ rap_forecasts = RAP.forecasts()
 
 
 
-# Best so far Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.05,:max_leaves=>10,:l2_regularization=>3.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>10000.0)
+# +12 hour model:
+# Validation size: (20829362 * 2926 = 60,946,713,212 byte validation)
+# Annealing round 1 (21382574 * 2926 = 62,565,411,524 bytes training): loss = 0.0012037802 with Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>2.0,:learning_rate=>0.05,:max_leaves=>12,:l2_regularization=>5.0,:feature_fraction=>0.6,:bagging_temperature=>0.5,:min_data_weight_in_leaf=>15000.0)
+# Stopped. Neither HREF nor SREF benefiting from "annealing".
+# 347:52:48 elapsed (14 days)
+
 
 TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
     rap_forecasts;
