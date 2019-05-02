@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# For downloading from the long term storage request system at https://www.ncdc.noaa.gov/has/HAS.FileAppRouter?datasetname=RAP130&subqueryby=STATION&applname=&outdest=FILE
+# You still have to request the data manually.
+
 # Usage: ruby get_rap_archived.rb https://www1.ncdc.noaa.gov/pub/has/model/HAS011081869/ [thread_count] [base_directory]
 
 base_url = ARGV[0] || raise("Usage: ruby get_rap_archived.rb https://www1.ncdc.noaa.gov/pub/has/model/HAS011081869/ [thread_count] [base_directory]")

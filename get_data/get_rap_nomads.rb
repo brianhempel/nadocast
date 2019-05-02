@@ -2,6 +2,8 @@
 
 require "date"
 
+# Nomads has 1 week ago to 1 year ago of RAP data.
+
 # Modify these constants.
 INV_OR_GRIB    = %w[inv grb2][1]
 DATES          = (Date.new(2017,9,6)..Date.today-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
