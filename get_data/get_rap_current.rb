@@ -7,7 +7,7 @@ FROM_NOMADS = false # (ARGV[0] == "--from-archive")
 RUN_HOURS      = (0..23).to_a
 FORECAST_HOURS = (1..21).to_a
 BASE_DIRECTORY = "/Volumes/RAP_1/rap"
-MIN_FILE_BYTES = 80_000_000
+MIN_FILE_BYTES = 10_000_000
 BAD_FILES      = %w[]
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_NOMADS ? "2" : "4"))
 
