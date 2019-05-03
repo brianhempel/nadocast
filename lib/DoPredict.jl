@@ -4,6 +4,8 @@ import MemoryConstrainedTreeBoosting
 #
 # $ FORECAST_DATE=2019-4-7 make forecast
 
+using Printf
+
 push!(LOAD_PATH, @__DIR__)
 import Forecasts
 import Grids
