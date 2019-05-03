@@ -171,6 +171,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     mean_predictions =
       if rap_count > 0
+        mean_rap_predictions .*= Float32(1.0 / rap_count)
         (mean_rap_predictions .* RAP_VS_HREF_SREF_WEIGHT) .+ (href_sref_mean_predictions .* (1.0 - RAP_VS_HREF_SREF_WEIGHT))
       else
         href_sref_mean_predictions
