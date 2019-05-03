@@ -54,6 +54,11 @@ function time_title(forecast :: Forecast) :: String
   @sprintf "%04d-%02d-%02d %02dZ +%d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
 end
 
+function valid_hhz(forecast :: Forecast) :: String
+  utc_datetime = valid_utc_datetime(forecast)
+  @sprintf "%02dz" Dates.hour(utc_datetime)
+end
+
 function valid_yyyymmdd_hhz(forecast :: Forecast) :: String
   utc_datetime = valid_utc_datetime(forecast)
   @sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime)

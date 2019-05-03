@@ -188,7 +188,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
-        period_raps_str = isempty(rap_strs) ? "" : "_rap_" * join(sort(collect(period_rap_strs)), "_")
+        period_raps_str = isempty(period_rap_strs) ? "" : "_rap_" * join(sort(collect(period_rap_strs)), "_")
         period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(period_raps_str)_$(period_start_str)_to_$(period_stop_str)"
         period_prediction = 1.0 .- period_inverse_prediction
         PlotMap.plot_map(period_path, Forecasts.grid(href_forecast), period_prediction)
@@ -199,11 +199,11 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       sref_run_time_str                      = "t$(sref_forecast.run_hour)z"
       period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       period_start_str                       = Forecasts.valid_yyyymmdd_hhz(href_forecast)
-      period_stop_str                        = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+      period_stop_str                        = Forecasts.valid_hhz(href_forecast)
       period_raps_str                        = Set{String}(Set(rap_strs))
     else
       period_inverse_prediction .*= (1.0 .- Float64.(mean_predictions))
-      period_stop_str             = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+      period_stop_str             = Forecasts.valid_hhz(href_forecast)
       if !isempty(rap_strs)
         push!(period_rap_strs, rap_strs...)
       end
@@ -215,7 +215,8 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   end
 end
 
-period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(join(sort(collect(period_rap_strs)), ""))_$(period_start_str)_to_$(period_stop_str)"
+period_raps_str = isempty(period_rap_strs) ? "" : "_rap_" * join(sort(collect(period_rap_strs)), "_")
+period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(period_raps_str)_$(period_start_str)_to_$(period_stop_str)"
 period_prediction = 1.0 .- period_inverse_prediction
 PlotMap.plot_map(period_path, Forecasts.grid(href_forecasts_to_plot[1]), period_prediction)
 push!(paths, period_path)
