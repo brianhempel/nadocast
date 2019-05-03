@@ -15,13 +15,19 @@ import SREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_mid_2018_forward")
 import HREF
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/rap_march_2014_forward")
+import RAP
+
 
 HREF_WEIGHT =
   if haskey(ENV, "HREF_WEIGHT")
     parse(Float32, ENV["HREF_WEIGHT"])
   else
-    0.5
+    0.75
   end
+
+RAP_VS_HREF_SREF_WEIGHT = 1.0
+
 
 
 sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model"
@@ -60,6 +66,25 @@ sref_bin_splits, sref_trees = MemoryConstrainedTreeBoosting.load(sref_model_path
 
 
 
+rap_model_path = (@__DIR__) * "/../models/rap_march_2014_forward/gbdt_f12_2019-04-17T19.27.16.893/568_trees_loss_0.0012037802.model"
+
+all_rap_forecasts = RAP.forecasts()
+
+rap_forecast_candidates = filter(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) >= sref_run_time_seconds, all_rap_forecasts)
+
+if haskey(ENV, "FORECAST_DATE")
+  # Use 10z RAP at latest, should be out before 12z
+  year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
+  run_time_seconds_10z = Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 10)
+
+  rap_forecast_candidates = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) <= run_time_seconds_10z, rap_forecast_candidates)
+end
+
+rap_bin_splits, rap_trees = MemoryConstrainedTreeBoosting.load(rap_model_path)
+
+
+
+
 href_model_path = (@__DIR__) * "/../models/href_mid_2018_forward/gbdt_f1-36_2019-03-28T13.34.42.186/99_trees_annealing_round_1_loss_0.0012652115.model"
 
 all_href_forecasts = HREF.forecasts()
@@ -92,8 +117,10 @@ period_start_str                       = nothing
 period_stop_str                        = nothing
 href_run_time_str                      = nothing
 sref_run_time_str                      = nothing
+period_rap_strs                        = Set{String}(Set())
 
 sref_to_href_layer_upsampler = Grids.get_interpolating_upsampler(SREF.grid(), HREF.grid())
+rap_to_href_layer_upsampler  = Grids.get_upsampler(RAP.grid(), HREF.grid())
 
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
 
@@ -104,7 +131,13 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(perhaps_sref_forecast)
     sref_weight = 1.0 - HREF_WEIGHT
 
-    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_weight_$(HREF_WEIGHT)_sref_" * Forecasts.yyyymmdd_thhz_fhh(sref_forecast) * "_weight_$(sref_weight)"
+    # Take up to 3 time-lagged RAPs.
+    rap_forecasts = collect(Iterators.take(reverse(sort(filter(rap_forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(rap_forecast) == valid_time_seconds, rap_forecast_candidates), by=Forecasts.run_time_in_seconds_since_epoch_utc)), 3))
+
+    rap_strs = map(rap_forecast -> "_rap_t$(rap_forecast.run_hour)z", rap_forecasts)
+    raps_str = join(rap_strs, "")
+
+    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref_t$(sref_forecast.run_hour)z_w$(sref_weight)" * raps_str
     println(path)
 
     sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
@@ -114,12 +147,29 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     href_predictions = MemoryConstrainedTreeBoosting.predict(href_data, href_bin_splits, href_trees)
 
     sref_predictions_upsampled = sref_to_href_layer_upsampler(sref_predictions)
-      # map(Forecasts.grid(href_forecast).latlons) do latlon
-      #   sref_grid_i = Grids.latlon_to_closest_grid_i(SREF.grid(), latlon)
-      #   sref_predictions[sref_grid_i]
-      # end
 
-    mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
+    mean_rap_predictions = nothing
+    rap_count            = 0
+
+    for (rap_forecast, rap_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(rap_forecasts)
+      rap_data                  = RAP.get_feature_engineered_data(rap_forecast, rap_data)
+      rap_predictions           = MemoryConstrainedTreeBoosting.predict(rap_data, rap_bin_splits, rap_trees)
+      if isnothing(mean_rap_predictions)
+        mean_rap_predictions = rap_to_href_layer_upsampler(rap_predictions)
+      else
+        mean_rap_predictions .+= rap_to_href_layer_upsampler(rap_predictions)
+      end
+      rap_count += 1
+    end
+
+    href_sref_mean_predictions = (href_predictions .* HREF_WEIGHT) .+ (sref_predictions_upsampled .* sref_weight)
+
+    mean_predictions =
+      if rap_count > 0
+        (mean_rap_predictions .* RAP_VS_HREF_SREF_WEIGHT) .+ (href_sref_mean_predictions .* (1.0 - RAP_VS_HREF_SREF_WEIGHT))
+      else
+        href_sref_mean_predictions
+      end
 
     global period_inverse_prediction
     global period_convective_days_since_epoch_utc
@@ -127,23 +177,27 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     global period_stop_str
     global href_run_time_str
     global sref_run_time_str
+    global period_rap_strs
+
 
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
-        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)_$(period_start_str)_to_$(period_stop_str)"
+        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(join(sort(collect(period_rap_strs)), ""))_$(period_start_str)_to_$(period_stop_str)"
         period_prediction = 1.0 .- period_inverse_prediction
         PlotMap.plot_map(period_path, Forecasts.grid(href_forecast), period_prediction)
         push!(paths, period_path)
       end
       period_inverse_prediction              = 1.0 .- Float64.(mean_predictions)
       href_run_time_str                      = Forecasts.yyyymmdd_thhz(href_forecast)
-      sref_run_time_str                      = Forecasts.yyyymmdd_thhz(sref_forecast)
+      sref_run_time_str                      = "t$(sref_forecast.run_hour)z"
       period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       period_start_str                       = Forecasts.valid_yyyymmdd_hhz(href_forecast)
       period_stop_str                        = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+      period_raps_str                        = Set{String}(Set(rap_strs))
     else
       period_inverse_prediction .*= (1.0 .- Float64.(mean_predictions))
       period_stop_str             = Forecasts.valid_yyyymmdd_hhz(href_forecast)
+      push!(period_rap_strs, rap_strs...)
     end
 
     push!(paths, path)
@@ -152,7 +206,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   end
 end
 
-period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)_$(period_start_str)_to_$(period_stop_str)"
+period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(join(sort(collect(period_rap_strs)), ""))_$(period_start_str)_to_$(period_stop_str)"
 period_prediction = 1.0 .- period_inverse_prediction
 PlotMap.plot_map(period_path, Forecasts.grid(href_forecasts_to_plot[1]), period_prediction)
 push!(paths, period_path)
