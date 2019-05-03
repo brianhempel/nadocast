@@ -203,7 +203,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     else
       period_inverse_prediction .*= (1.0 .- Float64.(mean_predictions))
       period_stop_str             = Forecasts.valid_yyyymmdd_hhz(href_forecast)
-      push!(period_rap_strs, rap_strs...)
+      if !isempty(rap_strs)
+        push!(period_rap_strs, rap_strs...)
+      end
     end
 
     push!(paths, path)
