@@ -32,7 +32,7 @@ RAP_VS_HREF_SREF_WEIGHT =
   if haskey(ENV, "RAP_VS_HREF_SREF_WEIGHT")
     parse(Float32, ENV["RAP_VS_HREF_SREF_WEIGHT"])
   else
-    1.0
+    0.5
   end
 
 
@@ -146,9 +146,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       if isempty(rap_strs)
         ""
       elseif length(rap_strs) == 1
-        "_rap_" * rap_strs[1]
+        "_rap_" * rap_strs[1] * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
       else
-        "_rap_" * first(rap_strs) * "-" * last(rap_strs)
+        "_rap_" * first(rap_strs) * "-" * last(rap_strs) * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
       end
 
     path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref_t$(sref_forecast.run_hour)z_w$(sref_weight)" * raps_str
@@ -201,9 +201,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
           if isempty(period_rap_strs)
             ""
           elseif length(period_rap_strs) == 1
-            "_rap_" * period_rap_strs[1]
+            "_rap_" * period_rap_strs[1] * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
           else
-            "_rap_" * first(period_rap_strs) * "-" * last(period_rap_strs)
+            "_rap_" * first(period_rap_strs) * "-" * last(period_rap_strs) * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
           end
 
         period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(period_raps_str)_$(period_start_str)_to_$(period_stop_str)"
@@ -236,9 +236,9 @@ period_raps_str =
   if isempty(period_rap_strs)
     ""
   elseif length(period_rap_strs) == 1
-    "_rap_" * period_rap_strs[1]
+    "_rap_" * period_rap_strs[1] * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
   else
-    "_rap_" * first(period_rap_strs) * "-" * last(period_rap_strs)
+    "_rap_" * first(period_rap_strs) * "-" * last(period_rap_strs) * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
   end
 
 period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "_w$(1.0 - HREF_WEIGHT)$(period_raps_str)_$(period_start_str)_to_$(period_stop_str)"
