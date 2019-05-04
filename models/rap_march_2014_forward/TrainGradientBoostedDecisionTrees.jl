@@ -14,7 +14,9 @@ model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))
 rap_forecasts = RAP.forecasts()
 # rap_forecasts = rap_forecasts[1:200:length(rap_forecasts)] # Subset the data
 
-
+# 11650 for training. (2107 with tornadoes.)
+# 2278 for validation.
+# 2287 for testing.
 
 # +12 hour model:
 # Validation size: (20829362 * 2926 = 60,946,713,212 byte validation)

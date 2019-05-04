@@ -16,6 +16,10 @@ hrrr_forecasts = HRRR.forecasts()
 
 
 
+# 6013 for training. (1111 with tornadoes.)
+# 1260 for validation.
+# 1206 for testing.
+
 
 
 TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
@@ -25,9 +29,9 @@ TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperpar
     get_feature_engineered_data = HRRR.get_feature_engineered_data,
 
     annealing_rounds = 3,
-    basal_inclusion_probability = 0.04f0,
+    basal_inclusion_probability = 0.06f0,
     prediction_inclusion_multiplier = 1000.0f0,
-    validation_inclusion_probability = 0.2f0,
+    validation_inclusion_probability = 0.3f0,
 
     bin_split_forecast_sample_count = 200,
     max_iterations_without_improvement = 20,
