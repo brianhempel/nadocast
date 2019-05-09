@@ -14,12 +14,15 @@ model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))
 hrrr_forecasts = HRRR.forecasts()
 # hrrr_forecasts = hrrr_forecasts[1:200:length(hrrr_forecasts)] # Subset the data
 
-
-
 # 6013 for training. (1111 with tornadoes.)
 # 1260 for validation.
 # 1206 for testing.
 
+# +12 hour model:
+# Validation size: (36642832 * 1678 = 61,486,672,096 byte validation)
+# Annealing round 1 (35036097 * 1678 = 58,790,570,766 bytes training): loss = 0.0011697214 with Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>1.5,:learning_rate=>0.1,:max_leaves=>10,:l2_regularization=>5.0,:feature_fraction=>0.6,:bagging_temperature=>0.1,:min_data_weight_in_leaf=>10000.0)
+# Stopped. Neither HREF nor SREF benefiting from "annealing".
+# 123:56:00 elapsed (5 days)
 
 
 TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
