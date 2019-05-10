@@ -164,7 +164,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       hrrr_forecasts = []
     end
 
-    rap_strs = map(rap_forecast -> (@sprintf "t%02dz" rap_forecast.run_hour), rap_forecasts)
+    rap_strs = map(rap_forecast -> (@sprintf "%02dz" rap_forecast.run_hour), rap_forecasts)
     raps_str =
       if isempty(rap_strs)
         ""
@@ -181,7 +181,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
         "_hrrr_w$(HRRR_VS_OTHERS_WEIGHT)"
       end
 
-    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref_t$(sref_forecast.run_hour)z" * raps_str * hrrr_str
+    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref_$(sref_forecast.run_hour)z" * raps_str * hrrr_str
     println(path)
 
     sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
@@ -265,7 +265,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       end
       period_inverse_prediction              = 1.0 .- Float64.(mean_predictions)
       href_run_time_str                      = Forecasts.yyyymmdd_thhz(href_forecast)
-      sref_run_time_str                      = "t$(sref_forecast.run_hour)z"
+      sref_run_time_str                      = "$(sref_forecast.run_hour)z"
       period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       period_start_str                       = Forecasts.valid_yyyymmdd_hhz(href_forecast)
       period_stop_str                        = Forecasts.valid_hhz(href_forecast)
