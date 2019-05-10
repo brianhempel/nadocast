@@ -169,19 +169,19 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       if isempty(rap_strs)
         ""
       elseif length(rap_strs) == 1
-        "_rap_" * rap_strs[1] * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
+        "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * rap_strs[1]
       else
-        "_rap_" * first(rap_strs) * "-" * last(rap_strs) * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
+        "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * first(sort(rap_strs)) * "-" * last(sort(rap_strs))
       end
 
     hrrr_str =
       if isempty(hrrr_forecasts)
         ""
       else
-        "_hrrr_w$(HRRR_VS_OTHERS_WEIGHT)"
+        "_hrrr$(HRRR_VS_OTHERS_WEIGHT)"
       end
 
-    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref_$(sref_forecast.run_hour)z" * raps_str * hrrr_str
+    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref$(sref_forecast.run_hour)z" * raps_str * hrrr_str
     println(path)
 
     sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
@@ -253,12 +253,12 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
           if isempty(period_rap_strs)
             ""
           elseif length(period_rap_strs) == 1
-            "_rap_" * period_rap_strs[1] * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
+            "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * period_rap_strs[1]
           else
-            "_rap_" * first(period_rap_strs) * "-" * last(period_rap_strs) * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
+            "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * first(sort(collect(period_rap_strs))) * "-" * last(sort(collect(period_rap_strs)))
           end
 
-        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)_to_$(period_stop_str)"
+        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)-$(period_stop_str)"
         period_prediction = 1.0 .- period_inverse_prediction
         PlotMap.plot_map(period_path, Forecasts.grid(href_forecast), period_prediction)
         push!(paths, period_path)
@@ -292,12 +292,12 @@ period_raps_str =
   if isempty(period_rap_strs)
     ""
   elseif length(period_rap_strs) == 1
-    "_rap_" * period_rap_strs[1] * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
+    "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * period_rap_strs[1]
   else
-    "_rap_" * first(period_rap_strs) * "-" * last(period_rap_strs) * "_w$(RAP_VS_HREF_SREF_WEIGHT)"
+    "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * first(sort(collect(period_rap_strs))) * "-" * last(sort(collect(period_rap_strs)))
   end
 
-period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref_" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)_to_$(period_stop_str)"
+period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)-$(period_stop_str)"
 period_prediction = 1.0 .- period_inverse_prediction
 PlotMap.plot_map(period_path, Forecasts.grid(href_forecasts_to_plot[1]), period_prediction)
 push!(paths, period_path)
