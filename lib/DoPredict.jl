@@ -20,6 +20,9 @@ import HREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/rap_march_2014_forward")
 import RAP
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/hrrr_mid_july_2016_forward")
+import HRRR
+
 
 HREF_WEIGHT =
   if haskey(ENV, "HREF_WEIGHT")
