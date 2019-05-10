@@ -232,11 +232,11 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     if rap_count > 0
       mean_predictions = (mean_rap_predictions .* RAP_VS_HREF_SREF_WEIGHT) .+ (mean_predictions .* (1.0 - RAP_VS_HREF_SREF_WEIGHT))
-    else
+    end
 
     if hrrr_count > 0
       mean_predictions = (mean_hrrr_predictions .* HRRR_VS_OTHERS_WEIGHT) .+ (mean_predictions .* (1.0 - HRRR_VS_OTHERS_WEIGHT))
-    else
+    end
 
     global period_inverse_prediction
     global period_convective_days_since_epoch_utc
