@@ -5,8 +5,10 @@ require File.expand_path("../../storm_data/storm_events.rb", __FILE__)
 
 FROM_ARCHIVE = (ARGV[0] == "--from-archive")
 
-RUN_HOURS      = (0..23).to_a
-FORECAST_HOURS = [2, 6, 12, 18]
+# RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_hrrr.rb
+
+RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
+FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 12, 18]
 BASE_DIRECTORY = "/Volumes/HRRR_1/hrrr"
 MIN_FILE_BYTES = 80_000_000
 BAD_FILES      = %w[]
