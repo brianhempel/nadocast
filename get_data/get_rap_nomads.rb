@@ -6,9 +6,9 @@ require "date"
 
 # Modify these constants.
 INV_OR_GRIB    = %w[inv grb2][1]
-DATES          = (Date.new(2017,9,6)..Date.today-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
+DATES          = (Date.new(2018,6,25)..Date.today-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
 HOURS_OF_DAY   = (0..23).to_a
-FORECAST_HOURS = [1,2,5,6,11,12,17,18] # RAP forcasts 0 - 21 hours ahead (0-18 before fall 2016). +0 is analysis, +1 barely comes out before its valid time, so +2 hours is the first real forecast.
+FORECAST_HOURS = [1,2,3,5,6,7,11,12,13,16,17,18] # RAP forcasts 0 - 21 hours ahead (0-18 before fall 2016). +0 is analysis, +1 barely comes out before its valid time, so +2 hours is the first real forecast.
 BASE_URL       = FORECAST_HOURS.max <= 1 ? "https://nomads.ncdc.noaa.gov/data/rucanl" : "https://nomads.ncdc.noaa.gov/data/rap130" # Based a single sample, files in these two folders are identical if they exist in both
 BASE_DIRECTORY = INV_OR_GRIB == "inv" ? "inventory_files" : "/Volumes/RAP_1/rap"
 MIN_FILE_BYTES = INV_OR_GRIB == "inv" ? 1000 : 10_000_000
