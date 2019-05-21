@@ -7,6 +7,9 @@ FROM_ARCHIVE = (ARGV[0] == "--from-archive")
 
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
 
+# For getting the HRRRs associated with the SREF/HREF forecasts we have
+# START_DATE=2018-6-25 FORECAST_HOURS=1,2,3,4,5,6,10,11,12,16,17,18 ruby get_hrrr.rb --from-archive
+
 RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 12, 18]
 BASE_DIRECTORY = "/Volumes/HRRR_1/hrrr"
@@ -25,8 +28,10 @@ loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mou
 loop { break if Dir.exists?("/Volumes/HRRR_2/"); puts "Waiting for HRRR_2 to mount..."; sleep 4 }
 
 if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +12 +18 forecasts.
+  start_date_parts = ENV["START_DATE"]&.split("-")&.map(&:to_i) || [2016,7,15]
+
   # https://pando-rgw01.chpc.utah.edu/hrrr/sfc/20180101/hrrr.t00z.wrfsfcf00.grib2
-  DATES = (Date.new(2016,7,15)..Date.today).to_a
+  DATES = (Date.new(*start_date_parts)..Date.today).to_a
 
   # This filtering takes five minutes.
   forecasts_to_get =
