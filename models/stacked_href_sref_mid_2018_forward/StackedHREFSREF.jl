@@ -102,8 +102,8 @@ function reload_forecasts()
   sref_prediction_forecasts, _, _, sref_get_feature_engineered_prediction_data =
     PredictionForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
       all_sref_forecasts,
-      HREF.vector_wind_layers,
-      HREF.get_feature_engineered_data,
+      SREF.vector_wind_layers,
+      SREF.get_feature_engineered_data,
       (sref_data -> MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees))
     )
 

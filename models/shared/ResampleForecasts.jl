@@ -15,6 +15,8 @@ import Inventories
 # forecasts, example_forecast, grid, get_feature_engineered_data
 function forecasts_example_forecast_grid_get_feature_engineered_data(original_forecasts, original_get_feature_engineered_data, layer_resampler, output_grid)
 
+  grid_point_count = output_grid.height * output_grid.width
+
   forecasts = map(original_forecasts) do original_forecast
     get_inventory(forecast) = begin
       Forecasts.inventory(original_forecast)
@@ -22,7 +24,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(original_fo
 
     # Only get_feature_engineered_data operates. It'd be a waste to call this, resample, then call get_feature_engineered_data which cannot use the resampled data.
     get_data(forecast) = begin
-      Array{Float32}(undef, (0,0))
+      Array{Float32}(undef, (grid_point_count,0))
     end
 
     get_grid(forecast) = begin
@@ -33,8 +35,6 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(original_fo
   end
 
   example_forecast = forecasts[1]
-
-  grid_point_count = output_grid.height * output_grid.width
 
   get_feature_engineered_data(forecast, junk_data) = begin
     original_forecast = forecast.based_on[1]
