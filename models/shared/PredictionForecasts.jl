@@ -93,7 +93,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
 
     grid_point_count = size(basic_predictions, 1)
 
-    predictions_with_winds = Array{Float32}(undef, (grid_point_count, length(inventory_with_winds))
+    predictions_with_winds = Array{Float32}(undef, (grid_point_count, length(inventory_with_winds)))
 
     base_data = Forecasts.get_data(base_forecast) # Getting base data again: a little inefficient
 
