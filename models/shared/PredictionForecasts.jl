@@ -83,7 +83,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
             [ "U" * simple_wind_layer_key
             , "V" * simple_wind_layer_key ]
           end
-        end
+        end...
       )
 
     wind_layer_is =
