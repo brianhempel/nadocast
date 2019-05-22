@@ -22,7 +22,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(original_fo
 
     # Only get_feature_engineered_data operates. It'd be a waste to call this, resample, then call get_feature_engineered_data which cannot use the resampled data.
     get_data(forecast) = begin
-      []
+      Array{Float32}(undef, (0,0))
     end
 
     get_grid(forecast) = begin
