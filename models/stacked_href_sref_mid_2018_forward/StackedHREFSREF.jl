@@ -2,6 +2,8 @@ module StackedHREFSREF
 
 import Dates
 
+import MemoryConstrainedTreeBoosting
+
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
