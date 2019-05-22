@@ -22,9 +22,19 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(original_fo
       Forecasts.inventory(original_forecast)
     end
 
-    # Only get_feature_engineered_data operates. It'd be a waste to call this, resample, then call get_feature_engineered_data which cannot use the resampled data.
+    # It's a waste to call this, resample, then call get_feature_engineered_data which should not use this resampled data. Oh well.
     get_data(forecast) = begin
-      Array{Float32}(undef, (grid_point_count,0))
+      original_data = Forecasts.get_data(original_forecast)
+
+      feature_count = size(original_data, 2)
+
+      resampled = Array{Float32}(undef, (grid_point_count, feature_count))
+
+      for feature_i in 1:feature_count
+        resampled[:, feature_i] = layer_resampler(original_data[:, feature_i])
+      end
+
+      resampled
     end
 
     get_grid(forecast) = begin
