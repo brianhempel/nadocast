@@ -58,7 +58,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
   unique_hundred_mi_mean_is = Vector{Int64}[] # Grid point indicies within 100mi but not within 50mi
 
   example_forecast = forecasts[1]
-  grid             = Forecasts.grid(example_forecast())
+  grid             = Forecasts.grid(example_forecast)
 
   twenty_five_mi_mean_is    = Grids.radius_grid_is(grid, 25.0)
   unique_fifty_mi_mean_is   = Grids.radius_grid_is_less_other_is(grid, 50.0, _twenty_five_mi_mean_is)
