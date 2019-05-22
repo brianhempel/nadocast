@@ -140,7 +140,7 @@ function reload_forecasts()
   nadocast_run_and_forecast_times = []
 
   run_date = Dates.Date(2018, 6, 1)
-  while run_date <= Date(now(UTC))
+  while run_date <= Dates.Date(Dates.now(UTC))
     run_year  = Dates.year(run_date)
     run_month = Dates.month(run_date)
     run_day   = Dates.day(run_date)
