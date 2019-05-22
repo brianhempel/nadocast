@@ -91,7 +91,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
         Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
       end
 
-    inventory_with_winds = Forecasts.inventory(forecast) + base_inventory[wind_layer_is] # Add the winds to the prediction layer.
+    inventory_with_winds = vcat(Forecasts.inventory(forecast), base_inventory[wind_layer_is]) # Add the winds to the prediction layer.
 
     grid_point_count = size(basic_predictions, 1)
 
