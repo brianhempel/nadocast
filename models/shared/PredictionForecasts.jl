@@ -91,7 +91,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
         Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
       end
 
-    inventory_with_winds = vcat(Forecasts.inventory(forecast), base_inventory[wind_layer_is]) # Add the winds to the prediction layer.
+    inventory_with_winds = vcat(Forecasts.inventory(forecast)[1:1], base_inventory[wind_layer_is]) # Add the winds to the prediction layer.
 
     grid_point_count = size(basic_predictions, 1)
 
@@ -102,7 +102,17 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
     predictions_with_winds[:,1]                                = basic_predictions[:,1]
     predictions_with_winds[:,2:size(predictions_with_winds,2)] = base_data[:,wind_layer_is]
 
-    feature_engineered_data_with_winds = FeatureEngineeringShared.make_data(grid, inventory_with_winds, forecast.forecast_hour, predictions_with_winds, base_forecast_vector_wind_layer_keys, layer_blocks_to_make, twenty_five_mi_mean_is, unique_fifty_mi_mean_is, unique_hundred_mi_mean_is)
+    feature_engineered_data_with_winds =
+      FeatureEngineeringShared.make_data(
+        grid,
+        inventory_with_winds,
+        forecast.forecast_hour,
+        predictions_with_winds,
+        base_forecast_vector_wind_layers,
+        layer_blocks_to_make,
+        twenty_five_mi_mean_is,
+        unique_fifty_mi_mean_is, unique_hundred_mi_mean_is
+      )
 
     # Now remove the winds (and the div(forecast_hour, 10) layer).
     feature_engineered_data_with_winds[:, 1:length(inventory_with_winds):(size(feature_engineered_data_with_winds, 2) - 1)]
