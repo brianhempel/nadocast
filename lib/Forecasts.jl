@@ -19,6 +19,7 @@ mutable struct Forecast
   run_day        :: Int64
   run_hour       :: Int64
   forecast_hour  :: Int64
+  based_on       :: Vector{Forecast} # If createded by a forecast combinator, point to original(s).
   _grid          :: Union{Grids.Grid, Nothing}                               # For lazy loading. Use grid() below.
   _inventory     :: Union{Vector{Inventories.InventoryLine}, Nothing}        # For lazy loading. Use inventory() below.
   _data          :: Union{Array{Float32,2}, Nothing}                         # For lazy loading. Use data() below.
@@ -26,8 +27,8 @@ mutable struct Forecast
   _get_inventory # :: Function((Forecast,), Vector{Inventories.InventoryLine}) # For lazy loading.
   _get_data      # :: Function((Forecast,), Array{Float32,2})                  # For lazy loading.
 
-  Forecast(run_year, run_month, run_day, run_hour, forecast_hour, get_grid, get_inventory, get_data) =
-    new(run_year, run_month, run_day, run_hour, forecast_hour, nothing, nothing, nothing, get_grid, get_inventory, get_data)
+  Forecast(run_year, run_month, run_day, run_hour, forecast_hour, based_on, get_grid, get_inventory, get_data) =
+    new(run_year, run_month, run_day, run_hour, forecast_hour, based_on, nothing, nothing, nothing, get_grid, get_inventory, get_data)
 end
 
 function run_time_in_seconds_since_epoch_utc(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64) :: Int64

@@ -83,7 +83,7 @@ function mean_prob_grib2s_to_forecast(
     hcat(mean_data, prob_data)
   end
 
-  Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, get_grid, get_inventory, get_data)
+  Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, [], get_grid, get_inventory, get_data)
 end
 
 

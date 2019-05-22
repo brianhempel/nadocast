@@ -18,3 +18,4 @@ gmt.history
 .ipynb_checkpoints/
 storm_data/tornadoes_old.csv
 grib2_decoded_cache/
+remote_forecasts/

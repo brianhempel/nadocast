@@ -79,6 +79,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     model_prefix = "",
     get_feature_engineered_data = nothing,
     bin_split_forecast_sample_count = 100,
+    balance_labels_when_computing_bin_splits = false,
     max_iterations_without_improvement = 20,
     configs...
   )
@@ -110,9 +111,24 @@ function train_with_coordinate_descent_hyperparameter_search(
 
   println("Preparing bin splits by sampling $bin_split_forecast_sample_count training tornado hour forecasts")
 
-  (bin_sample_X, _, _) = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count))
+  (bin_sample_X, bin_sample_y, _) = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count))
+  if balance_labels_when_computing_bin_splits
+    positive_indices = findall(bin_sample_y .>  0.5f0)
+    negative_indices = findall(bin_sample_y .<= 0.5f0)
+    print("filtering to balance $(length(positive_indices)) positive and $(length(negative_indices)) negative labels...")
+    if length(positive_indices) > length(negative_indices)
+      positive_indices = collect(Iterators.take(Random.shuffle(positive_indices), length(negative_indices)))
+    else
+      negative_indices = collect(Iterators.take(Random.shuffle(negative_indices), length(positive_indices)))
+    end
+    indicies_to_sample = sort(vcat(positive_indices, negative_indices)) # Vain hopes of gaining cache locality.
+
+    bin_sample_X = bin_sample_X[indicies_to_sample, :]
+  end
+  print("computing bin splits...")
   bin_splits           = MemoryConstrainedTreeBoosting.prepare_bin_splits(bin_sample_X)
   bin_sample_X         = nothing # freeeeeeee
+  bin_sample_y         = nothing # freeeeeeee
 
   println("done.")
 

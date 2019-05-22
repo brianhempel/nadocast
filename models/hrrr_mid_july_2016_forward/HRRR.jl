@@ -126,7 +126,7 @@ function reload_forecasts()
           inventory[i]
         else
           exception = Inventories.FieldMissing("HRRR forecast $(Forecasts.time_title(forecast))", key, inventory)
-          
+
           throw(exception)
         end
       end
@@ -149,7 +149,7 @@ function reload_forecasts()
       data
     end
 
-    forecast = Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, get_grid, get_inventory, get_data)
+    forecast = Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, [], get_grid, get_inventory, get_data)
 
     push!(_forecasts, forecast)
   end
