@@ -49,7 +49,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
       reshape(predictions, (:,1)) # Make the predictions a 2D features array with 1 feature
     end
 
-    Forecast(base_forecast.run_year, base_forecast.run_month, base_forecast.run_day, base_forecast.run_hour, base_forecast.forecast_hour, [base_forecast], base_forecast._get_grid, get_inventory, get_data)
+    Forecasts.Forecast(base_forecast.run_year, base_forecast.run_month, base_forecast.run_day, base_forecast.run_hour, base_forecast.forecast_hour, [base_forecast], base_forecast._get_grid, get_inventory, get_data)
   end
 
 

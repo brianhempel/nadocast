@@ -42,7 +42,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(paired_fore
         right_forecast
       end
 
-    Forecast(later_forecast.run_year, later_forecast.run_month, later_forecast.run_day, later_forecast.run_hour, later_forecast.forecast_hour, [left_forecast, right_forecast], later_forecast._get_grid, get_inventory, get_data)
+    Forecasts.Forecast(later_forecast.run_year, later_forecast.run_month, later_forecast.run_day, later_forecast.run_hour, later_forecast.forecast_hour, [left_forecast, right_forecast], later_forecast._get_grid, get_inventory, get_data)
   end
 
   example_forecast = forecasts[1]

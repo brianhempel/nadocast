@@ -29,7 +29,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(original_fo
       output_grid
     end
 
-    Forecast(original_forecast.run_year, original_forecast.run_month, original_forecast.run_day, original_forecast.run_hour, original_forecast.forecast_hour, [original_forecast], get_grid, get_inventory, get_data)
+    Forecasts.Forecast(original_forecast.run_year, original_forecast.run_month, original_forecast.run_day, original_forecast.run_hour, original_forecast.forecast_hour, [original_forecast], get_grid, get_inventory, get_data)
   end
 
   example_forecast = forecasts[1]
