@@ -139,8 +139,6 @@ function reload_forecasts()
   paired_forecasts                = []
   nadocast_run_and_forecast_times = []
 
-  # START HERE: why are we missing half the forecasts for training? Should be ~2000 (1/3 of the ~6000 for SREF training), but it's only ~1000!
-
   run_date = Dates.Date(2018, 6, 1)
   while run_date <= Dates.Date(Dates.now(Dates.UTC))
     run_year  = Dates.year(run_date)
@@ -196,13 +194,11 @@ function reload_forecasts()
     stacked_href_sref_prediction_forecast.run_year      = run_year
     stacked_href_sref_prediction_forecast.run_month     = run_month
     stacked_href_sref_prediction_forecast.run_day       = run_day
+    stacked_href_sref_prediction_forecast.run_hour      = run_hour
     stacked_href_sref_prediction_forecast.forecast_hour = forecast_hour
   end
 
   _forecasts = stacked_href_sref_prediction_forecasts
-
-  println("$(length(stacked_href_sref_prediction_forecasts)) stacked_href_sref_prediction_forecasts")
-  println("$(length(all_sref_forecasts)) all_sref_forecasts")
 
   _forecasts
 end
