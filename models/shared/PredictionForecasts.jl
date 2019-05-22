@@ -44,7 +44,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
     get_data(forecast) = begin
       feature_engineered_base_data = base_get_feature_engineered_data(base_forecast, Forecasts.get_data(base_forecast))
 
-      predictions = model_predict(feature_engineered_base_data)
+      predictions = Float32.(model_predict(feature_engineered_base_data))
 
       reshape(predictions, (:,1)) # Make the predictions a 2D features array with 1 feature
     end
