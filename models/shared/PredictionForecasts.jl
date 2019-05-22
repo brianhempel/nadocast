@@ -26,6 +26,8 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
 
   forecasts = map(base_forecasts) do base_forecast
     get_inventory(forecast) = begin
+      base_inventory = Forecasts.inventory(base_forecast)
+
       # Need just enough for FeatureEngineeringShared.make_data
       prediction_inventory_line =
         Inventories.InventoryLine(
