@@ -61,8 +61,8 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(base_foreca
   grid             = Forecasts.grid(example_forecast)
 
   twenty_five_mi_mean_is    = Grids.radius_grid_is(grid, 25.0)
-  unique_fifty_mi_mean_is   = Grids.radius_grid_is_less_other_is(grid, 50.0, _twenty_five_mi_mean_is)
-  unique_hundred_mi_mean_is = Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is))
+  unique_fifty_mi_mean_is   = Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is)
+  unique_hundred_mi_mean_is = Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is))
 
   get_feature_engineered_data(forecast, basic_predictions) = begin
     base_forecast  = forecast.based_on[1]
