@@ -198,7 +198,7 @@ function reload_forecasts()
 
   run_time_seconds_to_hrrr_forecasts = Dict{Int64,Vector{Forecasts.Forecast}}()
 
-  for hrrr_forecast in hrrr_prediction_forecasts
+  for hrrr_forecast in hrrr_upsampled_prediction_forecasts
     run_time = Forecasts.run_time_in_seconds_since_epoch_utc(hrrr_forecast)
     hrrr_forecasts_at_run_time = get(run_time_seconds_to_hrrr_forecasts, run_time, Forecasts.Forecast[])
     push!(hrrr_forecasts_at_run_time, hrrr_forecast)
@@ -207,7 +207,7 @@ function reload_forecasts()
 
   run_time_seconds_to_rap_forecasts = Dict{Int64,Vector{Forecasts.Forecast}}()
 
-  for rap_forecast in rap_prediction_forecasts
+  for rap_forecast in rap_upsampled_prediction_forecasts
     run_time = Forecasts.run_time_in_seconds_since_epoch_utc(rap_forecast)
     rap_forecasts_at_run_time = get(run_time_seconds_to_rap_forecasts, run_time, Forecasts.Forecast[])
     push!(rap_forecasts_at_run_time, rap_forecast)
