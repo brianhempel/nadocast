@@ -54,7 +54,7 @@ sref_run_time_seconds =
   if haskey(ENV, "FORECAST_DATE")
     # Use 3z SREF and 6z HREF, both should be out before 12z
     year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
-    Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 3)
+    Forecasts.time_in_seconds_since_epoch_utc(year, month, day, 3)
   else
     maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_sref_forecasts))
   end
@@ -94,7 +94,7 @@ hrrr_forecast_candidates = filter(forecast -> Forecasts.valid_time_in_seconds_si
 if haskey(ENV, "FORECAST_DATE")
   # Use 10z RAP/HRRR at latest, should be out before 12z
   year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
-  run_time_seconds_10z = Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 10)
+  run_time_seconds_10z = Forecasts.time_in_seconds_since_epoch_utc(year, month, day, 10)
 
   rap_forecast_candidates  = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) <= run_time_seconds_10z, rap_forecast_candidates)
   hrrr_forecast_candidates = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) <= run_time_seconds_10z, hrrr_forecast_candidates)
@@ -114,7 +114,7 @@ href_run_time_seconds =
   if haskey(ENV, "FORECAST_DATE")
     # Use 9z SREF and 6z HREF, both should be out before 12z
     year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
-    Forecasts.run_time_in_seconds_since_epoch_utc(year, month, day, 6)
+    Forecasts.time_in_seconds_since_epoch_utc(year, month, day, 6)
   else
     maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_href_forecasts))
   end

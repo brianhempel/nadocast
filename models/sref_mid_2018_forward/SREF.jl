@@ -12,6 +12,7 @@ import FeatureEngineeringShared
 
 # SREF is on grid 212: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid212.gif
 
+FORECASTS_ROOT = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
 _forecasts = []
 
@@ -104,8 +105,7 @@ function get_feature_engineered_data(forecast, data)
 end
 
 function reload_forecasts()
-  sref_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/sref")
-  # sref_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/sref")
+  sref_paths = Grib2.all_grib2_file_paths_in("$(FORECASTS_ROOT)/SREF_HREF_1/sref")
 
   global _forecasts
 

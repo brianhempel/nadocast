@@ -17,6 +17,8 @@ import FeatureEngineeringShared
 # RAP gained low-level (180-0 mb agl, 90-0 mb agl) CAPE/CIN layers on the 2014-02-25 12z run. These are key fields so we'll use forecasts after that date.
 # RAP is missing convective cloud top field from 2018-07-12 12z run through the 2018-08-10 13z run; in prior experiments, this was the most important feature so we'll skip these forecasts.
 
+FORECASTS_ROOT = get(ENV, "FORECASTS_ROOT", "/Volumes")
+
 _forecasts = []
 downsample = 1 # Don't downsample.
 
@@ -148,7 +150,7 @@ function get_feature_engineered_data(forecast, data)
 end
 
 function reload_forecasts()
-  rap_paths = Grib2.all_grib2_file_paths_in("/Volumes/RAP_1/rap")
+  rap_paths = Grib2.all_grib2_file_paths_in("$(FORECASTS_ROOT)/RAP_1/rap")
 
   global _forecasts
 

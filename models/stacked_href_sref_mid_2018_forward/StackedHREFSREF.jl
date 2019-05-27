@@ -154,7 +154,7 @@ function reload_forecasts()
         sref_delay_hours = 5 # Nadocast run hour 2,8,14,20z uses 21,3,9,15z SREF respectively
       end
 
-      run_time_in_seconds_since_epoch_utc = Forecasts.run_time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+      run_time_in_seconds_since_epoch_utc = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
 
       href_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - href_delay_hours*HOUR
       sref_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - sref_delay_hours*HOUR

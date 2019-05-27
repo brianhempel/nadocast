@@ -1,7 +1,7 @@
 module ConcatForecasts
 
 # Create a bunch of Forecast structs whose data is the
-# concatenation of the data from two underlying forecasts.
+# concatenation of the data of various underlying forecasts.
 #
 # Forecasts should already be on the same grid.
 #
@@ -15,34 +15,29 @@ import Grids
 import Inventories
 
 
+# Hand a list of tuples of associated forecasts. Also provide a tuple of get_feature_engineered_data functions.
+#
 # forecasts, example_forecast, grid, get_feature_engineered_data
-function forecasts_example_forecast_grid_get_feature_engineered_data(paired_forecasts, (left_get_feature_engineered_data, right_get_feature_engineered_data))
+function forecasts_example_forecast_grid_get_feature_engineered_data(associated_forecasts, get_feature_engineered_data_functions)
 
-  left_example_forecast  = paired_forecasts[1][1]
+  example_forecasts = collect(associated_forecasts[1])
+  # left_example_forecast  = paired_forecasts[1][1]
   # right_example_forecast = paired_forecasts[1][2]
 
-  forecasts = map(paired_forecasts) do (left_forecast, right_forecast)
+  forecasts = map(associated_forecasts) do forecasts_tuple
+    forecasts_array = collect(forecasts_tuple)
+
     get_inventory(forecast) = begin
-      vcat(Forecasts.inventory(left_forecast), Forecasts.inventory(right_forecast))
+      vcat(Forecasts.inventory.(forecasts_tuple)...)
     end
 
     get_data(forecast) = begin
-      # feature_engineered_base_data = base_get_feature_engineered_data(base_forecast, Forecasts.get_data(base_forecast))
-      #
-      # predictions = model_predict(feature_engineered_base_data)
-      #
-      # reshape(predictions, (:,1)) # Make the predictions a 2D features array with 1 feature
-      hcat(Forecasts.get_data(left_forecast), Forecasts.get_data(right_forecast))
+      hcat(Forecasts.get_data.(forecasts_tuple)...)
     end
 
-    later_forecast =
-      if Forecasts.run_time_in_seconds_since_epoch_utc(left_forecast) >= Forecasts.run_time_in_seconds_since_epoch_utc(right_forecast)
-        left_forecast
-      else
-        right_forecast
-      end
+    latest_forecast = last(sort(forecasts_array, by=Forecasts.run_time_in_seconds_since_epoch_utc))
 
-    Forecasts.Forecast(later_forecast.run_year, later_forecast.run_month, later_forecast.run_day, later_forecast.run_hour, later_forecast.forecast_hour, [left_forecast, right_forecast], later_forecast._get_grid, get_inventory, get_data)
+    Forecasts.Forecast(latest_forecast.run_year, latest_forecast.run_month, latest_forecast.run_day, latest_forecast.run_hour, latest_forecast.forecast_hour, forecasts_array, latest_forecast._get_grid, get_inventory, get_data)
   end
 
   example_forecast = forecasts[1]
@@ -53,15 +48,20 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(paired_fore
   # unique_hundred_mi_mean_is = Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is))
 
   get_feature_engineered_data(forecast, base_data) = begin
-    left_inventory_size  = length(Forecasts.inventory(left_example_forecast))
-    total_inventory_size = length(Forecasts.inventory(example_forecast))
+    inventory_sizes = length.(Forecasts.inventory.(example_forecasts))
 
-    left_data  = base_data[:,1:left_inventory_size]
-    right_data = base_data[:,(left_inventory_size+1):total_inventory_size]
+    last_column = 0
+    data_chunks = map(pairs(inventory_sizes)) do (inventory_i, inventory_size)
+      base_data[:, (last_column + 1):(last_column + inventory_size)]
+      last_column = last_column+inventory_size
+    end
 
-    left_forecast, right_forecast = forecast.based_on
+    # left_data  = base_data[:,1:left_inventory_size]
+    # right_data = base_data[:,(left_inventory_size+1):total_inventory_size]
 
-    hcat(left_get_feature_engineered_data(left_forecast, left_data), right_get_feature_engineered_data(right_forecast, right_data))
+    # left_forecast, right_forecast = forecast.based_on
+
+    hcat(left_get_feature_engineered_data.(forecast.based_on, data_chunks)...)
   end
 
   (forecasts, example_forecast, grid, get_feature_engineered_data)

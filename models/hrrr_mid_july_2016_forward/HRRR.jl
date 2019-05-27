@@ -24,6 +24,8 @@ import FeatureEngineeringShared
 # VGRD:300 mb:hour fcst:
 # USWRF:top of atmosphere:hour fcst:
 
+FORECASTS_ROOT = get(ENV, "FORECASTS_ROOT", "/Volumes")
+
 _forecasts = []
 downsample = 3
 
@@ -83,7 +85,7 @@ function get_feature_engineered_data(forecast, data)
 end
 
 function reload_forecasts()
-  hrrr_paths = Grib2.all_grib2_file_paths_in("/Volumes/HRRR_1/hrrr")
+  hrrr_paths = Grib2.all_grib2_file_paths_in("$(FORECASTS_ROOT)/HRRR_1/hrrr")
 
   global _forecasts
 
