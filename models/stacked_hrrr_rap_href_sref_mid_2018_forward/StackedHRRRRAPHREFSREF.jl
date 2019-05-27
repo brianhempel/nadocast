@@ -70,7 +70,7 @@ MINUTE = 60
 HOUR   = 60*MINUTE
 
 _forecasts = []
-_get_feature_engineered_data = nothing
+_get_stacked_feature_engineered_data = nothing
 
 # function forecasts_with_href_newer_than_sref()
 #   filter(forecasts()) do forecast
@@ -106,14 +106,24 @@ end
 # end
 
 function get_feature_engineered_data(forecast, data)
-  _get_feature_engineered_data(forecast, data)
+  stacked_predictions_data = _get_stacked_feature_engineered_data(forecast, base_data)
+
+  data_count = size(stacked_predictions_data, 1)
+
+  run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour =
+    filter(associated_run_hours -> run_hours[1] == forecast.run_hour, FORECAST_SCHEDULE)[1]
+
+  href_age_hours = forecast.forecast_hour + (href_run_hour > run_hour ? (run_hour + 24) - href_run_hour : run_hour - href_run_hour)
+  sref_age_hours = forecast.forecast_hour + (sref_run_hour > run_hour ? (run_hour + 24) - sref_run_hour : run_hour - sref_run_hour)
+
+  hcat(stacked_predictions_data, fill(Float32(href_age_hours), data_count), fill(Float32(sref_age_hours), data_count))
 end
 
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
 
   global _forecasts
-  global _get_feature_engineered_data
+  global _get_stacked_feature_engineered_data
 
   _forecasts = []
 
@@ -309,19 +319,7 @@ function reload_forecasts()
     )
 
   # Add columns with the HREF and SREF age.
-  _get_feature_engineered_data(forecast, base_data) = begin
-    stacked_predictions_data = get_stacked_feature_engineered_data(forecast, base_data)
-
-    data_count = size(stacked_predictions_data, 1)
-
-    run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour =
-      filter(associated_run_hours -> run_hours[1] == forecast.run_hour, FORECAST_SCHEDULE)[1]
-
-    href_age_hours = forecast.forecast_hour + (href_run_hour > run_hour ? (run_hour + 24) - href_run_hour : run_hour - href_run_hour)
-    sref_age_hours = forecast.forecast_hour + (sref_run_hour > run_hour ? (run_hour + 24) - sref_run_hour : run_hour - sref_run_hour)
-
-    hcat(stacked_predictions_data, fill(Float32(href_age_hours), data_count), fill(Float32(sref_age_hours), data_count))
-  end
+  _get_feature_engineered_data = get_stacked_feature_engineered_data
 
   for (stacked_hrrr_rap_href_sref_prediction_forecast, (run_year, run_month, run_day, run_hour, forecast_hour)) in Iterators.zip(stacked_hrrr_rap_href_sref_prediction_forecasts, nadocast_run_and_forecast_times)
     stacked_hrrr_rap_href_sref_prediction_forecast.run_year      = run_year
