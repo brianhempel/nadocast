@@ -105,7 +105,7 @@ end
 #   FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
 # end
 
-function get_feature_engineered_data(forecast, data)
+function get_feature_engineered_data(forecast, base_data)
   stacked_predictions_data = _get_stacked_feature_engineered_data(forecast, base_data)
 
   data_count = size(stacked_predictions_data, 1)
