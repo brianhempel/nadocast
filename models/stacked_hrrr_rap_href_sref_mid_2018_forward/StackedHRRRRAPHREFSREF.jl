@@ -106,6 +106,8 @@ end
 # end
 
 function get_feature_engineered_data(forecast, base_data)
+  global _get_stacked_feature_engineered_data
+
   stacked_predictions_data = _get_stacked_feature_engineered_data(forecast, base_data)
 
   data_count = size(stacked_predictions_data, 1)
@@ -319,7 +321,7 @@ function reload_forecasts()
     )
 
   # Add columns with the HREF and SREF age.
-  _get_feature_engineered_data = get_stacked_feature_engineered_data
+  _get_stacked_feature_engineered_data = get_stacked_feature_engineered_data
 
   for (stacked_hrrr_rap_href_sref_prediction_forecast, (run_year, run_month, run_day, run_hour, forecast_hour)) in Iterators.zip(stacked_hrrr_rap_href_sref_prediction_forecasts, nadocast_run_and_forecast_times)
     stacked_hrrr_rap_href_sref_prediction_forecast.run_year      = run_year
