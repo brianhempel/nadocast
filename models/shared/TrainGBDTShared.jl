@@ -7,6 +7,8 @@ import MemoryConstrainedTreeBoosting
 push!(LOAD_PATH, @__DIR__)
 import TrainingShared
 
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
 
 
 # If we had infinite memory, we could train on all datapoints with all the forecast hours.
@@ -88,6 +90,10 @@ function train_with_coordinate_descent_hyperparameter_search(
     TrainingShared.forecasts_grid_conus_grid_bitmask_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
 
   train_forecasts_with_tornadoes = filter(TrainingShared.forecast_is_tornado_hour, train_forecasts)
+
+  for forecast in train_forecasts_with_tornadoes
+    println(Forecasts.valid_utc_datetime(forecast))
+  end
 
   println("$(length(train_forecasts)) for training. ($(length(train_forecasts_with_tornadoes)) with tornadoes.)")
   println("$(length(validation_forecasts)) for validation.")
