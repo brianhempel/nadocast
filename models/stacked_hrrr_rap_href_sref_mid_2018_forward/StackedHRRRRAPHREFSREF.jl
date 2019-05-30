@@ -280,6 +280,10 @@ function reload_forecasts()
         perhaps_href_forecast                 = filter(forecast -> valid_time_in_seconds_since_epoch_utc == Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), hrefs_for_run_time)
         perhaps_sref_forecast                 = filter(forecast -> valid_time_in_seconds_since_epoch_utc == Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), srefs_for_run_time)
 
+        if forecast_hour == 11 && fld(valid_time_in_seconds_since_epoch_utc, HOUR) in storm_event_hours_set
+          println(((run_year, run_month, run_day, run_hour, forecast_hour), length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast])))
+        end
+
         if length(perhaps_hrrr_forecast) >= 2
           error("shouldn't have two matching hrrr_forecast forecasts!")
         elseif length(perhaps_hrrr_forecast_minus_one_hour) >= 2
@@ -310,8 +314,6 @@ function reload_forecasts()
             )
           )
           push!(nadocast_run_and_forecast_times, (run_year, run_month, run_day, run_hour, forecast_hour))
-        elseif forecast_hour == 11 && fld(valid_time_in_seconds_since_epoch_utc, HOUR) in storm_event_hours_set
-          println(((run_year, run_month, run_day, run_hour, forecast_hour), length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast])))
         end
       end
     end
