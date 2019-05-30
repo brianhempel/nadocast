@@ -308,7 +308,7 @@ function reload_forecasts()
           )
           push!(nadocast_run_and_forecast_times, (run_year, run_month, run_day, run_hour, forecast_hour))
         elseif valid_time_in_seconds_since_epoch_utc == Forecasts.time_in_seconds_since_epoch_utc(2018, 7, 23, 22)
-          println(length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast]))
+          println((forecast_hour, length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast])))
         end
       end
     end
