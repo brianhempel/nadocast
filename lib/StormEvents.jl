@@ -216,4 +216,25 @@ function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_ep
   map(event_to_segment, relevant_events)
 end
 
+function conus_event_hours_set_in_seconds_from_epoch_utc(event_time_window_half_size)
+  hour = 60*60
+
+  event_hours_set = Set{Int64}()
+
+  for event in conus_events()
+    event_time_range =
+      (event.start_seconds_from_epoch_utc - event_time_window_half_size):(event.end_seconds_from_epoch_utc + event_time_window_half_size - 1)
+
+    for hour_from_epoch in fld(event_time_range.start, hour):fld(event_time_range.stop, hour)
+      hour_second = hour_from_epoch*hour
+      if hour_second in event_time_range
+        push!(event_hours_set, hour_second)
+      end
+    end
+  end
+
+  event_hours_set
+end
+
+
 end # module StormEvents

@@ -103,7 +103,7 @@ def rap_to_time_range(rap_str)
   rap_to_time(rap_str)-30*60...rap_to_time(rap_str)+30*60
 end
 
-# Ported from models/shared/TrainingShared.jl
+# Ported from lib/StormEvents.jl conus_event_hours_set_in_seconds_from_epoch_utc
 #
 # Returns a set of Time objects representing the set of hours covered by the given storm events that are in the CONUS.
 def conus_event_hours_set(events, event_time_window_half_size)

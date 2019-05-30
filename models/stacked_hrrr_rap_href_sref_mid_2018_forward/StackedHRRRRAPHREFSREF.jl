@@ -8,6 +8,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
 import Grids
+import StormEvents
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import ConcatForecasts
@@ -128,6 +129,8 @@ function reload_forecasts()
   global _get_stacked_feature_engineered_data
 
   _forecasts = []
+
+  storm_event_hours_set = StormEvents.conus_event_hours_set_in_seconds_from_epoch_utc(30*MINUTE)
 
 
   all_hrrr_forecasts = HRRR.forecasts()
@@ -307,8 +310,8 @@ function reload_forecasts()
             )
           )
           push!(nadocast_run_and_forecast_times, (run_year, run_month, run_day, run_hour, forecast_hour))
-        elseif valid_time_in_seconds_since_epoch_utc == Forecasts.time_in_seconds_since_epoch_utc(2018, 7, 23, 22)
-          println((forecast_hour, length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast])))
+        elseif forecast_hour == 11 && fld(valid_time_in_seconds_since_epoch_utc, HOUR) in storm_event_hours_set
+          println(((run_year, run_month, run_day, run_hour, forecast_hour), length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast])))
         end
       end
     end

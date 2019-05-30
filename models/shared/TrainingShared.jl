@@ -44,19 +44,7 @@ function conus_event_hours_in_seconds_from_epoch_utc()
   global _conus_event_hours_in_seconds_from_epoch_utc
 
   if isnothing(_conus_event_hours_in_seconds_from_epoch_utc)
-    _conus_event_hours_in_seconds_from_epoch_utc = Set{Int64}()
-
-    for event in StormEvents.conus_events()
-      event_time_range =
-        (event.start_seconds_from_epoch_utc - EVENT_TIME_WINDOW_HALF_SIZE):(event.end_seconds_from_epoch_utc + EVENT_TIME_WINDOW_HALF_SIZE - 1)
-
-      for hour_from_epoch in fld(event_time_range.start, HOUR):fld(event_time_range.stop, HOUR)
-        hour_second = hour_from_epoch*HOUR
-        if hour_second in event_time_range
-          push!(_conus_event_hours_in_seconds_from_epoch_utc, hour_second)
-        end
-      end
-    end
+    _conus_event_hours_in_seconds_from_epoch_utc = StormEvents.conus_event_hours_set_in_seconds_from_epoch_utc(EVENT_TIME_WINDOW_HALF_SIZE)
   end
 
   _conus_event_hours_in_seconds_from_epoch_utc
