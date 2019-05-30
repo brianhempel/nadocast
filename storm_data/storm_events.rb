@@ -101,3 +101,21 @@ end
 def rap_to_time_range(rap_str)
   rap_to_time(rap_str)-30*60...rap_to_time(rap_str)+30*60
 end
+
+HOUR = 60*60
+
+# Ported from models/shared/TrainingShared.jl
+#
+# Returns a set of Time objects representing the set of hours covered by the given storm events that are in the CONUS.
+def conus_event_hours_set(events, event_time_window_half_size)
+  events.select(&:in_conus?).flat_map do |event|
+    event_time_range = (event.start_time.to_f.round - event_time_window_half_size ... event.end_time.to_f.round + event_time_window_half_size)
+
+    (event_time_range.begin / HOUR .. event_time_range.end / HOUR).map do |hour_from_epoch|
+      hour_second = hour_from_epoch*HOUR
+      if event_time_range.include?(hour_second)
+        Time.at(hour_second).utc
+      end
+    end.compact
+  end.to_set
+end

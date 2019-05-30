@@ -33,15 +33,20 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
   # https://pando-rgw01.chpc.utah.edu/hrrr/sfc/20180101/hrrr.t00z.wrfsfcf00.grib2
   DATES = (Date.new(*start_date_parts)..Date.today).to_a
 
+  storm_event_times =
+    conus_event_hours_set(STORM_EVENTS, 30*MINUTE)
+
   # This filtering takes five minutes.
   forecasts_to_get =
     DATES.product(RUN_HOURS, FORECAST_HOURS).select do |date, run_hour, forecast_hour|
       valid_time = Time.utc(date.year, date.month, date.day, run_hour) + forecast_hour*HOUR
-      valid_start_time = valid_time - 30*MINUTE
-      valid_end_time   = valid_time + 30*MINUTE
-      STORM_EVENTS.any? do |storm_event|
-        storm_event.on_ground_during(valid_start_time...valid_end_time) && storm_event.in_conus?
-      end
+
+      storm_event_times.include?(valid_time)
+      # valid_start_time = valid_time - 30*MINUTE
+      # valid_end_time   = valid_time + 30*MINUTE
+      # STORM_EVENTS.any? do |storm_event|
+      #   storm_event.on_ground_during(valid_start_time...valid_end_time) && storm_event.in_conus?
+      # end
     end.map do |date, run_hour, forecast_hour|
       ["%04d%02d%02d" % [date.year, date.month, date.day], run_hour, forecast_hour]
     end
