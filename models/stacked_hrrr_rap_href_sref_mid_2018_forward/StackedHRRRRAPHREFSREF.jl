@@ -307,6 +307,8 @@ function reload_forecasts()
             )
           )
           push!(nadocast_run_and_forecast_times, (run_year, run_month, run_day, run_hour, forecast_hour))
+        elseif valid_time_in_seconds_since_epoch_utc == Forecasts.time_in_seconds_since_epoch_utc(2018, 7, 23, 22)
+          println(length.([perhaps_hrrr_forecast, perhaps_hrrr_forecast_minus_one_hour, perhaps_hrrr_forecast_minus_two_hours, perhaps_rap_forecast, perhaps_rap_forecast_minus_one_hour, perhaps_rap_forecast_minus_two_hours, perhaps_href_forecast, perhaps_sref_forecast]))
         end
       end
     end
@@ -317,7 +319,15 @@ function reload_forecasts()
   stacked_hrrr_rap_href_sref_prediction_forecasts, _, _, get_stacked_feature_engineered_data =
     ConcatForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
       associated_forecasts,
-      (href_get_feature_engineered_prediction_data, sref_get_upsampled_feature_engineered_prediction_data)
+      ( hrrr_get_upsampled_feature_engineered_prediction_data
+      , hrrr_get_upsampled_feature_engineered_prediction_data
+      , hrrr_get_upsampled_feature_engineered_prediction_data
+      , rap_get_upsampled_feature_engineered_prediction_data
+      , rap_get_upsampled_feature_engineered_prediction_data
+      , rap_get_upsampled_feature_engineered_prediction_data
+      , href_get_feature_engineered_prediction_data
+      , sref_get_upsampled_feature_engineered_prediction_data
+      )
     )
 
   # Add columns with the HREF and SREF age.
