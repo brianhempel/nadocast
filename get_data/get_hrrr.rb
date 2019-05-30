@@ -56,7 +56,7 @@ else
   forecasts_to_get = YMDS.product(RUN_HOURS, FORECAST_HOURS)
 end
 
-puts storm_event_times.map { |t| "#{t.year}-#{t.month}-#{t.day}T#{t.hour}:#{t.minute}" }.join(" ")
+puts storm_event_times.map { |t| "#{t.year}-#{t.month}-#{t.day}T#{t.hour}:#{t.min}" }.join(" ")
 
 # hrrr.t02z.wrfsfcf18.grib2
 
