@@ -114,7 +114,7 @@ function get_feature_engineered_data(forecast, base_data)
   data_count = size(stacked_predictions_data, 1)
 
   run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour =
-    filter(associated_run_hours -> run_hours[1] == forecast.run_hour, FORECAST_SCHEDULE)[1]
+    filter(associated_run_hours -> associated_run_hours[1] == forecast.run_hour, FORECAST_SCHEDULE)[1]
 
   href_age_hours = forecast.forecast_hour + (href_run_hour > run_hour ? (run_hour + 24) - href_run_hour : run_hour - href_run_hour)
   sref_age_hours = forecast.forecast_hour + (sref_run_hour > run_hour ? (run_hour + 24) - sref_run_hour : run_hour - sref_run_hour)
