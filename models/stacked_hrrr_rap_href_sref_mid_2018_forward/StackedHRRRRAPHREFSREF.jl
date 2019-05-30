@@ -38,7 +38,7 @@ SREF_MODEL_PATH = (@__DIR__) * "/../sref_mid_2018_forward/gbdt_f1-39_2019-03-26T
 
 # Copy of the forecast_scheduling spreadsheet.
 # Run hours for nadocast, hrrr, rap, href, sref
-# nadocast run hour == HRRR run hour. RAP is usually the same too, except the 0Z rap is late.
+# nadocast run hour == HRRR run hour. RAP is usually the same too, except the 0Z and 12Z raps are late.
 FORECAST_SCHEDULE =
   [ (0,  0,  23, 18, 21)
   , (1,  1,  1,  18, 21)

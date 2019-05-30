@@ -8,7 +8,8 @@ require "date"
 INV_OR_GRIB    = %w[inv grb2][1]
 DATES          = (Date.new(2018,6,25)..Date.today-1).to_a # 2005-10-31 is first +1hr with inv, no forecasts during Jan 2008, 2008-10-30 is when 13km RUC consistently available, 2008-11-17-1200 is first RUC with simulated reflectivity; also schema more stable (during 2007 CAPE and others only included during certain periods, presumably if relevant or not)
 HOURS_OF_DAY   = (0..23).to_a
-FORECAST_HOURS = [1,2,3,4,5,6,7,8,11,12,13,14,16,17,18,19] # RAP forcasts 0 - 21 hours ahead (0-18 before fall 2016). +0 is analysis, +1 barely comes out before its valid time, so +2 hours is the first real forecast.
+FORECAST_HOURS = [1,2,3,5,6,7,11,12,13,16,17,18] # RAP forcasts 0 - 21 hours ahead (0-18 before fall 2016). +0 is analysis, +1 barely comes out before its valid time, so +2 hours is the first real forecast.
+EXTRA_FORECAST_HOURS_TO_COVER_0Z_12Z_DELAYS = [4,8,14,19]
 BASE_URL       = FORECAST_HOURS.max <= 1 ? "https://nomads.ncdc.noaa.gov/data/rucanl" : "https://nomads.ncdc.noaa.gov/data/rap130" # Based a single sample, files in these two folders are identical if they exist in both
 BASE_DIRECTORY = INV_OR_GRIB == "inv" ? "inventory_files" : "/Volumes/RAP_1/rap"
 MIN_FILE_BYTES = INV_OR_GRIB == "inv" ? 1000 : 10_000_000
@@ -27,7 +28,8 @@ end
 loop { break if Dir.exists?("/Volumes/RAP_1/"); puts "Waiting for RAP_1 to mount...";  sleep 4 }
 loop { break if Dir.exists?("/Volumes/RAP_2/"); puts "Waiting for RAP_2 to mount..."; sleep 4 }
 
-forecasts_to_get = DATES.product(HOURS_OF_DAY, FORECAST_HOURS)
+forecasts_to_get = DATES.product(HOURS_OF_DAY, FORECAST_HOURS) + DATES.product(FORECAST_HOURS & [21,9], EXTRA_FORECAST_HOURS_TO_COVER_0Z_12Z_DELAYS)
+forecasts_to_get.sort!
 
 threads = THREAD_COUNT.times.map do
   Thread.new do
