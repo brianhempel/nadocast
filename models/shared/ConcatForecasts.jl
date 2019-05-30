@@ -61,7 +61,10 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(associated_
 
     # left_forecast, right_forecast = forecast.based_on
 
-    hcat(left_get_feature_engineered_data.(forecast.based_on, data_chunks)...)
+    feature_engineered_chunks =
+      map(Iterators.zip(get_feature_engineered_data_functions, forecast.based_on, forecast.data_chunks))
+
+    hcat(feature_engineered_chunks...)
   end
 
   (forecasts, example_forecast, grid, get_feature_engineered_data)
