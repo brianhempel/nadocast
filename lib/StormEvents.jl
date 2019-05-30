@@ -216,12 +216,13 @@ function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_ep
   map(event_to_segment, relevant_events)
 end
 
-function conus_event_hours_set_in_seconds_from_epoch_utc(event_time_window_half_size)
+# Set of seconds, each on the hour.
+function event_hours_set_in_seconds_from_epoch_utc(events, event_time_window_half_size)
   hour = 60*60
 
   event_hours_set = Set{Int64}()
 
-  for event in conus_events()
+  for event in events
     event_time_range =
       (event.start_seconds_from_epoch_utc - event_time_window_half_size):(event.end_seconds_from_epoch_utc + event_time_window_half_size - 1)
 
