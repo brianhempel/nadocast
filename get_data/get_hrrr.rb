@@ -56,6 +56,8 @@ else
   forecasts_to_get = YMDS.product(RUN_HOURS, FORECAST_HOURS)
 end
 
+p forecasts_to_get.sort
+
 # hrrr.t02z.wrfsfcf18.grib2
 
 threads = THREAD_COUNT.times.map do
