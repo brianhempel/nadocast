@@ -51,7 +51,7 @@ function forecasts_example_forecast_grid_get_feature_engineered_data(associated_
     inventory_sizes = length.(Forecasts.inventory.(example_forecasts))
 
     last_column = 0
-    data_chunks = map(pairs(inventory_sizes)) do (inventory_i, inventory_size)
+    data_chunks = map(collect(pairs(inventory_sizes))) do (inventory_i, inventory_size)
       base_data[:, (last_column + 1):(last_column + inventory_size)]
       last_column = last_column+inventory_size
     end
