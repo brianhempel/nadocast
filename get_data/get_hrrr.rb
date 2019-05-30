@@ -42,21 +42,14 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
       valid_time = Time.utc(date.year, date.month, date.day, run_hour) + forecast_hour*HOUR
 
       storm_event_times.include?(valid_time)
-      # valid_start_time = valid_time - 30*MINUTE
-      # valid_end_time   = valid_time + 30*MINUTE
-      # STORM_EVENTS.any? do |storm_event|
-      #   storm_event.on_ground_during(valid_start_time...valid_end_time) && storm_event.in_conus?
-      # end
     end.map do |date, run_hour, forecast_hour|
       ["%04d%02d%02d" % [date.year, date.month, date.day], run_hour, forecast_hour]
     end
 else
   # https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/hrrr.20190220/conus/hrrr.t02z.wrfsfcf18.grib2
-  YMDS = `curl -s https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
-  forecasts_to_get = YMDS.product(RUN_HOURS, FORECAST_HOURS)
+  ymds = `curl -s https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
+  forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS)
 end
-
-puts storm_event_times.map { |t| "#{t.year}-#{t.month}-#{t.day}T#{t.hour}:#{t.min}" }.join(" ")
 
 # hrrr.t02z.wrfsfcf18.grib2
 
