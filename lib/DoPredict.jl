@@ -422,7 +422,7 @@ for path in paths
 end
 
 if ENV["TWEET"] == "true"
-  run_hour = Date.Hour(nadocast_run_time_utc)
+  run_hour = Dates.Hour(nadocast_run_time_utc)
 
   for path in daily_paths_to_perhaps_tweet
     run(`t update "$(run_hour)Z Day Tornado Forecast" --file=$path.png`)
