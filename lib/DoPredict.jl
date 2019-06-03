@@ -130,8 +130,9 @@ nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
 
 nadocast_run_hour = Dates.hour(nadocast_run_time_utc)
 
-out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z/"
+out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
 mkpath(out_dir)
+out_path_prefix = out_dir * "nadocast_conus_tor_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02dz" nadocast_run_hour))z"
 
 paths                        = []
 animation_glob_path          = nothing
@@ -139,13 +140,10 @@ daily_paths_to_perhaps_tweet = []
 
 period_inverse_prediction              = nothing
 period_convective_days_since_epoch_utc = nothing
-period_start_str                       = nothing
-period_stop_str                        = nothing
 period_start_forecast_hour             = nothing
 period_stop_forecast_hour              = nothing
 href_run_time_str                      = nothing
 sref_run_time_str                      = nothing
-period_rap_strs                        = String[]
 period_hrrr_run_hours                  = Int64[]
 period_rap_run_hours                   = Int64[]
 
@@ -188,27 +186,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       hrrr_forecasts = []
     end
 
-    rap_strs = map(rap_forecast -> (@sprintf "%02dz" rap_forecast.run_hour), rap_forecasts)
-    raps_str =
-      if isempty(rap_strs)
-        ""
-      elseif length(rap_strs) == 1
-        "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * rap_strs[1]
-      else
-        "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * first(sort(rap_strs)) * "-" * last(sort(rap_strs))
-      end
-
-    hrrr_str =
-      if isempty(hrrr_forecasts)
-        ""
-      else
-        "_hrrr$(HRRR_VS_OTHERS_WEIGHT)"
-      end
-
-
     global animation_glob_path
-    animation_glob_path = out_dir * "href_" * Forecasts.yyyymmdd_thhz(href_forecast) * "_f*_w$(HREF_WEIGHT)_sref$(sref_forecast.run_hour)z*.png"
-    path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref$(sref_forecast.run_hour)z" * raps_str * hrrr_str
+    animation_glob_path = out_path_prefix * "_f%02d.png"
+    path                = out_path_prefix * "_f$((@sprintf "%02dz" nadocast_forecast_hour))"
     println(path)
 
     sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
@@ -267,29 +247,16 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     global period_inverse_prediction
     global period_convective_days_since_epoch_utc
-    global period_start_str
-    global period_stop_str
     global period_start_forecast_hour
     global period_stop_forecast_hour
     global href_run_time_str
     global sref_run_time_str
-    global period_rap_strs
-    global period_hrrr_str
     global period_hrrr_run_hours
     global period_rap_run_hours
 
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
-        period_raps_str =
-          if isempty(period_rap_strs)
-            ""
-          elseif length(period_rap_strs) == 1
-            "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * period_rap_strs[1]
-          else
-            "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * first(sort(collect(period_rap_strs))) * "-" * last(sort(collect(period_rap_strs)))
-          end
-
-        period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)-$(period_stop_str)"
+        period_path = out_path_prefix * "_f$((@sprintf "%02dz" period_start_forecast_hour))-$((@sprintf "%02dz" period_stop_forecast_hour))"
         period_prediction = 1.0 .- period_inverse_prediction
         PlotMap.plot_map(
           period_path,
@@ -311,24 +278,13 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       href_run_time_str                      = Forecasts.yyyymmdd_thhz(href_forecast)
       sref_run_time_str                      = "$(sref_forecast.run_hour)z"
       period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
-      period_start_str                       = Forecasts.valid_yyyymmdd_hhz(href_forecast)
-      period_stop_str                        = Forecasts.valid_hhz(href_forecast)
       period_start_forecast_hour             = nadocast_forecast_hour
       period_stop_forecast_hour              = nadocast_forecast_hour
-      period_raps_str                        = Set{String}(Set(rap_strs))
-      period_hrrr_str                        = hrrr_str
       period_hrrr_run_hours                  = Int64[]
       period_rap_run_hours                   = Int64[]
     else
       period_inverse_prediction .*= (1.0 .- Float64.(mean_predictions))
-      period_stop_str             = Forecasts.valid_hhz(href_forecast)
       period_stop_forecast_hour   = nadocast_forecast_hour
-      if !isempty(rap_strs)
-        push!(period_rap_strs, rap_strs...)
-      end
-      if hrrr_str != ""
-        period_hrrr_str = hrrr_str
-      end
     end
     for rap_forecast in rap_forecasts
       if !(rap_forecast.run_hour in period_rap_run_hours)
@@ -357,16 +313,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   end
 end
 
-period_raps_str =
-  if isempty(period_rap_strs)
-    ""
-  elseif length(period_rap_strs) == 1
-    "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * period_rap_strs[1]
-  else
-    "_rap$(RAP_VS_HREF_SREF_WEIGHT)_" * first(sort(collect(period_rap_strs))) * "-" * last(sort(collect(period_rap_strs)))
-  end
-
-period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)-$(period_stop_str)"
+period_path = out_path_prefix * "_f$((@sprintf "%02dz" period_start_forecast_hour))-$((@sprintf "%02dz" period_stop_forecast_hour))"
 period_prediction = 1.0 .- period_inverse_prediction
 PlotMap.plot_map(
   period_path,
@@ -422,8 +369,8 @@ end
 
 if !isnothing(animation_glob_path)
   println("Making hourlies movie out of $(animation_glob_path)...")
-  hourlies_movie_path = out_dir * "hourlies_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z"
-  run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
+  hourlies_movie_path = out_path_prefix * "_hourlies"
+  run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
 end
 
 if ENV["TWEET"] == "true"
