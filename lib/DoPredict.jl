@@ -132,7 +132,7 @@ nadocast_run_hour = Dates.hour(nadocast_run_time_utc)
 
 out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
 mkpath(out_dir)
-out_path_prefix = out_dir * "nadocast_conus_tor_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02dz" nadocast_run_hour))z"
+out_path_prefix = out_dir * "nadocast_conus_tor_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
 
 paths                        = []
 animation_glob_path          = nothing
@@ -188,7 +188,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     global animation_glob_path
     animation_glob_path = out_path_prefix * "_f%02d.png"
-    path                = out_path_prefix * "_f$((@sprintf "%02dz" nadocast_forecast_hour))"
+    path                = out_path_prefix * "_f$((@sprintf "%02d" nadocast_forecast_hour))"
     println(path)
 
     sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
@@ -256,7 +256,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
-        period_path = out_path_prefix * "_f$((@sprintf "%02dz" period_start_forecast_hour))-$((@sprintf "%02dz" period_stop_forecast_hour))"
+        period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
         period_prediction = 1.0 .- period_inverse_prediction
         PlotMap.plot_map(
           period_path,
@@ -313,7 +313,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
   end
 end
 
-period_path = out_path_prefix * "_f$((@sprintf "%02dz" period_start_forecast_hour))-$((@sprintf "%02dz" period_stop_forecast_hour))"
+period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
 period_prediction = 1.0 .- period_inverse_prediction
 PlotMap.plot_map(
   period_path,
