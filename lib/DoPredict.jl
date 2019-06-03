@@ -423,7 +423,7 @@ end
 if !isnothing(animation_glob_path)
   println("Making hourlies movie out of $(animation_glob_path)...")
   hourlies_movie_path = out_dir * "hourlies_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z"
-  run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1280:812 $hourlies_movie_path.mp4`)
+  run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
 end
 
 if ENV["TWEET"] == "true"
