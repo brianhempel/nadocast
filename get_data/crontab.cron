@@ -1,3 +1,0 @@
-# Look for forecasts every hour.
-0 * * * * /home/brian/nadocast/get_data/get_sref.rb >> /home/brian/nadocast/get_data/get_sref.log 2>&1
-0 * * * * /home/brian/nadocast/get_data/get_href.rb >> /home/brian/nadocast/get_data/get_href.log 2>&1

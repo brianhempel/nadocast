@@ -1,3 +1,5 @@
+# sudo dpkg-reconfigure tzdata # Choose "Other" to get UTC
+#
 # sudo apt update
 # sudo apt install openssh-server
 # sudo apt install vim
@@ -15,7 +17,7 @@
 # git clone git@github.com:brianhempel/nadocast.git
 # cd nadocast
 # sudo apt install curl
-# crontab get_data/crontab.cron
+# crontab crontab.cron
 #
 # curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
 # sudo apt install gcc
