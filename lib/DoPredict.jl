@@ -293,7 +293,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
           period_path,
           Forecasts.grid(href_forecast),
           period_prediction;
-          nadocast_run_time_utc = nadocast_run_time_utc,
+          run_time_utc = nadocast_run_time_utc,
           forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
           hrrr_run_hours = period_hrrr_run_hours,
           rap_run_hours  = period_rap_run_hours,
@@ -342,7 +342,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       path,
       Forecasts.grid(href_forecast),
       mean_predictions;
-      nadocast_run_time_utc = nadocast_run_time_utc,
+      run_time_utc = nadocast_run_time_utc,
       forecast_hour_range = nadocast_forecast_hour:nadocast_forecast_hour,
       hrrr_run_hours = map(forecast -> forecast.run_hour, hrrr_forecasts),
       rap_run_hours  = map(forecast -> forecast.run_hour, rap_forecasts),
@@ -367,7 +367,7 @@ PlotMap.plot_map(
   period_path,
   Forecasts.grid(href_forecasts_to_plot[1]),
   period_prediction;
-  nadocast_run_time_utc = nadocast_run_time_utc,
+  run_time_utc = nadocast_run_time_utc,
   forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
   hrrr_run_hours = period_hrrr_run_hours,
   rap_run_hours  = period_rap_run_hours,
