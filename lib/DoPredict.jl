@@ -4,6 +4,7 @@ import MemoryConstrainedTreeBoosting
 #
 # $ FORECAST_DATE=2019-4-7 make forecast
 
+import Dates
 using Printf
 
 push!(LOAD_PATH, @__DIR__)
