@@ -128,7 +128,7 @@ href_bin_splits, href_trees = MemoryConstrainedTreeBoosting.load(href_model_path
 nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
 nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
 
-nadocast_run_hour = Dates.Hour(nadocast_run_time_utc)
+nadocast_run_hour = Dates.hour(nadocast_run_time_utc)
 
 out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z/"
 mkpath(out_dir)
