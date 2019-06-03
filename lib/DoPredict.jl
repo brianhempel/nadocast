@@ -23,6 +23,7 @@ import RAP
 push!(LOAD_PATH, (@__DIR__) * "/../models/hrrr_mid_july_2016_forward")
 import HRRR
 
+HOUR = 60*60
 
 HREF_WEIGHT =
   if haskey(ENV, "HREF_WEIGHT")
@@ -136,13 +137,33 @@ period_inverse_prediction              = nothing
 period_convective_days_since_epoch_utc = nothing
 period_start_str                       = nothing
 period_stop_str                        = nothing
+period_start_forecast_hour             = nothing
+period_stop_forecast_hour              = nothing
 href_run_time_str                      = nothing
 sref_run_time_str                      = nothing
 period_rap_strs                        = String[]
+period_hrrr_run_hours                  = Int64[]
+period_rap_run_hours                   = Int64[]
 
 sref_to_href_layer_upsampler = Grids.get_interpolating_upsampler(SREF.grid(), HREF.grid())
 rap_to_href_layer_upsampler  = Grids.get_upsampler(RAP.grid(), HREF.grid())
 hrrr_to_href_layer_resampler = Grids.get_upsampler(HRRR.grid(), HREF.grid())
+
+# for (run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour) in FORECAST_SCHEDULE
+#   run_time_in_seconds_since_epoch_utc = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+#
+#   hrrr_delay_hours = hrrr_run_hour > run_hour ? (run_hour + 24) - hrrr_run_hour : run_hour - hrrr_run_hour # HRRR run hour == nadocast run hour so this line is superfulous.
+#   rap_delay_hours  = rap_run_hour  > run_hour ? (run_hour + 24) - rap_run_hour  : run_hour - rap_run_hour
+#   href_delay_hours = href_run_hour > run_hour ? (run_hour + 24) - href_run_hour : run_hour - href_run_hour
+#   sref_delay_hours = sref_run_hour > run_hour ? (run_hour + 24) - sref_run_hour : run_hour - sref_run_hour
+#
+#   hrrr_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - hrrr_delay_hours*HOUR
+#   rap_run_time_in_seconds_since_epoch_utc  = run_time_in_seconds_since_epoch_utc - rap_delay_hours*HOUR
+#   href_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - href_delay_hours*HOUR
+#   sref_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - sref_delay_hours*HOUR
+
+nadocast_run_time_seconds = maximum(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
+nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
 
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
 
@@ -152,6 +173,8 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
   for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(perhaps_sref_forecast)
     sref_weight = 1.0 - HREF_WEIGHT
+
+    nadocast_forecast_hour = fld(valid_time_seconds - nadocast_run_time_seconds, HOUR)
 
     # Take 3 time-lagged RAPs/HRRRs
     rap_forecasts  = collect(Iterators.take(reverse(sort(filter(rap_forecast  -> Forecasts.valid_time_in_seconds_since_epoch_utc(rap_forecast)  == valid_time_seconds, rap_forecast_candidates),  by=Forecasts.run_time_in_seconds_since_epoch_utc)), 3))
@@ -180,6 +203,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       else
         "_hrrr$(HRRR_VS_OTHERS_WEIGHT)"
       end
+
 
     path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref$(sref_forecast.run_hour)z" * raps_str * hrrr_str
     println(path)
@@ -242,10 +266,14 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     global period_convective_days_since_epoch_utc
     global period_start_str
     global period_stop_str
+    global period_start_forecast_hour
+    global period_stop_forecast_hour
     global href_run_time_str
     global sref_run_time_str
     global period_rap_strs
     global period_hrrr_str
+    global period_hrrr_run_hours
+    global period_rap_run_hours
 
     if isnothing(period_inverse_prediction) || period_convective_days_since_epoch_utc != Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       if !isnothing(period_inverse_prediction)
@@ -260,7 +288,17 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
         period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)-$(period_stop_str)"
         period_prediction = 1.0 .- period_inverse_prediction
-        PlotMap.plot_map(period_path, Forecasts.grid(href_forecast), period_prediction)
+        PlotMap.plot_map(
+          period_path,
+          Forecasts.grid(href_forecast),
+          period_prediction;
+          nadocast_run_time_utc = nadocast_run_time_utc,
+          forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+          hrrr_run_hours = period_hrrr_run_hours,
+          rap_run_hours  = period_rap_run_hours,
+          href_run_hours = [href_forecast.run_hour],
+          sref_run_hours = [sref_forecast.run_hour]
+        )
         push!(paths, period_path)
       end
       period_inverse_prediction              = 1.0 .- Float64.(mean_predictions)
@@ -269,11 +307,16 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       period_convective_days_since_epoch_utc = Forecasts.valid_time_in_convective_days_since_epoch_utc(href_forecast)
       period_start_str                       = Forecasts.valid_yyyymmdd_hhz(href_forecast)
       period_stop_str                        = Forecasts.valid_hhz(href_forecast)
+      period_start_forecast_hour             = nadocast_forecast_hour
+      period_stop_forecast_hour              = nadocast_forecast_hour
       period_raps_str                        = Set{String}(Set(rap_strs))
       period_hrrr_str                        = hrrr_str
+      period_hrrr_run_hours                  = Int64[]
+      period_rap_run_hours                   = Int64[]
     else
       period_inverse_prediction .*= (1.0 .- Float64.(mean_predictions))
       period_stop_str             = Forecasts.valid_hhz(href_forecast)
+      period_stop_forecast_hour   = nadocast_forecast_hour
       if !isempty(rap_strs)
         push!(period_rap_strs, rap_strs...)
       end
@@ -281,10 +324,30 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
         period_hrrr_str = hrrr_str
       end
     end
+    for rap_forecast in rap_forecasts
+      if !(rap_forecast.run_hour in period_rap_run_hours)
+        push!(period_rap_run_hours, rap_forecast.run_hour)
+      end
+    end
+    for hrrr_forecast in hrrr_forecasts
+      if !(hrrr_forecast.run_hour in period_hrrr_run_hours)
+        push!(period_hrrr_run_hours, hrrr_forecast.run_hour)
+      end
+    end
 
     push!(paths, path)
 
-    PlotMap.plot_map(path, Forecasts.grid(href_forecast), mean_predictions)
+    PlotMap.plot_map(
+      path,
+      Forecasts.grid(href_forecast),
+      mean_predictions;
+      nadocast_run_time_utc = nadocast_run_time_utc,
+      forecast_hour_range = nadocast_forecast_hour:nadocast_forecast_hour,
+      hrrr_run_hours = map(forecast -> forecast.run_hour, hrrr_forecasts),
+      rap_run_hours  = map(forecast -> forecast.run_hour, rap_forecasts),
+      href_run_hours = [href_forecast.run_hour],
+      sref_run_hours = [sref_forecast.run_hour]
+    )
   end
 end
 
@@ -299,7 +362,17 @@ period_raps_str =
 
 period_path = out_dir * "href_" * href_run_time_str * "_w$(HREF_WEIGHT)_sref" * sref_run_time_str * "$(period_raps_str)$(period_hrrr_str)_$(period_start_str)-$(period_stop_str)"
 period_prediction = 1.0 .- period_inverse_prediction
-PlotMap.plot_map(period_path, Forecasts.grid(href_forecasts_to_plot[1]), period_prediction)
+PlotMap.plot_map(
+  period_path,
+  Forecasts.grid(href_forecasts_to_plot[1]),
+  period_prediction;
+  nadocast_run_time_utc = nadocast_run_time_utc,
+  forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+  hrrr_run_hours = period_hrrr_run_hours,
+  rap_run_hours  = period_rap_run_hours,
+  href_run_hours = [href_forecasts_to_plot[1].run_hour],
+  sref_run_hours = [sref_forecasts_to_plot[1].run_hour]
+)
 push!(paths, period_path)
 
 
@@ -316,7 +389,19 @@ for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
   push!(paths, path)
 
-  PlotMap.plot_map(path, Forecasts.grid(sref_forecast), sref_predictions)
+  nadocast_forecast_hour = fld(Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) - nadocast_run_time_seconds, HOUR)
+
+  PlotMap.plot_map(
+    path,
+    Forecasts.grid(sref_forecast),
+    sref_predictions;
+    nadocast_run_time_utc = nadocast_run_time_utc,
+    forecast_hour_range = nadocast_forecast_hour:nadocast_forecast_hour,
+    hrrr_run_hours = [],
+    rap_run_hours  = [],
+    href_run_hours = [],
+    sref_run_hours = [sref_forecast.run_hour]
+  )
 end
 
 # @sync doesn't seem to work; poll until subprocesses are done.

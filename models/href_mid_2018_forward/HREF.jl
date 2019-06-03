@@ -10,8 +10,9 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import SREFHREFShared
 import FeatureEngineeringShared
 
-# HREF is on grid 227: http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID227
+# Techincally, the HREF is on grid 227: http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID227
 # Natively 1473x1025
+# BUT there's lots of missing data near the edges. The effective bounds of the grid appear to match the HRRR.
 
 FORECASTS_ROOT = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
