@@ -396,7 +396,7 @@ for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     path,
     Forecasts.grid(sref_forecast),
     sref_predictions;
-    nadocast_run_time_utc = nadocast_run_time_utc,
+    run_time_utc = nadocast_run_time_utc,
     forecast_hour_range = nadocast_forecast_hour:nadocast_forecast_hour,
     hrrr_run_hours = [],
     rap_run_hours  = [],
