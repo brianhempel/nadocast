@@ -303,7 +303,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
           sref_run_hours = [sref_forecast.run_hour]
         )
         push!(paths, period_path)
-        if period_stop_forecast_hour >= 16 && period_stop_forecast_hour <= 36
+        if (period_stop_forecast_hour >= 16 && period_stop_forecast_hour < 36) || (period_stop_forecast_hour == 36 && period_stop_forecast_hour - period_stop_forecast_hour >= 22)
           push!(daily_paths_to_perhaps_tweet, period_path)
         end
       end
@@ -380,7 +380,7 @@ PlotMap.plot_map(
   sref_run_hours = [sref_forecasts_to_plot[1].run_hour]
 )
 push!(paths, period_path)
-if period_stop_forecast_hour >= 16 && period_stop_forecast_hour <= 36
+if (period_stop_forecast_hour >= 16 && period_stop_forecast_hour < 36) || (period_stop_forecast_hour == 36 && period_stop_forecast_hour - period_stop_forecast_hour >= 22)
   push!(daily_paths_to_perhaps_tweet, period_path)
 end
 
@@ -423,7 +423,7 @@ end
 if !isnothing(animation_glob_path)
   println("Making hourlies movie out of $(animation_glob_path)...")
   hourlies_movie_path = out_dir * "hourlies_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z"
-  run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 $hourlies_movie_path.mp4`) # -vf scale=1024:-1
+  run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1280:-1 $hourlies_movie_path.mp4`)
 end
 
 if ENV["TWEET"] == "true"
