@@ -75,7 +75,7 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
 
     println(f, "gmt begin $base_path pdf")
 
-    println(f, "gmt coast $region $projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
+    println(f, "gmt coast \$region \$projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
     println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$colors_path  # draw the predictions using the projection")
     println(f, "gmt coast -Q # stop clipping")
 
@@ -130,6 +130,8 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
     end
 
     println(f, "gmt end")
+
+    println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
     println(f, "rm $base_path.nc")
     println(f, "rm $base_path.xyz")
