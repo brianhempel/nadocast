@@ -2,7 +2,7 @@ import MemoryConstrainedTreeBoosting
 
 # To predict the past, set FORECAST_DATE=2019-4-7 in the environment:
 #
-# $ FORECAST_DATE=2019-4-7 make forecast
+# $ FORECAST_DATE=2019-4-7 TWEET=true make forecast
 
 import Dates
 using Printf
@@ -132,7 +132,9 @@ else
 end
 mkpath(out_dir)
 
-paths = []
+paths                        = []
+paths_to_animate             = []
+daily_paths_to_perhaps_tweet = []
 
 period_inverse_prediction              = nothing
 period_convective_days_since_epoch_utc = nothing
@@ -301,6 +303,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
           sref_run_hours = [sref_forecast.run_hour]
         )
         push!(paths, period_path)
+        if period_stop_forecast_hour >= 16 && period_stop_forecast_hour <= 36
+          push!(daily_paths_to_perhaps_tweet, period_path)
+        end
       end
       period_inverse_prediction              = 1.0 .- Float64.(mean_predictions)
       href_run_time_str                      = Forecasts.yyyymmdd_thhz(href_forecast)
@@ -337,6 +342,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     end
 
     push!(paths, path)
+    push!(paths_to_animate, path)
 
     PlotMap.plot_map(
       path,
@@ -375,6 +381,9 @@ PlotMap.plot_map(
   sref_run_hours = [sref_forecasts_to_plot[1].run_hour]
 )
 push!(paths, period_path)
+if period_stop_forecast_hour >= 16 && period_stop_forecast_hour <= 36
+  push!(daily_paths_to_perhaps_tweet, period_path)
+end
 
 
 last_href_valid_time_seconds = maximum(map(Forecasts.valid_time_in_seconds_since_epoch_utc, href_forecasts_to_plot))
@@ -409,5 +418,13 @@ end
 for path in paths
   while !isfile(path * ".pdf") || isfile(path * ".sh")
     sleep(1)
+  end
+end
+
+if ENV["TWEET"] == "true"
+  run_hour = Date.Hour(nadocast_run_time_utc)
+
+  for path in daily_paths_to_perhaps_tweet
+    run(`t update "$(run_hour)Z Day Tornado Forecast" --file=$path.png`)
   end
 end

@@ -25,6 +25,9 @@ storm_events:
 	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/hail_events_downloaded.csv > storm_data/hail_events.csv # The merge deduplicates and sorts
 	rm storm_data/tornadoes_downloaded.csv storm_data/wind_events_downloaded.csv storm_data/hail_events_downloaded.csv
 
+forecast_and_publish:
+	TWEET=true make forecast
+
 forecast:
 	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project lib/DoPredict.jl
 
