@@ -111,13 +111,13 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
       if !isempty(vcat(hrrr_run_hours, rap_run_hours, href_run_hours, sref_run_hours))
         sources_str = ""
         if !isempty(hrrr_run_hours)
-          sources_str = sources_str * "HRRR $(join(hrrr_run_hours, "/"))Z"
+          sources_str = sources_str * "HRRR $(join(hrrr_run_hours, "/"))Z "
         end
         if !isempty(rap_run_hours)
-          sources_str = sources_str * "RAP $(join(rap_run_hours, "/"))Z"
+          sources_str = sources_str * "RAP $(join(rap_run_hours, "/"))Z "
         end
         if !isempty(href_run_hours)
-          sources_str = sources_str * "HREF $(join(href_run_hours, "/"))Z"
+          sources_str = sources_str * "HREF $(join(href_run_hours, "/"))Z "
         end
         if !isempty(sref_run_hours)
           sources_str = sources_str * "SREF $(join(sref_run_hours, "/"))Z"

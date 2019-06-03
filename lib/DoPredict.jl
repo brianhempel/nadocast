@@ -303,7 +303,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
           sref_run_hours = [sref_forecast.run_hour]
         )
         push!(paths, period_path)
-        if (period_stop_forecast_hour >= 16 && period_stop_forecast_hour < 36) || (period_stop_forecast_hour == 36 && period_stop_forecast_hour - period_stop_forecast_hour >= 22)
+        if period_stop_forecast_hour - period_start_forecast_hour >= 16 && Dates.hour(nadocast_run_time_utc + Dates.Hour(period_stop_forecast_hour)) == 11
           push!(daily_paths_to_perhaps_tweet, period_path)
         end
       end
@@ -380,7 +380,7 @@ PlotMap.plot_map(
   sref_run_hours = [sref_forecasts_to_plot[1].run_hour]
 )
 push!(paths, period_path)
-if (period_stop_forecast_hour >= 16 && period_stop_forecast_hour < 36) || (period_stop_forecast_hour == 36 && period_stop_forecast_hour - period_stop_forecast_hour >= 22)
+if period_stop_forecast_hour - period_start_forecast_hour >= 16 && Dates.hour(nadocast_run_time_utc + Dates.Hour(period_stop_forecast_hour)) == 11
   push!(daily_paths_to_perhaps_tweet, period_path)
 end
 
