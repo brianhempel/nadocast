@@ -162,7 +162,7 @@ hrrr_to_href_layer_resampler = Grids.get_upsampler(HRRR.grid(), HREF.grid())
 #   href_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - href_delay_hours*HOUR
 #   sref_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - sref_delay_hours*HOUR
 
-nadocast_run_time_seconds = maximum(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
+nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
 nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
 
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
