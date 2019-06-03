@@ -92,14 +92,14 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
 
       if is_day_forecast
         println(f, "L 7pt,Helvetica-Bold C Nadocast Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
-        println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:M")) UTC")
-        println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:M")) UTC")
+        println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
+        println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
       else
         forecast_hour = forecast_hour_range.start
         valid_time    = valid_start
 
         println(f, "L 7pt,Helvetica-Bold C Nadocast $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$forecast_hour")
-        println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_time, "yyyy-m-d H:M")) UTC")
+        println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_time, "yyyy-m-d H:MM")) UTC")
 
         valid_pt = TimeZones.ZonedDateTime(valid_time, TimeZones.tz"America/Los_Angeles", from_utc = true)
         valid_mt = TimeZones.ZonedDateTime(valid_time, TimeZones.tz"America/Denver",      from_utc = true)
