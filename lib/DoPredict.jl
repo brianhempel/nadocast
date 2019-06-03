@@ -374,13 +374,15 @@ if !isnothing(animation_glob_path)
 end
 
 if ENV["TWEET"] == "true"
+  tweet_script_path = (@__DIR__) * "/tweet.rb"
+
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
-    run(`t update "$(nadocast_run_hour)Z Day Tornado Forecast" --file=$path.png`)
+    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast" $path.png`)
   end
 
   if !isnothing(animation_glob_path)
     println("Tweeting hourlies $(hourlies_movie_path)...")
-    run(`t update "$(nadocast_run_hour)Z Hourly Tornado Forecasts" --file=$hourlies_movie_path.mp4`)
+    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
   end
 end

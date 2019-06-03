@@ -65,12 +65,9 @@
 # make -j install
 
 # sudo apt install ruby-dev
-# sudo gem install t
-# sudo gem uninstall twitter
-# sudo gem install twitter -v 6.1.0
-
-# `t authorize` on some machine, copy the auth over:
-# scp ~/.trc nadocaster:~/.trc
+# sudo gem install twurl
+# twurl authorize --consumer-key key --consumer-secret secret
+# scp ~/.twurlrc nadocaster:~/.twurlrc # if authorization done on foreign machine
 
 # sudo apt install ffmpeg
 
