@@ -125,15 +125,16 @@ href_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_
 
 href_bin_splits, href_trees = MemoryConstrainedTreeBoosting.load(href_model_path)
 
-if href_run_time_seconds > sref_run_time_seconds
-  out_dir = (@__DIR__) * "/../forecasts/$(Forecasts.yyyymmdd(href_forecasts_to_plot[1]))/"
-else
-  out_dir = (@__DIR__) * "/../forecasts/$(Forecasts.yyyymmdd(sref_forecasts_to_plot[1]))/"
-end
+nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
+nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
+
+nadocast_run_hour = Dates.Hour(nadocast_run_time_utc)
+
+out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z/"
 mkpath(out_dir)
 
 paths                        = []
-paths_to_animate             = []
+animation_glob_path          = nothing
 daily_paths_to_perhaps_tweet = []
 
 period_inverse_prediction              = nothing
@@ -164,9 +165,6 @@ hrrr_to_href_layer_resampler = Grids.get_upsampler(HRRR.grid(), HREF.grid())
 #   rap_run_time_in_seconds_since_epoch_utc  = run_time_in_seconds_since_epoch_utc - rap_delay_hours*HOUR
 #   href_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - href_delay_hours*HOUR
 #   sref_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - sref_delay_hours*HOUR
-
-nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
-nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
 
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(href_forecasts_to_plot)
 
@@ -208,6 +206,8 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       end
 
 
+    global animation_glob_path
+    animation_glob_path = out_dir * "href_" * Forecasts.yyyymmdd_thhz(href_forecast) * "_f*_w$(HREF_WEIGHT)_sref$(sref_forecast.run_hour)z*.png"
     path = out_dir * "href_" * Forecasts.yyyymmdd_thhz_fhh(href_forecast) * "_w$(HREF_WEIGHT)_sref$(sref_forecast.run_hour)z" * raps_str * hrrr_str
     println(path)
 
@@ -342,7 +342,6 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     end
 
     push!(paths, path)
-    push!(paths_to_animate, path)
 
     PlotMap.plot_map(
       path,
@@ -422,9 +421,13 @@ for path in paths
 end
 
 if ENV["TWEET"] == "true"
-  run_hour = Dates.Hour(nadocast_run_time_utc)
-
   for path in daily_paths_to_perhaps_tweet
-    run(`t update "$(run_hour)Z Day Tornado Forecast" --file=$path.png`)
+    run(`t update "$(nadocast_run_hour)Z Day Tornado Forecast" --file=$path.png`)
+  end
+
+  if !isnothing(animation_glob_path)
+    hourlies_movie_path = out_dir * "hourlies_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z"
+    run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 $hourlies_movie_path.mp4`) #  -vf scale=1024:-1
+    run(`t update "$(nadocast_run_hour)Z Hourly Tornado Forecasts" --file=$hourlies_movie_path.mp4`)
   end
 end

@@ -70,6 +70,8 @@
 # `t authorize` on some machine, copy the auth over:
 # scp ~/.trc nadocaster:~/.trc
 
+# sudo apt install ffmpeg
+
 # make forecast
 # scp -r nadocaster:~/nadocast/forecasts remote_forecasts
 # make forecast_and_publish
