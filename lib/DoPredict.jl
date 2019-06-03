@@ -420,6 +420,12 @@ for path in paths
   end
 end
 
+if !isnothing(animation_glob_path)
+  println("Making hourlies movie out of $(animation_glob_path)...")
+  hourlies_movie_path = out_dir * "hourlies_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z"
+  run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 $hourlies_movie_path.mp4`) # -vf scale=1024:-1
+end
+
 if ENV["TWEET"] == "true"
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
@@ -427,9 +433,6 @@ if ENV["TWEET"] == "true"
   end
 
   if !isnothing(animation_glob_path)
-    println("Making hourlies movie out of $(animation_glob_path)...")
-    hourlies_movie_path = out_dir * "hourlies_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$(nadocast_run_hour)z"
-    run(`ffmpeg -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 $hourlies_movie_path.mp4`) #  -vf scale=1024:-1
     println("Tweeting hourlies $(hourlies_movie_path)...")
     run(`t update "$(nadocast_run_hour)Z Hourly Tornado Forecasts" --file=$hourlies_movie_path.mp4`)
   end
