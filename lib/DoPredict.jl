@@ -121,14 +121,16 @@ href_run_time_seconds =
     maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_href_forecasts))
   end
 
-href_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) == href_run_time_seconds, all_href_forecasts)
-
 href_bin_splits, href_trees = MemoryConstrainedTreeBoosting.load(href_model_path)
 
 nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
 nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
+nadocast_run_hour         = Dates.hour(nadocast_run_time_utc)
 
-nadocast_run_hour = Dates.hour(nadocast_run_time_utc)
+href_forecasts_to_plot = filter(all_href_forecasts) do forecast
+  Forecasts.valid_utc_datetime(forecast) > nadocast_run_time_utc &&
+  Forecasts.run_time_in_seconds_since_epoch_utc(forecast) == href_run_time_seconds
+end
 
 out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
 mkpath(out_dir)
