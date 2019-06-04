@@ -1,5 +1,6 @@
 # Look for forecasts every hour.
 SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 0 * * * * /home/brian/nadocast/get_data/get_sref.rb >> /home/brian/nadocast/get_data/get_sref.log 2>&1
 0 * * * * /home/brian/nadocast/get_data/get_href.rb >> /home/brian/nadocast/get_data/get_href.log 2>&1
 15 3 * * * cd /home/brian/nadocast && source $HOME/.bash_profile >> /home/brian/nadocast/forecaster.log 2>&1 && make forecast_and_publish >> /home/brian/nadocast/forecaster.log 2>&1
