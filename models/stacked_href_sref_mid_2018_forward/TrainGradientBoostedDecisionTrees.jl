@@ -20,10 +20,38 @@ if ENV["HREF_NEWER_THAN_SREF"] == "true"
   forecast_hour_range = 23:34
   model_prefix = "gbdt_href_newer_nadocastf$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
   stacked_href_sref_prediction_forecasts = StackedHREFSREF.forecasts_with_href_newer_than_sref()
+
+  # 1709 for training. (336 with tornadoes.)
+  # 416 for validation.
+  # 320 for testing.
+  # Note: a fair number failed to load.
+
+  # bin splits: filtering to balance 11151 positive and 12077324 negative labels
+
+  # Training:   60947565 datapoints with 26 features each. 1,584,636,690 bytes ≈ 1.5GB
+  # Validation: 15011360 datapoints with 26 features each.   390,295,360 bytes ≈ 390MB
+
+  # Best hyperparameters (loss = 0.0013223707): Dict{Symbol,Real}(:max_depth=>4,:max_delta_score=>1.5,:learning_rate=>0.0035,:max_leaves=>15,:l2_regularization=>80.0,:feature_fraction=>0.9,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>3500.0)
+  # 748:34:12 elapsed ~31 days
+
 else
-  forecast_hour_range = 19:30
+  forecast_hour_range = 19:30 # On the HREF, this works out to the same range of hours as the above.
   model_prefix = "gbdt_sref_newer_nadocastf$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
   stacked_href_sref_prediction_forecasts = StackedHREFSREF.forecasts_with_sref_newer_than_href()
+
+  # 1703 for training. (332 with tornadoes.)
+  # 416 for validation.
+  # 320 for testing.
+  # Note: a fair number failed to load.
+
+  # bin splits: filtering to balance 10884 positive and 11861081 negative labels
+
+  # Training:   60622800 datapoints with 26 features each. 1,576,192,800 bytes ≈ 1.5GB
+  # Validation: 15011360 datapoints with 26 features each.   390,295,360 bytes ≈ 390 MB
+
+  # Best hyperparameters (loss = 0.0013234919): Dict{Symbol,Real}(:max_depth=>6,:max_delta_score=>3.0,:learning_rate=>0.005,:max_leaves=>8,:l2_regularization=>5.0,:feature_fraction=>0.7,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>5000.0)
+  # 172:18:32 elapsed ~7 days
+
 end
 
 
