@@ -14,6 +14,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Grids
 import Inventories
+import ForecastCombinators
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import FeatureEngineeringShared
@@ -21,113 +22,180 @@ import FeatureEngineeringShared
 
 layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
-# forecasts, example_forecast, grid, get_feature_engineered_data
-function forecasts_example_forecast_grid_get_feature_engineered_data(base_forecasts, base_forecast_vector_wind_layers, base_get_feature_engineered_data, model_predict)
+# # forecasts, example_forecast, grid, get_feature_engineered_data
+# function forecasts_example_forecast_grid_get_feature_engineered_data(base_forecasts, base_forecast_vector_wind_layers, base_get_feature_engineered_data, model_predict)
+#
+#   forecasts = map(base_forecasts) do base_forecast
+#     get_inventory(forecast) = begin
+#       base_inventory = Forecasts.inventory(base_forecast)
+#
+#       # Need just enough for FeatureEngineeringShared.make_data
+#       prediction_inventory_line =
+#         Inventories.InventoryLine(
+#           "",                                         # message_dot_submessage :: String # "3" or "3.2"
+#           "",                                         # position_str           :: String # "956328"
+#           base_inventory[1].date_str,                 # date_str               :: String # "d=2018062900"
+#           "tornado probability",                      # abbrev                 :: String # "CAPE"
+#           "calculated",                               # level                  :: String # "180-0 mb above ground"
+#           "$(base_forecast.forecast_hour) hour fcst", # forecast_hour_str      :: String # "7 hour fcst" or "6-hour acc fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
+#           "calculated prob"                           # misc                   :: String # "wt ens mean" or "prob >2.54"
+#         )
+#
+#       [prediction_inventory_line]
+#     end
+#
+#     get_data(forecast) = begin
+#       feature_engineered_base_data = base_get_feature_engineered_data(base_forecast, Forecasts.get_data(base_forecast))
+#
+#       predictions = Float32.(model_predict(feature_engineered_base_data))
+#
+#       reshape(predictions, (:,1)) # Make the predictions a 2D features array with 1 feature
+#     end
+#
+#     Forecasts.Forecast("tor_prob($(base_forecast.model_name))", base_forecast.run_year, base_forecast.run_month, base_forecast.run_day, base_forecast.run_hour, base_forecast.forecast_hour, [base_forecast], base_forecast._get_grid, get_inventory, get_data)
+#   end
+#
+#
+#   twenty_five_mi_mean_is    = Vector{Int64}[] # Grid point indicies within 25mi
+#   unique_fifty_mi_mean_is   = Vector{Int64}[] # Grid point indicies within 50mi but not within 25mi
+#   unique_hundred_mi_mean_is = Vector{Int64}[] # Grid point indicies within 100mi but not within 50mi
+#
+#   example_forecast = forecasts[1]
+#   grid             = example_forecast.grid
+#
+#   twenty_five_mi_mean_is    = Grids.radius_grid_is(grid, 25.0)
+#   unique_fifty_mi_mean_is   = Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is)
+#   unique_hundred_mi_mean_is = Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is))
+#
+#   get_feature_engineered_data(forecast, basic_predictions) = begin
+#     base_forecast  = forecast.based_on[1]
+#     base_inventory = Forecasts.inventory(base_forecast)
+#
+#     base_forecast_vector_wind_layer_keys =
+#       vcat(
+#         map(base_forecast_vector_wind_layers) do simple_wind_layer_key
+#           if simple_wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
+#             [ "VUCSH:6000-0 m above ground:hour fcst:"
+#             , "VVCSH:6000-0 m above ground:hour fcst:" ]
+#           elseif simple_wind_layer_key == "VCSH:1000-0 m above ground:hour fcst:"
+#             [ "VUCSH:1000-0 m above ground:hour fcst:"
+#             , "VVCSH:1000-0 m above ground:hour fcst:" ]
+#           else
+#             [ "U" * simple_wind_layer_key
+#             , "V" * simple_wind_layer_key ]
+#           end
+#         end...
+#       )
+#
+#     wind_layer_is =
+#       findall(base_inventory) do inventory_line
+#         Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
+#       end
+#
+#     inventory_with_winds = vcat(Forecasts.inventory(forecast)[1:1], base_inventory[wind_layer_is]) # Add the winds to the prediction layer.
+#
+#     grid_point_count = size(basic_predictions, 1)
+#
+#     predictions_with_winds = Array{Float32}(undef, (grid_point_count, length(inventory_with_winds)))
+#
+#     base_data = Forecasts.get_data(base_forecast) # Getting base data again: a little inefficient
+#
+#     predictions_with_winds[:,1]                                = basic_predictions[:,1]
+#     predictions_with_winds[:,2:size(predictions_with_winds,2)] = base_data[:,wind_layer_is]
+#
+#     feature_engineered_data_with_winds =
+#       FeatureEngineeringShared.make_data(
+#         grid,
+#         inventory_with_winds,
+#         forecast.forecast_hour,
+#         predictions_with_winds,
+#         base_forecast_vector_wind_layers,
+#         layer_blocks_to_make,
+#         twenty_five_mi_mean_is,
+#         unique_fifty_mi_mean_is, unique_hundred_mi_mean_is
+#       )
+#
+#     # Now remove the winds (and the div(forecast_hour, 10) layer).
+#     feature_engineered_data_with_winds[:, 1:length(inventory_with_winds):(size(feature_engineered_data_with_winds, 2) - 1)]
+#   end
+#
+#   (forecasts, example_forecast, grid, get_feature_engineered_data)
+# end
 
-  forecasts = map(base_forecasts) do base_forecast
-    get_inventory(forecast) = begin
-      base_inventory = Forecasts.inventory(base_forecast)
-
-      # Need just enough for FeatureEngineeringShared.make_data
-      prediction_inventory_line =
-        Inventories.InventoryLine(
-          "",                                         # message_dot_submessage :: String # "3" or "3.2"
-          "",                                         # position_str           :: String # "956328"
-          base_inventory[1].date_str,                 # date_str               :: String # "d=2018062900"
-          "tornado probability",                      # abbrev                 :: String # "CAPE"
-          "calculated",                               # level                  :: String # "180-0 mb above ground"
-          "$(base_forecast.forecast_hour) hour fcst", # forecast_hour_str      :: String # "7 hour fcst" or "6-hour acc fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
-          "calculated prob"                           # misc                   :: String # "wt ens mean" or "prob >2.54"
-        )
-
-      [prediction_inventory_line]
-    end
-
-    get_data(forecast) = begin
-      feature_engineered_base_data = base_get_feature_engineered_data(base_forecast, Forecasts.get_data(base_forecast))
-
-      predictions = Float32.(model_predict(feature_engineered_base_data))
-
-      reshape(predictions, (:,1)) # Make the predictions a 2D features array with 1 feature
-    end
-
-    Forecasts.Forecast(base_forecast.run_year, base_forecast.run_month, base_forecast.run_day, base_forecast.run_hour, base_forecast.forecast_hour, [base_forecast], base_forecast._get_grid, get_inventory, get_data)
-  end
 
 
-  twenty_five_mi_mean_is    = Vector{Int64}[] # Grid point indicies within 25mi
-  unique_fifty_mi_mean_is   = Vector{Int64}[] # Grid point indicies within 50mi but not within 25mi
-  unique_hundred_mi_mean_is = Vector{Int64}[] # Grid point indicies within 100mi but not within 50mi
+function simple_prediction_forecasts(base_forecasts, model_predict)
 
-  example_forecast = forecasts[1]
-  grid             = Forecasts.grid(example_forecast)
-
-  twenty_five_mi_mean_is    = Grids.radius_grid_is(grid, 25.0)
-  unique_fifty_mi_mean_is   = Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is)
-  unique_hundred_mi_mean_is = Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is))
-
-  get_feature_engineered_data(forecast, basic_predictions) = begin
-    base_forecast  = forecast.based_on[1]
-    base_inventory = Forecasts.inventory(base_forecast)
-
-    base_forecast_vector_wind_layer_keys =
-      vcat(
-        map(base_forecast_vector_wind_layers) do simple_wind_layer_key
-          if simple_wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
-            [ "VUCSH:6000-0 m above ground:hour fcst:"
-            , "VVCSH:6000-0 m above ground:hour fcst:" ]
-          elseif simple_wind_layer_key == "VCSH:1000-0 m above ground:hour fcst:"
-            [ "VUCSH:1000-0 m above ground:hour fcst:"
-            , "VVCSH:1000-0 m above ground:hour fcst:" ]
-          else
-            [ "U" * simple_wind_layer_key
-            , "V" * simple_wind_layer_key ]
-          end
-        end...
+  inventory_transformer(base_inventory, base_data) = begin
+    # Need just enough for FeatureEngineeringShared.make_data
+    prediction_inventory_line =
+      Inventories.InventoryLine(
+        "",                                         # message_dot_submessage :: String # "3" or "3.2"
+        "",                                         # position_str           :: String # "956328"
+        base_inventory[1].date_str,                 # date_str               :: String # "d=2018062900"
+        "tornado probability",                      # abbrev                 :: String # "CAPE"
+        "calculated",                               # level                  :: String # "180-0 mb above ground"
+        "$(base_forecast.forecast_hour) hour fcst", # forecast_hour_str      :: String # "7 hour fcst" or "6-hour acc fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
+        "calculated prob",                          # misc                   :: String # "wt ens mean" or "prob >2.54"
+        ""
       )
 
-    wind_layer_is =
-      findall(base_inventory) do inventory_line
-        Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
-      end
-
-    inventory_with_winds = vcat(Forecasts.inventory(forecast)[1:1], base_inventory[wind_layer_is]) # Add the winds to the prediction layer.
-
-    grid_point_count = size(basic_predictions, 1)
-
-    predictions_with_winds = Array{Float32}(undef, (grid_point_count, length(inventory_with_winds)))
-
-    base_data = Forecasts.get_data(base_forecast) # Getting base data again: a little inefficient
-
-    predictions_with_winds[:,1]                                = basic_predictions[:,1]
-    predictions_with_winds[:,2:size(predictions_with_winds,2)] = base_data[:,wind_layer_is]
-
-    feature_engineered_data_with_winds =
-      FeatureEngineeringShared.make_data(
-        grid,
-        inventory_with_winds,
-        forecast.forecast_hour,
-        predictions_with_winds,
-        base_forecast_vector_wind_layers,
-        layer_blocks_to_make,
-        twenty_five_mi_mean_is,
-        unique_fifty_mi_mean_is, unique_hundred_mi_mean_is
-      )
-
-    # Now remove the winds (and the div(forecast_hour, 10) layer).
-    feature_engineered_data_with_winds[:, 1:length(inventory_with_winds):(size(feature_engineered_data_with_winds, 2) - 1)]
+    [prediction_inventory_line]
   end
 
-  (forecasts, example_forecast, grid, get_feature_engineered_data)
+  data_transformer(base_forecast, base_data) = begin
+    reshape(Float32.(model_predict(base_data)), (:,1)) # Make the predictions a 2D features array with 1 feature
+  end
+
+  ForecastCombinators.map_forecasts(base_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
 
-# function forecasts_at_forecast_hour(forecast_hour)
-#   filter(forecast -> forecast.forecast_hour == forecast_hour, forecasts())
-# end
+# Forecasts with the 25,50,100mi means and gradients of the predictions
+#
+# If base_forecasts are feature engineered, you can provide the base forecasts without feature engineering
+# to avoid recomputing the feature engineering just to get the winds.
+function feature_engineered_prediction_forecasts(base_forecasts, model_predict; base_forecasts_no_feature_engineering = base_forecasts, vector_wind_layers, layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks)
 
-# function feature_i_to_name(feature_i)
-#   inventory = Forecasts.inventory(example_forecast())
-#   FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
-# end
+  base_forecast_vector_wind_layer_keys =
+    vcat(
+      map(vector_wind_layers) do simple_wind_layer_key
+        if simple_wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
+          [ "VUCSH:6000-0 m above ground:hour fcst:"
+          , "VVCSH:6000-0 m above ground:hour fcst:" ]
+        elseif simple_wind_layer_key == "VCSH:1000-0 m above ground:hour fcst:"
+          [ "VUCSH:1000-0 m above ground:hour fcst:"
+          , "VVCSH:1000-0 m above ground:hour fcst:" ]
+        else
+          [ "U" * simple_wind_layer_key
+          , "V" * simple_wind_layer_key ]
+        end
+      end...
+    )
+
+  is_prediction_layer(inventory_line) = begin
+    inventory_line.abbrev == "tornado probability"
+  end
+
+  is_wind_or_prediction_layer(inventory_line) = begin
+    is_prediction_layer(inventory_line) ||
+    (
+      inventory_line.feature_engineering == "" &&
+      Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
+    )
+  end
+
+  basic_prediction_forecasts                = simple_prediction_forecasts(base_forecasts, model_predict)
+  forecasts_with_predictions                = ForecastCombinators.concat_forecasts(Iterators.zip(basic_prediction_forecasts, base_forecasts_no_feature_engineering))
+  forecasts_with_predictions_and_winds_only = filter_features_forecasts(forecasts_with_predictions, is_wind_or_prediction_layer)
+  forecasts_feature_engineered_predictions_and_winds  =
+    FeatureEngineeringShared.feature_engineered_forecasts(
+      forecasts_with_predictions_and_winds_only;
+      vector_wind_layers   = vector_wind_layers,
+      layer_blocks_to_make = layer_blocks_to_make
+    )
+  forecasts_feature_engineered_predictions_only = filter_features_forecasts(forecasts_feature_engineered_predictions_and_winds, is_prediction_layer)
+
+  forecasts_feature_engineered_predictions_only
+end
 
 end # module PredictionForecasts

@@ -9,6 +9,20 @@ struct InventoryLine
   level                  :: String # "180-0 mb above ground"
   forecast_hour_str      :: String # "7 hour fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
   misc                   :: String # "wt ens mean" or "prob >2.54"
+  feature_engineering    :: String # "" or "25mi mean" or "100mi forward grad" etc
+end
+
+function revise_with_feature_engineering(line :: InventoryLine, feature_engineering :: String) :: InventoryLine
+  InventoryLine(
+    line.message_dot_submessage,
+    line.position_str,
+    line.date_str,
+    line.abbrev,
+    line.level,
+    line.forecast_hour_str,
+    line.misc,
+    feature_engineering
+  )
 end
 
 struct FieldMissing <: Exception

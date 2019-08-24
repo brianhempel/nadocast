@@ -24,35 +24,9 @@ import FeatureEngineeringShared
 # VGRD:300 mb:hour fcst:
 # USWRF:top of atmosphere:hour fcst:
 
-FORECASTS_ROOT = get(ENV, "FORECASTS_ROOT", "/Volumes")
-
-_forecasts = []
-downsample = 3
-
-function forecasts()
-  if isempty(_forecasts)
-    reload_forecasts()
-  else
-    _forecasts
-  end
-end
-
-function example_forecast()
-  forecasts()[1]
-end
-
-function grid()
-  Forecasts.grid(example_forecast())
-end
+forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
 layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
-
-function feature_i_to_name(feature_i)
-  inventory = Forecasts.inventory(example_forecast())
-  FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
-end
-
-common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers.txt"), String), "\n"))
 
 vector_wind_layers = [
   "GRD:250 mb:hour fcst:",
@@ -68,30 +42,53 @@ vector_wind_layers = [
   "VCSH:6000-0 m above ground:hour fcst:", # VUCSH:6000-0 m above ground:hour fcst: and VVCSH:6000-0 m above ground:hour fcst: (special handling in FeatureEngineeringShared)
 ]
 
-_twenty_five_mi_mean_is    = Vector{Int64}[] # Grid point indicies within 25mi
-_unique_fifty_mi_mean_is   = Vector{Int64}[] # Grid point indicies within 50mi but not within 25mi
-_unique_hundred_mi_mean_is = Vector{Int64}[] # Grid point indicies within 100mi but not within 50mi
+_forecasts = []
+downsample = 3
 
-function get_feature_engineered_data(forecast, data)
-  global _twenty_five_mi_mean_is
-  global _unique_fifty_mi_mean_is
-  global _unique_hundred_mi_mean_is
-
-  _twenty_five_mi_mean_is    = isempty(_twenty_five_mi_mean_is)    ? Grids.radius_grid_is(grid(), 25.0)                                                                         : _twenty_five_mi_mean_is
-  _unique_fifty_mi_mean_is   = isempty(_unique_fifty_mi_mean_is)   ? Grids.radius_grid_is_less_other_is(grid(), 50.0, _twenty_five_mi_mean_is)                                  : _unique_fifty_mi_mean_is
-  _unique_hundred_mi_mean_is = isempty(_unique_hundred_mi_mean_is) ? Grids.radius_grid_is_less_other_is(grid(), 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is)) : _unique_hundred_mi_mean_is
-
-  FeatureEngineeringShared.make_data(grid(), Forecasts.inventory(forecast), forecast.forecast_hour, data, vector_wind_layers, layer_blocks_to_make, _twenty_five_mi_mean_is, _unique_fifty_mi_mean_is, _unique_hundred_mi_mean_is)
+function forecasts()
+  if isempty(_forecasts)
+    reload_forecasts()
+  else
+    _forecasts
+  end
 end
 
+function feature_engineered_forecasts()
+  FeatureEngineeringShared.feature_engineered_forecasts(
+    forecasts();
+    vector_wind_layers = vector_wind_layers,
+    layer_blocks_to_make = layer_blocks_to_make,
+    feature_interaction_terms = []
+  )
+end
+
+function example_forecast()
+  forecasts()[1]
+end
+
+function grid()
+  example_forecast().grid
+end
+
+# function feature_i_to_name(feature_i)
+#   inventory = Forecasts.inventory(example_forecast())
+#   FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
+# end
+
+
+common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers.txt"), String), "\n"))
+
 function reload_forecasts()
-  hrrr_paths = Grib2.all_grib2_file_paths_in("$(FORECASTS_ROOT)/HRRR_1/hrrr")
+  hrrr_paths = Grib2.all_grib2_file_paths_in("$(forecasts_root())/HRRR_1/hrrr")
 
   global _forecasts
 
   _forecasts = []
 
+  grid = nothing
+
   for hrrr_path in hrrr_paths
+    # println(hrrr_path)
     # "/Volumes/HRRR_1/hrrr/201607/20160715/hrrr_conus_sfc_20160715_t08z_f12.grib2"
 
     year_str, month_str, day_str, run_hour_str, forecast_hour_str = match(r"/hrrr_conus_sfc_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_f(\d\d)\.gri?b2", hrrr_path).captures
@@ -102,20 +99,8 @@ function reload_forecasts()
     run_hour      = parse(Int64, run_hour_str)
     forecast_hour = parse(Int64, forecast_hour_str)
 
-    # This should speed up loading times and save some space in our disk cache.
-    grid =
-      if isempty(_forecasts)
-        nothing
-      else
-        Forecasts.grid(_forecasts[1])
-      end
-
-    get_grid(forecast) = begin
-      if grid == nothing
-        Grib2.read_grid(hrrr_path, downsample = downsample)
-      else
-        grid
-      end
+    if isnothing(grid)
+      grid = Grib2.read_grid(hrrr_path, downsample = downsample)
     end
 
     get_inventory(forecast) = begin
@@ -143,7 +128,7 @@ function reload_forecasts()
         if downsample == 1
           nothing
         else
-          Forecasts.grid(forecast)
+          forecast.grid
         end
 
       data = Grib2.read_layers_data_raw(hrrr_path, Forecasts.inventory(forecast), downsample_grid = downsample_grid)
@@ -151,12 +136,14 @@ function reload_forecasts()
       data
     end
 
-    forecast = Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, [], get_grid, get_inventory, get_data)
+    forecast = Forecasts.Forecast("HRRR", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)
 
     push!(_forecasts, forecast)
   end
 
+  print("sorting...")
   _forecasts = sort(_forecasts, by = (forecast -> (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))))
+  println("done")
 
   _forecasts
 end

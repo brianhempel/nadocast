@@ -361,7 +361,10 @@ function get_upsampler(low_res_grid, high_res_grid)
   end
 
   upsampler(low_res_layer) = begin
-    low_res_layer[low_res_grid_is_on_high_res_grid]
+    print("Upsampling...")
+    out = low_res_layer[low_res_grid_is_on_high_res_grid]
+    println("done.")
+    out
   end
 
   upsampler
@@ -442,10 +445,13 @@ function get_interpolating_upsampler(low_res_grid, high_res_grid)
   end
 
   upsampler(low_res_layer) = begin
-    map(low_res_grid_is_and_weights_on_high_res_grid) do low_res_is_and_weights
+    print("Interpolating upsampling...")
+    out = map(low_res_grid_is_and_weights_on_high_res_grid) do low_res_is_and_weights
       low_res_is, low_res_weights = low_res_is_and_weights
       sum(low_res_layer[low_res_is] .* low_res_weights)
     end
+    println("done.")
+    out
   end
 
   upsampler

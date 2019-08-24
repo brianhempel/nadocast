@@ -2,12 +2,11 @@ module Grib2
 
 import DelimitedFiles # For readdlm
 import JSON # For reading layer_name_normalization_substitutions.json
-import Serialization
 import Plots
-using TranscodingStreams, CodecZstd
 
 push!(LOAD_PATH, @__DIR__)
 
+import Cache
 import GeoUtils
 import Grids
 import Inventories
@@ -26,38 +25,6 @@ function all_grib2_file_paths_in(root_path)
 end
 
 
-### Caching in the local grib2_decoded_cache folder
-
-function cache_path(grib2_path, function_name, more_keying...)
-  more_keying_str = isempty(more_keying) ? "" : string(hash(more_keying))
-  (@__DIR__) * "/grib2_decoded_cache" * replace(grib2_path, r"\.gri?b2$" => "") * "/" * function_name * "_" * more_keying_str
-end
-
-function get_cached(grib2_path, function_name, more_keying...)
-  path = cache_path(grib2_path, function_name, more_keying...)
-  if isfile(path)
-    open(CodecZstd.ZstdDecompressorStream, path, "r") do stream
-      Serialization.deserialize(stream)
-    end
-  else
-    nothing
-  end
-end
-
-function cache_and_return(item, grib2_path, function_name, more_keying...)
-  path = cache_path(grib2_path, function_name, more_keying...)
-
-  mkpath(dirname(path))
-
-  open(CodecZstd.ZstdCompressorStream, path, "w") do stream
-    Serialization.serialize(stream, item)
-  end
-
-  item
-end
-
-
-
 ### Grib2 Functions
 
 # Read grib2 grid. Optional integer downsample parameter does what you would expect.
@@ -66,105 +33,106 @@ end
 #
 # Returns a Grid.Grid structure (see Grid.jl) which contains the grid size and the lat-lon coordinates of all grid points.
 function read_grid(grib2_path; downsample = 1) :: Grids.Grid
-  cached = get_cached(grib2_path, "read_grid_downsample_$(downsample)x")
-  if cached != nothing
-    return cached
-  end
+  print("Reading grid $grib2_path...")
 
-  # Read the grid from the grib file. Returns four columns: row_index, col_index, lat, lon
-  #
-  # -end means stop after first (sub)message.
-  # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
-  all_pts = open(grid_csv -> DelimitedFiles.readdlm(grid_csv, ',', Float64; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
-  all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
+  out = Cache.cached([grib2_path], "read_grid_downsample_$(downsample)x") do
 
-  raw_height = Int64(maximum(all_pts[:,2]))
-  raw_width  = Int64(maximum(all_pts[:,1]))
+    # Read the grid from the grib file. Returns four columns: row_index, col_index, lat, lon
+    #
+    # -end means stop after first (sub)message.
+    # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
+    all_pts = open(grid_csv -> DelimitedFiles.readdlm(grid_csv, ',', Float64; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
+    all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 
-  downsample_y_range = div(downsample+1,2):downsample:raw_height # 1:1:raw_height or 1:2:raw_height or 2:3:raw_height or 2:4:raw_height
-  downsample_x_range = div(downsample+1,2):downsample:raw_width  # 1:1:raw_width  or 1:2:raw_width  or 2:3:raw_width  or 2:4:raw_width
+    raw_height = Int64(maximum(all_pts[:,2]))
+    raw_width  = Int64(maximum(all_pts[:,1]))
 
-  height = length(downsample_y_range)
-  width  = length(downsample_x_range)
+    downsample_y_range = div(downsample+1,2):downsample:raw_height # 1:1:raw_height or 1:2:raw_height or 2:3:raw_height or 2:4:raw_height
+    downsample_x_range = div(downsample+1,2):downsample:raw_width  # 1:1:raw_width  or 1:2:raw_width  or 2:3:raw_width  or 2:4:raw_width
 
-  downsampled_pts = zeros(Float64, (height*width, 2))
+    height = length(downsample_y_range)
+    width  = length(downsample_x_range)
 
-  downsampled_flat_i = 1
-  for j in downsample_y_range
-    for i in downsample_x_range
-      original_flat_i = raw_width*(j-1) + i
+    downsampled_pts = zeros(Float64, (height*width, 2))
 
-      if isodd(downsample)
-        downsampled_pts[downsampled_flat_i, 1:2] = all_pts[original_flat_i, 3:4]
-      else
-        right_flat_i    = original_flat_i
-        left_flat_i     = raw_width*(j-1) + min(i+1, raw_width)
-        up_right_flat_i = raw_width*(min(j+1,raw_height)-1) + i
-        up_left_flat_i  = raw_width*(min(j+1,raw_height)-1) + min(i+1, raw_width)
+    downsampled_flat_i = 1
+    for j in downsample_y_range
+      for i in downsample_x_range
+        original_flat_i = raw_width*(j-1) + i
 
-        # Dumb flat mean, no sphere math. Should be close enough--always small distances
-        original_flat_is = [right_flat_i, left_flat_i, up_right_flat_i, up_left_flat_i]
-        lat = sum(all_pts[original_flat_is, 3]) / 4
-        lon = sum(all_pts[original_flat_is, 4]) / 4
+        if isodd(downsample)
+          downsampled_pts[downsampled_flat_i, 1:2] = all_pts[original_flat_i, 3:4]
+        else
+          right_flat_i    = original_flat_i
+          left_flat_i     = raw_width*(j-1) + min(i+1, raw_width)
+          up_right_flat_i = raw_width*(min(j+1,raw_height)-1) + i
+          up_left_flat_i  = raw_width*(min(j+1,raw_height)-1) + min(i+1, raw_width)
 
-        downsampled_pts[downsampled_flat_i, 1:2] = [lat, lon]
+          # Dumb flat mean, no sphere math. Should be close enough--always small distances
+          original_flat_is = [right_flat_i, left_flat_i, up_right_flat_i, up_left_flat_i]
+          lat = sum(all_pts[original_flat_is, 3]) / 4
+          lon = sum(all_pts[original_flat_is, 4]) / 4
+
+          downsampled_pts[downsampled_flat_i, 1:2] = [lat, lon]
+        end
+
+        downsampled_flat_i += 1
       end
-
-      downsampled_flat_i += 1
     end
+
+    min_lat = minimum(downsampled_pts[:,1])
+    max_lat = maximum(downsampled_pts[:,1])
+    min_lon = minimum(downsampled_pts[:,2])
+    max_lon = maximum(downsampled_pts[:,2])
+
+    latlons = map(flat_i -> (downsampled_pts[flat_i,1], downsampled_pts[flat_i,2]), 1:(height*width)) :: Array{Tuple{Float64,Float64},1}
+
+    # println("Estimating point areas...")
+
+    # Estimate area represented by each grid point
+
+    point_areas_sq_miles = zeros(Float64, height*width)
+    point_heights_miles  = zeros(Float64, height*width)
+    point_widths_miles   = zeros(Float64, height*width)
+
+    for j = 1:height
+      for i = 1:width
+        flat_i = (j-1)*width + i
+        lat, lon = latlons[flat_i]
+
+        wlon = i > 1      ? latlons[flat_i-1][2]     : -1000.0
+        elon = i < width  ? latlons[flat_i+1][2]     : -1000.0
+        slat = j > 1      ? latlons[flat_i-width][1] : -1000.0
+        nlat = j < height ? latlons[flat_i+width][1] : -1000.0
+
+        w_distance = wlon > -1000.0 ? GeoUtils.distance((lat, lon), (lat, wlon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+        e_distance = elon > -1000.0 ? GeoUtils.distance((lat, lon), (lat, elon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+        s_distance = slat > -1000.0 ? GeoUtils.distance((lat, lon), (slat, lon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+        n_distance = nlat > -1000.0 ? GeoUtils.distance((lat, lon), (nlat, lon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
+
+        w_distance = w_distance == 0.0 ? e_distance : w_distance
+        e_distance = e_distance == 0.0 ? w_distance : e_distance
+        s_distance = s_distance == 0.0 ? n_distance : s_distance
+        n_distance = n_distance == 0.0 ? s_distance : n_distance
+
+        sw_area = w_distance * s_distance
+        se_area = e_distance * s_distance
+        nw_area = w_distance * n_distance
+        ne_area = e_distance * n_distance
+
+        point_areas_sq_miles[flat_i] = sw_area + se_area + nw_area + ne_area
+        point_heights_miles[flat_i]  = s_distance + n_distance
+        point_widths_miles[flat_i]   = w_distance + e_distance
+      end
+    end
+
+    point_weights = point_areas_sq_miles / maximum(point_areas_sq_miles)
+
+    Grids.Grid(height, width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
   end
 
-  min_lat = minimum(downsampled_pts[:,1])
-  max_lat = maximum(downsampled_pts[:,1])
-  min_lon = minimum(downsampled_pts[:,2])
-  max_lon = maximum(downsampled_pts[:,2])
-
-  latlons = map(flat_i -> (downsampled_pts[flat_i,1], downsampled_pts[flat_i,2]), 1:(height*width)) :: Array{Tuple{Float64,Float64},1}
-
-  # println("Estimating point areas...")
-
-  # Estimate area represented by each grid point
-
-  point_areas_sq_miles = zeros(Float64, height*width)
-  point_heights_miles  = zeros(Float64, height*width)
-  point_widths_miles   = zeros(Float64, height*width)
-
-  for j = 1:height
-    for i = 1:width
-      flat_i = (j-1)*width + i
-      lat, lon = latlons[flat_i]
-
-      wlon = i > 1      ? latlons[flat_i-1][2]     : -1000.0
-      elon = i < width  ? latlons[flat_i+1][2]     : -1000.0
-      slat = j > 1      ? latlons[flat_i-width][1] : -1000.0
-      nlat = j < height ? latlons[flat_i+width][1] : -1000.0
-
-      w_distance = wlon > -1000.0 ? GeoUtils.distance((lat, lon), (lat, wlon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
-      e_distance = elon > -1000.0 ? GeoUtils.distance((lat, lon), (lat, elon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
-      s_distance = slat > -1000.0 ? GeoUtils.distance((lat, lon), (slat, lon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
-      n_distance = nlat > -1000.0 ? GeoUtils.distance((lat, lon), (nlat, lon)) / 2.0 / GeoUtils.METERS_PER_MILE : 0.0
-
-      w_distance = w_distance == 0.0 ? e_distance : w_distance
-      e_distance = e_distance == 0.0 ? w_distance : e_distance
-      s_distance = s_distance == 0.0 ? n_distance : s_distance
-      n_distance = n_distance == 0.0 ? s_distance : n_distance
-
-      sw_area = w_distance * s_distance
-      se_area = e_distance * s_distance
-      nw_area = w_distance * n_distance
-      ne_area = e_distance * n_distance
-
-      point_areas_sq_miles[flat_i] = sw_area + se_area + nw_area + ne_area
-      point_heights_miles[flat_i]  = s_distance + n_distance
-      point_widths_miles[flat_i]   = w_distance + e_distance
-    end
-  end
-
-  point_weights = point_areas_sq_miles / maximum(point_areas_sq_miles)
-
-  grid = Grids.Grid(height, width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
-
-  cache_and_return(grid, grib2_path, "read_grid_downsample_$(downsample)x")
+  println("done.")
+  out
 end
 
 layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_name_normalization_substitutions.json")) :: Dict{String,Any}
@@ -177,27 +145,28 @@ layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_na
 #
 # Probability files have an extra second-to-last column that just says "probability forecast" or "Neighborhood Probability"
 function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
-  cached = get_cached(grib2_path, "read_inventory")
-  if cached != nothing
-    return cached
-  end
+  print("Reading inventory $grib2_path...")
 
-  # -s indicates "simple inventory"
-  # -n indicates to add the inventory number
-  table =
-    open(`wgrib2 $grib2_path -s -n`) do inv
-      # c.f. find_common_layers.rb
-      normalized_raw_inventory = read(inv, String)
-      for (old, replacement) in layer_name_normalization_substitutions
-        normalized_raw_inventory = replace(normalized_raw_inventory, old => replacement)
+  out = Cache.cached([grib2_path], "read_inventory") do
+
+    # -s indicates "simple inventory"
+    # -n indicates to add the inventory number
+    table =
+      open(`wgrib2 $grib2_path -s -n`) do inv
+        # c.f. find_common_layers.rb
+        normalized_raw_inventory = read(inv, String)
+        for (old, replacement) in layer_name_normalization_substitutions
+          normalized_raw_inventory = replace(normalized_raw_inventory, old => replacement)
+        end
+
+        DelimitedFiles.readdlm(IOBuffer(normalized_raw_inventory), ':', String; header=false, use_mmap=false, quotes=false)
       end
 
-      DelimitedFiles.readdlm(IOBuffer(normalized_raw_inventory), ':', String; header=false, use_mmap=false, quotes=false)
-    end
+    mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7], ""), table, dims = [2])[:,1]
+  end
 
-  result = mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7]), table, dims = [2])[:,1]
-
-  cache_and_return(result, grib2_path, "read_inventory")
+  println("done.")
+  out
 end
 
 # Read out the given layers into a binary Float32 array.
@@ -210,6 +179,7 @@ end
 #
 # Returns grid_length by layer_count Float32 array of values.
 function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) :: Array{Float32, 2}
+  print("Reading data $grib2_path...")
   if downsample_grid == nothing
     downsample = 1
     raw_height = -1
@@ -220,21 +190,18 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
     raw_width  = downsample_grid.original_width
   end
 
-  cached = get_cached(grib2_path, "read_layers_data_raw_downsample_$(downsample)x", inventory)
-  if cached != nothing
-    return cached
-  end
+  # out = Cache.cached([grib2_path], "read_layers_data_raw_downsample_$(downsample)x", inventory) do
 
   # -i says to read the inventory from stdin
   # -headers says to print the layer size before and after
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
 
-  # print("opening wgrib2...")
+  print("opening wgrib2...")
   temp_path = tempname()
   # wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
   wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
 
-  # print("asking for layers...")
+  print("asking for layers...")
   layer_count = length(inventory)
 
   # Tell wgrib2 which layers we want.
@@ -244,10 +211,10 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
     println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
   end
   close(wgrib2.in)
-  # print("waiting...")
+  print("waiting...")
   wait(wgrib2)
 
-  # print("reading layers")
+  print("reading layers")
   wgrib2_out = open(temp_path)
   output_values_initialized = false
 
@@ -283,9 +250,15 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
       end
     end
 
+    if downsample != 1 && layer_value_count != raw_width*raw_height
+      error("Layer $(Inventories.specific_inventory_line_key(layer_to_fetch)) of $grib2_path had $layer_value_count values but expected $(raw_width*raw_height) values.")
+    end
+
+    print("undefs to 0...")
     # Set undefineds to 0 instead of 9.999f20
     layer_values = map(v -> v == 9.999f20 ? 0.0f0 : v, reinterpret(Float32, read(wgrib2_out, layer_value_count*4)))
 
+    print("downsampling...")
     if downsample == 1
       values[:,layer_i] = layer_values
     else
@@ -342,7 +315,11 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
   # print("removing temp file...")
   run(`rm $temp_path`)
 
-  cache_and_return(values, grib2_path, "read_layers_data_raw_downsample_$(downsample)x", inventory)
+  out = values
+  # end
+
+  println("done.")
+  out
 end
 
 

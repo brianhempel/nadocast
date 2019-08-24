@@ -13,7 +13,7 @@ function get_data_and_labels(forecasts)
 
   Xs = []
 
-  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
+  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     data = RAP.get_feature_engineered_data(forecast, data)
 
     push!(Xs, data)

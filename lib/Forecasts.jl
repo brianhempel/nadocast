@@ -12,23 +12,17 @@ MINUTE = 60
 HOUR   = 60*MINUTE
 DAY    = 24*HOUR
 
-# Mutable only for lazy loading of the actual data.
-mutable struct Forecast
+struct Forecast
+  model_name     :: String
   run_year       :: Int64
   run_month      :: Int64
   run_day        :: Int64
   run_hour       :: Int64
   forecast_hour  :: Int64
   based_on       :: Vector{Forecast} # If createded by a forecast combinator, point to original(s).
-  _grid          :: Union{Grids.Grid, Nothing}                               # For lazy loading. Use grid() below.
-  _inventory     :: Union{Vector{Inventories.InventoryLine}, Nothing}        # For lazy loading. Use inventory() below.
-  _data          :: Union{Array{Float32,2}, Nothing}                         # For lazy loading. Use data() below.
-  _get_grid      # :: Function((Forecast,), Grids.Grid)                        # For lazy loading.
+  grid           :: Grids.Grid
   _get_inventory # :: Function((Forecast,), Vector{Inventories.InventoryLine}) # For lazy loading.
   _get_data      # :: Function((Forecast,), Array{Float32,2})                  # For lazy loading.
-
-  Forecast(run_year, run_month, run_day, run_hour, forecast_hour, based_on, get_grid, get_inventory, get_data) =
-    new(run_year, run_month, run_day, run_hour, forecast_hour, based_on, nothing, nothing, nothing, get_grid, get_inventory, get_data)
 end
 
 function time_in_seconds_since_epoch_utc(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64, forecast_hour = 0) :: Int64
@@ -37,6 +31,10 @@ end
 
 function run_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
   time_in_seconds_since_epoch_utc(forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour)
+end
+
+function run_utc_datetime(forecast :: Forecast) :: Dates.DateTime
+  Dates.unix2datetime(run_time_in_seconds_since_epoch_utc(forecast))
 end
 
 function valid_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
@@ -78,43 +76,21 @@ function yyyymmdd(forecast :: Forecast) :: String
 end
 
 
-function grid(forecast :: Forecast) :: Grids.Grid
-  if forecast._grid == nothing
-    forecast._grid = forecast._get_grid(forecast)
-  end
-  forecast._grid
-end
-
 function inventory(forecast :: Forecast) :: Vector{Inventories.InventoryLine}
-  if forecast._inventory == nothing
-    forecast._inventory = forecast._get_inventory(forecast)
-  end
-  forecast._inventory
+  forecast._get_inventory(forecast)
 end
 
-# If not cached, get but don't cache the data.
-function get_data(forecast :: Forecast) :: Array{Float32,2}
-  if forecast._data == nothing
-    forecast._get_data(forecast)
-  else
-    forecast._data
-  end
-end
-
-# If not cached, get and cache the data.
 function data(forecast :: Forecast) :: Array{Float32,2}
-  if forecast._data == nothing
-    forecast._data = forecast._get_data(forecast)
-  end
-  forecast._data
+  forecast._get_data(forecast)
 end
+
 
 # # Note raw data is W -> E, S -> N.
 # #
 # # Reinterpretation lets us index it as [x, y, layer]
 # function data_in_x_y_layers_3d_array(forecast :: Forecast) :: Array{Float32,3}
-#   width  = grid(forecast).width
-#   height = grid(forecast).height
+#   width  = forecast.grid.width
+#   height = forecast.grid.height
 #   reshape(data(forecast), (width, height, :))
 # end
 
@@ -125,7 +101,7 @@ struct UncorruptedForecastsDataIteratorNoCache
   forecasts :: Vector{Forecasts.Forecast}
 end
 
-function iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
+function iterate_data_of_uncorrupted_forecasts(forecasts)
   UncorruptedForecastsDataIteratorNoCache(collect(forecasts))
 end
 
@@ -141,13 +117,14 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
 
   data =
     try
-      Forecasts.get_data(forecast)
+      Forecasts.data(forecast)
     catch exception
-      if isa(exception, EOFError) || isa(exception, ErrorException)
-        println("Bad forecast: $(Forecasts.time_title(forecast))")
-        return Base.iterate(iterator, i+1)
-      elseif isa(exception, Inventories.FieldMissing)
+      if isa(exception, Inventories.FieldMissing)
         println(exception)
+        return Base.iterate(iterator, i+1)
+      elseif isa(exception, EOFError) || isa(exception, ErrorException)
+        println(exception)
+        println("Bad forecast: $(forecast.model_name) $(Forecasts.time_title(forecast))")
         return Base.iterate(iterator, i+1)
       else
         rethrow(exception)
@@ -156,5 +133,22 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
 
   ((forecast, data), i+1)
 end
+
+
+# Index a list of forecasts to avoid O(n^2) lookups/associations.
+
+function run_time_seconds_to_forecasts(forecasts)
+  run_time_seconds_to_forecasts = Dict{Int64,Vector{Forecast}}()
+
+  for forecast in forecasts
+    run_time = Forecasts.run_time_in_seconds_since_epoch_utc(forecast)
+    forecasts_at_run_time = get(run_time_seconds_to_forecasts, run_time, Forecast[])
+    push!(forecasts_at_run_time, forecast)
+    run_time_seconds_to_forecasts[run_time] = forecasts_at_run_time
+  end
+
+  run_time_seconds_to_forecasts
+end
+
 
 end # module Forecasts

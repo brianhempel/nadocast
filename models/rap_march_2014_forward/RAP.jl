@@ -17,44 +17,7 @@ import FeatureEngineeringShared
 # RAP gained low-level (180-0 mb agl, 90-0 mb agl) CAPE/CIN layers on the 2014-02-25 12z run. These are key fields so we'll use forecasts after that date.
 # RAP is missing convective cloud top field from 2018-07-12 12z run through the 2018-08-10 13z run; in prior experiments, this was the most important feature so we'll skip these forecasts.
 
-FORECASTS_ROOT = get(ENV, "FORECASTS_ROOT", "/Volumes")
-
-_forecasts = []
-downsample = 1 # Don't downsample.
-
-function forecasts()
-  if isempty(_forecasts)
-    reload_forecasts()
-  else
-    _forecasts
-  end
-end
-
-# function forecasts_at_forecast_hour(forecast_hour)
-#   filter(forecast -> forecast.forecast_hour == forecast_hour, forecasts())
-# end
-
-low_level_energy_fields_start_seconds = Int64(Dates.datetime2unix(Dates.DateTime(2014, 2, 25, 12)))
-
-function forecast_has_low_level_energy_fields(forecast)
-  Forecasts.run_time_in_seconds_since_epoch_utc(forecast) >= low_level_energy_fields_start_seconds
-end
-
-missing_convective_cloud_top_start_seconds = Int64(Dates.datetime2unix(Dates.DateTime(2018, 7, 12, 12)))
-missing_convective_cloud_top_stop_seconds  = Int64(Dates.datetime2unix(Dates.DateTime(2018, 8, 10, 13)))
-missing_convective_cloud_top_seconds_range = missing_convective_cloud_top_start_seconds:missing_convective_cloud_top_stop_seconds
-
-function forecast_has_convective_cloud_top_field(forecast)
-  !(Forecasts.run_time_in_seconds_since_epoch_utc(forecast) in missing_convective_cloud_top_seconds_range)
-end
-
-function example_forecast()
-  forecasts()[1]
-end
-
-function grid()
-  Forecasts.grid(example_forecast())
-end
+forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
 layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
@@ -73,13 +36,6 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 #   # FeatureEngineeringShared.hundred_mi_leftward_gradient_block,
 #   # FeatureEngineeringShared.hundred_mi_linestraddling_gradient_block,
 # ]
-
-function feature_i_to_name(feature_i)
-  inventory = Forecasts.inventory(example_forecast())
-  FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
-end
-
-common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers.txt"), String), "\n"))
 
 vector_wind_layers = [
   "GRD:1000 mb:hour fcst:",
@@ -133,30 +89,70 @@ vector_wind_layers = [
   "VCSH:6000-0 m above ground:hour fcst:", # VUCSH:6000-0 m above ground:hour fcst: and VVCSH:6000-0 m above ground:hour fcst: (special handling in FeatureEngineeringShared)
 ]
 
-_twenty_five_mi_mean_is    = Vector{Int64}[] # Grid point indicies within 25mi
-_unique_fifty_mi_mean_is   = Vector{Int64}[] # Grid point indicies within 50mi but not within 25mi
-_unique_hundred_mi_mean_is = Vector{Int64}[] # Grid point indicies within 100mi but not within 50mi
+_forecasts = []
+downsample = 1 # Don't downsample.
 
-function get_feature_engineered_data(forecast, data)
-  global _twenty_five_mi_mean_is
-  global _unique_fifty_mi_mean_is
-  global _unique_hundred_mi_mean_is
-
-  _twenty_five_mi_mean_is    = isempty(_twenty_five_mi_mean_is)    ? Grids.radius_grid_is(grid(), 25.0)                                                                         : _twenty_five_mi_mean_is
-  _unique_fifty_mi_mean_is   = isempty(_unique_fifty_mi_mean_is)   ? Grids.radius_grid_is_less_other_is(grid(), 50.0, _twenty_five_mi_mean_is)                                  : _unique_fifty_mi_mean_is
-  _unique_hundred_mi_mean_is = isempty(_unique_hundred_mi_mean_is) ? Grids.radius_grid_is_less_other_is(grid(), 100.0, vcat(_twenty_five_mi_mean_is, _unique_fifty_mi_mean_is)) : _unique_hundred_mi_mean_is
-
-  FeatureEngineeringShared.make_data(grid(), Forecasts.inventory(forecast), forecast.forecast_hour, data, vector_wind_layers, layer_blocks_to_make, _twenty_five_mi_mean_is, _unique_fifty_mi_mean_is, _unique_hundred_mi_mean_is)
+function forecasts()
+  if isempty(_forecasts)
+    reload_forecasts()
+  else
+    _forecasts
+  end
 end
 
+function feature_engineered_forecasts()
+  FeatureEngineeringShared.feature_engineered_forecasts(
+    forecasts();
+    vector_wind_layers = vector_wind_layers,
+    layer_blocks_to_make = layer_blocks_to_make,
+    feature_interaction_terms = []
+  )
+end
+
+# function forecasts_at_forecast_hour(forecast_hour)
+#   filter(forecast -> forecast.forecast_hour == forecast_hour, forecasts())
+# end
+
+low_level_energy_fields_start_seconds = Int64(Dates.datetime2unix(Dates.DateTime(2014, 2, 25, 12)))
+
+function forecast_has_low_level_energy_fields(forecast)
+  Forecasts.run_time_in_seconds_since_epoch_utc(forecast) >= low_level_energy_fields_start_seconds
+end
+
+missing_convective_cloud_top_start_seconds = Int64(Dates.datetime2unix(Dates.DateTime(2018, 7, 12, 12)))
+missing_convective_cloud_top_stop_seconds  = Int64(Dates.datetime2unix(Dates.DateTime(2018, 8, 10, 13)))
+missing_convective_cloud_top_seconds_range = missing_convective_cloud_top_start_seconds:missing_convective_cloud_top_stop_seconds
+
+function forecast_has_convective_cloud_top_field(forecast)
+  !(Forecasts.run_time_in_seconds_since_epoch_utc(forecast) in missing_convective_cloud_top_seconds_range)
+end
+
+function example_forecast()
+  forecasts()[1]
+end
+
+function grid()
+  example_forecast().grid
+end
+
+# function feature_i_to_name(feature_i)
+#   inventory = Forecasts.inventory(example_forecast())
+#   FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
+# end
+
+common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers.txt"), String), "\n"))
+
 function reload_forecasts()
-  rap_paths = Grib2.all_grib2_file_paths_in("$(FORECASTS_ROOT)/RAP_1/rap")
+  rap_paths = Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_1/rap")
 
   global _forecasts
 
   _forecasts = []
 
+  grid = nothing
+
   for rap_path in rap_paths
+    # println(rap_path)
     # "/Volumes/RAP_1/rap/201402/20140225/rap_130_20140225_1300_012.grb2"
 
     if occursin("rap_130_", rap_path) # Skip old ruc files
@@ -168,20 +164,8 @@ function reload_forecasts()
       run_hour      = parse(Int64, run_hour_str)
       forecast_hour = parse(Int64, forecast_hour_str)
 
-      # This should speed up loading times and save some space in our disk cache.
-      grid =
-        if isempty(_forecasts)
-          nothing
-        else
-          Forecasts.grid(_forecasts[1])
-        end
-
-      get_grid(forecast) = begin
-        if grid == nothing
-          Grib2.read_grid(rap_path, downsample = downsample)
-        else
-          grid
-        end
+      if isnothing(grid)
+        grid = Grib2.read_grid(rap_path, downsample = downsample)
       end
 
       get_inventory(forecast) = begin
@@ -207,7 +191,7 @@ function reload_forecasts()
           if downsample == 1
             nothing
           else
-            Forecasts.grid(forecast)
+            forecast.grid
           end
 
         data = Grib2.read_layers_data_raw(rap_path, Forecasts.inventory(forecast), downsample_grid = downsample_grid)
@@ -215,15 +199,18 @@ function reload_forecasts()
         data
       end
 
-      forecast = Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, [], get_grid, get_inventory, get_data)
+      forecast = Forecasts.Forecast("RAP", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)
 
       push!(_forecasts, forecast)
     end
   end
 
+  println("filtering")
   _forecasts = filter(forecast_has_low_level_energy_fields, _forecasts)
   _forecasts = filter(forecast_has_convective_cloud_top_field, _forecasts)
+  print("sorting...")
   _forecasts = sort(_forecasts, by = (forecast -> (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))))
+  println("done")
 
   _forecasts
 end

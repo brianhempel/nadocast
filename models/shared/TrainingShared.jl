@@ -75,38 +75,30 @@ function forecast_is_tornado_hour(forecast)
 end
 
 
-# returns (grid, conus_on_grid, train_forecasts, validation_forecasts, test_forecasts)
-function forecasts_grid_conus_grid_bitmask_train_validation_test(all_forecasts; forecast_hour_range = 1:10000)
+# returns (train_forecasts, validation_forecasts, test_forecasts)
+function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:10000)
   # This filtering here is probably pretty slow.
   forecasts =
     filter(all_forecasts) do forecast
       (forecast.forecast_hour in forecast_hour_range) && is_relevant_forecast(forecast)
     end
 
-  grid = Forecasts.grid(forecasts[1])
-
   train_forecasts      = filter(is_train, forecasts)
   validation_forecasts = filter(is_validation, forecasts)
   test_forecasts       = filter(is_test, forecasts)
 
-  conus_on_grid      = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
-  conus_grid_bitmask = (conus_on_grid .== 1.0f0)
-
-  (grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts)
+  (train_forecasts, validation_forecasts, test_forecasts)
 end
 
 
-function forecast_labels(grid, forecast) :: Array{Float32,1}
-  StormEvents.grid_to_tornado_neighborhoods(grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
+function forecast_labels(forecast) :: Array{Float32,1}
+  StormEvents.grid_to_tornado_neighborhoods(forecast.grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
 
-# get_feature_engineered_data should be a function that takes a forecast and the raw data and returns new data
-# c.f. SREF.get_feature_engineered_data
-#
 # concatenating all the forecasts doubles peak memory usage if done in-RAM
 # so we do the concatenation as an on-disk file append
-function get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing)
+function get_data_labels_weights(grid, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing)
   # Xs      = []
   # Ys      = []
   # weights = []
@@ -131,16 +123,18 @@ function get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineere
     buffer
   end
 
+  grid = forecasts[1].grid
+
+  conus_on_grid      = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
+  conus_grid_bitmask = (conus_on_grid .== 1.0f0)
   conus_grid_weights = Float32.(grid.point_weights[conus_grid_bitmask])
 
   # Deterministic randomness for X_and_labels_to_inclusion_probabilities, presuming forecasts are given in the same order.
   rng = Random.MersenneTwister(12345)
 
-  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts_no_caching(forecasts)
-    data = get_feature_engineered_data(forecast, data)
-
+  for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     data_in_conus = data[conus_grid_bitmask, :]
-    labels        = forecast_labels(grid, forecast)[conus_grid_bitmask] :: Array{Float32,1}
+    labels        = forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
 
     if X_and_labels_to_inclusion_probabilities != nothing
       probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, labels))

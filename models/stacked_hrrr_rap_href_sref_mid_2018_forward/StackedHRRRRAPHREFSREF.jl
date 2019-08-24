@@ -7,13 +7,12 @@ import MemoryConstrainedTreeBoosting
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
+import ForecastCombinators
 import Grids
 import StormEvents
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
-import ConcatForecasts
 import PredictionForecasts
-import ResampleForecasts
 
 push!(LOAD_PATH, (@__DIR__) * "/../hrrr_mid_july_2016_forward")
 import HRRR
@@ -71,7 +70,6 @@ MINUTE = 60
 HOUR   = 60*MINUTE
 
 _forecasts = []
-_get_stacked_feature_engineered_data = nothing
 
 # function forecasts_with_href_newer_than_sref()
 #   filter(forecasts()) do forecast
@@ -98,7 +96,7 @@ function example_forecast()
 end
 
 function grid()
-  Forecasts.grid(example_forecast())
+  HREF.grid()
 end
 
 # function feature_i_to_name(feature_i)
@@ -106,136 +104,99 @@ end
 #   FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)
 # end
 
-function get_feature_engineered_data(forecast, base_data)
-  global _get_stacked_feature_engineered_data
-
-  stacked_predictions_data = _get_stacked_feature_engineered_data(forecast, base_data)
-
-  data_count = size(stacked_predictions_data, 1)
-
-  run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour =
-    filter(associated_run_hours -> associated_run_hours[1] == forecast.run_hour, FORECAST_SCHEDULE)[1]
-
-  href_age_hours = forecast.forecast_hour + (href_run_hour > run_hour ? (run_hour + 24) - href_run_hour : run_hour - href_run_hour)
-  sref_age_hours = forecast.forecast_hour + (sref_run_hour > run_hour ? (run_hour + 24) - sref_run_hour : run_hour - sref_run_hour)
-
-  hcat(stacked_predictions_data, fill(Float32(href_age_hours), data_count), fill(Float32(sref_age_hours), data_count))
-end
+# function get_feature_engineered_data(forecast, base_data)
+#   global _get_stacked_feature_engineered_data
+#
+#   stacked_predictions_data = _get_stacked_feature_engineered_data(forecast, base_data)
+#
+#   data_count = size(stacked_predictions_data, 1)
+#
+#   run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour =
+#     filter(associated_run_hours -> associated_run_hours[1] == forecast.run_hour, FORECAST_SCHEDULE)[1]
+#
+#   href_age_hours = forecast.forecast_hour + (href_run_hour > run_hour ? (run_hour + 24) - href_run_hour : run_hour - href_run_hour)
+#   sref_age_hours = forecast.forecast_hour + (sref_run_hour > run_hour ? (run_hour + 24) - sref_run_hour : run_hour - sref_run_hour)
+#
+#   hcat(stacked_predictions_data, fill(Float32(href_age_hours), data_count), fill(Float32(sref_age_hours), data_count))
+# end
 
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
 
   global _forecasts
-  global _get_stacked_feature_engineered_data
 
   _forecasts = []
 
   storm_event_hours_set = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_events(), 30*MINUTE)
 
 
-  all_hrrr_forecasts = HRRR.forecasts()
   hrrr_bin_splits, hrrr_trees = MemoryConstrainedTreeBoosting.load(HRRR_MODEL_PATH)
-  hrrr_prediction_forecasts, _, _, hrrr_get_feature_engineered_prediction_data =
-    PredictionForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
-      all_hrrr_forecasts,
-      HRRR.vector_wind_layers,
-      HRRR.get_feature_engineered_data,
-      (hrrr_data -> MemoryConstrainedTreeBoosting.predict(hrrr_data, hrrr_bin_splits, hrrr_trees))
+  hrrr_prediction_forecasts =
+    PredictionForecasts.feature_engineered_prediction_forecasts(
+      HRRR.feature_engineered_forecasts(),
+      (hrrr_data -> MemoryConstrainedTreeBoosting.predict(hrrr_data, hrrr_bin_splits, hrrr_trees));
+      base_forecasts_no_feature_engineering = HRRR.forecasts(),
+      vector_wind_layers = HRRR.vector_wind_layers
     )
 
-  hrrr_upsampled_prediction_forecasts, _, _, hrrr_get_upsampled_feature_engineered_prediction_data =
-    ResampleForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
+  hrrr_upsampled_prediction_forecasts =
+    ForecastCombinators.resample_forecasts(
       hrrr_prediction_forecasts,
-      hrrr_get_feature_engineered_prediction_data,
-      Grids.get_upsampler(HRRR.grid(), HREF.grid()),
+      Grids.get_upsampler,
       HREF.grid()
     )
 
-  all_rap_forecasts = RAP.forecasts()
+
   rap_bin_splits, rap_trees = MemoryConstrainedTreeBoosting.load(RAP_MODEL_PATH)
-  rap_prediction_forecasts, _, _, rap_get_feature_engineered_prediction_data =
-    PredictionForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
-      all_rap_forecasts,
-      RAP.vector_wind_layers,
-      RAP.get_feature_engineered_data,
-      (rap_data -> MemoryConstrainedTreeBoosting.predict(rap_data, rap_bin_splits, rap_trees))
+  rap_prediction_forecasts =
+    PredictionForecasts.feature_engineered_prediction_forecasts(
+      RAP.feature_engineered_forecasts(),
+      (rap_data -> MemoryConstrainedTreeBoosting.predict(rap_data, rap_bin_splits, rap_trees));
+      base_forecasts_no_feature_engineering = RAP.forecasts(),
+      vector_wind_layers = RAP.vector_wind_layers
     )
 
-  rap_upsampled_prediction_forecasts, _, _, rap_get_upsampled_feature_engineered_prediction_data =
-    ResampleForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
+  rap_upsampled_prediction_forecasts =
+    ForecastCombinators.resample_forecasts(
       rap_prediction_forecasts,
-      rap_get_feature_engineered_prediction_data,
-      Grids.get_upsampler(RAP.grid(), HREF.grid()),
+      Grids.get_upsampler,
       HREF.grid()
     )
 
 
-  all_href_forecasts = HREF.forecasts()
   href_bin_splits, href_trees = MemoryConstrainedTreeBoosting.load(HREF_MODEL_PATH)
-  href_prediction_forecasts, _, _, href_get_feature_engineered_prediction_data =
-    PredictionForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
-      all_href_forecasts,
-      HREF.vector_wind_layers,
-      HREF.get_feature_engineered_data,
-      (href_data -> MemoryConstrainedTreeBoosting.predict(href_data, href_bin_splits, href_trees))
+  href_prediction_forecasts =
+    PredictionForecasts.feature_engineered_prediction_forecasts(
+      HREF.feature_engineered_forecasts(),
+      (href_data -> MemoryConstrainedTreeBoosting.predict(href_data, href_bin_splits, href_trees));
+      base_forecasts_no_feature_engineering = HREF.forecasts(),
+      vector_wind_layers = HREF.vector_wind_layers
     )
 
-  all_sref_forecasts = SREF.forecasts()
+
   sref_bin_splits, sref_trees = MemoryConstrainedTreeBoosting.load(SREF_MODEL_PATH)
-  sref_prediction_forecasts, _, _, sref_get_feature_engineered_prediction_data =
-    PredictionForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
-      all_sref_forecasts,
-      SREF.vector_wind_layers,
-      SREF.get_feature_engineered_data,
-      (sref_data -> MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees))
+  sref_prediction_forecasts =
+    PredictionForecasts.feature_engineered_prediction_forecasts(
+      SREF.feature_engineered_forecasts(),
+      (sref_data -> MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees));
+      base_forecasts_no_feature_engineering = SREF.forecasts(),
+      vector_wind_layers = SREF.vector_wind_layers
     )
 
-  sref_upsampled_prediction_forecasts, _, _, sref_get_upsampled_feature_engineered_prediction_data =
-    ResampleForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
+  sref_upsampled_prediction_forecasts =
+    ForecastCombinators.resample_forecasts(
       sref_prediction_forecasts,
-      sref_get_feature_engineered_prediction_data,
-      Grids.get_interpolating_upsampler(SREF.grid(), HREF.grid()),
+      Grids.get_interpolating_upsampler,
       HREF.grid()
     )
 
 
   # Index to avoid O(n^2)
 
-  run_time_seconds_to_hrrr_forecasts = Dict{Int64,Vector{Forecasts.Forecast}}()
-
-  for hrrr_forecast in hrrr_upsampled_prediction_forecasts
-    run_time = Forecasts.run_time_in_seconds_since_epoch_utc(hrrr_forecast)
-    hrrr_forecasts_at_run_time = get(run_time_seconds_to_hrrr_forecasts, run_time, Forecasts.Forecast[])
-    push!(hrrr_forecasts_at_run_time, hrrr_forecast)
-    run_time_seconds_to_hrrr_forecasts[run_time] = hrrr_forecasts_at_run_time
-  end
-
-  run_time_seconds_to_rap_forecasts = Dict{Int64,Vector{Forecasts.Forecast}}()
-
-  for rap_forecast in rap_upsampled_prediction_forecasts
-    run_time = Forecasts.run_time_in_seconds_since_epoch_utc(rap_forecast)
-    rap_forecasts_at_run_time = get(run_time_seconds_to_rap_forecasts, run_time, Forecasts.Forecast[])
-    push!(rap_forecasts_at_run_time, rap_forecast)
-    run_time_seconds_to_rap_forecasts[run_time] = rap_forecasts_at_run_time
-  end
-
-  run_time_seconds_to_href_forecasts = Dict{Int64,Vector{Forecasts.Forecast}}()
-
-  for href_forecast in href_prediction_forecasts
-    run_time = Forecasts.run_time_in_seconds_since_epoch_utc(href_forecast)
-    href_forecasts_at_run_time = get(run_time_seconds_to_href_forecasts, run_time, Forecasts.Forecast[])
-    push!(href_forecasts_at_run_time, href_forecast)
-    run_time_seconds_to_href_forecasts[run_time] = href_forecasts_at_run_time
-  end
-
-  run_time_seconds_to_sref_forecasts = Dict{Int64,Vector{Forecasts.Forecast}}()
-
-  for sref_forecast in sref_upsampled_prediction_forecasts
-    run_time = Forecasts.run_time_in_seconds_since_epoch_utc(sref_forecast)
-    sref_forecasts_at_run_time = get(run_time_seconds_to_sref_forecasts, run_time, Forecasts.Forecast[])
-    push!(sref_forecasts_at_run_time, sref_forecast)
-    run_time_seconds_to_sref_forecasts[run_time] = sref_forecasts_at_run_time
-  end
+  run_time_seconds_to_hrrr_forecasts = Forecasts.run_time_seconds_to_forecasts(hrrr_upsampled_prediction_forecasts)
+  run_time_seconds_to_rap_forecasts  = Forecasts.run_time_seconds_to_forecasts(rap_upsampled_prediction_forecasts)
+  run_time_seconds_to_href_forecasts = Forecasts.run_time_seconds_to_forecasts(href_prediction_forecasts)
+  run_time_seconds_to_sref_forecasts = Forecasts.run_time_seconds_to_forecasts(sref_upsampled_prediction_forecasts)
 
   associated_forecasts            = []
   nadocast_run_and_forecast_times = []
@@ -319,22 +280,10 @@ function reload_forecasts()
     run_date += Dates.Day(1)
   end
 
-  stacked_hrrr_rap_href_sref_prediction_forecasts, _, _, get_stacked_feature_engineered_data =
-    ConcatForecasts.forecasts_example_forecast_grid_get_feature_engineered_data(
-      associated_forecasts,
-      ( hrrr_get_upsampled_feature_engineered_prediction_data
-      , hrrr_get_upsampled_feature_engineered_prediction_data
-      , hrrr_get_upsampled_feature_engineered_prediction_data
-      , rap_get_upsampled_feature_engineered_prediction_data
-      , rap_get_upsampled_feature_engineered_prediction_data
-      , rap_get_upsampled_feature_engineered_prediction_data
-      , href_get_feature_engineered_prediction_data
-      , sref_get_upsampled_feature_engineered_prediction_data
-      )
-    )
+  stacked_hrrr_rap_href_sref_prediction_forecasts = ForecastCombinators.concat_forecasts(associated_forecasts)
 
   # Add columns with the HREF and SREF age.
-  _get_stacked_feature_engineered_data = get_stacked_feature_engineered_data
+  # _get_stacked_feature_engineered_data = get_stacked_feature_engineered_data
 
   for (stacked_hrrr_rap_href_sref_prediction_forecast, (run_year, run_month, run_day, run_hour, forecast_hour)) in Iterators.zip(stacked_hrrr_rap_href_sref_prediction_forecasts, nadocast_run_and_forecast_times)
     stacked_hrrr_rap_href_sref_prediction_forecast.run_year      = run_year

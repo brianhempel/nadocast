@@ -13,7 +13,7 @@ function mean_prob_grib2s_to_forecast(
             common_layers_mean, # List of layer keys
             common_layers_prob; # List of layer keys
             forecast_hour = nothing,
-            grid          = nothing, # After downsampling. Prevents having to reload the grid.
+            grid, # After downsampling. Prevents having to reload the grid.
             downsample    = 1
           ) :: Forecasts.Forecast
 
@@ -27,14 +27,6 @@ function mean_prob_grib2s_to_forecast(
   if forecast_hour == nothing
     forecast_hour_str, = match( r"_mean_f(\d+)\.grib2", mean_grib2_path).captures
     forecast_hour      = parse(Int64, forecast_hour_str)
-  end
-
-  get_grid(forecast) = begin
-    if grid == nothing
-      Grib2.read_grid(mean_grib2_path, downsample = downsample) # mean and prob better have the same grid!
-    else
-      grid
-    end
   end
 
   get_inventory(forecast) = begin
@@ -71,7 +63,7 @@ function mean_prob_grib2s_to_forecast(
       if downsample == 1
         nothing
       else
-        Forecasts.grid(forecast)
+        forecast.grid
       end
 
     mean_inventory = collect(Iterators.take(Forecasts.inventory(forecast), length(common_layers_mean)))
@@ -83,7 +75,7 @@ function mean_prob_grib2s_to_forecast(
     hcat(mean_data, prob_data)
   end
 
-  Forecasts.Forecast(run_year, run_month, run_day, run_hour, forecast_hour, [], get_grid, get_inventory, get_data)
+  Forecasts.Forecast(href_or_sref_str, run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)
 end
 
 

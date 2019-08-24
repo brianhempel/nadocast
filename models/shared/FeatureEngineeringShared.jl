@@ -1,7 +1,11 @@
 module FeatureEngineeringShared
 
+using Printf
+
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Cache
 import Forecasts
+import ForecastCombinators
 import Grids
 import Inventories
 
@@ -43,40 +47,135 @@ leftover_fields = [
   "div(forecast hour, 10)",
 ]
 
-function feature_i_to_name(inventory :: Vector{Inventories.InventoryLine}, layer_blocks_to_make :: Vector{Int64}, feature_i :: Int64; feature_interaction_terms = []) :: String
-  raw_feature_count = length(inventory)
+
+function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_blocks_to_make, feature_interaction_terms = [])
+
+  if isempty(base_forecasts)
+    return base_forecasts
+  end
 
   layer_blocks_to_make = sort(layer_blocks_to_make) # Layers always produced in a particular order regardless of given order. It's a set.
 
-  output_block_i, feature_i_in_block = divrem(feature_i - 1, raw_feature_count)
+  grid = base_forecasts[1].grid
 
-  output_block_i += 1
-  feature_i_in_block += 1
+  print("computing radius indices...")
+  point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
+  cache_folder = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
+  twenty_five_mi_mean_is    = Cache.cached(() -> Grids.radius_grid_is(grid, 25.0),                                                                       [cache_folder], "twenty_five_mi_mean_is")
+  unique_fifty_mi_mean_is   = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is),                                 [cache_folder], "unique_fifty_mi_mean_is")
+  unique_hundred_mi_mean_is = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is)), [cache_folder], "unique_hundred_mi_mean_is")
+  println("done")
 
-  if output_block_i >= 1 && output_block_i <= length(layer_blocks_to_make)
-    block_name = feature_block_names[layer_blocks_to_make[output_block_i]]
-    return Inventories.inventory_line_key(inventory[feature_i_in_block]) * ":" * block_name
-  elseif output_block_i > length(layer_blocks_to_make)
-    leftover_feature_i = feature_i - length(layer_blocks_to_make)*raw_feature_count
+  inventory_transformer(base_forecast, base_inventory) = begin
 
-    if leftover_feature_i <= length(leftover_fields)
-      return join([leftover_fields[leftover_feature_i], "calculated", "hour fcst", "calculated", ""], ":")
+    new_inventory = Inventories.InventoryLine[]
+
+    for output_block_i in layer_blocks_to_make
+      block_name = feature_block_names[output_block_i]
+      for inventory_line in base_inventory
+        push!(new_inventory, Inventories.revise_with_feature_engineering(inventory_line, block_name))
+      end
     end
 
-    interaction_feature_i = leftover_feature_i - length(leftover_fields)
+    for leftover_field in leftover_fields
+      leftover_line =
+        Inventories.InventoryLine(
+          "",             # message_dot_submessage
+          "",             # position_str
+          base_inventory[1].date_str,
+          leftover_field, # abbrev
+          "calculated",   # level
+          "hour fcst",    # forecast_hour_str
+          line.misc,      # misc
+          ""              # feature_engineering
+        )
 
-    if interaction_feature_i <= length(feature_interaction_terms)
+      push!(new_inventory, leftover_line)
+    end
+
+    for interaction_is in feature_interaction_terms
       names_of_interacting_features =
-        map(feature_interaction_terms[interaction_feature_i]) do feature_i
-          feature_i_to_name(inventory, layer_blocks_to_make, feature_i, feature_interaction_terms = feature_interaction_terms)
+        map(interaction_is) do feature_i
+          line = new_inventory[feature_i]
+          join([line.abbrev, line.level, Inventories.generic_forecast_hour_str(line.forecast_hour_str), line.misc, line.feature_engineering], ".")
         end
 
-      return join(names_of_interacting_features, "*")
+      interaction_line =
+        Inventories.InventoryLine(
+          "",             # message_dot_submessage
+          "",             # position_str
+          base_inventory[1].date_str,
+          join(names_of_interacting_features, " * "), # abbrev
+          "calculated",   # level
+          "hour fcst",    # forecast_hour_str
+          line.misc,      # misc
+          ""              # feature_engineering
+        )
+
+      push!(new_inventory, interaction_line)
     end
+
+    new_inventory
   end
 
-  "Unknown feature $feature_i"
+  data_transformer(base_forecast, base_data) = begin
+    println("Feature engineering $(base_forecast.model_name) $(Forecasts.time_title(base_forecast))...")
+
+    out = FeatureEngineeringShared.make_data(
+      grid,
+      Forecasts.inventory(base_forecast),
+      base_forecast.forecast_hour,
+      base_data,
+      vector_wind_layers,
+      layer_blocks_to_make,
+      twenty_five_mi_mean_is,
+      unique_fifty_mi_mean_is,
+      unique_hundred_mi_mean_is;
+      feature_interaction_terms = feature_interaction_terms
+    )
+
+    println("done.")
+    out
+  end
+
+  ForecastCombinators.map_forecasts(base_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
+
+
+# function feature_i_to_name(inventory :: Vector{Inventories.InventoryLine}, layer_blocks_to_make :: Vector{Int64}, feature_i :: Int64; feature_interaction_terms = []) :: String
+#   raw_feature_count = length(inventory)
+#
+#   layer_blocks_to_make = sort(layer_blocks_to_make) # Layers always produced in a particular order regardless of given order. It's a set.
+#
+#   output_block_i, feature_i_in_block = divrem(feature_i - 1, raw_feature_count)
+#
+#   output_block_i += 1
+#   feature_i_in_block += 1
+#
+#   if output_block_i >= 1 && output_block_i <= length(layer_blocks_to_make)
+#     block_name = feature_block_names[layer_blocks_to_make[output_block_i]]
+#     return Inventories.inventory_line_key(inventory[feature_i_in_block]) * ":" * block_name
+#   elseif output_block_i > length(layer_blocks_to_make)
+#     leftover_feature_i = feature_i - length(layer_blocks_to_make)*raw_feature_count
+#
+#     if leftover_feature_i <= length(leftover_fields)
+#       return join([leftover_fields[leftover_feature_i], "calculated", "hour fcst", "calculated", ""], ":")
+#     end
+#
+#     interaction_feature_i = leftover_feature_i - length(leftover_fields)
+#
+#     if interaction_feature_i <= length(feature_interaction_terms)
+#       names_of_interacting_features =
+#         map(feature_interaction_terms[interaction_feature_i]) do feature_i
+#           feature_i_to_name(inventory, layer_blocks_to_make, feature_i, feature_interaction_terms = feature_interaction_terms)
+#         end
+#
+#       return join(names_of_interacting_features, "*")
+#     end
+#   end
+#
+#   "Unknown feature $feature_i"
+# end
 
 function feature_range(block_i, raw_feature_count)
   (block_i-1)*raw_feature_count+1:block_i*raw_feature_count

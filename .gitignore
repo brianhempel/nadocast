@@ -19,3 +19,4 @@ gmt.history
 storm_data/tornadoes_old.csv
 grib2_decoded_cache/
 remote_forecasts/
+lib/computation_cache/

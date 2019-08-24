@@ -86,14 +86,14 @@ function train_with_coordinate_descent_hyperparameter_search(
     configs...
   )
 
-  (grid, conus_grid_bitmask, train_forecasts, validation_forecasts, test_forecasts) =
-    TrainingShared.forecasts_grid_conus_grid_bitmask_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
+  (train_forecasts, validation_forecasts, test_forecasts) =
+    TrainingShared.forecasts_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
 
   train_forecasts_with_tornadoes = filter(TrainingShared.forecast_is_tornado_hour, train_forecasts)
 
-  for forecast in train_forecasts_with_tornadoes
-    println(Forecasts.valid_utc_datetime(forecast))
-  end
+  # for forecast in train_forecasts_with_tornadoes
+  #   println(Forecasts.valid_utc_datetime(forecast))
+  # end
 
   println("$(length(train_forecasts)) for training. ($(length(train_forecasts_with_tornadoes)) with tornadoes.)")
   println("$(length(validation_forecasts)) for validation.")
@@ -103,7 +103,7 @@ function train_with_coordinate_descent_hyperparameter_search(
   # Returns (X_binned, labels, weights)
   get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
   end
 
   # Returns path
@@ -117,7 +117,7 @@ function train_with_coordinate_descent_hyperparameter_search(
 
   println("Preparing bin splits by sampling $bin_split_forecast_sample_count training tornado hour forecasts")
 
-  (bin_sample_X, bin_sample_y, _) = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, get_feature_engineered_data, Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count))
+  (bin_sample_X, bin_sample_y, _) = TrainingShared.get_data_labels_weights(Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count))
   if balance_labels_when_computing_bin_splits
     positive_indices = findall(bin_sample_y .>  0.5f0)
     negative_indices = findall(bin_sample_y .<= 0.5f0)
