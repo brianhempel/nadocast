@@ -409,7 +409,7 @@ if !isnothing(animation_glob_path)
   run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
 end
 
-if ENV["TWEET"] == "true"
+if get(ENV, "TWEET", "false") == "true"
   tweet_script_path = (@__DIR__) * "/tweet.rb"
 
   for path in daily_paths_to_perhaps_tweet
