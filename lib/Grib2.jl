@@ -35,7 +35,7 @@ end
 #
 # Returns a Grid.Grid structure (see Grid.jl) which contains the grid size and the lat-lon coordinates of all grid points.
 function read_grid(grib2_path; crop = nothing, downsample = 1) :: Grids.Grid
-  print("Reading grid $grib2_path...")
+  # print("Reading grid $grib2_path...")
 
   out = Cache.cached([grib2_path], "read_grid_downsample_$(downsample)x") do
 
@@ -147,7 +147,7 @@ function read_grid(grib2_path; crop = nothing, downsample = 1) :: Grids.Grid
     Grids.Grid(height, width, crop, crop_mask, crop_height, crop_width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
   end
 
-  println("done.")
+  # println("done.")
   out
 end
 
@@ -161,7 +161,7 @@ layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_na
 #
 # Probability files have an extra second-to-last column that just says "probability forecast" or "Neighborhood Probability"
 function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
-  print("Reading inventory $grib2_path...")
+  # print("Reading inventory $grib2_path...")
 
   out = Cache.cached([grib2_path], "read_inventory") do
 
@@ -181,7 +181,7 @@ function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
     mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7], ""), table, dims = [2])[:,1]
   end
 
-  println("done.")
+  # println("done.")
   out
 end
 
@@ -195,7 +195,7 @@ end
 #
 # Returns grid_length by layer_count Float32 array of values.
 function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = nothing) :: Array{Float32, 2}
-  print("Reading data $grib2_path...")
+  # print("Reading data $grib2_path...")
   if crop_downsample_grid == nothing
     raw_height  = -1
     raw_width   = -1
@@ -222,12 +222,12 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # -headers says to print the layer size before and after
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
 
-  print("opening wgrib2...")
+  # print("opening wgrib2...")
   temp_path = tempname()
   # wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
   wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
 
-  print("asking for layers...")
+  # print("asking for layers...")
   layer_count = length(inventory)
 
   # Tell wgrib2 which layers we want.
@@ -237,10 +237,10 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
   end
   close(wgrib2.in)
-  print("waiting...")
+  # print("waiting...")
   wait(wgrib2)
 
-  print("reading layers")
+  # print("reading layers")
   wgrib2_out = open(temp_path)
   output_values_initialized = false
 
@@ -272,17 +272,17 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
       error("Layer $(Inventories.specific_inventory_line_key(layer_to_fetch)) of $grib2_path had $layer_value_count values but expected $(raw_width*raw_height) values.")
     end
 
-    print("read and crop...")
+    # print("read and crop...")
     layer_values = reinterpret(Float32, read(wgrib2_out, layer_value_count*4))[crop_mask]
 
-    print("undefs to 0...")
+    # print("undefs to 0...")
     # Set undefineds to 0 instead of 9.999f20
     layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
 
     if downsample == 1
       values[:,layer_i] = layer_values
     else
-      print("downsampling...")
+      # print("downsampling...")
       layer_values_2d = reshape(layer_values, (crop_width, crop_height))
 
       _do_downsample(downsample, crop_height, crop_width, layer_values_2d, layer_i, values)
@@ -297,10 +297,6 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     #   # Handle undefined
     #   values = map((v -> (v > 25000.0f0 || v < -1000.0f0) ? 25000.0f0 : v), values)
     # end
-    # println(grid_length)
-    # println(values)
-    # layer_to_data[layer_key] = values
-    # println(grid_length_again)
 
     # print(".")
   end
@@ -317,7 +313,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   out = values
   # end
 
-  println("done.")
+  # println("done.")
   out
 end
 

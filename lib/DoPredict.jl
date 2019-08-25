@@ -12,23 +12,23 @@ import Forecasts
 import Grids
 import PlotMap
 
-println("Loading SREF module")
+# println("Loading SREF module")
 push!(LOAD_PATH, (@__DIR__) * "/../models/sref_mid_2018_forward")
 import SREF
 
-println("Loading HREF module")
+# println("Loading HREF module")
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_mid_2018_forward")
 import HREF
 
-println("Loading RAP module")
+# println("Loading RAP module")
 push!(LOAD_PATH, (@__DIR__) * "/../models/rap_march_2014_forward")
 import RAP
 
-println("Loading HRRR module")
+# println("Loading HRRR module")
 push!(LOAD_PATH, (@__DIR__) * "/../models/hrrr_mid_july_2016_forward")
 import HRRR
 
-println("BEGIN")
+# println("BEGIN")
 HOUR = 60*60
 
 HREF_WEIGHT =
@@ -55,9 +55,9 @@ HRRR_VS_OTHERS_WEIGHT =
 
 sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model"
 
-print("Gather SREF forecasts...")
+# print("Gather SREF forecasts...")
 all_sref_forecasts = SREF.feature_engineered_forecasts()
-println("done.")
+# println("done.")
 
 sref_run_time_seconds =
   if haskey(ENV, "FORECAST_DATE")
@@ -73,10 +73,9 @@ sref_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_
 # out_dir = (@__DIR__) * "/../forecasts/$(Forecasts.yyyymmdd(forecasts_to_plot[1]))/"
 # mkpath(out_dir)
 
-print("Load SREF model...")
-# sref_bin_splits, sref_trees = MemoryConstrainedTreeBoosting.load(sref_model_path)
+# print("Load SREF model...")
 sref_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(sref_model_path)
-println("done.")
+# println("done.")
 
 
 # @sync begin
@@ -98,13 +97,13 @@ println("done.")
 rap_model_path  = (@__DIR__) * "/../models/rap_march_2014_forward/gbdt_f12_2019-04-17T19.27.16.893/568_trees_loss_0.0012037802.model"
 hrrr_model_path = (@__DIR__) * "/../models/hrrr_mid_july_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
 
-print("Load RAP forecasts...")
+# print("Load RAP forecasts...")
 all_rap_forecasts = RAP.feature_engineered_forecasts()
-println("done.")
+# println("done.")
 
-print("Load HRRR forecasts...")
+# print("Load HRRR forecasts...")
 all_hrrr_forecasts = HRRR.feature_engineered_forecasts()
-println("done.")
+# println("done.")
 
 rap_forecast_candidates  = filter(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) >= sref_run_time_seconds, all_rap_forecasts)
 hrrr_forecast_candidates = filter(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) >= sref_run_time_seconds, all_hrrr_forecasts)
@@ -118,24 +117,22 @@ if haskey(ENV, "FORECAST_DATE")
   hrrr_forecast_candidates = filter(forecast -> Forecasts.run_time_in_seconds_since_epoch_utc(forecast) <= run_time_seconds_10z, hrrr_forecast_candidates)
 end
 
-print("Load RAP model...")
-# rap_bin_splits,  rap_trees  = MemoryConstrainedTreeBoosting.load(rap_model_path)
+# print("Load RAP model...")
 rap_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(rap_model_path)
-println("done.")
+# println("done.")
 
-print("Load HRRR model...")
-# hrrr_bin_splits, hrrr_trees = MemoryConstrainedTreeBoosting.load(hrrr_model_path)
+# print("Load HRRR model...")
 hrrr_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(hrrr_model_path)
-println("done.")
+# println("done.")
 
 
 
 
 href_model_path = (@__DIR__) * "/../models/href_mid_2018_forward/gbdt_f1-36_2019-03-28T13.34.42.186/99_trees_annealing_round_1_loss_0.0012652115.model"
 
-print("Load HREF forecasts...")
+# print("Load HREF forecasts...")
 all_href_forecasts = HREF.feature_engineered_forecasts()
-println("done.")
+# println("done.")
 
 href_run_time_seconds =
   if haskey(ENV, "FORECAST_DATE")
@@ -146,10 +143,9 @@ href_run_time_seconds =
     maximum(map(Forecasts.run_time_in_seconds_since_epoch_utc, all_href_forecasts))
   end
 
-print("Load HREF model...")
-# href_bin_splits, href_trees = MemoryConstrainedTreeBoosting.load(href_model_path)
+# print("Load HREF model...")
 href_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(href_model_path)
-println("done.")
+# println("done.")
 
 nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
 nadocast_run_time_utc     = Dates.unix2datetime(nadocast_run_time_seconds)
@@ -177,7 +173,7 @@ sref_run_time_str                      = nothing
 period_hrrr_run_hours                  = Int64[]
 period_rap_run_hours                   = Int64[]
 
-println("Compute upsamplers")
+# println("Compute upsamplers")
 sref_to_href_layer_upsampler = Grids.get_interpolating_upsampler(SREF.grid(), HREF.grid())
 rap_to_href_layer_upsampler  = Grids.get_upsampler(RAP.grid(), HREF.grid())
 hrrr_to_href_layer_resampler = Grids.get_upsampler(HRRR.grid(), HREF.grid())
@@ -195,7 +191,7 @@ hrrr_to_href_layer_resampler = Grids.get_upsampler(HRRR.grid(), HREF.grid())
 #   href_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - href_delay_hours*HOUR
 #   sref_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - sref_delay_hours*HOUR
 
-println("Start forecasts")
+# println("Start forecasts")
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(href_forecasts_to_plot)
 
   valid_time_seconds = Forecasts.valid_time_in_seconds_since_epoch_utc(href_forecast)
@@ -223,17 +219,12 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     path                = out_path_prefix * "_f$((@sprintf "%02d" nadocast_forecast_hour))"
     println(path)
 
-    # sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
-    # href_data = HREF.get_feature_engineered_data(href_forecast, href_data)
-
-    print("Predicting SREF...")
-    # sref_predictions = MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees)
+    # print("Predicting SREF...")
     sref_predictions = sref_predict(sref_data)
-    println("done.")
-    print("Predicting HREF...")
-    # href_predictions = MemoryConstrainedTreeBoosting.predict(href_data, href_bin_splits, href_trees)
+    # println("done.")
+    # print("Predicting HREF...")
     href_predictions = href_predict(href_data)
-    println("done.")
+    # println("done.")
 
     sref_predictions_upsampled = sref_to_href_layer_upsampler(sref_predictions)
 
@@ -241,11 +232,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     rap_count            = 0
 
     for (rap_forecast, rap_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(rap_forecasts)
-      # rap_data        = RAP.get_feature_engineered_data(rap_forecast, rap_data)
-      print("Predicting RAP...")
-      # rap_predictions = MemoryConstrainedTreeBoosting.predict(rap_data, rap_bin_splits, rap_trees)
+      # print("Predicting RAP...")
       rap_predictions = rap_predict(rap_data)
-      println("done.")
+      # println("done.")
       if isnothing(mean_rap_predictions)
         mean_rap_predictions = rap_to_href_layer_upsampler(rap_predictions)
       else
@@ -262,11 +251,9 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     hrrr_count            = 0
 
     for (hrrr_forecast, hrrr_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(hrrr_forecasts)
-      # hrrr_data        = HRRR.get_feature_engineered_data(hrrr_forecast, hrrr_data)
-      print("Predicting with HRRR...")
-      # hrrr_predictions = MemoryConstrainedTreeBoosting.predict(hrrr_data, hrrr_bin_splits, hrrr_trees)
+      # print("Predicting with HRRR...")
       hrrr_predictions = hrrr_predict(hrrr_data)
-      println("done.")
+      # println("done.")
       if isnothing(mean_hrrr_predictions)
         mean_hrrr_predictions = hrrr_to_href_layer_resampler(hrrr_predictions)
       else
