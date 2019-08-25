@@ -279,36 +279,13 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     # Set undefineds to 0 instead of 9.999f20
     layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
 
-    print("downsampling...")
-    downsample_y_range      = div(downsample+1,2):downsample:crop_height # 1:1:crop_height or 1:2:crop_height or 2:3:crop_height or 2:4:crop_height
-    downsample_x_range      = div(downsample+1,2):downsample:crop_width  # 1:1:crop_width  or 1:2:crop_width  or 2:3:crop_width  or 2:4:crop_width
-
     if downsample == 1
       values[:,layer_i] = layer_values
     else
-      downleft_delta_i = div(downsample+1,2) - 1
-      upright_delta_i  = -downleft_delta_i + downsample - 1
-
+      print("downsampling...")
       layer_values_2d = reshape(layer_values, (crop_width, crop_height))
 
-      downsampled_flat_i = 1
-      for j in downsample_y_range
-        for i in downsample_x_range
-          downsampled_value       = 0.0f0
-          downsampled_value_count = 0.0f0
-
-          for j2 in (j - downleft_delta_i):min(j + upright_delta_i, crop_height)
-            for i2 in (i - downleft_delta_i):min(i + upright_delta_i, crop_width)
-              downsampled_value       += layer_values_2d[i2, j2]
-              downsampled_value_count += 1.0f0
-            end
-          end
-
-          values[downsampled_flat_i, layer_i] = downsampled_value / downsampled_value_count
-
-          downsampled_flat_i += 1
-        end
-      end
+      _do_downsample(downsample, crop_height, crop_width, layer_values_2d, layer_i, values)
     end
 
     this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
@@ -344,6 +321,35 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   out
 end
 
+# Downsamples the given layer and places the result in the approprate location in values.
+function _do_downsample(downsample, crop_height, crop_width, layer_values_2d, layer_i, values)
+  downsample_y_range = div(downsample+1,2):downsample:crop_height # 1:1:crop_height or 1:2:crop_height or 2:3:crop_height or 2:4:crop_height
+  downsample_x_range = div(downsample+1,2):downsample:crop_width  # 1:1:crop_width  or 1:2:crop_width  or 2:3:crop_width  or 2:4:crop_width
+
+  downleft_delta_i = div(downsample+1,2) - 1
+  upright_delta_i  = -downleft_delta_i + downsample - 1
+
+  downsampled_flat_i = 1
+  @inbounds for j in downsample_y_range
+    for i in downsample_x_range
+      downsampled_value       = 0.0f0
+      downsampled_value_count = 0.0f0
+
+      for j2 in (j - downleft_delta_i):min(j + upright_delta_i, crop_height)
+        for i2 in (i - downleft_delta_i):min(i + upright_delta_i, crop_width)
+          downsampled_value       += layer_values_2d[i2, j2]
+          downsampled_value_count += 1.0f0
+        end
+      end
+
+      values[downsampled_flat_i, layer_i] = downsampled_value / downsampled_value_count
+
+      downsampled_flat_i += 1
+    end
+  end
+
+  ()
+end
 
 
 ### Utility
