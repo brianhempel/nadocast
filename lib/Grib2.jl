@@ -29,10 +29,12 @@ end
 
 # Read grib2 grid. Optional integer downsample parameter does what you would expect.
 #
+# If provided, crop is applied before downsample. Format: (W:E index range, S:N index range)
+#
 # Ordering is row-major: W -> E, S -> N
 #
 # Returns a Grid.Grid structure (see Grid.jl) which contains the grid size and the lat-lon coordinates of all grid points.
-function read_grid(grib2_path; downsample = 1) :: Grids.Grid
+function read_grid(grib2_path; crop = nothing, downsample = 1) :: Grids.Grid
   print("Reading grid $grib2_path...")
 
   out = Cache.cached([grib2_path], "read_grid_downsample_$(downsample)x") do
@@ -47,8 +49,22 @@ function read_grid(grib2_path; downsample = 1) :: Grids.Grid
     raw_height = Int64(maximum(all_pts[:,2]))
     raw_width  = Int64(maximum(all_pts[:,1]))
 
-    downsample_y_range = div(downsample+1,2):downsample:raw_height # 1:1:raw_height or 1:2:raw_height or 2:3:raw_height or 2:4:raw_height
-    downsample_x_range = div(downsample+1,2):downsample:raw_width  # 1:1:raw_width  or 1:2:raw_width  or 2:3:raw_width  or 2:4:raw_width
+    if isnothing(crop)
+      crop_mask   = (:)
+      crop_pts    = all_pts
+      crop_height = raw_height
+      crop_width  = raw_width
+    else
+      crop_x_range, crop_y_range = crop
+
+      crop_mask   = map(x_i -> x_i in crop_x_range, all_pts[:,1]) .& map(y_i -> y_i in crop_y_range, all_pts[:,2])
+      crop_pts    = all_pts[crop_mask, :]
+      crop_height = Int64(maximum(crop_pts[:,2]) - minimum(crop_pts[:,2]) + 1)
+      crop_width  = Int64(maximum(crop_pts[:,1]) - minimum(crop_pts[:,1]) + 1)
+    end
+
+    downsample_y_range = div(downsample+1,2):downsample:crop_height # 1:1:crop_height or 1:2:crop_height or 2:3:crop_height or 2:4:crop_height
+    downsample_x_range = div(downsample+1,2):downsample:crop_width  # 1:1:crop_width  or 1:2:crop_width  or 2:3:crop_width  or 2:4:crop_width
 
     height = length(downsample_y_range)
     width  = length(downsample_x_range)
@@ -58,20 +74,20 @@ function read_grid(grib2_path; downsample = 1) :: Grids.Grid
     downsampled_flat_i = 1
     for j in downsample_y_range
       for i in downsample_x_range
-        original_flat_i = raw_width*(j-1) + i
+        crop_flat_i = crop_width*(j-1) + i
 
         if isodd(downsample)
-          downsampled_pts[downsampled_flat_i, 1:2] = all_pts[original_flat_i, 3:4]
+          downsampled_pts[downsampled_flat_i, 1:2] = crop_pts[crop_flat_i, 3:4]
         else
-          right_flat_i    = original_flat_i
-          left_flat_i     = raw_width*(j-1) + min(i+1, raw_width)
-          up_right_flat_i = raw_width*(min(j+1,raw_height)-1) + i
-          up_left_flat_i  = raw_width*(min(j+1,raw_height)-1) + min(i+1, raw_width)
+          right_flat_i    = crop_flat_i
+          left_flat_i     = crop_width*(j-1) + min(i+1, crop_width)
+          up_right_flat_i = crop_width*(min(j+1,crop_height)-1) + i
+          up_left_flat_i  = crop_width*(min(j+1,crop_height)-1) + min(i+1, crop_width)
 
           # Dumb flat mean, no sphere math. Should be close enough--always small distances
-          original_flat_is = [right_flat_i, left_flat_i, up_right_flat_i, up_left_flat_i]
-          lat = sum(all_pts[original_flat_is, 3]) / 4
-          lon = sum(all_pts[original_flat_is, 4]) / 4
+          crop_flat_is = [right_flat_i, left_flat_i, up_right_flat_i, up_left_flat_i]
+          lat = sum(crop_pts[crop_flat_is, 3]) / 4
+          lon = sum(crop_pts[crop_flat_is, 4]) / 4
 
           downsampled_pts[downsampled_flat_i, 1:2] = [lat, lon]
         end
@@ -128,7 +144,7 @@ function read_grid(grib2_path; downsample = 1) :: Grids.Grid
 
     point_weights = point_areas_sq_miles / maximum(point_areas_sq_miles)
 
-    Grids.Grid(height, width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
+    Grids.Grid(height, width, crop, crop_mask, crop_height, crop_width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
   end
 
   println("done.")
@@ -172,22 +188,32 @@ end
 # Read out the given layers into a binary Float32 array.
 #
 # `inventory` is a filtered set of lines from read_inventory above.
-# If downsampling, raw_width and raw_height must be provided.
+# If cropping or downsampling, crop_downsample_grid must be provided.
 #
 # Julia reading happens to be really slow for Pipes b/c everything is read byte-by-byte, thereby making a bajillion syscalls.
 # It's faster to have wgrib2 dump to a file and then read in the file, so that's what the code below does.
 #
 # Returns grid_length by layer_count Float32 array of values.
-function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) :: Array{Float32, 2}
+function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = nothing) :: Array{Float32, 2}
   print("Reading data $grib2_path...")
-  if downsample_grid == nothing
-    downsample = 1
-    raw_height = -1
-    raw_width  = -1
+  if crop_downsample_grid == nothing
+    raw_height  = -1
+    raw_width   = -1
+    crop_mask   = (:)
+    crop_height = -1
+    crop_width  = -1
+    crop_downsampled_value_count = UInt32(0)
+    downsample  = 1
   else
-    downsample = downsample_grid.downsample
-    raw_height = downsample_grid.original_height
-    raw_width  = downsample_grid.original_width
+    raw_height = crop_downsample_grid.original_height
+    raw_width  = crop_downsample_grid.original_width
+
+    crop_mask   = crop_downsample_grid.crop_mask
+    crop_height = crop_downsample_grid.crop_height # Before downsampling
+    crop_width  = crop_downsample_grid.crop_width  # Before downsampling
+
+    crop_downsampled_value_count = UInt32(crop_downsample_grid.width * crop_downsample_grid.height)
+    downsample = crop_downsample_grid.downsample
   end
 
   # out = Cache.cached([grib2_path], "read_layers_data_raw_downsample_$(downsample)x", inventory) do
@@ -218,14 +244,8 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
   wgrib2_out = open(temp_path)
   output_values_initialized = false
 
-  layer_value_count       = UInt32(0)
-  downsampled_value_count = UInt32(0)
-  values                  = Array{Float32,2}[]
-
-  downsample_y_range      = div(downsample+1,2):downsample:raw_height # 1:1:raw_height or 1:2:raw_height or 2:3:raw_height or 2:4:raw_height
-  downsample_x_range      = div(downsample+1,2):downsample:raw_width  # 1:1:raw_width  or 1:2:raw_width  or 2:3:raw_width  or 2:4:raw_width
-  downsampled_height      = length(downsample_y_range)
-  downsampled_width       = length(downsample_x_range)
+  layer_value_count = UInt32(0)
+  values            = Array{Float32,2}[]
 
   # Read out the data in those layers.
   # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
@@ -235,13 +255,11 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
     if !output_values_initialized
       layer_value_count = div(read(wgrib2_out, UInt32), 4)
 
-      if downsample == 1
-        downsampled_value_count = layer_value_count
-      else
-        downsampled_value_count = downsampled_height*downsampled_width
+      if isnothing(crop_downsample_grid)
+        crop_downsampled_value_count = layer_value_count
       end
 
-      values = zeros(Float32, (downsampled_value_count,layer_count))
+      values = zeros(Float32, (crop_downsampled_value_count,layer_count))
       output_values_initialized = true
     else
       this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
@@ -250,22 +268,28 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
       end
     end
 
-    if downsample != 1 && layer_value_count != raw_width*raw_height
+    if raw_width != -1 && layer_value_count != raw_width*raw_height
       error("Layer $(Inventories.specific_inventory_line_key(layer_to_fetch)) of $grib2_path had $layer_value_count values but expected $(raw_width*raw_height) values.")
     end
 
+    print("read and crop...")
+    layer_values = reinterpret(Float32, read(wgrib2_out, layer_value_count*4))[crop_mask]
+
     print("undefs to 0...")
     # Set undefineds to 0 instead of 9.999f20
-    layer_values = map(v -> v == 9.999f20 ? 0.0f0 : v, reinterpret(Float32, read(wgrib2_out, layer_value_count*4)))
+    layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
 
     print("downsampling...")
+    downsample_y_range      = div(downsample+1,2):downsample:crop_height # 1:1:crop_height or 1:2:crop_height or 2:3:crop_height or 2:4:crop_height
+    downsample_x_range      = div(downsample+1,2):downsample:crop_width  # 1:1:crop_width  or 1:2:crop_width  or 2:3:crop_width  or 2:4:crop_width
+
     if downsample == 1
       values[:,layer_i] = layer_values
     else
       downleft_delta_i = div(downsample+1,2) - 1
       upright_delta_i  = downleft_delta_i + downsample - 1
 
-      layer_values_2d = reshape(layer_values, (raw_width, raw_height))
+      layer_values_2d = reshape(layer_values, (crop_width, crop_height))
 
       downsampled_flat_i = 1
       for j in downsample_y_range
@@ -273,8 +297,8 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
           downsampled_value       = 0.0f0
           downsampled_value_count = 0.0f0
 
-          for j2 in (j - downleft_delta_i):min(j + upright_delta_i, raw_height)
-            for i2 in (i - downleft_delta_i):min(i + upright_delta_i, raw_width)
+          for j2 in (j - downleft_delta_i):min(j + upright_delta_i, crop_height)
+            for i2 in (i - downleft_delta_i):min(i + upright_delta_i, crop_width)
               downsampled_value       += layer_values_2d[i2, j2]
               downsampled_value_count += 1.0f0
             end
@@ -291,8 +315,6 @@ function read_layers_data_raw(grib2_path, inventory; downsample_grid = nothing) 
     if this_layer_value_count != layer_value_count
       error("value count mismatch, expected $layer_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
     end
-
-
 
     # if desc == "cloud base" || desc == "cloud top" || abbrev == "RETOP"
     #   # Handle undefined

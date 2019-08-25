@@ -124,16 +124,7 @@ function reload_forecasts()
     end
 
     get_data(forecast) = begin
-      downsample_grid =
-        if downsample == 1
-          nothing
-        else
-          forecast.grid
-        end
-
-      data = Grib2.read_layers_data_raw(hrrr_path, Forecasts.inventory(forecast), downsample_grid = downsample_grid)
-
-      data
+      Grib2.read_layers_data_raw(hrrr_path, Forecasts.inventory(forecast), crop_downsample_grid = grid)
     end
 
     forecast = Forecasts.Forecast("HRRR", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)

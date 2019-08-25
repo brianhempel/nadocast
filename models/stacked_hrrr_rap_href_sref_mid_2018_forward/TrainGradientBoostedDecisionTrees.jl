@@ -15,6 +15,20 @@ model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))
 
 stacked_forecasts = StackedHRRRRAPHREFSREF.forecasts()
 
+# 616 for training. (118 with tornadoes.)
+# 170 for validation.
+# 118 for testing.
+# looks like there were ~10 bad forecasts in training...
+
+# filtering to balance 4127 positive and 4181733 negative labels...computing bin splits...done.
+
+# Training   21867510 datapoints with 106 features each = 2,317,956,060 bytes
+# Validation  6134450 datapoints with 106 features each =   650,251,700 bytes
+
+# Best hyperparameters (loss = 0.0012386695): Dict{Symbol,Real}(:max_depth=>4,:max_delta_score=>3.0,:learning_rate=>0.005,:max_leaves=>8,:l2_regularization=>3.0,:feature_fraction=>0.7,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>1500.0)
+
+# 139:20:35 elapsed (~5.5 days)
+
 
 TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
     stacked_forecasts;

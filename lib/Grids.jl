@@ -7,11 +7,15 @@ push!(LOAD_PATH, @__DIR__)
 import GeoUtils
 
 struct Grid
-  height               :: Int64 # Element count
-  width                :: Int64 # Element count
+  height               :: Int64 # Element count, after crop and downsample
+  width                :: Int64 # Element count, after crop and downsample
+  crop                 :: Union{Nothing, Tuple{UnitRange{Int64}, UnitRange{Int64}}} # (West:East crop range, South:North crop range) on original indicies
+  crop_mask            :: Union{Colon, BitArray{1}}
+  crop_height          :: Int64 # Element count before downsample
+  crop_width           :: Int64 # Element count before downsample
   downsample           :: Int64 # 2x 3x 4x etc. (1x is no downsampling)
-  original_height      :: Int64 # Element count before downsampling happened
-  original_width       :: Int64 # Element count before downsampling happened
+  original_height      :: Int64 # Element count before crop and downsample
+  original_width       :: Int64 # Element count before crop and downsample
   min_lat              :: Float64
   max_lat              :: Float64
   min_lon              :: Float64
@@ -34,6 +38,14 @@ function from_file(path :: String) :: Grids.Grid
   # JLD.load(path, "grid")
   open(path, "r") do file
     Serialization.deserialize(file) :: Grids.Grid
+  end
+end
+
+function latlons_to_csv(path :: String, grid :: Grid)
+  open(path, "w") do file
+    for (lat, lon) in grid.latlons
+      println(file, "$lat,$lon")
+    end
   end
 end
 

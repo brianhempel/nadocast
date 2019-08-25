@@ -13,9 +13,13 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import FeatureEngineeringShared
 
 # RAP is on grid 130: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid130.gif https://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID130
+#
+# To match the HREF grid, we'll cut 14 off the W, 0 off the E, 26 off the S, 55 off the N
+crop = ((1+14):(451-0), (1+26):(337-55))
 
 # RAP gained low-level (180-0 mb agl, 90-0 mb agl) CAPE/CIN layers on the 2014-02-25 12z run. These are key fields so we'll use forecasts after that date.
 # RAP is missing convective cloud top field from 2018-07-12 12z run through the 2018-08-10 13z run; in prior experiments, this was the most important feature so we'll skip these forecasts.
+
 
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
@@ -165,7 +169,7 @@ function reload_forecasts()
       forecast_hour = parse(Int64, forecast_hour_str)
 
       if isnothing(grid)
-        grid = Grib2.read_grid(rap_path, downsample = downsample)
+        grid = Grib2.read_grid(rap_path, crop = crop, downsample = downsample)
       end
 
       get_inventory(forecast) = begin
@@ -187,16 +191,7 @@ function reload_forecasts()
       end
 
       get_data(forecast) = begin
-        downsample_grid =
-          if downsample == 1
-            nothing
-          else
-            forecast.grid
-          end
-
-        data = Grib2.read_layers_data_raw(rap_path, Forecasts.inventory(forecast), downsample_grid = downsample_grid)
-
-        data
+        Grib2.read_layers_data_raw(rap_path, Forecasts.inventory(forecast), crop_downsample_grid = grid)
       end
 
       forecast = Forecasts.Forecast("RAP", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)

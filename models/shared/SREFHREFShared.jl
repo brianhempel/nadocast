@@ -13,8 +13,7 @@ function mean_prob_grib2s_to_forecast(
             common_layers_mean, # List of layer keys
             common_layers_prob; # List of layer keys
             forecast_hour = nothing,
-            grid, # After downsampling. Prevents having to reload the grid.
-            downsample    = 1
+            grid
           ) :: Forecasts.Forecast
 
   year_str, month_str, day_str, run_hour_str = match(r"/\w+_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_mean_\w+.gri?b2", mean_grib2_path).captures
@@ -59,18 +58,11 @@ function mean_prob_grib2s_to_forecast(
   end
 
   get_data(forecast) = begin
-    downsample_grid =
-      if downsample == 1
-        nothing
-      else
-        forecast.grid
-      end
-
     mean_inventory = collect(Iterators.take(Forecasts.inventory(forecast), length(common_layers_mean)))
     prob_inventory = collect(Iterators.drop(Forecasts.inventory(forecast), length(common_layers_mean)))
 
-    mean_data = Grib2.read_layers_data_raw(mean_grib2_path, mean_inventory, downsample_grid = downsample_grid)
-    prob_data = Grib2.read_layers_data_raw(prob_grib2_path, prob_inventory, downsample_grid = downsample_grid)
+    mean_data = Grib2.read_layers_data_raw(mean_grib2_path, mean_inventory, crop_downsample_grid = grid)
+    prob_data = Grib2.read_layers_data_raw(prob_grib2_path, prob_inventory, crop_downsample_grid = grid)
 
     hcat(mean_data, prob_data)
   end

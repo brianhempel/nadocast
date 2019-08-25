@@ -13,6 +13,11 @@ import FeatureEngineeringShared
 # Techincally, the HREF is on grid 227: http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID227
 # Natively 1473x1025 (5km)
 # BUT there's lots of missing data near the edges. The effective bounds of the grid appear to match the HRRR.
+#
+# See HREF_raw_usage.txt: it's not exactly square on the grid.
+#
+# We'll conservatively cut 214 off the W, 99 off the E, 119 off the S, 228 off the N
+crop = ((1+214):(1473 - 99), (1+119):(1025-228))
 
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
@@ -92,14 +97,14 @@ function reload_forecasts()
     # "/Volumes/SREF_HREF_1/href/201807/20180728/href_conus_20180728_t06z_mean_f15.grib2"
 
     if isnothing(grid)
-      grid = Grib2.read_grid(href_path, downsample = downsample) # mean and prob better have the same grid!
+      grid = Grib2.read_grid(href_path, crop = crop, downsample = downsample) # mean and prob better have the same grid!
     end
 
     if occursin("z_mean_f", href_path)
       mean_href_path = href_path
       prob_href_path = replace(mean_href_path, "z_mean_f" => "z_prob_f")
 
-      forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("href", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, grid = grid, downsample = downsample)
+      forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("href", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, grid = grid)
 
       push!(_forecasts, forecast)
     end

@@ -11,6 +11,10 @@ import SREFHREFShared
 import FeatureEngineeringShared
 
 # SREF is on grid 212: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid212.gif
+#
+# To match the HREF grid, we'll cut 26 off the W, 12 off the E, 14 off the S, 28 off the N
+crop = ((1+26):(185-12), (1+14):(129-28))
+
 
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
@@ -113,7 +117,7 @@ function reload_forecasts()
 
     # This should speed up loading times and save some space in our disk cache.
     if isnothing(grid)
-      grid = Grib2.read_grid(sref_path, downsample = downsample) # mean and prob better have the same grid!
+      grid = Grib2.read_grid(sref_path, crop = crop, downsample = downsample) # mean and prob better have the same grid!
     end
 
     if occursin("mean_1hrly", sref_path)
