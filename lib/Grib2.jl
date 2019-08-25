@@ -287,7 +287,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
       values[:,layer_i] = layer_values
     else
       downleft_delta_i = div(downsample+1,2) - 1
-      upright_delta_i  = downleft_delta_i + downsample - 1
+      upright_delta_i  = -downleft_delta_i + downsample - 1
 
       layer_values_2d = reshape(layer_values, (crop_width, crop_height))
 
