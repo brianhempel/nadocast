@@ -119,7 +119,7 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
   end
 
   data_transformer(base_forecast, base_data) = begin
-    println("Feature engineering $(base_forecast.model_name) $(Forecasts.time_title(base_forecast))...")
+    # println("Feature engineering $(base_forecast.model_name) $(Forecasts.time_title(base_forecast))...")
 
     out = FeatureEngineeringShared.make_data(
       grid,
@@ -134,7 +134,7 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
       feature_interaction_terms = feature_interaction_terms
     )
 
-    println("done.")
+    # println("done.")
     out
   end
 

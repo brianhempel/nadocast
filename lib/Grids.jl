@@ -377,9 +377,9 @@ function get_upsampler(low_res_grid, high_res_grid)
   end
 
   upsampler(low_res_layer) = begin
-    print("Upsampling...")
+    # print("Upsampling...")
     out = low_res_layer[low_res_grid_is_on_high_res_grid]
-    println("done.")
+    # println("done.")
     out
   end
 
