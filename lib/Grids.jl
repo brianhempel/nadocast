@@ -94,9 +94,9 @@ function latlon_to_closest_grid_i_search(grid :: Grid, (target_lat, target_lon) 
   # down row
   s_to_n_row_to_test = s_to_n_row - vertical_step_size
 
-  if s_to_n_row_to_test > 1
+  if s_to_n_row_to_test >= 1
     w_to_e_col_to_test = w_to_e_col - horizontal_step_size
-    if w_to_e_col_to_test > 1
+    if w_to_e_col_to_test >= 1
       flat_i = get_grid_i(grid, (s_to_n_row_to_test, w_to_e_col_to_test))
       (lat, lon) = grid.latlons[flat_i]
       distance_squared = (lat-target_lat)^2 + (lon-target_lon)^2
@@ -134,7 +134,7 @@ function latlon_to_closest_grid_i_search(grid :: Grid, (target_lat, target_lon) 
   s_to_n_row_to_test = s_to_n_row
 
   w_to_e_col_to_test = w_to_e_col - horizontal_step_size
-  if w_to_e_col_to_test > 1
+  if w_to_e_col_to_test >= 1
     flat_i = get_grid_i(grid, (s_to_n_row_to_test, w_to_e_col_to_test))
     (lat, lon) = grid.latlons[flat_i]
     distance_squared = (lat-target_lat)^2 + (lon-target_lon)^2
@@ -172,7 +172,7 @@ function latlon_to_closest_grid_i_search(grid :: Grid, (target_lat, target_lon) 
 
   if s_to_n_row_to_test <= grid.height
     w_to_e_col_to_test = w_to_e_col - horizontal_step_size
-    if w_to_e_col_to_test > 1
+    if w_to_e_col_to_test >= 1
       flat_i = get_grid_i(grid, (s_to_n_row_to_test, w_to_e_col_to_test))
       (lat, lon) = grid.latlons[flat_i]
       distance_squared = (lat-target_lat)^2 + (lon-target_lon)^2
