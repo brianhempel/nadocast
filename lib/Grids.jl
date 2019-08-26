@@ -42,8 +42,12 @@ function from_file(path :: String) :: Grids.Grid
 end
 
 function latlons_to_csv(path :: String, grid :: Grid)
+  latlons_to_csv(path, grid.latlons)
+end
+
+function latlons_to_csv(path :: String, latlons :: Array{Tuple{Float64,Float64}, 1})
   open(path, "w") do file
-    for (lat, lon) in grid.latlons
+    for (lat, lon) in latlons
       println(file, "$lat,$lon")
     end
   end

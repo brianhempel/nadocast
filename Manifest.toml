@@ -7,10 +7,10 @@ uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 version = "0.4.1"
 
 [[ArchGDAL]]
-deps = ["DataStreams", "Dates", "GDAL", "GeoInterface", "Statistics", "Test"]
-git-tree-sha1 = "aadd7642ba2dbf13442359622a02d985f42d0e1b"
+deps = ["DataStreams", "Dates", "GDAL", "GeoInterface"]
+git-tree-sha1 = "dbe057fd9b23a5c9e796417c47622e0592f65109"
 uuid = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"
-version = "0.2.0"
+version = "0.2.1"
 
 [[Arpack]]
 deps = ["BinaryProvider", "Libdl", "LinearAlgebra"]
