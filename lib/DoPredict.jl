@@ -289,6 +289,7 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
       if !isnothing(period_inverse_prediction)
         period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
         period_prediction = 1.0 .- period_inverse_prediction
+        write(period_path * ".float16.bin", Float16.(period_prediction))
         PlotMap.plot_map(
           period_path,
           href_forecast.grid,
@@ -330,6 +331,8 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     push!(paths, path)
 
+    write(path * ".float16.bin", Float16.(mean_predictions))
+
     PlotMap.plot_map(
       path,
       href_forecast.grid,
@@ -346,6 +349,7 @@ end
 
 period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
 period_prediction = 1.0 .- period_inverse_prediction
+write(period_path * ".float16.bin", Float16.(period_prediction))
 PlotMap.plot_map(
   period_path,
   href_forecasts_to_plot[1].grid,
@@ -379,6 +383,7 @@ for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
   nadocast_forecast_hour = fld(Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) - nadocast_run_time_seconds, HOUR)
 
+  write(path * ".float16.bin", Float16.(sref_predictions))
   PlotMap.plot_map(
     path,
     sref_forecast.grid,
