@@ -17,21 +17,25 @@ function is_in_conus_bounding_box((lat, lon))
   lat > s_extreme && lat < n_extreme && lon > w_extreme && lon < e_extreme
 end
 
+# Same cropping as in HREF.jl
+const href_cropped_5km_grid = Grib2.read_grid((@__DIR__) * "/href_one_field_for_grid.grib2", crop = ((1+214):(1473 - 99), (1+119):(1025-228))) :: Grids.Grid
 
-const rap_130_grid = Grib2.read_grid((@__DIR__) * "/rap_130_one_field_for_grid.grb2") :: Grids.Grid
+# See MakeConusGrid for how to create HREF_conus_latlons.csv
+const conus_mask_href_cropped_5km_grid = begin
+  latlons, _ = DelimitedFiles.readdlm((@__DIR__) * "/HREF_conus_latlons.csv", Float64; header = true)
+  conus_mask = falses(length(href_cropped_5km_grid.latlons))
 
-# conus_on_rap_130_grid.txt produced by:
-#
-# import Grib2
-# import MakeConusGrid
-# import DelimitedFiles # For readdlm
-#
-# DelimitedFiles.writedlm("conus_on_rap_130_grid.txt", MakeConusGrid.grid_to_conus(Grib2.read_grid("test_grib2s/rap_130_20180319_1400_012.grb2")))
-const conus_layer_data_on_rap_130_grid = DelimitedFiles.readdlm((@__DIR__) * "/conus_on_rap_130_grid.txt", Float32)[:,1] :: Array{Float32,1} # 0.0/1.0 indicator layer of conus
+  for (lat, lon) in eachrow(latlons)
+    conus_mask[Grids.latlon_to_closest_grid_i(href_cropped_5km_grid, (lat, lon))] = true
+  end
 
+  conus_mask
+end
+
+# Based on closest HREF 5km gridpoint
 function is_in_conus(latlon :: Tuple{Float64, Float64}) :: Bool
-  flat_i = Grids.latlon_to_closest_grid_i(rap_130_grid, latlon)
-  conus_layer_data_on_rap_130_grid[flat_i] > 0.5f0
+  flat_i = Grids.latlon_to_closest_grid_i(href_cropped_5km_grid, latlon)
+  conus_mask_href_cropped_5km_grid[flat_i]
 end
 
 end # module Conus

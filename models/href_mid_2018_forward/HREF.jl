@@ -76,6 +76,19 @@ function grid()
   example_forecast().grid
 end
 
+_original_grid_cropped = nothing
+
+function original_grid_cropped()
+  global _original_grid_cropped
+
+  if isnothing(_original_grid_cropped)
+    href_paths = Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_1/href")
+    _original_grid_cropped = Grib2.read_grid(href_paths[1], crop = crop)
+  end
+
+  _original_grid_cropped
+end
+
 # function feature_i_to_name(feature_i)
 #   inventory = Forecasts.inventory(example_forecast())
 #   FeatureEngineeringShared.feature_i_to_name(inventory, layer_blocks_to_make, feature_i)

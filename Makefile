@@ -34,6 +34,9 @@ forecast:
 crontab:
 	crontab crontab.cron
 
+lib/href_one_field_for_grid.grib2:
+	wgrib2 test_grib2s/href.t00z.conus.mean.f07.grib2 -end -grib lib/href_one_field_for_grid.grib2
+
 setup:
 	# sudo dpkg-reconfigure tzdata # Choose "Other" to get UTC
 	#
