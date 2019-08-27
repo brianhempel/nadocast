@@ -147,14 +147,12 @@ def row_to_lat_lon_cells(row)
   ]
 end
 
-last_storm_events_database_year = nil
+last_storm_events_database_event_time = Time.new(2014)
 
 (2014..Time.now.year).each do |year|
   file_name = file_names.grep(/v1\.0_d#{year}_/).last
 
   next unless file_name
-
-  last_storm_events_database_year = year
 
   rows = CSV.parse(`curl #{ROOT_URL + file_name} | gunzip`, headers: true)
 
@@ -169,6 +167,8 @@ last_storm_events_database_year = nil
   STDERR.puts "#{hail_rows.count} hail events in #{year}"
 
   tornado_rows.map! do |row|
+    last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
+
     row_to_begin_end_time_cells(row) +
     [
       row["TOR_F_SCALE"][/\d+/], # f_scale
@@ -187,6 +187,8 @@ last_storm_events_database_year = nil
   }
 
   wind_rows.map! do |row|
+    last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
+
     row_to_begin_end_time_cells(row) +
     [
       row["EVENT_TYPE"], # kind
@@ -197,6 +199,8 @@ last_storm_events_database_year = nil
   end
 
   hail_rows.map! do |row|
+    last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
+
     row_to_begin_end_time_cells(row) +
     [
       row["EVENT_TYPE"],
@@ -225,7 +229,7 @@ end
 
 if ARGV[3] == "--add_spc_storm_reports"
 
-  start_date = Date.new(last_storm_events_database_year + 1)
+  start_date = last_storm_events_database_event_time.to_date + 1
   end_date   = Date.today - 7
 
   puts "Adding SPC storm reports for #{start_date} through #{end_date}"
