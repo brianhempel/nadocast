@@ -11,9 +11,7 @@ module StormEvent
     end_time   > time_range.begin
   end
 
-  # Assume ungeocoded events (wind events) are in the CONUS. We need more negative data.
   def in_conus?
-    start_lat.nan? || start_lon.nan? ||
     ((24..50).cover?(start_lat) && (-125..-66).cover?(start_lon)) ||
     ((24..50).cover?(end_lat)   && (-125..-66).cover?(end_lon))
   end
@@ -108,8 +106,6 @@ STORM_EVENTS = TORNADOES + HAIL_EVENTS + WIND_EVENTS
 # Ported from lib/StormEvents.jl conus_event_hours_set_in_seconds_from_epoch_utc
 #
 # Returns a set of Time objects representing the set of hours covered by the given storm events that are in the CONUS.
-#
-# Assumes non-geocoded events (winds, mostly) are in the CONUS.
 def conus_event_hours_set(events, event_time_window_half_size)
   hour = 60*60
 
