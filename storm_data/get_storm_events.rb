@@ -195,6 +195,8 @@ last_storm_events_database_event_time = Time.new(2014)
   }
 
   # Wind rows are allowed to have bad geocodes.
+  # But we don't want "sustained" winds.
+  wind_rows.select! { |row| (wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"]) != "sustained" }
   wind_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
