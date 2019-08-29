@@ -41,7 +41,7 @@ function read_events_csv(path) ::Vector{Event}
     if isa(row[start_lat_col_i], Real)
       start_latlon  = (row[start_lat_col_i], row[start_lon_col_i])
       end_latlon    = (row[end_lat_col_i],   row[end_lon_col_i])
-    elseif row[start_lat_col_i] == "" || row[start_lat_col_i] == "LA"
+    elseif row[start_lat_col_i] == "" || row[start_lat_col_i] == "LA" || row[start_lat_col_i] == "NJ"
       # Some wind events are not geocoded. One LSR event is geocoded as "LA,32.86,LA,32.86"
       start_latlon = (NaN, NaN)
       end_latlon   = (NaN, NaN)
@@ -114,7 +114,10 @@ function conus_wind_events() :: Vector{Event}
 
   if isnothing(_conus_wind_events)
     _conus_wind_events = filter(wind_events()) do wind_event
-      # Exclude Alaska, Hawaii, Puerto Rico
+      # Exclude Alaska, Hawaii, Puerto Rico.
+      #
+      # Assume ungeocoded wind events are in the CONUS. We need more negative data.
+      isnan(wind_event.start_latlon[1]) || isnan(wind_event.start_latlon[2]) ||
       Conus.is_in_conus_bounding_box(wind_event.start_latlon) || Conus.is_in_conus_bounding_box(wind_event.end_latlon)
     end
   end

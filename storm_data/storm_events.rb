@@ -11,7 +11,9 @@ module StormEvent
     end_time   > time_range.begin
   end
 
+  # Assume ungeocoded events (wind events) are in the CONUS. We need more negative data.
   def in_conus?
+    start_lat.nan? || start_lon.nan? ||
     ((24..50).cover?(start_lat) && (-125..-66).cover?(start_lon)) ||
     ((24..50).cover?(end_lat)   && (-125..-66).cover?(end_lon))
   end
@@ -86,26 +88,28 @@ end
 STORM_EVENTS = TORNADOES + HAIL_EVENTS + WIND_EVENTS
 
 
-def rap_to_time(rap_str)
-  # rap_130_20161008_1800_001
-  yyyy = rap_str[8..11]
-  mm   = rap_str[12..13]
-  dd   = rap_str[14..15]
-  hh   = rap_str[17..18]
-  fh   = rap_str[23..24]
-
-  require "time"
-
-  Time.parse("#{yyyy}-#{mm}-#{dd} #{hh}:00 +0000") + 60*60*fh.to_i
-end
-
-def rap_to_time_range(rap_str)
-  rap_to_time(rap_str)-30*60...rap_to_time(rap_str)+30*60
-end
+# def rap_to_time(rap_str)
+#   # rap_130_20161008_1800_001
+#   yyyy = rap_str[8..11]
+#   mm   = rap_str[12..13]
+#   dd   = rap_str[14..15]
+#   hh   = rap_str[17..18]
+#   fh   = rap_str[23..24]
+#
+#   require "time"
+#
+#   Time.parse("#{yyyy}-#{mm}-#{dd} #{hh}:00 +0000") + 60*60*fh.to_i
+# end
+#
+# def rap_to_time_range(rap_str)
+#   rap_to_time(rap_str)-30*60...rap_to_time(rap_str)+30*60
+# end
 
 # Ported from lib/StormEvents.jl conus_event_hours_set_in_seconds_from_epoch_utc
 #
 # Returns a set of Time objects representing the set of hours covered by the given storm events that are in the CONUS.
+#
+# Assumes non-geocoded events (winds, mostly) are in the CONUS.
 def conus_event_hours_set(events, event_time_window_half_size)
   hour = 60*60
 
