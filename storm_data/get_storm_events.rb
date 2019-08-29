@@ -147,6 +147,13 @@ def row_to_lat_lon_cells(row)
   ]
 end
 
+def valid_lat_lon?(row)
+  (row["BEGIN_LAT"] || row["Lat"]).to_f > 0 &&
+  (row["BEGIN_LON"] || row["Lon"]).to_f < -1 &&
+  (row["END_LAT"] || row["Lat"]).to_f > 0 &&
+  (row["END_LON"] || row["Lon"]).to_f < -1
+end
+
 last_storm_events_database_event_time = Time.new(2014)
 
 (2014..Time.now.year).each do |year|
@@ -166,6 +173,7 @@ last_storm_events_database_event_time = Time.new(2014)
   STDERR.puts "#{wind_rows.count} high wind events in #{year}"
   STDERR.puts "#{hail_rows.count} hail events in #{year}"
 
+  tornado_rows.select! { |row| valid_lat_lon?(row) }
   tornado_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
@@ -186,6 +194,7 @@ last_storm_events_database_event_time = Time.new(2014)
     "MS" => "sustained",
   }
 
+  # Wind rows are allowed to have bad geocodes.
   wind_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
@@ -198,6 +207,7 @@ last_storm_events_database_event_time = Time.new(2014)
     row_to_lat_lon_cells(row)
   end
 
+  hail_rows.select! { |row| valid_lat_lon?(row) }
   hail_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
@@ -270,6 +280,7 @@ if ARGV[3] == "--add_spc_storm_reports"
     wind_rows    = CSV.parse(day_reports_wind_csv_str, headers: true).each.to_a # as list of rows
     hail_rows    = CSV.parse(day_reports_hail_csv_str, headers: true).each.to_a # as list of rows
 
+    tornado_rows.select! { |row| valid_lat_lon?(row) }
     tornado_rows.map! do |row|
       time = spc_storm_report_row_to_time(date, row)
 
@@ -280,6 +291,7 @@ if ARGV[3] == "--add_spc_storm_reports"
       row_to_lat_lon_cells(row)
     end
 
+    # Wind rows are allowed to have bad geocodes.
     wind_rows.map! do |row|
       time = spc_storm_report_row_to_time(date, row)
 
@@ -292,6 +304,7 @@ if ARGV[3] == "--add_spc_storm_reports"
       row_to_lat_lon_cells(row)
     end
 
+    hail_rows.select! { |row| valid_lat_lon?(row) }
     hail_rows.map! do |row|
       time = spc_storm_report_row_to_time(date, row)
 

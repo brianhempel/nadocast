@@ -59,7 +59,7 @@ end
 
 # Some wind events are not geocoded. One LSR event is geocoded as "LA,32.86,LA,32.86"
 WIND_EVENTS = CSV.read(WIND_EVENTS_CSV_PATH).drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, kind_str, speed_str, speed_type_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
-  if !start_lat_str || start_lat_str == "LA"
+  if start_lat_str.to_f == 0.0
     start_lat = Float::NAN
     start_lon = Float::NAN
     end_lat   = Float::NAN
