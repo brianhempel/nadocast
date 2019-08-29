@@ -186,14 +186,14 @@ function feature_engineered_prediction_forecasts(base_forecasts, model_predict; 
 
   basic_prediction_forecasts                = simple_prediction_forecasts(base_forecasts, model_predict)
   forecasts_with_predictions                = ForecastCombinators.concat_forecasts(Iterators.zip(basic_prediction_forecasts, base_forecasts_no_feature_engineering))
-  forecasts_with_predictions_and_winds_only = filter_features_forecasts(forecasts_with_predictions, is_wind_or_prediction_layer)
+  forecasts_with_predictions_and_winds_only = ForecastCombinators.filter_features_forecasts(forecasts_with_predictions, is_wind_or_prediction_layer)
   forecasts_feature_engineered_predictions_and_winds  =
     FeatureEngineeringShared.feature_engineered_forecasts(
       forecasts_with_predictions_and_winds_only;
       vector_wind_layers   = vector_wind_layers,
       layer_blocks_to_make = layer_blocks_to_make
     )
-  forecasts_feature_engineered_predictions_only = filter_features_forecasts(forecasts_feature_engineered_predictions_and_winds, is_prediction_layer)
+  forecasts_feature_engineered_predictions_only = ForecastCombinators.filter_features_forecasts(forecasts_feature_engineered_predictions_and_winds, is_prediction_layer)
 
   forecasts_feature_engineered_predictions_only
 end
