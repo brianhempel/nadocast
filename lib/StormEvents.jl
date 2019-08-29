@@ -41,7 +41,7 @@ function read_events_csv(path) ::Vector{Event}
     if isa(row[start_lat_col_i], Real)
       start_latlon  = (row[start_lat_col_i], row[start_lon_col_i])
       end_latlon    = (row[end_lat_col_i],   row[end_lon_col_i])
-    elseif row[start_lat_col_i] == "" || row[start_lat_col_i] == "LA"
+    elseif row[start_lat_col_i] == "" || row[start_lat_col_i] == "LA" || row[start_lat_col_i] == "NJ"
       # Some wind events are not geocoded. One LSR event is geocoded as "LA,32.86,LA,32.86"
       start_latlon = (NaN, NaN)
       end_latlon   = (NaN, NaN)
