@@ -128,7 +128,7 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
     conus_event_hours_set(STORM_EVENTS, 30*MINUTE)
 
   forecasts_in_range =
-    DATES.product(RUN_HOURS, (0..18)).map do |date, run_hour, forecast_hour|
+    DATES.product(RUN_HOURS, (0..18).to_a).map do |date, run_hour, forecast_hour|
       Forecast.new(date, run_hour, forecast_hour)
     end
 
