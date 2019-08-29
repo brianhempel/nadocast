@@ -128,13 +128,13 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
     conus_event_hours_set(STORM_EVENTS, 30*MINUTE)
 
   forecasts_in_range =
-    DATES.product(RUN_HOURS, FORECAST_HOURS).map do |date, run_hour, forecast_hour|
+    DATES.product(RUN_HOURS, (0..18)).map do |date, run_hour, forecast_hour|
       Forecast.new(date, run_hour, forecast_hour)
     end
 
   forecasts_to_get =
     forecasts_in_range.select do |forecast|
-      storm_event_times.include?(forecast.valid_time)
+      FORECAST_HOURS.include?(forecast.forecast_hour) && storm_event_times.include?(forecast.valid_time)
     end
 
   forecasts_to_remove = DELETE_UNNEEDED ? (forecasts_in_range - forecasts_to_get) : []
