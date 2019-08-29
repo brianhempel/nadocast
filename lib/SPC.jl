@@ -46,7 +46,7 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
                 # println(geom)
               end
               ArchGDAL.createpoint(0,0) do point
-                _add_geom_to_mask(mask, grid.latlons, geom, point)
+                _add_geom_to_mask!(mask, grid.latlons, geom, point)
                 # test_point(-90.3, 39.9, geom, point)
                 # test_point(-91.9, 41.7, geom, point)
                 # test_point(-91.9, 41.8, geom, point)
@@ -65,7 +65,7 @@ end
 
 
 # Mutates mask. On HREF grid, ~3-5s per geom.
-function _add_geom_to_mask(mask, grid_latlons, geom, point)
+function _add_geom_to_mask!(mask, grid_latlons, geom, point)
   bounds = ArchGDAL.getenvelope(geom)
 
   for i in 1:length(grid_latlons)

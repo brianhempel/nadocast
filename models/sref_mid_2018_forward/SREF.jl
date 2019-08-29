@@ -132,6 +132,7 @@ function reload_forecasts()
       end
     end
 
+    # Didn't start gathering the 3-hourlies until 2019-1-9
     if occursin("mean_3hrly", sref_path)
       mean_sref_path = sref_path
       prob_sref_path = replace(mean_sref_path, "mean_3hrly" => "prob_3hrly")

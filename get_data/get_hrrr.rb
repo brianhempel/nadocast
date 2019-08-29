@@ -8,6 +8,8 @@ FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time range not associated with storm events.
 
+# The reason we have run hour 1,2,3,5,6,7,11,12,13,16,17,18 forecasts for storm events since mid-2018 is for training the stacked models. :/
+
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
 
 # For getting the HRRRs associated with the SREF/HREF forecasts we have
