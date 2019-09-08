@@ -11,13 +11,25 @@ If all goes well, the expected possible advantages over Storm Prediction Center'
 
 ## Status
 
-- [ ] Get Some Data
-  - [ ] HREF
-  - [ ] SREF
-  - [ ] HRRR
-  - [ ] RAP
-- [ ] Get some storm events
-- [ ] Read the weather data
+- [x] Get Some Data
+  - [x] HREF
+  - [x] SREF
+  - [x] HRRR
+  - [x] RAP
+- [x] Get some storm events
+- [x] Read the weather data
+- [ ] Build background climatology (spacial, diurnal, annual)
+- [ ] Storm mode?
+- [ ] Add some interaction terms
+- [ ] Faster training
+- [ ] Stats-based pruning
+- [ ] Set up process:
+  - [ ] Retrain SREF with 3-hour chunks
+  - [ ] Retrain HREF with 3-hour chunks
+  - [ ] Retrain RAP with 3-hour chunks
+  - [ ] Retrain HRRR
+  - [ ] Optimize hourly weighted combo
+  - [ ] Combine into daily
 
 ## Model
 
@@ -25,7 +37,7 @@ After a bunch of RAP-only experiments with various gradient descent methods (log
 
 I'm pretty sure I don't have the computation resources to train a convnet that will out-perform the boosted decision trees.
 
-In particular, I would like to include forecasting insight about supercell probability, which based on the angle between the storm motion vector and the initiating front—the supercells move off the front, so that front angle may not be immediately local either temporally or spacially. A dumb convnet that could capture that might have to have a computationally heavy architecture, so some amount of feature engineering may be in order regardless.
+In particular, I would like to include forecasting insight about supercell probability.
 
 The first goal, however, is simply to get the forecast data into an amendable format with some degree of generality between the weather models.
 
