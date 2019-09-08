@@ -123,7 +123,7 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
     buffer
   end
 
-  grid = forecasts[1].grid
+  grid = first(forecasts).grid
 
   conus_on_grid      = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
   conus_grid_bitmask = (conus_on_grid .== 1.0f0)
