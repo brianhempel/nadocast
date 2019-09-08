@@ -11,9 +11,6 @@ forecast_hour_range = 1:39 # 1:87 # 4:39             # SREF files come out 3-4 h
 
 model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
 
-sref_forecasts = SREF.forecasts()
-# sref_forecasts = sref_forecasts[1:100:length(sref_forecasts)] # Subset the data
-
 
 # Best (loss = 0.00480496), for SREF tornado hours, with 50mi features
 # Dict{Symbol,Real}(:max_depth=>4,:max_delta_score=>5.0,:learning_rate=>0.03,:max_leaves=>6,:l2_regularization=>3.0,:feature_fraction=>0.5,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>150000.0)
@@ -23,18 +20,15 @@ sref_forecasts = SREF.forecasts()
 # Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.07,:max_leaves=>10,:l2_regularization=>20.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>15000.0)
 # 32:48:23 elapsed
 
-TrainGBDTShared.train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(
-    sref_forecasts;
+TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
+    SREF.feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    get_feature_engineered_data = SREF.get_feature_engineered_data,
 
-    annealing_rounds = 1,
-    basal_inclusion_probability = 1f0,
-    prediction_inclusion_multiplier = 1f0,
-    validation_inclusion_probability = 1f0,
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> 1f0,
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> 1f0,
 
-    bin_split_forecast_sample_count = 200,
+    bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
 
     min_data_weight_in_leaf = [10.0, 15.0, 20.0, 35.0, 50.0, 70.0, 100.0, 150.0, 200.0, 350.0, 500.0, 700.0, 1000.0, 1500.0, 2000.0, 3500.0, 5000.0, 7000.0, 10000.0, 15000.0, 20000.0, 35000.0, 50000.0, 70000.0, 100000.0, 150000.0, 200000.0, 350000.0, 500000.0, 700000.0, 1000000.0, 1500000.0, 2000000.0, 3500000.0, 5000000.0, 7000000.0, 10000000.0],
