@@ -1,14 +1,15 @@
 require "date"
 require "csv"
 
-# Fetches the storm events database from 2014 through the current year
-# and outputs all the tornado, wind, and hail events.
+# Fetches the storm events database from (ENV["START_YEAR"] || 2014) through
+# the current year (or ENV["STOP_YEAR"]) and outputs all the tornado, wind, and hail events.
 #
 # Primarily uses the storm events database because it has start and end times and locations.
 #
 # The previous year is finalized near the end of Spring of the following year.
 #
-# For the current year, augments the data from the SPC storm reports
+# If ARGV[3] is "--add_spc_storm_reports", then SPC storm reports from the
+# end of the storm events database until one week ago are included.
 #
 # To run this script, see the Makefile at the project root.
 
@@ -16,6 +17,8 @@ tornadoes_csv_out_path   = ARGV[0] || "tornadoes.csv"
 wind_events_csv_out_path = ARGV[1] || "wind_events.csv"
 hail_events_csv_out_path = ARGV[2] || "hail_events.csv"
 
+START_YEAR = Integer(ENV["START_YEAR"] || "2014")
+STOP_YEAR  = Integer(ENV["STOP_YEAR"]  || Time.now.year)
 
 # Part 1: Storm Events Database
 
@@ -154,9 +157,9 @@ def valid_lat_lon?(row)
   (row["END_LON"] || row["Lon"]).to_f < -1
 end
 
-last_storm_events_database_event_time = Time.new(2014)
+last_storm_events_database_event_time = Time.new(START_YEAR)
 
-(2014..Time.now.year).each do |year|
+(START_YEAR..STOP_YEAR).each do |year|
   file_name = file_names.grep(/v1\.0_d#{year}_/).last
 
   next unless file_name
@@ -203,7 +206,7 @@ last_storm_events_database_event_time = Time.new(2014)
     row_to_begin_end_time_cells(row) +
     [
       row["EVENT_TYPE"], # kind
-      row["MAGNITUDE"][/[\d\.]+/] || "-1", # speed
+      (row["MAGNITUDE"].to_s)[/[\d\.]+/] || "-1", # speed
       wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"], # speed_type
     ] +
     row_to_lat_lon_cells(row)
@@ -216,7 +219,7 @@ last_storm_events_database_event_time = Time.new(2014)
     row_to_begin_end_time_cells(row) +
     [
       row["EVENT_TYPE"],
-      row["MAGNITUDE"][/[\d\.]+/] || "-1", # Hail size
+      (row["MAGNITUDE"].to_s)[/[\d\.]+/] || "-1", # Hail size
       # row["TOR_LENGTH"].to_f,
       # row["TOR_WIDTH"].to_i,
     ] +

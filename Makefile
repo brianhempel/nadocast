@@ -25,6 +25,15 @@ storm_events:
 	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/hail_events_downloaded.csv > storm_data/hail_events.csv # The merge deduplicates and sorts
 	rm storm_data/tornadoes_downloaded.csv storm_data/wind_events_downloaded.csv storm_data/hail_events_downloaded.csv
 
+storm_events_for_climatology:
+	# Last NEXRAD of the main installation program was installed in 1997
+	START_YEAR=1998 STOP_YEAR=2013 ruby storm_data/get_storm_events.rb storm_data/tornadoes_1998-2013_downloaded.csv storm_data/wind_events_1998-2013_downloaded.csv storm_data/hail_events_1998-2013_downloaded.csv
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/tornadoes_1998-2013_downloaded.csv > storm_data/tornadoes_1998-2013.csv # The merge deduplicates and sorts
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/wind_events_1998-2013_downloaded.csv > storm_data/wind_events_1998-2013.csv # The merge deduplicates and sorts
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/hail_events_1998-2013_downloaded.csv > storm_data/hail_events_1998-2013.csv # The merge deduplicates and sorts
+	rm storm_data/tornadoes_1998-2013_downloaded.csv storm_data/wind_events_1998-2013_downloaded.csv storm_data/hail_events_1998-2013_downloaded.csv
+
+
 forecast_and_publish:
 	TWEET=true make forecast
 
