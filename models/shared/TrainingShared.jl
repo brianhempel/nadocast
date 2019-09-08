@@ -98,7 +98,7 @@ end
 
 # concatenating all the forecasts doubles peak memory usage if done in-RAM
 # so we do the concatenation as an on-disk file append
-function get_data_labels_weights(grid, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing)
+function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing)
   # Xs      = []
   # Ys      = []
   # weights = []
