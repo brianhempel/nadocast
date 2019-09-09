@@ -25,8 +25,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.5f0, labels)),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.5f0, labels)),
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.5f0, labels),
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.5f0, labels),
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
