@@ -113,7 +113,7 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   labels_file   = nothing
   weights_file  = nothing
   prior_loss    = 0.0f0
-  ϵ             = eps(1.0f0)
+  ε             = eps(1.0f0)
   logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε) # Copied from Flux.jl
 
 
