@@ -79,6 +79,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     training_X_and_labels_to_inclusion_probabilities   = nothing,
     validation_X_and_labels_to_inclusion_probabilities = nothing,
     model_prefix = "",
+    prior_model_path = nothing,
     bin_split_forecast_sample_count = 100,
     balance_labels_when_computing_bin_splits = false,
     max_iterations_without_improvement = 20,
@@ -100,9 +101,9 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   # Returns (X_binned, labels, weights)
-  get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities) = begin
+  get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities; prior_predictor = nothing) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
   end
 
   # Returns path
@@ -143,7 +144,8 @@ function train_with_coordinate_descent_hyperparameter_search(
   println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
 
   println("Loading validation data")
-  validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities)
+  prior_predictor = isnothing(prior_model_path) ? nothing : MemoryConstrainedTreeBoosting.load_unbinned_predictor(prior_model_path)
+  validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities; prior_predictor = prior_predictor)
   println("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.")
 
 

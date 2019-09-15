@@ -98,7 +98,10 @@ end
 
 # concatenating all the forecasts doubles peak memory usage if done in-RAM
 # so we do the concatenation as an on-disk file append
-function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing)
+#
+# If prior_predictor is provided, computes prior predictor's loss during loading.
+# prior_predictor is fed the untransformed data.
+function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
   # Xs      = []
   # Ys      = []
   # weights = []
@@ -109,6 +112,10 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   feature_files = nothing
   labels_file   = nothing
   weights_file  = nothing
+  prior_loss    = 0.0f0
+  ϵ             = eps(1.0f0)
+  logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε) # Copied from Flux.jl
+
 
   loading_tmp_dir = "loading_tmp_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   mkpath(loading_tmp_dir)
@@ -144,11 +151,13 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
 
       forecast_weights = conus_grid_weights[mask] ./ probabilities
       labels           = labels[mask]
-      X_transformed    = X_transformer(data_in_conus[mask, :])
+      data_masked      = data_in_conus[mask, :]
+      X_transformed    = X_transformer(data_masked)
 
       # print("$(count(mask) / length(mask))")
     else
       forecast_weights = conus_grid_weights
+      data_masked      = data_in_conus
       X_transformed    = X_transformer(data_in_conus)
     end
 
@@ -171,6 +180,11 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
 
     data_count += length(labels)
 
+    if !isnothing(prior_predictor)
+      predictions = prior_predictor(data_masked)
+      prior_loss += sum(logloss.(labels, predictions) .* forecast_weights) / sum(forecast_weights)
+    end
+
     # push!(Xs, X_transformed)
     # push!(Ys, labels)
     # push!(weights, forecast_weights)
@@ -183,6 +197,10 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   end
   close(labels_file)
   close(weights_file)
+
+  if !isnothing(prior_predictor)
+    print("loss via prior predictor: $prior_loss")
+  end
 
   X       = Array{feature_type}(undef, (data_count, feature_count))
   Y       = Array{Float32}(undef, data_count)

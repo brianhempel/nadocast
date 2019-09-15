@@ -20,6 +20,17 @@ model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$
 # Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>3.0,:learning_rate=>0.07,:max_leaves=>10,:l2_regularization=>20.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>15000.0)
 # 32:48:23 elapsed
 
+# Retrain with tornadoes up to 2019-8-21
+# Training:   42410666 datapoints with 2185 features each = 92,667,305,210 bytes
+# Validation: 9140743  datapoints with 2185 features each = 19,972,523,455 bytes
+#
+# Best hyperparameters (loss = 0.0016723482): Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>2.0,:learning_rate=>0.07,:max_leaves=>10,:l2_regularization=>3.0,:feature_fraction=>0.5,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>20000.0)
+# 120:33:03 elapsed
+#
+# Take 2, to compare loss and see how slow the tree booster is:
+#
+
+
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     SREF.feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
@@ -27,6 +38,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
     training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.5f0, labels),
     validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.5f0, labels),
+
+    prior_model_path = (@__DIR__) * "/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model", # To compare validation loss
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
