@@ -79,7 +79,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     training_X_and_labels_to_inclusion_probabilities   = nothing,
     validation_X_and_labels_to_inclusion_probabilities = nothing,
     model_prefix = "",
-    prior_model_path = nothing,
+    prior_predictor = nothing,
     bin_split_forecast_sample_count = 100,
     balance_labels_when_computing_bin_splits = false,
     max_iterations_without_improvement = 20,
@@ -144,7 +144,6 @@ function train_with_coordinate_descent_hyperparameter_search(
   println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
 
   println("Loading validation data")
-  prior_predictor = isnothing(prior_model_path) ? nothing : MemoryConstrainedTreeBoosting.load_unbinned_predictor(prior_model_path)
   validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities; prior_predictor = prior_predictor)
   println("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.")
 
