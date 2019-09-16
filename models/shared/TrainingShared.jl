@@ -112,7 +112,8 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   feature_files = nothing
   labels_file   = nothing
   weights_file  = nothing
-  prior_loss    = 0.0f0
+  prior_losses         = []
+  prior_losses_weights = []
   ε             = eps(1.0f0)
   logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε) # Copied from Flux.jl
 
@@ -182,7 +183,8 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
 
     if !isnothing(prior_predictor)
       predictions = prior_predictor(data_masked)
-      prior_loss += sum(logloss.(labels, predictions) .* forecast_weights) / sum(forecast_weights)
+      push!(prior_losses, sum(logloss.(labels, predictions) .* forecast_weights))
+      push!(prior_losses_weights, sum(forecast_weights))
     end
 
     # push!(Xs, X_transformed)
@@ -199,6 +201,7 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   close(weights_file)
 
   if !isnothing(prior_predictor)
+    prior_loss = sum(prior_losses) / sum(prior_losses_weights)
     print("loss via prior predictor: $prior_loss")
   end
 
