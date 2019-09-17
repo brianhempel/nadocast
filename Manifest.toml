@@ -52,10 +52,10 @@ uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
 version = "0.5.6"
 
 [[CategoricalArrays]]
-deps = ["Compat", "DataAPI", "Future", "JSON", "Missings", "Printf", "Reexport"]
-git-tree-sha1 = "13240cfcc884837fc1aa89b60d500a652bcc3f10"
+deps = ["Compat", "DataAPI", "Future", "JSON", "Missings", "Printf", "Reexport", "Unicode"]
+git-tree-sha1 = "5f4400b24adb1fbed17a9dcc1e8ab8aaf5b03d1f"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
-version = "0.5.5"
+version = "0.6.0"
 
 [[CodecZstd]]
 deps = ["BinaryProvider", "Libdl", "Test", "TranscodingStreams"]
@@ -147,9 +147,9 @@ version = "0.9.4"
 
 [[FFTW]]
 deps = ["AbstractFFTs", "BinaryProvider", "Conda", "Libdl", "LinearAlgebra", "Reexport", "Test"]
-git-tree-sha1 = "e1a479d3c972f20c9a70563eec740bbfc786f515"
+git-tree-sha1 = "03f8776fbdae28c20c0d1d2ae4e090cd1dfcd247"
 uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-version = "0.3.0"
+version = "1.0.0"
 
 [[FileIO]]
 deps = ["Pkg"]
@@ -175,9 +175,9 @@ version = "0.2.0"
 
 [[GLM]]
 deps = ["Distributions", "LinearAlgebra", "Printf", "Random", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
-git-tree-sha1 = "4ddc58560691feed10fe930ff92b71bbe6eef1fd"
+git-tree-sha1 = "3299c7d643b67cce50a67b6dd2f1cafd9e92934a"
 uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
-version = "1.3.1"
+version = "1.3.2"
 
 [[GLMNet]]
 deps = ["BinaryProvider", "Distributed", "Distributions", "Libdl", "Printf", "Random", "SparseArrays", "StatsBase"]
@@ -310,25 +310,24 @@ version = "0.3.0"
 
 [[MemoryConstrainedTreeBoosting]]
 deps = ["BSON", "Random"]
-git-tree-sha1 = "a7b70ea46d5b386e4bb7a408ffb061419416af18"
+git-tree-sha1 = "3ac4bdfd89520ff74ec42faa66123817c6f0c1e4"
 repo-rev = "master"
 repo-url = "https://github.com/brianhempel/MemoryConstrainedTreeBoosting.jl"
 uuid = "892701ce-1da2-11e9-2428-fd1c8d726794"
 version = "0.1.0"
 
 [[Missings]]
-deps = ["SparseArrays", "Test"]
-git-tree-sha1 = "f0719736664b4358aa9ec173077d4285775f8007"
+git-tree-sha1 = "29858ce6c8ae629cf2d733bffa329619a1c843d0"
 uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
-version = "0.4.1"
+version = "0.4.2"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[Mocking]]
-git-tree-sha1 = "7f42a32a8cef08f45d43c35663e73bd4e3b35f6d"
+git-tree-sha1 = "bd2623f8b728af988d2afec53d611acb621f3bc4"
 uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
-version = "0.6.0"
+version = "0.7.0"
 
 [[NaNMath]]
 deps = ["Compat"]
@@ -349,9 +348,9 @@ version = "1.1.0"
 
 [[PDMats]]
 deps = ["Arpack", "LinearAlgebra", "SparseArrays", "SuiteSparse", "Test"]
-git-tree-sha1 = "9d6a9b3e19634612fb1edcafc4b1d75242b24bde"
+git-tree-sha1 = "035f8d60ba2a22cb1d2580b1e0e5ce0cb05e4563"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.9.9"
+version = "0.9.10"
 
 [[Pkg]]
 deps = ["Dates", "LibGit2", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
@@ -492,10 +491,10 @@ deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
-deps = ["BinDeps", "BinaryProvider", "Libdl", "Test"]
-git-tree-sha1 = "0b45dc2e45ed77f445617b99ff2adf0f5b0f23ea"
+deps = ["BinDeps", "BinaryProvider", "Libdl"]
+git-tree-sha1 = "3bdd374b6fd78faf0119b8c5d538788dbf910c6e"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.7.2"
+version = "0.8.0"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
