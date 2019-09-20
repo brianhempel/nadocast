@@ -25,6 +25,19 @@ function revise_with_feature_engineering(line :: InventoryLine, feature_engineer
   )
 end
 
+function revise_with_misc(line :: InventoryLine, misc :: String) :: InventoryLine
+  InventoryLine(
+    line.message_dot_submessage,
+    line.position_str,
+    line.date_str,
+    line.abbrev,
+    line.level,
+    line.forecast_hour_str,
+    misc,
+    line.feature_engineering
+  )
+end
+
 struct FieldMissing <: Exception
   forecast_str :: String
   missing_key  :: String

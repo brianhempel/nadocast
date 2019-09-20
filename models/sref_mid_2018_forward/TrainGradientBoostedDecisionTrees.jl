@@ -31,6 +31,17 @@ model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$
 #
 # Take 2, to compare loss and see how slow the tree booster is:
 #
+# Validation loss via prior predictor: 0.0017312753
+#
+# 58-99 seconds per tree, old MemoryConstrainedTreeBoosting
+#
+# 24-50 seconds per tree, new MemoryConstrainedTreeBoosting
+#
+# 17-31 seconds per tree, cache optimized MemoryConstrainedTreeBoosting
+#
+# Best hyperparameters (loss = 0.0016721075): Dict{Symbol,Real}(:max_depth=>5,:max_delta_score=>1.5,:learning_rate=>0.07,:max_leaves=>10,:l2_regularization=>3.0,:feature_fraction=>0.6,:bagging_temperature=>0.25,:min_data_weight_in_leaf=>15000.0)
+# 39:05:00 elapsed
+
 
 # Annoyingly, because of world age issues, have to do this at the top level.
 prior_predictor = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model")

@@ -29,5 +29,8 @@ train_gradient_boosted_decision_trees:
 	# time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 	ulimit -n 8192; JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 
+train_gradient_boosted_decision_trees_3_hour_window:
+	ulimit -n 8192; JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainGradientBoostedDecisionTrees3HourWindow.jl
+
 train_elastic_nets:
 	ulimit -n 8192; JULIA_NUM_THREADS=${CORE_COUNT} time julia --project=../.. TrainElasticNets.jl

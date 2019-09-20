@@ -9,6 +9,7 @@ import Grids
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import SREFHREFShared
 import FeatureEngineeringShared
+import ThreeHourWindowForecasts
 
 # SREF is on grid 212: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid212.gif
 #
@@ -91,6 +92,10 @@ end
 
 function grid()
   example_forecast().grid
+end
+
+function three_hour_window_feature_engineered_forecasts()
+  ThreeHourWindowForecasts.three_hour_window_forecasts(feature_engineered_forecasts())
 end
 
 
