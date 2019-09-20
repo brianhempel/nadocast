@@ -103,7 +103,7 @@ function reload_forecasts()
       grid = Grib2.read_grid(hrrr_path, downsample = downsample)
     end
 
-    get_inventory(forecast) = begin
+    get_inventory() = begin
       # Somewhat inefficient that each hour must trigger wgrib2 on the same file...prefer using Forecasts.inventory(example_forecast()) if you don't need the particular file's exact byte locations of the layers
       inventory = Grib2.read_inventory(hrrr_path)
 
@@ -112,7 +112,7 @@ function reload_forecasts()
         if i != nothing
           inventory[i]
         else
-          exception = Inventories.FieldMissing("HRRR forecast $(Forecasts.time_title(forecast))", key, inventory)
+          exception = Inventories.FieldMissing("HRRR forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour))", key, inventory)
 
           throw(exception)
         end
@@ -123,8 +123,8 @@ function reload_forecasts()
       inventory_to_use
     end
 
-    get_data(forecast) = begin
-      Grib2.read_layers_data_raw(hrrr_path, Forecasts.inventory(forecast), crop_downsample_grid = grid)
+    get_data() = begin
+      Grib2.read_layers_data_raw(hrrr_path, get_inventory(), crop_downsample_grid = grid)
     end
 
     forecast = Forecasts.Forecast("HRRR", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)

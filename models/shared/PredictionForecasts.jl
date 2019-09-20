@@ -26,7 +26,7 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 # function forecasts_example_forecast_grid_get_feature_engineered_data(base_forecasts, base_forecast_vector_wind_layers, base_get_feature_engineered_data, model_predict)
 #
 #   forecasts = map(base_forecasts) do base_forecast
-#     get_inventory(forecast) = begin
+#     get_inventory() = begin
 #       base_inventory = Forecasts.inventory(base_forecast)
 #
 #       # Need just enough for FeatureEngineeringShared.make_data
@@ -44,7 +44,7 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 #       [prediction_inventory_line]
 #     end
 #
-#     get_data(forecast) = begin
+#     get_data() = begin
 #       feature_engineered_base_data = base_get_feature_engineered_data(base_forecast, Forecasts.get_data(base_forecast))
 #
 #       predictions = Float32.(model_predict(feature_engineered_base_data))

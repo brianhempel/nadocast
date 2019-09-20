@@ -17,21 +17,14 @@ end
 #
 # Each transformer function is given (old_forecast, old_thing).
 function map_forecasts(old_forecasts; new_grid = nothing, inventory_transformer = nothing, data_transformer = nothing)
-
-  get_inventory(forecast) = begin
-    old_forecast = forecast.based_on[1]
-    inventory_transformer(old_forecast, Forecasts.inventory(old_forecast))
-  end
-
-  get_data(forecast) = begin
-    old_forecast = forecast.based_on[1]
-    data_transformer(old_forecast, Forecasts.data(old_forecast))
-  end
-
   map(old_forecasts) do old_forecast
+    get_inventory() = inventory_transformer(old_forecast, Forecasts.inventory(old_forecast))
+    get_data()      = data_transformer(old_forecast, Forecasts.data(old_forecast))
+
     grid           = isnothing(new_grid)              ? old_forecast.grid           : new_grid
     _get_inventory = isnothing(inventory_transformer) ? old_forecast._get_inventory : get_inventory
     _get_data      = isnothing(data_transformer)      ? old_forecast._get_data      : get_data
+
     revised_forecast(old_forecast, grid, _get_inventory, _get_data)
   end
 end
@@ -43,16 +36,11 @@ end
 #
 # Hand a list of tuples of associated forecasts.
 function concat_forecasts(associated_forecasts)
-  get_inventory(forecast) = begin
-    vcat(Forecasts.inventory.(forecast.based_on)...)
-  end
-
-  get_data(forecast) = begin
-    hcat(Forecasts.data.(forecast.based_on)...)
-  end
-
   map(associated_forecasts) do forecasts_tuple
     forecasts_array = collect(forecasts_tuple)
+
+    get_inventory() = vcat(Forecasts.inventory.(forecasts_array)...)
+    get_data()      = hcat(Forecasts.data.(forecasts_array)...)
 
     latest_forecast = last(sort(forecasts_array, by=Forecasts.run_time_in_seconds_since_epoch_utc))
 
@@ -69,14 +57,8 @@ end
 # The predicate is given an inventory line. Features matching
 # the predicate are retained.
 function filter_features_forecasts(old_forecasts, predicate)
-  inventory_transformer(old_forecast, old_inventory) = begin
-    filter(predicate, old_inventory)
-  end
-
-  data_transformer(old_forecast, old_data) = begin
-    features_is = findall(predicate, Forecasts.inventory(old_forecast))
-    old_data[:, features_is]
-  end
+  inventory_transformer(old_forecast, old_inventory) = filter(predicate, old_inventory)
+  data_transformer(old_forecast, old_data)           = old_data[:, findall(predicate, Forecasts.inventory(old_forecast))]
 
   map_forecasts(old_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
@@ -123,21 +105,19 @@ function cache_forecasts(old_forecasts)
     , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
     ]
 
-  get_inventory(forecast) = begin
-    old_forecast = forecast.based_on[1]
-    Cache.cached(item_key_parts(old_forecast), "inventory") do
-      Forecasts.inventory(old_forecast)
-    end
-  end
-
-  get_data(forecast) = begin
-    old_forecast = forecast.based_on[1]
-    Cache.cached(item_key_parts(old_forecast), "data") do
-      Forecasts.data(old_forecast)
-    end
-  end
-
   map(old_forecasts) do old_forecast
+    get_inventory() = begin
+      Cache.cached(item_key_parts(old_forecast), "inventory") do
+        Forecasts.inventory(old_forecast)
+      end
+    end
+
+    get_data() = begin
+      Cache.cached(item_key_parts(old_forecast), "data") do
+        Forecasts.data(old_forecast)
+      end
+    end
+
     revised_forecast(old_forecast, old_forecast.grid, get_inventory, get_data)
   end
 end

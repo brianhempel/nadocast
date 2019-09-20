@@ -172,7 +172,7 @@ function reload_forecasts()
         grid = Grib2.read_grid(rap_path, crop = crop, downsample = downsample)
       end
 
-      get_inventory(forecast) = begin
+      get_inventory() = begin
         # Somewhat inefficient that each hour must trigger wgrib2 on the same file...prefer using Forecasts.inventory(example_forecast()) if you don't need the particular file's exact byte locations of the layers
         inventory = Grib2.read_inventory(rap_path)
 
@@ -181,7 +181,7 @@ function reload_forecasts()
           if i != nothing
             inventory[i]
           else
-            throw("RAP forecast $(Forecasts.time_title(forecast)) does not have $key: $inventory")
+            throw("RAP forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key: $inventory")
           end
         end
 
@@ -190,8 +190,8 @@ function reload_forecasts()
         inventory_to_use
       end
 
-      get_data(forecast) = begin
-        Grib2.read_layers_data_raw(rap_path, Forecasts.inventory(forecast), crop_downsample_grid = grid)
+      get_data() = begin
+        Grib2.read_layers_data_raw(rap_path, get_inventory(), crop_downsample_grid = grid)
       end
 
       forecast = Forecasts.Forecast("RAP", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)

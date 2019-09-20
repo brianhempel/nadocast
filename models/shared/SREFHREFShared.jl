@@ -28,7 +28,7 @@ function mean_prob_grib2s_to_forecast(
     forecast_hour      = parse(Int64, forecast_hour_str)
   end
 
-  get_inventory(forecast) = begin
+  get_inventory() = begin
     # Somewhat inefficient that each hour must trigger wgrib2 on the same file...could add another layer of caching here.
     mean_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(mean_grib2_path))
     prob_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(prob_grib2_path))
@@ -38,7 +38,7 @@ function mean_prob_grib2s_to_forecast(
       if i != nothing
         mean_inventory[i]
       else
-        throw("$href_or_sref_str forecast $(Forecasts.time_title(forecast)) does not have $key in mean layers: $mean_inventory")
+        throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in mean layers: $mean_inventory")
       end
     end
 
@@ -47,7 +47,7 @@ function mean_prob_grib2s_to_forecast(
       if i != nothing
         prob_inventory[i]
       else
-        throw("$href_or_sref_str forecast $(Forecasts.time_title(forecast)) does not have $key in prob layers: $prob_inventory")
+        throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in prob layers: $prob_inventory")
       end
     end
 
@@ -57,9 +57,10 @@ function mean_prob_grib2s_to_forecast(
     vcat(mean_inventory_to_use, prob_inventory_to_use)
   end
 
-  get_data(forecast) = begin
-    mean_inventory = collect(Iterators.take(Forecasts.inventory(forecast), length(common_layers_mean)))
-    prob_inventory = collect(Iterators.drop(Forecasts.inventory(forecast), length(common_layers_mean)))
+  get_data() = begin
+    inventory = get_inventory()
+    mean_inventory = collect(Iterators.take(inventory, length(common_layers_mean)))
+    prob_inventory = collect(Iterators.drop(inventory, length(common_layers_mean)))
 
     mean_data = Grib2.read_layers_data_raw(mean_grib2_path, mean_inventory, crop_downsample_grid = grid)
     prob_data = Grib2.read_layers_data_raw(prob_grib2_path, prob_inventory, crop_downsample_grid = grid)

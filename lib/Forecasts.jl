@@ -50,7 +50,11 @@ function valid_time_in_convective_days_since_epoch_utc(forecast :: Forecast) :: 
 end
 
 function time_title(forecast :: Forecast) :: String
-  @sprintf "%04d-%02d-%02d %02dZ +%d" forecast.run_year forecast.run_month forecast.run_day forecast.run_hour forecast.forecast_hour
+  time_title(forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour, forecast.forecast_hour)
+end
+
+function time_title(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64, forecast_hour :: Int64) :: String
+  @sprintf "%04d-%02d-%02d %02dZ +%d" run_year run_month run_day run_hour forecast_hour
 end
 
 function valid_hhz(forecast :: Forecast) :: String
@@ -77,11 +81,11 @@ end
 
 
 function inventory(forecast :: Forecast) :: Vector{Inventories.InventoryLine}
-  forecast._get_inventory(forecast)
+  forecast._get_inventory()
 end
 
 function data(forecast :: Forecast) :: Array{Float32,2}
-  forecast._get_data(forecast)
+  forecast._get_data()
 end
 
 
