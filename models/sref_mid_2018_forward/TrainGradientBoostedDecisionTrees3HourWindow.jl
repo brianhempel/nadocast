@@ -15,18 +15,19 @@ model_prefix = "gbdt_3hr_window_f$(forecast_hour_range.start)-$(forecast_hour_ra
 
 
 # Annoyingly, because of world age issues, have to do this at the top level.
-# prior_predictor = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model")
+prior_predictor = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/gbdt_f1-39_2019-09-17T14.50.32.041/182_trees_loss_0.0016721075.model")
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
-    SREF.three_hour_window_feature_engineered_forecasts();
+    # SREF.three_hour_window_feature_engineered_forecasts();
+    SREF.three_hour_window_feature_engineered_forecasts_middle_hour_only(); # Debug
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
 
     training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.2f0, labels),
     validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.2f0, labels),
 
-    # prior_predictor = prior_predictor, # To compare validation loss
+    prior_predictor = prior_predictor, # To compare validation loss
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,

@@ -3,6 +3,7 @@ module SREF
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
+import ForecastCombinators
 import Grib2
 import Grids
 
@@ -96,6 +97,30 @@ end
 
 function three_hour_window_feature_engineered_forecasts()
   ThreeHourWindowForecasts.three_hour_window_forecasts(feature_engineered_forecasts())
+end
+
+# Debug
+function three_hour_window_feature_engineered_forecasts_middle_hour_only()
+  inventory_transformer(base_forecast, base_inventory) = begin
+    single_hour_feature_count = div(length(base_inventory),3)
+
+    forecast_hour_inventory = base_inventory[(single_hour_feature_count + 1):(2*single_hour_feature_count)]
+    forecast_hour_inventory
+  end
+
+  data_transformer(base_forecast, base_data) = begin
+    point_count               = size(base_data, 1)
+    single_hour_feature_count = div(size(base_data, 2),3)
+
+    forecast_hour_data = base_data[:, (1*single_hour_feature_count + 1):(2*single_hour_feature_count)]
+    forecast_hour_data
+  end
+
+  ForecastCombinators.map_forecasts(three_hour_window_feature_engineered_forecasts(); inventory_transformer = inventory_transformer, data_transformer = data_transformer)
+end
+
+function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts(feature_engineered_forecasts())
 end
 
 
