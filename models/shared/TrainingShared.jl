@@ -114,6 +114,7 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   weights_file  = nothing
   prior_losses         = []
   prior_losses_weights = []
+  prior_loss_forecasts = []
   ε             = eps(1.0f0)
   logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε) # Copied from Flux.jl
 
@@ -185,6 +186,7 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
       predictions = prior_predictor(data_masked)
       push!(prior_losses, sum(logloss.(labels, predictions) .* forecast_weights))
       push!(prior_losses_weights, sum(forecast_weights))
+      push!(prior_loss_forecasts, forecast)
     end
 
     # push!(Xs, X_transformed)
@@ -202,7 +204,14 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
 
   if !isnothing(prior_predictor)
     prior_loss = sum(prior_losses) / sum(prior_losses_weights)
-    print("loss via prior predictor: $prior_loss")
+    print("loss via prior predictor: $prior_loss ")
+    worst_first_permutation = sortperm(prior_losses, rev=true)
+    worst_losses    = prior_losses[worst_first_permutation][1:10]
+    worst_forecasts = prior_loss_forecasts[worst_first_permutation][1:10]
+
+    for (loss, forecast) in zip(worst_losses, worst_forecasts)
+      print(Forecasts.time_title(forecast) * ": $loss ")
+    end
   end
 
   X       = Array{feature_type}(undef, (data_count, feature_count))

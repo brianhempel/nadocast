@@ -140,7 +140,7 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   println("Loading training data")
-  X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities)
+  X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities; prior_predictor = prior_predictor)
   println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
 
   println("Loading validation data")
