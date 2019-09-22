@@ -34,19 +34,22 @@ end
 #
 # Forecasts should already be on the same grid.
 #
-# Hand a list of tuples of associated forecasts.
-function concat_forecasts(associated_forecasts)
+# Hand a list of tuples of associated forecasts, and possible a function that takes such a
+# tuple and returns the forecast whose runtime + forecast time + grid should be used as the
+# time and grid for the output forecast. If not provided, a forecast with the latest runtime is used.
+function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_forecast = nothing)
   map(associated_forecasts) do forecasts_tuple
     forecasts_array = collect(forecasts_tuple)
 
     get_inventory() = vcat(Forecasts.inventory.(forecasts_array)...)
     get_data()      = hcat(Forecasts.data.(forecasts_array)...)
 
-    latest_forecast = last(sort(forecasts_array, by=Forecasts.run_time_in_seconds_since_epoch_utc))
+    canonical_forecast =
+      isnothing(forecasts_tuple_to_canonical_forecast) ? last(sort(forecasts_array, by=Forecasts.run_time_in_seconds_since_epoch_utc)) : forecasts_tuple_to_canonical_forecast(forecasts_tuple)
 
     model_names = map(forecast -> forecast.model_name, forecasts_array)
 
-    Forecasts.Forecast(join(model_names, "|"), latest_forecast.run_year, latest_forecast.run_month, latest_forecast.run_day, latest_forecast.run_hour, latest_forecast.forecast_hour, forecasts_array, latest_forecast.grid, get_inventory, get_data)
+    Forecasts.Forecast(join(model_names, "|"), canonical_forecast.run_year, canonical_forecast.run_month, canonical_forecast.run_day, canonical_forecast.run_hour, canonical_forecast.forecast_hour, forecasts_array, canonical_forecast.grid, get_inventory, get_data)
   end
 end
 

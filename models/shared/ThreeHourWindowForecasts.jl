@@ -40,21 +40,13 @@ function three_hour_window_forecasts(base_forecasts)
   base_model_name = isempty(base_forecasts) ? "" : base_forecasts[1].model_name
   model_name = "$(base_model_name)-1hr|$(base_model_name)|$(base_model_name)+1hr"
 
-  map(ForecastCombinators.concat_forecasts(associated_forecasts)) do three_hour_forecast
-    # concat_forecasts always chooses the latest forecast as the canonical: we want the middle.
-    Forecasts.Forecast(
-      model_name,
-      three_hour_forecast.run_year,
-      three_hour_forecast.run_month,
-      three_hour_forecast.run_day,
-      three_hour_forecast.run_hour,
-      three_hour_forecast.forecast_hour - 1,
-      three_hour_forecast.based_on,
-      three_hour_forecast.grid,
-      three_hour_forecast._get_inventory,
-      three_hour_forecast._get_data
-    )
-  end
+  # Use runtime/forecast hour of middle forecast.
+  forecasts_tuple_to_canonical_forecast(forecasts_tuple) = forecasts_tuple[2]
+
+  ForecastCombinators.concat_forecasts(
+    associated_forecasts,
+    forecasts_tuple_to_canonical_forecast = forecasts_tuple_to_canonical_forecast
+  )
 end
 
 end # module ThreeHourWindowForecasts
