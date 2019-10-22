@@ -171,6 +171,12 @@ function train_with_coordinate_descent_hyperparameter_search(
 
       if validation_loss < best_loss
         best_model_path = save(validation_loss, bin_splits, trees)
+
+        validation_scores = MemoryConstrainedTreeBoosting.apply_trees(validation_X_binned, trees)
+        write("$(model_prefix)/$(length(trees))_trees_loss_$(validation_loss).validation_scores", validation_scores)
+        write("$(model_prefix)/validation_labels", validation_y)
+        write("$(model_prefix)/validation_weights", validation_weights)
+
         best_loss = validation_loss
       end
     end
