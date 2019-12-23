@@ -74,9 +74,10 @@ end
 # rap_130_20161228_0900_018.grb2
 
 threads = THREAD_COUNT.times.map do
-Thread.new do
-  while forecast_to_get = forecasts_to_get.shift
-    forecast_to_get.ensure_downloaded!(from_archive: false)
+  Thread.new do
+    while forecast_to_get = forecasts_to_get.shift
+      forecast_to_get.ensure_downloaded!(from_archive: false)
+    end
   end
 end
 
