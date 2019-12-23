@@ -3,6 +3,7 @@
 require "date"
 require "fileutils"
 require File.expand_path("../../storm_data/storm_events.rb", __FILE__)
+require File.expand_path("../forecast.rb", __FILE__)
 
 FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
@@ -11,65 +12,46 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 # Runs through 2018 are stored on HRRR_1
 # Runs 2019 onward are stored on HRRR_2
 
+# For training:
+# ruby get_hrrr.rb --from-archive --delete-unneeded
+
 # Forecaster runs these:
 # RUN_HOURS=8,9,10   FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
 # RUN_HOURS=12,13,14 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
 
-# The reason we have run hour 1,2,3,5,6,7,11,12,13,16,17,18 forecasts for storm events since mid-2018 is for training the stacked models. :/
-
-# For getting the HRRRs associated with the SREF/HREF forecasts we have
+# For getting the HRRRs associated with the SREF/HREF forecasts use this (although we don't have these, currently)
 # START_DATE=2018-6-25 FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_hrrr.rb --from-archive
 
-
+# Want three hour windows. Don't have storage yet for all, so we'll start with +11,+12,+13 and build from there.
 
 RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
-FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 12, 18]
+FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 11, 12, 13, 18]
 MIN_FILE_BYTES = 80_000_000
 THREAD_COUNT   = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
-
-MINUTE = 60
-HOUR   = 60*MINUTE
-
-def base_directory(run_date)
-  if run_date.year <= 2018
-    "/Volumes/HRRR_1/hrrr"
-  else
-    "/Volumes/HRRR_2/hrrr"
-  end
-end
-
-def alt_location(directory)
-  # directory.sub(/^\/Volumes\/HRRR_1\//, "/Volumes/HRRR_2/")
-  raise "no alt location for HRRR: the online archive serves as the backup"
-end
 
 loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
 loop { break if Dir.exists?("/Volumes/HRRR_2/"); puts "Waiting for HRRR_2 to mount..."; sleep 4 }
 
-def ymd_to_date(ymd_str)
-  Date.new(Integer(ymd_str[0...4]), ymd_str[4...6].to_i, ymd_str[6...8].to_i)
-end
-
-class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
-  def year_month_day
-    "%04d%02d%02d" % [run_date.year, run_date.month, run_date.day]
-  end
-
-  def year_month
-    "%04d%02d" % [run_date.year, run_date.month]
-  end
-
-  def run_hour_str
-    "%02d" % [run_hour]
-  end
-
-  def forecast_hour_str
-    "%02d" % [forecast_hour]
-  end
-
-  def valid_time
-    Time.utc(run_date.year, run_date.month, run_date.day, run_hour) + forecast_hour*HOUR
-  end
+class HRRRForecast < Forecast
+  # def year_month_day
+  #   "%04d%02d%02d" % [run_date.year, run_date.month, run_date.day]
+  # end
+  #
+  # def year_month
+  #   "%04d%02d" % [run_date.year, run_date.month]
+  # end
+  #
+  # def run_hour_str
+  #   "%02d" % [run_hour]
+  # end
+  #
+  # def forecast_hour_str
+  #   "%02d" % [forecast_hour]
+  # end
+  #
+  # def valid_time
+  #   Time.utc(run_date.year, run_date.month, run_date.day, run_hour) + forecast_hour*HOUR
+  # end
 
   def file_name
     "hrrr_conus_sfc_#{year_month_day}_t#{run_hour_str}z_f#{forecast_hour_str}.grib2"
@@ -83,56 +65,73 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
     "https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/hrrr.#{year_month_day}/conus/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
   end
 
-  def directory
-    "#{base_directory(run_date)}/#{year_month}/#{year_month_day}"
+  def base_directory
+    if run_date.year <= 2018
+      "/Volumes/HRRR_1/hrrr"
+    else
+      "/Volumes/HRRR_2/hrrr"
+    end
   end
 
-  def path
-    "#{directory}/#{file_name}"
-  end
+  # def directory
+  #   "#{base_directory}/#{year_month}/#{year_month_day}"
+  # end
+
+  # def path
+  #   "#{directory}/#{file_name}"
+  # end
 
   def alt_directory
+    # directory.sub(/^\/Volumes\/HRRR_1\//, "/Volumes/HRRR_2/")
     raise "no alt directory for HRRR: the online archive serves as the backup"
   end
 
   def alt_path
-    raise "no alt directory for HRRR: the online archive serves as the backup"
+    nil
   end
-
-  def make_directories!
-    return if DRY_RUN
-    system("mkdir -p #{directory} 2> /dev/null")
-    # system("mkdir -p #{alt_directory} 2> /dev/null")
-  end
-
-  def downloaded?
-    (File.size(path) rescue 0) >= MIN_FILE_BYTES
-  end
-
-  def ensure_downloaded!(from_archive: false)
-    url_to_get = from_archive ? archive_url : ncep_url
-    make_directories!
-    unless downloaded?
-      puts "#{url_to_get} -> #{path}"
-      return if DRY_RUN
-      data = `curl -f -s --show-error #{url_to_get}`
-      if $?.success? && data.size >= MIN_FILE_BYTES
-        File.write(path, data)
-        # File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
-      end
-    end
-  end
-
-  def remove!
-    if File.exists?(path)
-      puts "REMOVE #{path}"
-      FileUtils.rm(path) unless DRY_RUN
-    end
-    # if File.exists?(alt_path)
-    #   puts "REMOVE #{alt_path}"
-    #   FileUtils.rm(alt_path) unless DRY_RUN
-    # end
-  end
+  #
+  # def make_directories!
+  #   return if DRY_RUN
+  #   system("mkdir -p #{directory} 2> /dev/null")
+  #   if alt_path
+  #     system("mkdir -p #{alt_directory} 2> /dev/null")
+  #   end
+  # end
+  #
+  # def min_file_bytes
+  #   MIN_FILE_BYTES
+  # end
+  #
+  # def downloaded?
+  #   (File.size(path) rescue 0) >= min_file_bytes
+  # end
+  #
+  # def ensure_downloaded!(from_archive: false)
+  #   url_to_get = from_archive ? archive_url : ncep_url
+  #   make_directories!
+  #   unless downloaded?
+  #     puts "#{url_to_get} -> #{path}"
+  #     return if DRY_RUN
+  #     data = `curl -f -s --show-error #{url_to_get}`
+  #     if $?.success? && data.size >= min_file_bytes
+  #       File.write(path, data)
+  #       if alt_path
+  #         File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < min_file_bytes
+  #       end
+  #     end
+  #   end
+  # end
+  #
+  # def remove!
+  #   if File.exists?(path)
+  #     puts "REMOVE #{path}"
+  #     FileUtils.rm(path) unless DRY_RUN
+  #   end
+  #   if alt_path && File.exists?(alt_path)
+  #     puts "REMOVE #{alt_path}"
+  #     FileUtils.rm(alt_path) unless DRY_RUN
+  #   end
+  # end
 end
 
 if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +12 +18 forecasts.
@@ -142,11 +141,11 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
   DATES = (Date.new(*start_date_parts)..Date.today).to_a
 
   storm_event_times =
-    conus_event_hours_set(STORM_EVENTS, 30*MINUTE)
+    conus_event_hours_set(STORM_EVENTS, 90*MINUTE)
 
   forecasts_in_range =
     DATES.product(RUN_HOURS, (0..18).to_a).map do |date, run_hour, forecast_hour|
-      Forecast.new(date, run_hour, forecast_hour)
+      HRRRForecast.new(date, run_hour, forecast_hour)
     end
 
   forecasts_to_get =
@@ -160,7 +159,7 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
 else
   # https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/hrrr.20190220/conus/hrrr.t02z.wrfsfcf18.grib2
   ymds = `curl -s https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
-  forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| Forecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
+  forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| HRRRForecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
 end
 
 # hrrr.t02z.wrfsfcf18.grib2
