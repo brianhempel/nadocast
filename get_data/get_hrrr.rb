@@ -8,24 +8,39 @@ FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time range not associated with storm events.
 
-# The reason we have run hour 1,2,3,5,6,7,11,12,13,16,17,18 forecasts for storm events since mid-2018 is for training the stacked models. :/
+# Runs through 2018 are stored on HRRR_1
+# Runs 2019 onward are stored on HRRR_2
 
-# RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
+# Forecaster runs these:
+# RUN_HOURS=8,9,10   FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
+# RUN_HOURS=12,13,14 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
+
+# The reason we have run hour 1,2,3,5,6,7,11,12,13,16,17,18 forecasts for storm events since mid-2018 is for training the stacked models. :/
 
 # For getting the HRRRs associated with the SREF/HREF forecasts we have
 # START_DATE=2018-6-25 FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_hrrr.rb --from-archive
 
+
+
 RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 12, 18]
-BASE_DIRECTORY = "/Volumes/HRRR_1/hrrr"
 MIN_FILE_BYTES = 80_000_000
 THREAD_COUNT   = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
 
 MINUTE = 60
 HOUR   = 60*MINUTE
 
+def base_directory(run_date)
+  if run_date.year <= 2018
+    "/Volumes/HRRR_1/hrrr"
+  else
+    "/Volumes/HRRR_2/hrrr"
+  end
+end
+
 def alt_location(directory)
-  directory.sub(/^\/Volumes\/HRRR_1\//, "/Volumes/HRRR_2/")
+  # directory.sub(/^\/Volumes\/HRRR_1\//, "/Volumes/HRRR_2/")
+  raise "no alt location for HRRR: the online archive serves as the backup"
 end
 
 loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
@@ -69,7 +84,7 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
   end
 
   def directory
-    "#{BASE_DIRECTORY}/#{year_month}/#{year_month_day}"
+    "#{base_directory(run_date)}/#{year_month}/#{year_month_day}"
   end
 
   def path
@@ -77,17 +92,17 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
   end
 
   def alt_directory
-    alt_location(directory)
+    raise "no alt directory for HRRR: the online archive serves as the backup"
   end
 
   def alt_path
-    alt_location(path)
+    raise "no alt directory for HRRR: the online archive serves as the backup"
   end
 
   def make_directories!
     return if DRY_RUN
     system("mkdir -p #{directory} 2> /dev/null")
-    system("mkdir -p #{alt_directory} 2> /dev/null")
+    # system("mkdir -p #{alt_directory} 2> /dev/null")
   end
 
   def downloaded?
@@ -103,7 +118,7 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
       data = `curl -f -s --show-error #{url_to_get}`
       if $?.success? && data.size >= MIN_FILE_BYTES
         File.write(path, data)
-        File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
+        # File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
       end
     end
   end
@@ -113,10 +128,10 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
       puts "REMOVE #{path}"
       FileUtils.rm(path) unless DRY_RUN
     end
-    if File.exists?(alt_path)
-      puts "REMOVE #{alt_path}"
-      FileUtils.rm(alt_path) unless DRY_RUN
-    end
+    # if File.exists?(alt_path)
+    #   puts "REMOVE #{alt_path}"
+    #   FileUtils.rm(alt_path) unless DRY_RUN
+    # end
   end
 end
 
