@@ -147,7 +147,10 @@ end
 common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers.txt"), String), "\n"))
 
 function reload_forecasts()
-  rap_paths = Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_1/rap")
+  rap_paths = vcat(
+    Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_1/rap"),
+    Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_3/rap")
+  )
 
   global _forecasts
 
