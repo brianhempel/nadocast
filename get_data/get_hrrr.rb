@@ -97,11 +97,11 @@ class HRRRForecast < Forecast
   #     system("mkdir -p #{alt_directory} 2> /dev/null")
   #   end
   # end
-  #
-  # def min_file_bytes
-  #   MIN_FILE_BYTES
-  # end
-  #
+
+  def min_file_bytes
+    MIN_FILE_BYTES
+  end
+
   # def downloaded?
   #   (File.size(path) rescue 0) >= min_file_bytes
   # end
