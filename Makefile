@@ -124,6 +124,13 @@ setup:
 	# scp -r nadocaster:~/nadocast/forecasts remote_forecasts
 	# make forecast_and_publish
 
+# Security updates
+update:
+	sudo apt-get update
+	sudo apt-get dist-upgrade
+	sudo reboot
+	# May need to manually unplug USB drives and physically push restart
+	# Also, HD's only auto-mount from the GUI so have to log in and plug them in
 
 
 # get_rap:
