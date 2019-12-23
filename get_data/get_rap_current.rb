@@ -67,7 +67,7 @@ if FROM_NOMADS
 else
   # https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/rap.20180319/rap.t00z.awp130pgrbf02.grib2
   ymds = `curl -s https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/`.scan(/rap\.(\d{8})\//).flatten.uniq
-  forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| HRRRForecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
+  forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| RAPForecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
 end
 
 # rap.t00z.awp130pgrbf02.grib2
