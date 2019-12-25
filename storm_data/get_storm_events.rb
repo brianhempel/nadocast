@@ -50,9 +50,6 @@ tornadoes_file.print   (BEGIN_END_TIMES_HEADERS + %w[f_scale] + LAT_LON_HEADERS)
 wind_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind speed speed_type] + LAT_LON_HEADERS).to_csv
 hail_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind inches] + LAT_LON_HEADERS).to_csv
 
-# "High Wind" events aren't geocoded but we'll keep them anyway for now.
-# Those hours might serve as negative data for tornadoes.
-
 # Event types:
 # Astronomical Low Tide
 # Avalanche
@@ -197,8 +194,9 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
     "MS" => "sustained",
   }
 
-  # Wind rows are allowed to have bad geocodes.
-  # But we don't want "sustained" winds.
+  # Although we might use wind hours without geocodes for negative data, we aren't yet.
+  # We don't want "sustained" winds.
+  wind_rows.select! { |row| valid_lat_lon?(row) }
   wind_rows.select! { |row| (wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"]) != "sustained" }
   wind_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
