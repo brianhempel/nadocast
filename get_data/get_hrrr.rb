@@ -9,8 +9,8 @@ FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time range not associated with storm events.
 
-# Runs through 2018 are stored on HRRR_1
-# Runs 2019 onward are stored on HRRR_2
+# Runs through 2018-10 are stored on HRRR_1
+# Runs 2018-11 onward are stored on HRRR_2
 
 # For training:
 # ruby get_hrrr.rb --from-archive --delete-unneeded
@@ -24,10 +24,11 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 
 # Want three hour windows. Don't have storage yet for all, so we'll start with +11,+12,+13 and build from there.
 
-RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
-FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 11, 12, 13, 18]
-MIN_FILE_BYTES = 80_000_000
-THREAD_COUNT   = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
+RUN_HOURS        = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
+FORECAST_HOURS   = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 11, 12, 13, 18]
+MIN_FILE_BYTES   = 80_000_000
+THREAD_COUNT     = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
+HALF_WINDOW_SIZE = 90*MINUTE # Grab forecasts valid within this many minutes of a geocoded storm event
 
 loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
 loop { break if Dir.exists?("/Volumes/HRRR_2/"); puts "Waiting for HRRR_2 to mount..."; sleep 4 }
@@ -66,7 +67,7 @@ class HRRRForecast < Forecast
   end
 
   def base_directory
-    if run_date.year <= 2018
+    if [run_date.year, run_date.month] <= [2018, 10]
       "/Volumes/HRRR_1/hrrr"
     else
       "/Volumes/HRRR_2/hrrr"
@@ -141,7 +142,7 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
   DATES = (Date.new(*start_date_parts)..Date.today).to_a
 
   storm_event_times =
-    conus_event_hours_set(STORM_EVENTS, 90*MINUTE)
+    conus_event_hours_set(STORM_EVENTS, HALF_WINDOW_SIZE)
 
   forecasts_in_range =
     DATES.product(RUN_HOURS, (0..18).to_a).map do |date, run_hour, forecast_hour|
