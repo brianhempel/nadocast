@@ -67,7 +67,7 @@ class HRRRForecast < Forecast
   end
 
   def base_directory
-    if [run_date.year, run_date.month] <= [2018, 10]
+    if ([run_date.year, run_date.month] <=> [2018, 10]) <= 0
       "/Volumes/HRRR_1/hrrr"
     else
       "/Volumes/HRRR_2/hrrr"
