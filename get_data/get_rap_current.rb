@@ -7,8 +7,9 @@ def ymd_to_date(ymd_str)
   Date.new(Integer(ymd_str[0...4]), ymd_str[4...6].to_i, ymd_str[6...8].to_i)
 end
 
+# NOMADS has 1 week to 1 year ago of data.
 
-FROM_NOMADS = false # (ARGV[0] == "--from-archive")
+FROM_NOMADS = ARGV.include?("--from-nomads") # (ARGV[0] == "--from-archive")
 DRY_RUN     = ARGV.include?("--dry-run")
 
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap_current.rb
@@ -31,7 +32,11 @@ class RAPForecast < Forecast
   end
 
   def archive_url
-    raise "unimplemented"
+    if FROM_NOMADS
+      "https://nomads.ncdc.noaa.gov/data/rap130/#{year_month}/#{year_month_day}/rap_130_#{year_month_day}_#{run_hour}00_0#{forecast_hour_str}.grb2"
+    else
+      raise "see get_rap_archived.rb for pulling from NCDC's long term storage request system"
+    end
   end
 
   def ncep_url
@@ -62,8 +67,24 @@ end
 
 
 if FROM_NOMADS
-  STDERR.puts "This script hasn't yet been updated to grab files from Nomads."
-  exit 1
+  DATES = (Date.today - 365..Date.today).to_a
+
+  # storm_event_times =
+  #   conus_event_hours_set(STORM_EVENTS, HALF_WINDOW_SIZE)
+
+  forecasts_in_range =
+    DATES.product(RUN_HOURS, (0..21).to_a).map do |date, run_hour, forecast_hour|
+      RAPForecast.new(date, run_hour, forecast_hour)
+    end
+
+  forecasts_to_get =
+    forecasts_in_range.select do |forecast|
+      FORECAST_HOURS.include?(forecast.forecast_hour)
+    end
+
+  forecasts_to_remove = DELETE_UNNEEDED ? (forecasts_in_range - forecasts_to_get) : []
+
+  forecasts_to_remove.each(&:remove!)
 else
   # https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/rap.20180319/rap.t00z.awp130pgrbf02.grib2
   ymds = `curl -s https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/`.scan(/rap\.(\d{8})\//).flatten.uniq
