@@ -20,6 +20,13 @@ hail_events_csv_out_path = ARGV[2] || "hail_events.csv"
 START_YEAR = Integer(ENV["START_YEAR"] || "2014")
 STOP_YEAR  = Integer(ENV["STOP_YEAR"]  || Time.now.year)
 
+# Some longitudes are encoded with their decimal point apparently off by one (e.g. -812.15 instead of, presumably -81.215)
+# Whether it's an insertion error or an off by one error is not clear so repair is attempted by assuming the start/end longitude
+# should be the same and using the other if it looks good. Not perfect, but more reasonable for climatological purposes than
+# discarding or not fixing.
+DO_REPAIR_LATLONS = (ENV["BAD_LATLON_HANDLING"] == "repair")
+
+
 # Part 1: Storm Events Database
 
 ROOT_URL = "https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
@@ -147,11 +154,43 @@ def row_to_lat_lon_cells(row)
   ]
 end
 
+def valid_lat?(lat)
+  (1..90).cover?(lat)
+end
+
+def valid_lon?(lon)
+  (-180..-2).cover?(lon)
+end
+
+# Mutates row.
+def perhaps_repair_latlons!(row)
+  if DO_REPAIR_LATLONS
+    if row["BEGIN_LAT"] && row["END_LAT"]
+      if valid_lat?(row["BEGIN_LAT"].to_f) && !valid_lat?(row["END_LAT"].to_f)
+        STDERR.puts "Repairing latitude #{row["END_LAT"]} to #{row["BEGIN_LAT"]}"
+        row["END_LAT"] = row["BEGIN_LAT"]
+      elsif !valid_lat?(row["BEGIN_LAT"].to_f) && valid_lat?(row["END_LAT"].to_f)
+        STDERR.puts "Repairing latitude #{row["BEGIN_LAT"]} to #{row["END_LAT"]}"
+        row["BEGIN_LAT"] = row["END_LAT"]
+      end
+    end
+    if row["BEGIN_LON"] && row["END_LON"]
+      if valid_lon?(row["BEGIN_LON"].to_f) && !valid_lon?(row["END_LON"].to_f)
+        STDERR.puts "Repairing longitude #{row["END_LON"]} to #{row["BEGIN_LON"]}"
+        row["END_LON"] = row["BEGIN_LON"]
+      elsif !valid_lon?(row["BEGIN_LON"].to_f) && valid_lon?(row["END_LON"].to_f)
+        STDERR.puts "Repairing longitude #{row["BEGIN_LON"]} to #{row["END_LON"]}"
+        row["BEGIN_LON"] = row["END_LON"]
+      end
+    end
+  end
+end
+
 def valid_lat_lon?(row)
-  (row["BEGIN_LAT"] || row["Lat"]).to_f > 0 &&
-  (row["BEGIN_LON"] || row["Lon"]).to_f < -1 &&
-  (row["END_LAT"] || row["Lat"]).to_f > 0 &&
-  (row["END_LON"] || row["Lon"]).to_f < -1
+  valid_lat?((row["BEGIN_LAT"] || row["Lat"]).to_f) &&
+  valid_lon?((row["BEGIN_LON"] || row["Lon"]).to_f) &&
+  valid_lat?((row["END_LAT"]   || row["Lat"]).to_f) &&
+  valid_lon?((row["END_LON"]   || row["Lon"]).to_f)
 end
 
 last_storm_events_database_event_time = Time.new(START_YEAR)
@@ -173,7 +212,7 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
   STDERR.puts "#{wind_rows.count} high wind events in #{year}"
   STDERR.puts "#{hail_rows.count} hail events in #{year}"
 
-  tornado_rows.select! { |row| valid_lat_lon?(row) }
+  tornado_rows.select! { |row| perhaps_repair_latlons!(row); valid_lat_lon?(row) }
   tornado_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
@@ -196,7 +235,7 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
 
   # Although we might use wind hours without geocodes for negative data, we aren't yet.
   # We don't want "sustained" winds.
-  wind_rows.select! { |row| valid_lat_lon?(row) }
+  wind_rows.select! { |row| perhaps_repair_latlons!(row); valid_lat_lon?(row) }
   wind_rows.select! { |row| (wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"]) != "sustained" }
   wind_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
@@ -210,7 +249,7 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
     row_to_lat_lon_cells(row)
   end
 
-  hail_rows.select! { |row| valid_lat_lon?(row) }
+  hail_rows.select! { |row| perhaps_repair_latlons!(row); valid_lat_lon?(row) }
   hail_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
