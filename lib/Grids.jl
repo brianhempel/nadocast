@@ -227,6 +227,11 @@ end
 # Searches gridpoints outward in a diamond shape from the given center until
 # (a) it starts finding points matching the predicate, and after that until
 # (b) it adds a layer to the diamond and finds no new points matching the predicate
+function diamond_search(predicate, grid :: Grid, center_flat_i :: Int64) :: Vector{Int64}
+  j0, i0 = fldmod(center_flat_i-1, grid.width)
+  diamond_search(predicate, grid, i0 + 1, j0 + 1)
+end
+
 function diamond_search(predicate, grid :: Grid, center_i :: Int64, center_j :: Int64) :: Vector{Int64}
   any_found_this_diamond  = false
   still_searching_on_grid = true

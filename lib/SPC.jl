@@ -4,7 +4,7 @@ module SPC
 #
 # Rasterizes onto the given grid.
 #
-# Asking for
+# Asking for a threshold probability of 0.02 will give you the union of the 2%, 5%, 10%, etc regions.
 
 import ArchGDAL
 

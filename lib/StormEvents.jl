@@ -7,12 +7,28 @@ import Conus
 import GeoUtils
 import Grids
 
+HOUR = 60*60
+DAY  = 24*HOUR
+
 struct Event
   start_seconds_from_epoch_utc :: Int64
   end_seconds_from_epoch_utc   :: Int64
   start_latlon                 :: Tuple{Float64, Float64}
   end_latlon                   :: Tuple{Float64, Float64}
 end
+
+function seconds_to_convective_days_since_epoch_utc(seconds_from_epoch_utc :: Int64) :: Int64
+  fld(seconds_from_epoch_utc - 12*HOUR, DAY)
+end
+
+function start_time_in_convective_days_since_epoch_utc(event :: Event) :: Int64
+  seconds_to_convective_days_since_epoch_utc(event.start_seconds_from_epoch_utc)
+end
+
+function end_time_in_convective_days_since_epoch_utc(event :: Event) :: Int64
+  seconds_to_convective_days_since_epoch_utc(event.end_seconds_from_epoch_utc)
+end
+
 
 _tornadoes         = nothing
 _wind_events       = nothing
@@ -218,15 +234,13 @@ end
 
 # Set of seconds, each on the hour.
 function event_hours_set_in_seconds_from_epoch_utc(events, event_time_window_half_size)
-  hour = 60*60
-
   event_hours_set = Set{Int64}()
 
   for event in events
     event_time_range =
       (event.start_seconds_from_epoch_utc - event_time_window_half_size):(event.end_seconds_from_epoch_utc + event_time_window_half_size - 1)
 
-    for hour_from_epoch in fld(event_time_range.start, hour):fld(event_time_range.stop, hour)
+    for hour_from_epoch in fld(event_time_range.start, HOUR):fld(event_time_range.stop, HOUR)
       hour_second = hour_from_epoch*hour
       if hour_second in event_time_range
         push!(event_hours_set, hour_second)

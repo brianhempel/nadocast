@@ -19,6 +19,70 @@ function hour_12_hour_ampm_str(datetime)
   "$(twelve_hour)$(ampm_str)"
 end
 
+
+# Plots the vals using a default color scheme
+function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals), zhigh=maximum(vals), steps=10)
+  color_scheme = "tofino" # Choices: http://gmt.soest.hawaii.edu/doc/latest/GMT_Docs.html#built-in-color-palette-tables-cpt
+
+  open(base_path * ".xyz", "w") do f
+    # lon lat val
+    DelimitedFiles.writedlm(f, map(i -> (grid.latlons[i][2], grid.latlons[i][1], vals[i]), 1:length(vals)), '\t')
+  end
+
+  # GMT sets internal working directory based on parent pid, so run in sh so each has a diff parent pid.
+  open(base_path * ".sh", "w") do f
+
+    println(f, "projection=-Jl-100/35/33/45/0.3")
+    println(f, "region=-R-120.7/22.8/-63.7/47.7+r # +r makes the map square rather than weird shaped")
+
+    println(f, "gmt sphinterpolate $base_path.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
+
+    range     = zhigh - zlow
+    step_size = range / steps
+
+    # println(f, "gmt grd2cpt $base_path.nc -C$color_scheme -T$zlow/$zhigh/$step_size > $base_path.cpt")
+    println(f, "gmt makecpt -C$color_scheme -T$zlow/$zhigh/$step_size > $base_path.cpt")
+
+    println(f, "gmt begin $base_path pdf")
+
+    println(f, "gmt coast \$region \$projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
+    println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$base_path.cpt # draw the numbers using the projection")
+    println(f, "gmt coast -Q # stop clipping")
+
+    println(f, "gmt coast \$region \$projection -A500 -N2/thinnest -t65 # draw state borders 65% transparent")
+    println(f, "gmt coast \$region \$projection -A500 -N1 -Wthinnest -t45 # draw country borders and coastlines 45% transparent")
+
+    # Draw legend box.
+    if !isnothing(title)
+      println(f, "gmt legend -Dx0.04i/0.04i+w1.7i+l1.3 -C0.03i/0.03i -F+gwhite+pthin << EOF")
+      println(f, "L 7pt,Helvetica-Bold C $title")
+      println(f, "L 7pt,Helvetica-Bold C ") # blank line
+      println(f, "L 7pt,Helvetica-Bold C ") # blank line
+      println(f, "EOF")
+    end
+
+    println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0.5p --MAP_TICK_PEN_PRIMARY=0.5p -Dx0.25i/0.25i+w1.3i+h -S -Ba$(range/2) -Np -C$base_path.cpt")
+
+    println(f, "gmt end")
+
+    println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
+
+    println(f, "rm $base_path.nc")
+    println(f, "rm $base_path.xyz")
+    println(f, "rm $base_path.cpt")
+  end
+
+  plot() = begin
+    run(`sh $base_path.sh`)
+    rm(base_path * ".sh")
+  end
+
+  # @async plot()
+  plot()
+
+  ()
+end
+
 # Requires GMT >=6
 #
 # For daily forecast, provide a multi-hour range for forecast_hour_range
@@ -82,6 +146,7 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
     println(f, "gmt coast \$region \$projection -A500 -N2/thinnest -t65 # draw state borders 65% transparent")
     println(f, "gmt coast \$region \$projection -A500 -N1 -Wthinnest -t45 # draw country borders and coastlines 45% transparent")
 
+    # Draw legend box.
     if !isnothing(run_time_utc) && !isnothing(forecast_hour_range)
       is_day_forecast = forecast_hour_range.start != forecast_hour_range.stop
 
