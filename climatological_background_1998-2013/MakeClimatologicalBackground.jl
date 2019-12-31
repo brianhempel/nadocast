@@ -8,8 +8,9 @@ import Grids
 import PlotMap
 import StormEvents
 
-HOUR = StormEvents.HOUR
-DAY  = StormEvents.DAY
+MINUTE = 60
+HOUR   = StormEvents.HOUR
+DAY    = StormEvents.DAY
 
 NEIGHBORHOOD_RADIUS_MILES = 25
 
@@ -266,18 +267,25 @@ function compute_conus_radius_grid_is(miles)
   end
 end
 
-function compute_daily_mean_tor_prob(day_count, tornado_day_counts_grid)
-  # println("day counts $day_count")
-
-  tornado_weighted_spacial_counts = 0.0
-  weight_total                    = 0.0
+# Returns (total, total spacial weight)
+function weighted_sum_conus(values)
+  total  = 0.0
+  weight = 0.0
 
   for grid_i in 1:length(HREF_CROPPED_15KM_GRID.latlons)
     if CONUS_ON_HREF_CROPPED_15KM_GRID[grid_i]
-      tornado_weighted_spacial_counts += tornado_day_counts_grid[grid_i] * HREF_CROPPED_15KM_GRID.point_weights[grid_i]
-      weight_total                    +=                                   HREF_CROPPED_15KM_GRID.point_weights[grid_i]
+      total  += values[grid_i] * HREF_CROPPED_15KM_GRID.point_weights[grid_i]
+      weight +=                  HREF_CROPPED_15KM_GRID.point_weights[grid_i]
     end
   end
+
+  (total, weight)
+end
+
+function compute_daily_mean_tor_prob(day_count, tornado_day_counts_grid)
+  # println("day counts $day_count")
+
+  tornado_weighted_spacial_counts, weight_total = weighted_sum_conus(tornado_day_counts_grid)
 
   tornado_weighted_spacial_counts / weight_total / day_count
 end
@@ -410,3 +418,99 @@ PlotMap.plot_debug_map(
 # PlotMap.plot_debug_map("event_day_counts",                  HREF_CROPPED_15KM_GRID, event_day_counts_grid_blurred;                                      title="Severe Event Day Counts")
 # println("Plotting p(TornadoDay|SevereEventDay)...")
 # PlotMap.plot_debug_map("prob_tornado_day_given_severe_day", HREF_CROPPED_15KM_GRID, tornado_day_counts_grid_blurred ./ (event_day_counts_grid_blurred .+ 1f0); title="p(TornadoDay|SevereEventDay)")
+
+
+# Counts by hour
+
+function count_events_by_hour(range_in_seconds_from_epoch, hour_since_epoch_to_tornadoes, hour_since_epoch_to_wind_events, hour_since_epoch_to_hail_events)
+  grid = HREF_CROPPED_15KM_GRID
+
+  tornado_hour_counts_grids = map(_ -> zeros(Float32, size(grid.latlons)), 0:23)
+  event_hour_counts_grids   = map(_ -> zeros(Float32, size(grid.latlons)), 0:23)
+  hour_counts               = map(_ -> 0f0, 0:23)
+
+  for hour_seconds_from_epoch in range_in_seconds_from_epoch.start:HOUR:range_in_seconds_from_epoch.stop
+    hour_from_epoch = fld(hour_seconds_from_epoch, HOUR)
+    hour_in_day     = mod(hour_from_epoch, 24)
+    hour_in_day_i   = hour_in_day + 1
+    # day_i = StormEvents.seconds_to_convective_days_since_epoch_utc(day_seconds_from_epoch)
+
+    if hour_in_day == 0
+      print(".")
+    end
+
+    tornadoes = vcat(
+      get(hour_since_epoch_to_tornadoes, hour_from_epoch-1, StormEvents.Event[]),
+      get(hour_since_epoch_to_tornadoes, hour_from_epoch, StormEvents.Event[])
+    )
+    events = vcat(
+      tornadoes,
+      get(hour_since_epoch_to_wind_events, hour_from_epoch-1, StormEvents.Event[]),
+      get(hour_since_epoch_to_wind_events, hour_from_epoch, StormEvents.Event[]),
+      get(hour_since_epoch_to_hail_events, hour_from_epoch-1, StormEvents.Event[]),
+      get(hour_since_epoch_to_hail_events, hour_from_epoch, StormEvents.Event[])
+    )
+
+    tornado_segments = StormEvents.event_segments_around_time(tornadoes, hour_seconds_from_epoch, 30*MINUTE)
+    event_segments   = StormEvents.event_segments_around_time(events,    hour_seconds_from_epoch, 30*MINUTE)
+
+    count_neighborhoods!(tornado_hour_counts_grids[hour_in_day_i], grid, tornado_segments, NEIGHBORHOOD_RADIUS_MILES)
+    count_neighborhoods!(event_hour_counts_grids[hour_in_day_i],   grid, event_segments,   NEIGHBORHOOD_RADIUS_MILES)
+    hour_counts[hour_in_day_i] += 1
+  end
+  println("")
+
+  hour_tornado_probs = zeros(Float64, 24)
+  hour_severe_probs  = zeros(Float64, 24)
+
+  map(1:24) do hour_in_day_i
+    tornado_hour_counts_grid = tornado_hour_counts_grids[hour_in_day_i]
+    event_hour_counts_grid   = event_hour_counts_grids[hour_in_day_i]
+    tornado_counts_for_hour, conus_weight = weighted_sum_conus(tornado_hour_counts_grid)
+    severe_counts_for_hour,  conus_weight = weighted_sum_conus(event_hour_counts_grid)
+
+    hour_tornado_probs[hour_in_day_i] = tornado_counts_for_hour / conus_weight / hour_counts[hour_in_day_i]
+    hour_severe_probs[hour_in_day_i]  = severe_counts_for_hour  / conus_weight / hour_counts[hour_in_day_i]
+  end
+
+  (hour_tornado_probs, hour_severe_probs)
+end
+
+println("Computing tornado probability for hours in day")
+
+hour_tornado_probs, hour_severe_probs = count_events_by_hour(start_seconds_from_epoch:(end_seconds_from_epoch - 1), hour_since_epoch_to_tornadoes, hour_since_epoch_to_wind_events, hour_since_epoch_to_hail_events)
+
+println("Hour in day\tTornado Prob\tSevere Prob")
+
+# Hour in day	Tornado Prob	Severe Prob
+# 0	0.00011281105589407664	0.0016023082155621861
+# 1	9.542421364076437e-5	0.0013623035856667757
+# 2	7.715274555775172e-5	0.0010855538933892944
+# 3	4.6671249398663465e-5	0.0008256739049214956
+# 4	3.8775537478660835e-5	0.0006386233952509774
+# 5	3.5468275746195707e-5	0.0005312684547429962
+# 6	2.7773615089433353e-5	0.0004403691211915202
+# 7	2.4574173641975926e-5	0.0003915619648709643
+# 8	2.0915068390769666e-5	0.00035983595485939704
+# 9	2.266193139047085e-5	0.00033027840031592574
+# 10	2.79491412942416e-5	0.0003368885868618107
+# 11	3.209419466673707e-5	0.0003818199314824443
+# 12	4.093512080238398e-5	0.0004920051141764673
+# 13	5.63113670579055e-5	0.0007253110513502339
+# 14	7.970223364709648e-5	0.0010512935636334706
+# 15	0.00010412373680106372	0.0013813556459886616
+# 16	0.00012957508827892515	0.001696731311387437
+# 17	0.00014456868869499806	0.001894080868249279
+# 18	0.00015874903775936556	0.0019672777784898177
+# 19	0.00015525202952999288	0.0020145104648122397
+# 20	0.00013703402383647353	0.001977639225067383
+# 21	0.00012021929890633081	0.001956761225011932
+# 22	0.00012540520675259194	0.001927498480735839
+# 23	0.00012211326059844427	0.001794125630938225
+
+for hour_in_day in 0:23
+  hour_in_day_i = hour_in_day + 1
+
+  println("$hour_in_day\t$(hour_tornado_probs[hour_in_day_i])\t$(hour_severe_probs[hour_in_day_i])")
+end
+
