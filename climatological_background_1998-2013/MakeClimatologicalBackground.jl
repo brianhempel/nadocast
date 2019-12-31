@@ -342,6 +342,7 @@ PlotMap.plot_debug_map(
   zhigh=0.006,
   steps=12
 )
+write("tornado_day_climatological_probability.float16.bin", Float16.(tornado_prediction_grid))
 
 println("Plotting Severe Day Climatological Probability...")
 PlotMap.plot_debug_map(
@@ -353,6 +354,7 @@ PlotMap.plot_debug_map(
   zhigh=0.06,
   steps=12
 )
+write("severe_day_climatological_probability.float16.bin", Float16.(event_prediction_grid))
 
 println("Plotting p(TornadoDay|SevereDay)...")
 PlotMap.plot_debug_map(
@@ -364,6 +366,7 @@ PlotMap.plot_debug_map(
   zhigh=0.6,
   steps=12
 )
+write("tornado_day_given_severe_day_climatological_probability.float16.bin", Float16.(tornado_day_given_event_day))
 
 println("Plotting geomean of tor prob and p(TornadoDay|SevereDay)...")
 PlotMap.plot_debug_map(
@@ -375,7 +378,7 @@ PlotMap.plot_debug_map(
   zhigh=0.04,
   steps=8
 )
-
+write("geomean_absolute_and_conditional_climatological_probability.float16.bin", Float16.(geomean_absolute_and_conditional_probabilty))
 
 
 # Counts by hour
