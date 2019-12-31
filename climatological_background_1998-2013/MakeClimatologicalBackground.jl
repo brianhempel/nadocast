@@ -1,5 +1,7 @@
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 
+import Dates
+
 import Conus
 import Forecasts
 import GeoUtils
@@ -109,11 +111,6 @@ end
 # Mutates counts_grid.
 function count_neighborhoods!(counts_grid, grid, event_segments, miles)
 
-  # radius_is[flat_i] =
-  #   diamond_search(grid, i, j) do candidate_latlon
-  #     GeoUtils.instantish_distance(candidate_latlon, latlon) <= miles * GeoUtils.METERS_PER_MILE
-  #   end
-
   positive_grid_is = Set{Int64}()
 
   for (latlon1, latlon2) in event_segments
@@ -129,36 +126,12 @@ function count_neighborhoods!(counts_grid, grid, event_segments, miles)
     counts_grid[grid_i] += 1f0
   end
 
-  # is_near_event(latlon) = begin
-  #   is_near = false
-  #
-  #   for (latlon1, latlon2) in event_segments
-  #     meters_away = GeoUtils.instant_meters_to_line(latlon, latlon1, latlon2)
-  #     if meters_away <= miles * GeoUtils.METERS_PER_MILE
-  #       is_near = true
-  #     end
-  #   end
-  #
-  #   is_near
-  # end
-  #
-  # Threads.@threads for grid_i in 1:length(grid.latlons)
-  #   latlon = grid.latlons[grid_i]
-  #
-  #   if is_near_event(latlon)
-  #     counts_grid[grid_i] += 1f0
-  #   end
-  # end
-
   ()
 end
 
 
-# event_hour_counts_grid   = zeros(Float32, size(HREF_CROPPED_15KM_GRID.latlons))
-# tornado_hour_counts_grid = zeros(Float32, size(HREF_CROPPED_15KM_GRID.latlons))
-
 # Returns (day_count, tornado_day_counts_grid, event_day_counts_grid)
-function count_events(range_in_seconds_from_epoch, grid, convective_day_to_tornadoes, convective_day_to_wind_events, convective_day_to_hail_events)
+function count_events_by_day(range_in_seconds_from_epoch, grid, convective_day_to_tornadoes, convective_day_to_wind_events, convective_day_to_hail_events)
   day_count = 0
 
   tornado_day_counts_grid  = zeros(Float32, size(grid.latlons))
@@ -186,7 +159,7 @@ end
 
 fold_day_tornado_and_event_counts =
   map(fold_ranges_in_seconds_from_epoch) do fold_range
-    count_events(fold_range, HREF_CROPPED_15KM_GRID, convective_day_to_tornadoes, convective_day_to_wind_events, convective_day_to_hail_events)
+    count_events_by_day(fold_range, HREF_CROPPED_15KM_GRID, convective_day_to_tornadoes, convective_day_to_wind_events, convective_day_to_hail_events)
   end
 
 const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -289,11 +262,6 @@ function compute_daily_mean_tor_prob(day_count, tornado_day_counts_grid)
 
   tornado_weighted_spacial_counts / weight_total / day_count
 end
-
-# daily_mean_tor_prob = compute_daily_mean_tor_prob(day_count, tornado_day_counts_grid)
-#
-#
-# println("Overall conus daily mean tor prob (within 25mi): $daily_mean_tor_prob")
 
 # best_params = (0.010477507670158212, 50.0, 96.0) # loss, blur_radius, smoothing_strength
 best_params = (Inf, nothing, nothing) # loss, blur_radius, smoothing_strength
@@ -402,26 +370,17 @@ PlotMap.plot_debug_map(
   "geomean_absolute_and_conditional_climatological_probability",
   HREF_CROPPED_15KM_GRID,
   geomean_absolute_and_conditional_probabilty;
-  title="Geomean abs & cond prob 1998-2013",
+  title="Geomean abs&cond prob 1998-2013",
   zlow=0.0,
-  zhigh=0.2,
-  steps=10
+  zhigh=0.04,
+  steps=8
 )
 
 
 
-# tornado_day_counts_grid_blurred = meanify(tornado_day_counts_grid, hundred_mi_mean_is)
-# event_day_counts_grid_blurred   = meanify(event_day_counts_grid, hundred_mi_mean_is)
-# println("Plotting Tornado Day Counts...")
-# PlotMap.plot_debug_map("tornado_day_counts",                HREF_CROPPED_15KM_GRID, tornado_day_counts_grid_blurred;                                    title="Tornado Day Counts")
-# println("Plotting Severe Event Day Counts...")
-# PlotMap.plot_debug_map("event_day_counts",                  HREF_CROPPED_15KM_GRID, event_day_counts_grid_blurred;                                      title="Severe Event Day Counts")
-# println("Plotting p(TornadoDay|SevereEventDay)...")
-# PlotMap.plot_debug_map("prob_tornado_day_given_severe_day", HREF_CROPPED_15KM_GRID, tornado_day_counts_grid_blurred ./ (event_day_counts_grid_blurred .+ 1f0); title="p(TornadoDay|SevereEventDay)")
-
-
 # Counts by hour
 
+# Returns (hour_tornado_probs, hour_severe_probs)
 function count_events_by_hour(range_in_seconds_from_epoch, hour_since_epoch_to_tornadoes, hour_since_epoch_to_wind_events, hour_since_epoch_to_hail_events)
   grid = HREF_CROPPED_15KM_GRID
 
@@ -514,3 +473,71 @@ for hour_in_day in 0:23
   println("$hour_in_day\t$(hour_tornado_probs[hour_in_day_i])\t$(hour_severe_probs[hour_in_day_i])")
 end
 
+# Counts by season
+
+# Returns (tornado_day_probs_by_month, event_day_probs_by_month)
+function count_events_by_month(range_in_seconds_from_epoch, convective_day_to_tornadoes, convective_day_to_wind_events, convective_day_to_hail_events)
+  grid = HREF_CROPPED_15KM_GRID
+
+  tornado_day_counts_grids  = map(_ -> zeros(Float32, size(grid.latlons)), 1:12)
+  event_day_counts_grids    = map(_ -> zeros(Float32, size(grid.latlons)), 1:12)
+  day_counts_by_month       = zeros(Float32, 12)
+
+  for day_seconds_from_epoch in range_in_seconds_from_epoch.start:DAY:range_in_seconds_from_epoch.stop
+    day_i = StormEvents.seconds_to_convective_days_since_epoch_utc(day_seconds_from_epoch)
+
+    # Might be off by a day b/c convective day whatevers. No biggie, this is rough stats.
+    month_i = Dates.month(Dates.unix2datetime(day_seconds_from_epoch))
+
+    print(".")
+
+    tornadoes = get(convective_day_to_tornadoes, day_i, StormEvents.Event[])
+    events    = vcat(tornadoes, get(convective_day_to_wind_events, day_i, StormEvents.Event[]), get(convective_day_to_hail_events, day_i, StormEvents.Event[]))
+
+    tornado_segments = StormEvents.event_segments_around_time(tornadoes, day_seconds_from_epoch + 12*HOUR, 12*HOUR)
+    event_segments   = StormEvents.event_segments_around_time(events,    day_seconds_from_epoch + 12*HOUR, 12*HOUR)
+
+    count_neighborhoods!(tornado_day_counts_grids[month_i], grid, tornado_segments, NEIGHBORHOOD_RADIUS_MILES)
+    count_neighborhoods!(event_day_counts_grids[month_i],   grid, event_segments,   NEIGHBORHOOD_RADIUS_MILES)
+    day_counts_by_month[month_i] += 1
+  end
+  println("")
+
+  tornado_day_probs_by_month = zeros(Float64, 12)
+  event_day_probs_by_month  = zeros(Float64, 12)
+
+  map(1:12) do month_i
+    tornado_day_counts_grid = tornado_day_counts_grids[month_i]
+    event_day_counts_grid   = event_day_counts_grids[month_i]
+    tornado_day_counts_for_month, conus_weight = weighted_sum_conus(tornado_day_counts_grid)
+    severe_day_counts_for_month,  conus_weight = weighted_sum_conus(event_day_counts_grid)
+
+    tornado_day_probs_by_month[month_i] = tornado_day_counts_for_month / conus_weight / day_counts_by_month[month_i]
+    event_day_probs_by_month[month_i]   = severe_day_counts_for_month  / conus_weight / day_counts_by_month[month_i]
+  end
+
+  (tornado_day_probs_by_month, event_day_probs_by_month)
+end
+
+tornado_day_probs_by_month, event_day_probs_by_month = count_events_by_month(start_seconds_from_epoch:(end_seconds_from_epoch - 1), convective_day_to_tornadoes, convective_day_to_wind_events, convective_day_to_hail_events)
+
+println("Month\tTornado Day Prob\tSevere Day Prob")
+
+# Month	Tornado Day Prob	Severe Day Prob
+# 1	0.0006040794235708681	0.0033315314012978435
+# 2	0.0006566448193920728	0.005525090396417805
+# 3	0.0011690501952992978	0.0106942747404591
+# 4	0.002689031711471158	0.021670062450983234
+# 5	0.003601540094162475	0.0356165042151227
+# 6	0.0031561038846052185	0.04797686001522021
+# 7	0.0016031769612964244	0.03902905429465588
+# 8	0.0011273924818847902	0.02806697548060397
+# 9	0.0010541411218898957	0.01074848441613435
+# 10	0.0008076681769902537	0.005483847465320244
+# 11	0.0007586494447008108	0.0037478221231480326
+# 12	0.0004647142381289501	0.0025546124759955094
+
+
+for month_i in 1:12
+  println("$month_i\t$(tornado_day_probs_by_month[month_i])\t$(event_day_probs_by_month[month_i])")
+end
