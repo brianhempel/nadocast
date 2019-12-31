@@ -9,8 +9,9 @@ end
 
 # NOMADS has 1 week to 1 year ago of data.
 
-FROM_NOMADS = ARGV.include?("--from-nomads") # (ARGV[0] == "--from-archive")
-DRY_RUN     = ARGV.include?("--dry-run")
+FROM_NOMADS     = ARGV.include?("--from-nomads") # (ARGV[0] == "--from-archive")
+DRY_RUN         = ARGV.include?("--dry-run")
+DELETE_UNNEEDED = false
 
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap_current.rb
 
