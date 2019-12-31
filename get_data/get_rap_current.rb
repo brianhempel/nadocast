@@ -98,7 +98,7 @@ end
 threads = THREAD_COUNT.times.map do
   Thread.new do
     while forecast_to_get = forecasts_to_get.shift
-      forecast_to_get.ensure_downloaded!(from_archive: false)
+      forecast_to_get.ensure_downloaded!(from_archive: FROM_NOMADS)
     end
   end
 end
