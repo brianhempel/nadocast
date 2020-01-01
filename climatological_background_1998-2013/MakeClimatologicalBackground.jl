@@ -234,10 +234,37 @@ function try_parameters(transform_day_count_and_event_counts_to_prediction_grid)
   loss / weight
 end
 
-function compute_conus_radius_grid_is(miles)
-  map(Grids.radius_grid_is(HREF_CROPPED_15KM_GRID, miles)) do grid_mean_is
-    filter(grid_i -> CONUS_ON_HREF_CROPPED_15KM_GRID[grid_i], grid_mean_is)
+println("Computing smoothing for points outside CONUS...")
+mean_is_outside_conus =
+  map(1:length(HREF_CROPPED_15KM_GRID.latlons)) do grid_i
+    print(".")
+    if !CONUS_ON_HREF_CROPPED_15KM_GRID[grid_i]
+      radius = Inf
+      Grids.diamond_search(HREF_CROPPED_15KM_GRID, grid_i) do candidate_latlon
+        distance = GeoUtils.instantish_distance(candidate_latlon, HREF_CROPPED_15KM_GRID.latlons[grid_i])
+        if Conus.is_in_conus(candidate_latlon) && distance <= radius
+          if radius == Inf
+            radius = distance * 1.2
+          end
+          true
+        else
+          false
+        end
+      end
+    else
+      Int64[]
+    end
   end
+
+function compute_conus_radius_grid_is(miles)
+  mean_is = Grids.radius_grid_is(HREF_CROPPED_15KM_GRID, miles)
+  for grid_i in 1:length(mean_is)
+    mean_is[grid_i] = filter(grid_i -> CONUS_ON_HREF_CROPPED_15KM_GRID[grid_i], mean_is[grid_i])
+    if !CONUS_ON_HREF_CROPPED_15KM_GRID[grid_i] && length(mean_is[grid_i]) < length(mean_is_outside_conus[grid_i])
+      mean_is[grid_i] = mean_is_outside_conus[grid_i]
+    end
+  end
+  mean_is
 end
 
 # Returns (total, total spacial weight)
