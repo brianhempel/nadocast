@@ -18,16 +18,18 @@ If all goes well, the expected possible advantages over Storm Prediction Center'
   - [x] RAP
 - [x] Get some storm events
 - [x] Read the weather data
-- [ ] Build background climatology (spacial, diurnal, annual)
+- [x] Build background climatology (spacial, diurnal, annual)
 - [ ] Storm mode?
-- [ ] Add some interaction terms
-- [ ] Faster training
+- [x] Add some interaction terms
+- [x] Faster training
+- [ ] Faster loading
 - [ ] Tree refitting
+- [ ] Loss-based tree pruning
 - [ ] Set up process:
   - [ ] Retrain SREF with 3-hour chunks
   - [ ] Retrain HREF with 3-hour chunks
-  - [ ] Retrain RAP with 3-hour chunks
-  - [ ] Retrain HRRR
+  - [ ] Retrain RAP with 2-hour chunks
+  - [ ] Retrain HRRR with 3-hour chunks
   - [ ] Optimize hourly weighted combo
   - [ ] Combine into daily
 
