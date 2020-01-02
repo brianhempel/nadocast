@@ -46,6 +46,10 @@ all_layer_blocks                             = collect(1:length(feature_block_na
 # leftover_fields = [
 #   "div(forecast hour, 10)",
 # ]
+forecast_hour_feature_post(grid) =
+  ( "div(forecast hour, 10)"
+  , forecast -> fill(Float32(div(forecast.forecast_hour, 10)), length(grid.latlons))
+  )
 
 
 # new_features_pre should be a list of pairs of (feature_name, compute_feature_function(grid, inventory, data))
@@ -138,10 +142,9 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
   data_transformer(base_forecast, base_data) = begin
     # println("Feature engineering $(base_forecast.model_name) $(Forecasts.time_title(base_forecast))...")
 
-    out = FeatureEngineeringShared.make_data(
+    out = make_data(
       grid,
       Forecasts.inventory(base_forecast),
-      base_forecast.forecast_hour,
       base_data,
       vector_wind_layers,
       layer_blocks_to_make,
@@ -494,7 +497,6 @@ end
 function make_data(
       grid                      :: Grids.Grid,
       inventory                 :: Vector{Inventories.InventoryLine},
-      forecast_hour             :: Int64,
       data                      :: Array{Float32,2},
       vector_wind_layers        :: Vector{String},
       layer_blocks_to_make      :: Vector{Int64}, # List of indices. See top of this file.

@@ -107,7 +107,6 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 #       FeatureEngineeringShared.make_data(
 #         grid,
 #         inventory_with_winds,
-#         forecast.forecast_hour,
 #         predictions_with_winds,
 #         base_forecast_vector_wind_layers,
 #         layer_blocks_to_make,

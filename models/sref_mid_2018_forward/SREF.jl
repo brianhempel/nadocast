@@ -8,6 +8,7 @@ import Grib2
 import Grids
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
+import Climatology
 import SREFHREFShared
 import FeatureEngineeringShared
 import ThreeHourWindowForecasts
@@ -130,9 +131,9 @@ function grid()
   example_forecast().grid
 end
 
-function three_hour_window_feature_engineered_forecasts()
-  ThreeHourWindowForecasts.three_hour_window_forecasts(feature_engineered_forecasts())
-end
+# function three_hour_window_feature_engineered_forecasts()
+#   ThreeHourWindowForecasts.three_hour_window_forecasts(feature_engineered_forecasts())
+# end
 
 # # Debug
 # function three_hour_window_feature_engineered_forecasts_middle_hour_only()
@@ -155,7 +156,7 @@ end
 # end
 
 function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
-  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts(feature_engineered_forecasts())
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(feature_engineered_forecasts())
 end
 
 

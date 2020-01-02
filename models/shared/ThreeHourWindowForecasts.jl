@@ -9,6 +9,10 @@ import Forecasts
 import ForecastCombinators
 import Inventories
 
+push!(LOAD_PATH, @__DIR__)
+import Climatology
+import FeatureEngineeringShared
+
 function add_misc_suffix_to_inventory_lines(inventory, suffix)
   map(inventory) do inventory_line
     Inventories.revise_with_misc(inventory_line, inventory_line.misc * suffix)
@@ -69,7 +73,9 @@ end
 
 # 3 hour forecasts plus 3hr min, mean, max, delta
 # (7x the features of the base forecasts)
-function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts)
+#
+# new_features_post should be a list of pairs of (feature_name, compute_feature_function(base_forecast))
+function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_features_post=[])
   window_forecasts = three_hour_window_forecasts(base_forecasts)
 
   inventory_transformer(base_forecast, base_inventory) = begin
@@ -82,14 +88,29 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts)
     max_inventory   = add_misc_suffix_to_inventory_lines(forecast_hour_inventory, " 3hr max")
     delta_inventory = add_misc_suffix_to_inventory_lines(forecast_hour_inventory, " 3hr delta")
 
-    vcat(base_inventory, min_inventory, mean_inventory, max_inventory, delta_inventory)
+    new_features_post_lines =
+      map(new_features_post) do feature_name_and_compute_function
+        Inventories.InventoryLine(
+          "",                                   # message_dot_submessage
+          "",                                   # position_str
+          base_inventory[1].date_str,
+          feature_name_and_compute_function[1], # abbrev
+          "calculated",                         # level
+          "hour fcst",                          # forecast_hour_str
+          "",                                   # misc
+          ""                                    # feature_engineering
+        )
+      end
+
+    vcat(base_inventory, min_inventory, mean_inventory, max_inventory, delta_inventory, new_features_post_lines)
   end
 
   data_transformer(base_forecast, base_data) = begin
     point_count               = size(base_data, 1)
     single_hour_feature_count = div(size(base_data, 2),3)
+    hours_feature_count       = 7*single_hour_feature_count
 
-    out = Array{Float32}(undef, (point_count, 7*single_hour_feature_count))
+    out = Array{Float32}(undef, (point_count, hours_feature_count + length(new_features_post)))
 
     out[:, 1:(3*single_hour_feature_count)] = base_data
 
@@ -103,10 +124,41 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts)
 
     compute_min_mean_max_delta!(prior_hour_data, forecast_hour_data, next_hour_data, window_min_data, window_mean_data, window_max_data, window_delta_data)
 
+    Threads.@threads for new_post_feature_i in 1:length(new_features_post)
+      new_feature_name, compute_new_feature_post = new_features_post[new_post_feature_i]
+      out[:, hours_feature_count + new_post_feature_i] = compute_new_feature_post(base_forecast)
+    end
+
     out
   end
 
   ForecastCombinators.map_forecasts(window_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
+
+function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(forecasts)
+  grid = forecasts[1].grid
+
+  new_features_post = [
+    FeatureEngineeringShared.forecast_hour_feature_post(grid),
+    Climatology.tornado_day_spacial_probability_feature(grid),
+    Climatology.severe_day_spacial_probability_feature(grid),
+    Climatology.tornado_day_given_severe_day_spacial_probability_feature(grid),
+    Climatology.geomean_tornado_and_conditional_spacial_probability_feature(grid),
+    Climatology.forecast_hour_tornado_probability_feature(grid),
+    Climatology.forecast_hour_severe_probability_feature(grid),
+    Climatology.forecast_hour_tornado_given_severe_probability_feature(grid),
+    Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid),
+    Climatology.month_tornado_day_probability_feature(grid),
+    Climatology.month_severe_day_probability_feature(grid),
+    Climatology.month_tornado_day_given_severe_day_probability_feature(grid),
+    Climatology.month_geomean_tornado_and_conditional_probability_feature(grid)
+  ]
+
+  three_hour_window_and_min_mean_max_delta_forecasts(
+    forecasts;
+    new_features_post = new_features_post
+  )
+end
+
 
 end # module ThreeHourWindowForecasts
