@@ -149,4 +149,11 @@ function specific_inventory_line_key(line :: InventoryLine) :: String
   join([line.abbrev, line.level, line.forecast_hour_str, line.misc], ":")
 end
 
+# "REFD:1000 m above ground:hour fcst:prob >40:25mi mean"
+function inventory_line_description(line :: InventoryLine) :: String
+  # "7 hour fcst" => "hour fcst"
+  # c.f. find_common_layers.rb
+  join([line.abbrev, line.level, generic_forecast_hour_str(line.forecast_hour_str), line.misc, line.feature_engineering], ":")
+end
+
 end # module Inventories

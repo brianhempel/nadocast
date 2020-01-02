@@ -57,7 +57,7 @@ function read_events_csv(path) ::Vector{Event}
     if isa(row[start_lat_col_i], Real)
       start_latlon  = (row[start_lat_col_i], row[start_lon_col_i])
       end_latlon    = (row[end_lat_col_i],   row[end_lon_col_i])
-    elseif row[start_lat_col_i] == "" || row[start_lat_col_i] == "LA" || row[start_lat_col_i] == "NJ"
+    elseif row[start_lat_col_i] == "" || row[start_lat_col_i] == "LA" || row[start_lat_col_i] == "NJ" || row[start_lat_col_i] == "TN"
       # Some wind events are not geocoded. One LSR event is geocoded as "LA,32.86,LA,32.86"
       start_latlon = (NaN, NaN)
       end_latlon   = (NaN, NaN)
@@ -241,7 +241,7 @@ function event_hours_set_in_seconds_from_epoch_utc(events, event_time_window_hal
       (event.start_seconds_from_epoch_utc - event_time_window_half_size):(event.end_seconds_from_epoch_utc + event_time_window_half_size - 1)
 
     for hour_from_epoch in fld(event_time_range.start, HOUR):fld(event_time_range.stop, HOUR)
-      hour_second = hour_from_epoch*hour
+      hour_second = hour_from_epoch*HOUR
       if hour_second in event_time_range
         push!(event_hours_set, hour_second)
       end

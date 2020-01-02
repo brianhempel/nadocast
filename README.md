@@ -1,4 +1,4 @@
-# NadoCast.com — Intraday Tornado Prediction
+# [nadocast.com](http://nadocast.com) — Intraday Tornado Prediction
 
 Planning to use the [HREF](http://nomads.ncep.noaa.gov/txt_descriptions/HREF_doc.shtml), [SREF](https://nomads.ncep.noaa.gov/txt_descriptions/SREF_doc.shtml), [HRRR](https://rapidrefresh.noaa.gov/hrrr/), and [Rapid Refresh](https://rapidrefresh.noaa.gov/) weather models to generate hourly tornado probabilities.
 
@@ -22,7 +22,7 @@ If all goes well, the expected possible advantages over Storm Prediction Center'
 - [ ] Storm mode?
 - [ ] Add some interaction terms
 - [ ] Faster training
-- [ ] Stats-based pruning
+- [ ] Tree refitting
 - [ ] Set up process:
   - [ ] Retrain SREF with 3-hour chunks
   - [ ] Retrain HREF with 3-hour chunks

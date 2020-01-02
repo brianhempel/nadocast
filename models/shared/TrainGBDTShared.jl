@@ -81,7 +81,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     model_prefix = "",
     prior_predictor = nothing,
     bin_split_forecast_sample_count = 100,
-    balance_labels_when_computing_bin_splits = false,
+    balance_labels_when_computing_bin_splits = true,
     max_iterations_without_improvement = 20,
     configs...
   )

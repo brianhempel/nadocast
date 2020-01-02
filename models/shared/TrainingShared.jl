@@ -1,11 +1,14 @@
 module TrainingShared
 
 import Random
+import Serialization
+import Printf
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Conus
 import Forecasts
+import Inventories
 import StormEvents
 
 
@@ -91,46 +94,44 @@ function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:
 end
 
 
-function forecast_labels(forecast) :: Array{Float32,1}
+function compute_forecast_labels(forecast) :: Array{Float32,1}
   StormEvents.grid_to_tornado_neighborhoods(forecast.grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
 
-# concatenating all the forecasts doubles peak memory usage if done in-RAM
-# so we do the concatenation as an on-disk file append
+# Concatenating all the forecasts doubles peak memory usage if done in-RAM.
+#
+# We load each file to disk, after which we know the appropriate size needed
+# and load back into RAM.
 #
 # If prior_predictor is provided, computes prior predictor's loss during loading.
 # prior_predictor is fed the untransformed data.
-function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
-  # Xs      = []
-  # Ys      = []
-  # weights = []
+#
+# If save_dir already exists, reads the data in from disk.
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
+  if isnothing(save_dir)
+    save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
+  end
+  if !isdir(save_dir)
+    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
+  end
+  read_data_labels_weights_from_disk(save_dir)
+end
 
-  data_count    = 0
-  feature_count = nothing
-  feature_type  = nothing
-  feature_files = nothing
-  labels_file   = nothing
-  weights_file  = nothing
+# We can keep weights and labels in memory at least. It's the features that really kill us.
+function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
+  mkpath(save_dir)
+
+  save_path(path) = joinpath(save_dir, path)
+
+  labels  = Float32[]
+  weights = Float32[]
+
   prior_losses         = []
   prior_losses_weights = []
   prior_loss_forecasts = []
   ε             = eps(1.0f0)
   logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε) # Copied from Flux.jl
-
-
-  loading_tmp_dir = "loading_tmp_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
-  mkpath(loading_tmp_dir)
-
-  concat_path(name)                                = joinpath(loading_tmp_dir, name)
-  open_concat_file(name)                           = open(concat_path(name), "w")
-  read_and_remove_concat_file(name, data_count, T) = begin
-    buffer = Array{T}(undef, data_count)
-    read!(concat_path(name), buffer)
-    # Remove as we go in case we are swapping and need the space.
-    rm(concat_path(name))
-    buffer
-  end
 
   grid = first(forecasts).grid
 
@@ -141,18 +142,20 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
   # Deterministic randomness for X_and_labels_to_inclusion_probabilities, presuming forecasts are given in the same order.
   rng = Random.MersenneTwister(12345)
 
+  forecast_i = 1
+
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-    data_in_conus = data[conus_grid_bitmask, :]
-    labels        = forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
+    data_in_conus   = data[conus_grid_bitmask, :]
+    forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
 
     if X_and_labels_to_inclusion_probabilities != nothing
-      probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, labels))
+      probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels))
       probabilities = clamp.(probabilities, 0f0, 1f0)
       mask          = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
       probabilities = probabilities[mask]
 
       forecast_weights = conus_grid_weights[mask] ./ probabilities
-      labels           = labels[mask]
+      forecast_labels  = forecast_labels[mask]
       data_masked      = data_in_conus[mask, :]
       X_transformed    = X_transformer(data_masked)
 
@@ -163,44 +166,32 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
       X_transformed    = X_transformer(data_in_conus)
     end
 
-    if isnothing(feature_files)
-      feature_count = size(X_transformed,2)
-      feature_type  = typeof(X_transformed[1,1])
-      feature_files =
-        map(1:feature_count) do feature_i
-          open_concat_file("feature_$(feature_i)")
-        end
-      labels_file  = open_concat_file("labels")
-      weights_file = open_concat_file("weights")
+    if forecast_i == 1
+      inventory_lines      = Forecasts.inventory(forecast)
+      feature_descriptions = Inventories.inventory_line_description.(inventory_lines)
+      write(save_path("features.txt"), join(feature_descriptions, "\n"))
     end
-
-    for feature_i in 1:feature_count
-      write(feature_files[feature_i], X_transformed[:,feature_i])
-    end
-    write(labels_file,  labels)
-    write(weights_file, forecast_weights)
-
-    data_count += length(labels)
 
     if !isnothing(prior_predictor)
       predictions = prior_predictor(data_masked)
-      push!(prior_losses, sum(logloss.(labels, predictions) .* forecast_weights))
+      push!(prior_losses, sum(logloss.(forecast_labels, predictions) .* forecast_weights))
       push!(prior_losses_weights, sum(forecast_weights))
       push!(prior_loss_forecasts, forecast)
     end
 
-    # push!(Xs, X_transformed)
-    # push!(Ys, labels)
-    # push!(weights, forecast_weights)
+    data_file_name = Printf.@sprintf "data_%06d.serialized" forecast_i
+    Serialization.serialize(save_path(data_file_name), X_transformed)
+
+    append!(labels, forecast_labels)
+    append!(weights, forecast_weights)
+
+    forecast_i += 1
 
     print(".")
   end
 
-  for feature_i in 1:feature_count
-    close(feature_files[feature_i])
-  end
-  close(labels_file)
-  close(weights_file)
+  Serialization.serialize(save_path("labels.serialized"), labels)
+  Serialization.serialize(save_path("weights.serialized"), weights)
 
   if !isnothing(prior_predictor)
     prior_loss = sum(prior_losses) / sum(prior_losses_weights)
@@ -214,24 +205,46 @@ function get_data_labels_weights(forecasts; X_transformer = identity, X_and_labe
     end
   end
 
-  X       = Array{feature_type}(undef, (data_count, feature_count))
-  Y       = Array{Float32}(undef, data_count)
-  weights = Array{Float32}(undef, data_count)
+  ()
+end
 
-  for feature_i in 1:feature_count
-    X[:, feature_i] = read_and_remove_concat_file("feature_$(feature_i)", data_count, feature_type)
+function read_data_labels_weights_from_disk(save_dir)
+  save_path(path) = joinpath(save_dir, path)
+
+  labels  = Serialization.deserialize(save_path("labels.serialized"))
+  weights = Serialization.deserialize(save_path("weights.serialized"))
+
+  @assert length(labels) == length(weights)
+  data_count = length(labels)
+
+  data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.")[2])))
+
+  forecast_data_1 = Serialization.deserialize(save_path(data_file_names[1]))
+
+  feature_count = size(forecast_data_1, 2)
+  feature_type  = eltype(forecast_data_1)
+
+  forecast_data_1 = nothing # free
+
+  data = Array{feature_type}(undef, (data_count, feature_count))
+
+  row_i = 1
+
+  for data_file_name in data_file_names
+    forecast_data = Serialization.deserialize(save_path(data_file_name))
+
+    forecast_row_count, forecast_feature_count = size(forecast_data)
+
+    @assert feature_count == forecast_feature_count
+
+    data[row_i:(row_i + forecast_row_count - 1), :] = forecast_data
+
+    row_i += forecast_row_count
   end
-  Y       = read_and_remove_concat_file("labels", data_count, Float32)
-  weights = read_and_remove_concat_file("weights", data_count, Float32)
 
-  rm(loading_tmp_dir, recursive = true)
+  @assert row_i - 1 == data_count
 
-  # @assert vcat(Xs...) == X
-  # @assert vcat(Ys...) == Y
-  # @assert vcat(weights...) == weights2
-
-  # (vcat(Xs...), vcat(Ys...), vcat(weights...))
-  (X, Y, weights)
+  (data, labels, weights)
 end
 
 

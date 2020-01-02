@@ -148,7 +148,7 @@ while true
   #   print("Plotting $(Forecasts.time_title(forecast)) (epoch+$(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast))s)...")
   #   data     = SREF.get_feature_engineered_data(forecast, Forecasts.get_data(forecast))
   #   data     = Float64.(data')
-  #   labels   = Float64.(TrainingShared.forecast_labels(grid, forecast))
+  #   labels   = Float64.(TrainingShared.compute_forecast_labels(grid, forecast))
   #   prefix   = "epoch_$(epoch_n)_forecast_$(replace(Forecasts.time_title(forecast), " " => "_"))"
   #   Plots.png(Grib2.plot(grid, Float32.(Tracker.data(double_logistic_model(data)))), "$(prefix)_predictions.png")
   #   Plots.png(Grib2.plot(grid, Float32.(labels)), "$(prefix)_labels.png")
