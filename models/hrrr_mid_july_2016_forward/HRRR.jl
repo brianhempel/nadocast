@@ -9,6 +9,7 @@ import Grids
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import FeatureEngineeringShared
+import ThreeHourWindowForecasts
 
 # HRRR is on its own 3km grid:
 # $ wgrib2 -grid -end /Volumes/HRRR_1/hrrr/201903/20190314/hrrr_conus_sfc_20190314_t04z_f12.grib2

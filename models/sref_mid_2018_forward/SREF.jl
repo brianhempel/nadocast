@@ -3,12 +3,11 @@ module SREF
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
-import ForecastCombinators
+# import ForecastCombinators
 import Grib2
 import Grids
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
-import Climatology
 import SREFHREFShared
 import FeatureEngineeringShared
 import ThreeHourWindowForecasts
