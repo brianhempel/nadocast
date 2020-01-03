@@ -222,8 +222,19 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # -headers says to print the layer size before and after
   # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
 
+  if Sys.KERNEL == :Darwin && !isdir("/Volumes/RAMDisk")
+    println("Creating RAM disk for grib2 loading")
+    disk_path = strip(read(`hdiutil attach -nomount ram://8388608`, String)) # 4GB ram disk
+    run(`diskutil erasevolume HFS+ RAMDisk $disk_path`)
+  end
+
   # print("opening wgrib2...")
   temp_path = tempname()
+  if isdir("/dev/shm") # Use Ubuntu RAM disk if available
+    temp_path = replace(temp_path, r".*/" => "/dev/shm/")
+  elseif isdir("/Volumes/RAMDisk")
+    temp_path = replace(temp_path, r".*/" => "/Volumes/RAMDisk/")
+  end
   # wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
   wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
 
