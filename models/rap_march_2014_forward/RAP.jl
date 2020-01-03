@@ -109,7 +109,7 @@ function feature_engineered_forecasts()
     forecasts();
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
-    feature_interaction_terms = []
+    new_features_pre = []
   )
 end
 
