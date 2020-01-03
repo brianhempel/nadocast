@@ -53,6 +53,49 @@ function forecasts()
   end
 end
 
+function example_forecast()
+  forecasts()[1]
+end
+
+function grid()
+  example_forecast().grid
+end
+
+# get_layer = FeatureEngineeringShared.get_layer
+#
+# sbcape_key      = "CAPE:surface:hour fcst:wt ens mean"
+# sbcin_key       = "CIN:surface:hour fcst:wt ens mean"
+# helicity3km_key = "HLCY:3000-0 m above ground:hour fcst:wt ens mean"
+#
+# function compute_0_500mb_BWD(inventory, data)
+#   diff_u = get_layer(data, inventory, "UGRD:500 mb:hour fcst:wt ens mean") .- get_layer(data, inventory, "UGRD:10 m above ground:hour fcst:wt ens mean")
+#   diff_v = get_layer(data, inventory, "VGRD:500 mb:hour fcst:wt ens mean") .- get_layer(data, inventory, "VGRD:10 m above ground:hour fcst:wt ens mean")
+#   sqrt.(diff_u.^2 .+ diff_v.^2)
+# end
+#
+# interaction_terms = [
+#   # 0-3km EHI, roughly
+#   (    "SBCAPE*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* get_layer(data, inventory, helicity3km_key)),
+#   ("sqrtSBCAPE*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* get_layer(data, inventory, helicity3km_key)),
+#
+#   # Terms following Togstad et al 2011 "Conditional Probability Estimation for Significant Tornadoes Based on Rapid Update Cycle (RUC) Profiles"
+#   (    "SBCAPE*BWD0-500mb", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_500mb_BWD(inventory, data)),
+#   ("sqrtSBCAPE*BWD0-500mb", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_500mb_BWD(inventory, data)),
+#
+#   # Pseudo-STP terms
+#   (    "SBCAPE*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+#   ("sqrtSBCAPE*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+#
+#   (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+#   ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+#
+#   (    "SBCAPE*BWD0-500mb*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+#   ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+#
+#   (    "SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+#   ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+# ]
+
 function feature_engineered_forecasts()
   FeatureEngineeringShared.feature_engineered_forecasts(
     forecasts();
@@ -62,12 +105,8 @@ function feature_engineered_forecasts()
   )
 end
 
-function example_forecast()
-  forecasts()[1]
-end
-
-function grid()
-  example_forecast().grid
+function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(feature_engineered_forecasts())
 end
 
 # function feature_i_to_name(feature_i)
