@@ -177,7 +177,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       data_masked      = data_in_conus[mask, :]
       X_transformed    = X_transformer(data_masked)
 
-      elapsed1 = (time1 - Base.time_ns()) / 1.0e9
+      elapsed1 = (Base.time_ns() - time1) / 1.0e9
       print(elapsed1)
 
       # print("$(count(mask) / length(mask))")
