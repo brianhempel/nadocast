@@ -258,17 +258,19 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
 
   thread_wgrib2_out_path(thread_id) = temp_path * "_thread_$(thread_id)"
 
-  Threads.@threads for layer_i = 1:layer_count
+  Threads.@threads for layer_is in Iterators.partition(1:layer_count, Threads.nthreads())
     out_path = thread_wgrib2_out_path(Threads.threadid())
 
     wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path`, "r+")
 
     # print("asking for layers...")
-    # Tell wgrib2 which layer we want.
+    # Tell wgrib2 which layers we want.
 
-    layer_to_fetch = inventory[layer_i]
-    # Only need first two columns (message.submessage and position) plus newline
-    println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
+    for layer_i in layer_is
+      layer_to_fetch = inventory[layer_i]
+      # Only need first two columns (message.submessage and position) plus newline
+      println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
+    end
 
     close(wgrib2.in)
     # print("waiting...")
@@ -277,40 +279,45 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     # print("reading layer")
     wgrib2_out = open(out_path)
 
-    # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
+    for layer_i in layer_is
 
-    this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
-    if this_layer_value_count != expected_layer_raw_value_count
-      error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
+      layer_to_fetch = inventory[layer_i]
+
+      # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
+
+      this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
+      if this_layer_value_count != expected_layer_raw_value_count
+        error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
+      end
+
+      # print("read and crop...")
+      layer_values = reinterpret(Float32, read(wgrib2_out, expected_layer_raw_value_count*4))[crop_mask]
+
+      # print("undefs to 0...")
+      # Set undefineds to 0 instead of 9.999f20
+      layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
+
+      if downsample == 1
+        out[:,layer_i] = layer_values
+      else
+        # print("downsampling...")
+        layer_values_2d = reshape(layer_values, (crop_width, crop_height))
+
+        _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, layer_i, out)
+      end
+
+      this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
+      if this_layer_value_count != expected_layer_raw_value_count
+        error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
+      end
+
+      # if desc == "cloud base" || desc == "cloud top" || abbrev == "RETOP"
+      #   # Handle undefined
+      #   out = map((v -> (v > 25000.0f0 || v < -1000.0f0) ? 25000.0f0 : v), out)
+      # end
+
+      # print(".")
     end
-
-    # print("read and crop...")
-    layer_values = reinterpret(Float32, read(wgrib2_out, expected_layer_raw_value_count*4))[crop_mask]
-
-    # print("undefs to 0...")
-    # Set undefineds to 0 instead of 9.999f20
-    layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
-
-    if downsample == 1
-      out[:,layer_i] = layer_values
-    else
-      # print("downsampling...")
-      layer_values_2d = reshape(layer_values, (crop_width, crop_height))
-
-      _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, layer_i, out)
-    end
-
-    this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
-    if this_layer_value_count != expected_layer_raw_value_count
-      error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
-    end
-
-    # if desc == "cloud base" || desc == "cloud top" || abbrev == "RETOP"
-    #   # Handle undefined
-    #   out = map((v -> (v > 25000.0f0 || v < -1000.0f0) ? 25000.0f0 : v), out)
-    # end
-
-    # print(".")
 
     # Sanity check that incoming stream is empty
     if !eof(wgrib2_out)
