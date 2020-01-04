@@ -292,7 +292,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
 
   Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
 
-    out_path = thread_wgrib2_out_path(Threads.thread_id())
+    out_path = thread_wgrib2_out_path(Threads.threadid())
 
     # print("reading layers")
     wgrib2_out = open(out_path)
