@@ -256,9 +256,17 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # So we can safely random access the file without killing the disk with seeks.
   # So we can run multiple instances of wgrib2 to read the different layers in parallel!
 
+  thread_range(thread_id, count) = begin
+    start = div((thread_id-1) * count, Threads.nthreads()) + 1
+    stop  = div( thread_id    * count, Threads.nthreads())
+    start:stop
+  end
+
+  thread_wgrib2_inv_path(thread_id) = temp_path * "_inventory_to_get_$(thread_id)"
   thread_wgrib2_out_path(thread_id) = temp_path * "_thread_$(thread_id)"
 
-  Threads.@threads for layer_is in collect(Iterators.partition(1:layer_count, Threads.nthreads()))
+  Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
+
     out_path = thread_wgrib2_out_path(Threads.threadid())
 
     wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path`, "r+")
@@ -276,15 +284,9 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     # print("waiting...")
     wait(wgrib2)
     close(wgrib2)
-  end
 
-  for thread_i in 1:Threads.nthreads()
-    out_path = thread_wgrib2_out_path(thread_i)
-    
     # print("reading layers")
     wgrib2_out = open(out_path)
-
-    layer_is = collect(Iterators.partition(1:layer_count, Threads.nthreads()))[thread_i]
 
     for layer_i in layer_is
 
