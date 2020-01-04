@@ -150,6 +150,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   forecast_i = 1
 
+  last_time = time_ns()
+
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     data_in_conus = Array{Float32}(undef, (conus_point_count, size(data, 2)))
 
@@ -199,6 +201,10 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     forecast_i += 1
 
     print(".")
+    time = Base.time_ns()
+    elapsed = (time - last_time) / 1.0e9
+    print(elapsed)
+    last_time = time
   end
 
   Serialization.serialize(save_path("labels.serialized"), labels)
