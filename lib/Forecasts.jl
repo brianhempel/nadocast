@@ -120,7 +120,10 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
 
   forecast = forecasts[i]
 
-  if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
+  if i == 1
+    # Don't trash the disk with mad seeks on the first iteration.
+    run(pipeline(`cat $(forecasts[i].preload_paths)`, devnull))
+  elseif i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
     run(pipeline(`cat $(forecasts[i+1].preload_paths)`, devnull), wait=false)
   end
 
