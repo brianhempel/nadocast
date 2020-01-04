@@ -127,6 +127,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   mkpath(save_dir)
 
   save_path(path) = joinpath(save_dir, path)
+  serialize_async(path, value) = Threads.@spawn Serialization.serialize(path, value)
 
   labels  = Float32[]
   weights = Float32[]
@@ -151,6 +152,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   forecast_i = 1
 
   last_time = time_ns()
+
+  serialization_task = nothing
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     data_in_conus = Array{Float32}(undef, (conus_point_count, size(data, 2)))
@@ -193,7 +196,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     end
 
     data_file_name = Printf.@sprintf "data_%06d.serialized" forecast_i
-    Serialization.serialize(save_path(data_file_name), X_transformed)
+
+    serialization_task = serialize_async(save_path(data_file_name), X_transformed)
 
     append!(labels, forecast_labels)
     append!(weights, forecast_weights)
@@ -206,6 +210,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     print(elapsed)
     last_time = time
   end
+
+  wait(serialization_task) # Synchronize
 
   Serialization.serialize(save_path("labels.serialized"), labels)
   Serialization.serialize(save_path("weights.serialized"), weights)
