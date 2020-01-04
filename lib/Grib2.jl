@@ -258,7 +258,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
 
   thread_wgrib2_out_path(thread_id) = temp_path * "_thread_$(thread_id)"
 
-  Threads.@threads for layer_is in Iterators.partition(1:layer_count, Threads.nthreads())
+  Threads.@threads for layer_is in collect(Iterators.partition(1:layer_count, Threads.nthreads()))
     out_path = thread_wgrib2_out_path(Threads.threadid())
 
     wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path`, "r+")
