@@ -183,7 +183,13 @@ function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid
     is_near
   end
 
-  map(latlon -> is_near_event(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
+  out = Vector{Float32}(undef, length(grid.latlons))
+
+  Threads.@threads for grid_i in 1:length(grid.latlons)
+    out[grid_i] = is_near_event(grid.latlons[grid_i]) ? 1.0f0 : 0.0f0
+  end
+
+  out
 end
 
 # Returns list of (start_latlon, end_latlon) of where the tornadoes were around during the time period.
