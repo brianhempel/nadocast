@@ -210,7 +210,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     append!(weights, forecast_weights)
 
     elapsed = (Base.time_ns() - start_time) / 1.0e9
-    print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.\t$(elapsed / forecast_i)s each.\t~$((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60) hours left.            ")
+    print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.  $(elapsed / forecast_i)s each.  ~$((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60) hours left.            ")
 
     forecast_i += 1
   end
