@@ -143,13 +143,20 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   conus_grid_bitmask = (conus_on_grid .== 1.0f0)
   conus_grid_weights = Float32.(grid.point_weights[conus_grid_bitmask])
 
+  conus_point_count  = count(conus_grid_bitmask)
+
   # Deterministic randomness for X_and_labels_to_inclusion_probabilities, presuming forecasts are given in the same order.
   rng = Random.MersenneTwister(12345)
 
   forecast_i = 1
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-    data_in_conus   = data[conus_grid_bitmask, :]
+    data_in_conus = Array{Float32}(undef, (conus_point_count, size(data, 2)))
+
+    Threads.@threads for feature_i in 1:size(data, 2)
+      data_in_conus[:, feature_i] = @view data[conus_grid_bitmask, feature_i]
+    end
+
     forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
 
     if X_and_labels_to_inclusion_probabilities != nothing
