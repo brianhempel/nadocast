@@ -46,7 +46,7 @@ end
 
 Base.showerror(io::IO, e::FieldMissing) = print(io, e.forecast_str, " is missing ", e.missing_key, ". Inventory: ", join(map(inventory_line_key, e.inventory), "\t"))
 
-# c.f. extract_forecast_hour in find_common_layers.rg
+# c.f. extract_forecast_hour in find_common_layers.rb
 function forecast_hour(line :: InventoryLine) :: Int64
   try
     if line.forecast_hour_str == "anl"

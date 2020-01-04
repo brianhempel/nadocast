@@ -9,7 +9,7 @@ import Inventories
 
 # Copy time info, but set based_on and grid/inventory/data
 function revised_forecast(forecast, grid, get_inventory, get_data)
-  Forecasts.Forecast(forecast.model_name, forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour, forecast.forecast_hour, [forecast], grid, get_inventory, get_data)
+  Forecasts.Forecast(forecast.model_name, forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour, forecast.forecast_hour, [forecast], grid, get_inventory, get_data, forecast._preload)
 end
 
 # Create a bunch of Forecast structs whose inventory and data
@@ -49,7 +49,9 @@ function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_for
 
     model_names = map(forecast -> forecast.model_name, forecasts_array)
 
-    Forecasts.Forecast(join(model_names, "|"), canonical_forecast.run_year, canonical_forecast.run_month, canonical_forecast.run_day, canonical_forecast.run_hour, canonical_forecast.forecast_hour, forecasts_array, canonical_forecast.grid, get_inventory, get_data)
+    preload() = map(Forecasts.preload, forecasts_array)
+
+    Forecasts.Forecast(join(model_names, "|"), canonical_forecast.run_year, canonical_forecast.run_month, canonical_forecast.run_day, canonical_forecast.run_hour, canonical_forecast.forecast_hour, forecasts_array, canonical_forecast.grid, get_inventory, get_data, preload)
   end
 end
 

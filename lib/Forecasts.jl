@@ -21,8 +21,9 @@ struct Forecast
   forecast_hour  :: Int64
   based_on       :: Vector{Forecast} # If createded by a forecast combinator, point to original(s).
   grid           :: Grids.Grid
-  _get_inventory # :: Function((Forecast,), Vector{Inventories.InventoryLine}) # For lazy loading.
-  _get_data      # :: Function((Forecast,), Array{Float32,2})                  # For lazy loading.
+  _get_inventory # :: Function((), Vector{Inventories.InventoryLine}) # For lazy loading.
+  _get_data      # :: Function((), Array{Float32,2})                  # For lazy loading.
+  _preload       # :: Union{Nothing, Function((), ())}                # For warming up disk caches etc. Should not do any required work. Called while prior forecast is loading. Should be written synchronously. Code that calls it will be async.
 end
 
 function time_in_seconds_since_epoch_utc(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64, forecast_hour = 0) :: Int64
@@ -88,6 +89,14 @@ function data(forecast :: Forecast) :: Array{Float32,2}
   forecast._get_data()
 end
 
+# Optional to call this while prior forecast is loading.
+# For warming up disk caches etc.
+function preload(forecast :: Forecast)
+  if !isnothing(forecast._preload)
+    forecast._preload()
+  end
+end
+
 
 # # Note raw data is W -> E, S -> N.
 # #
@@ -118,6 +127,10 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
   end
 
   forecast = forecasts[i]
+
+  if i+1 <= length(forecasts)
+    @async Forecasts.preload(forecasts[i+1])
+  end
 
   data =
     try

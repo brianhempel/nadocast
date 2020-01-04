@@ -210,7 +210,9 @@ function reload_forecasts()
       Grib2.read_layers_data_raw(hrrr_path, get_inventory(), crop_downsample_grid = grid)
     end
 
-    forecast = Forecasts.Forecast("HRRR", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data)
+    preload() = run(pipeline(`cat $hrrr_path`, devnull))
+
+    forecast = Forecasts.Forecast("HRRR", run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data, preload)
 
     push!(_forecasts, forecast)
   end
