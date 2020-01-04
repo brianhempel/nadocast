@@ -42,7 +42,34 @@ function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_for
     forecasts_array = collect(forecasts_tuple)
 
     get_inventory() = vcat(Forecasts.inventory.(forecasts_array)...)
-    get_data()      = hcat(Forecasts.data.(forecasts_array)...)
+    get_data()      = begin
+      out_datas = map(Forecasts.data, forecasts_array) # Vector of 2D arrays
+
+      # Threaded hcat
+
+      sizes = map(size, out_datas)
+
+      point_count = first(sizes[1])
+
+      for out_data in out_datas
+        @assert size(out_data, 1) == point_count
+      end
+
+      aggregate_sizes = cumsum(map(last, sizes))
+      feature_count   = last(aggregate_sizes)
+
+      out = Array{Float32}(undef, (point_count, feature_count))
+
+      Threads.@threads for feature_i in 1:feature_count
+        out_data_i         = findfirst(n -> feature_i <= n, aggregate_sizes)
+        out_data           = out_datas[out_data_i]
+        out_data_feature_i = out_data_i == 1 ? feature_i : feature_i - aggregate_sizes[out_data_i - 1]
+
+        out[:, feature_i] = @view out_data[:, out_data_feature_i]
+      end
+
+      out
+    end
 
     canonical_forecast =
       isnothing(forecasts_tuple_to_canonical_forecast) ? last(sort(forecasts_array, by=Forecasts.run_time_in_seconds_since_epoch_utc)) : forecasts_tuple_to_canonical_forecast(forecasts_tuple)
@@ -87,8 +114,8 @@ function resample_forecasts(old_forecasts, get_layer_resampler, new_grid)
     grid_point_count = new_grid.height * new_grid.width
     resampled = Array{Float32}(undef, (grid_point_count, feature_count))
 
-    for feature_i in 1:feature_count
-      resampled[:, feature_i] = layer_resampler(old_data[:, feature_i])
+    Threads.@threads for feature_i in 1:feature_count
+      resampled[:, feature_i] = layer_resampler(@view old_data[:, feature_i])
     end
 
     resampled
