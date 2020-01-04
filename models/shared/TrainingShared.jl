@@ -161,7 +161,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   forecast_i = 1
 
-  last_time = time_ns()
+  start_time = time_ns()
 
   serialization_task = nothing
 
@@ -209,13 +209,10 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     append!(labels, forecast_labels)
     append!(weights, forecast_weights)
 
-    forecast_i += 1
+    elapsed = (Base.time_ns() - start_time) / 1.0e9
+    print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.\t$(elapsed / forecast_i)s each.\t~$((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60) hours left.            ")
 
-    print(".")
-    time = Base.time_ns()
-    elapsed = (time - last_time) / 1.0e9
-    print(elapsed)
-    last_time = time
+    forecast_i += 1
   end
 
   wait(serialization_task) # Synchronize
@@ -234,6 +231,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       print(Forecasts.time_title(forecast) * ": $loss ")
     end
   end
+
+  println("")
 
   ()
 end
