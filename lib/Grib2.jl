@@ -270,7 +270,10 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
 
     out_path = thread_wgrib2_out_path(thread_i)
 
-    wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path`, "r+")
+    # Okay it turns out wgrib2 is already multithreaded in this case.
+    # But outputing separate files will allow us to downsample in threads.
+
+    wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path -ncpu 1`, "r+")
 
     # print("asking for layers...")
     # Tell wgrib2 which layers we want.
