@@ -265,9 +265,10 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   thread_wgrib2_inv_path(thread_id) = temp_path * "_inventory_to_get_$(thread_id)"
   thread_wgrib2_out_path(thread_id) = temp_path * "_thread_$(thread_id)"
 
-  Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
+  wgrib2s = map(1:Threads.nthreads()) do thread_i
+    layer_is = thread_range(thread_i, layer_count)
 
-    out_path = thread_wgrib2_out_path(Threads.threadid())
+    out_path = thread_wgrib2_out_path(thread_i)
 
     wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path`, "r+")
 
@@ -281,9 +282,17 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     end
 
     close(wgrib2.in)
-    # print("waiting...")
-    wait(wgrib2)
-    close(wgrib2)
+
+    wgrib2
+  end
+
+  # I don't think wait is thread-safe. It's lock-tastic. Hence the above isn't threaded (though it doesn't really need to be).
+  # print("waiting...")
+  map(wait, wgrib2s)
+
+  Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
+
+    out_path = thread_wgrib2_out_path(Threads.thread_id())
 
     # print("reading layers")
     wgrib2_out = open(out_path)
