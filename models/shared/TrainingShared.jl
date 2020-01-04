@@ -122,6 +122,16 @@ function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = 
   read_data_labels_weights_from_disk(save_dir)
 end
 
+function mask_rows_threaded(data, mask; final_row_count=count(mask))
+  out = Array{Float32}(undef, (final_row_count, size(data, 2)))
+
+  Threads.@threads for col_i in 1:size(data, 2)
+    out[:, col_i] = @view data[mask, col_i]
+  end
+
+  out
+end
+
 # We can keep weights and labels in memory at least. It's the features that really kill us.
 function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
   mkpath(save_dir)
@@ -156,16 +166,11 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   serialization_task = nothing
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-    data_in_conus = Array{Float32}(undef, (conus_point_count, size(data, 2)))
-
-    Threads.@threads for feature_i in 1:size(data, 2)
-      data_in_conus[:, feature_i] = @view data[conus_grid_bitmask, feature_i]
-    end
+    data_in_conus = mask_rows_threaded(data, conus_grid_bitmask; final_row_count=conus_point_count)
 
     forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
 
     if X_and_labels_to_inclusion_probabilities != nothing
-
       probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels))
       probabilities = clamp.(probabilities, 0f0, 1f0)
       mask          = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
@@ -173,12 +178,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
       forecast_weights = conus_grid_weights[mask] ./ probabilities
       forecast_labels  = forecast_labels[mask]
-
-      time1 = Base.time_ns()
-      data_masked      = data_in_conus[mask, :]
-      elapsed1 = (Base.time_ns() - time1) / 1.0e9
-      print(elapsed1)
-
+      data_masked      = mask_rows_threaded(data_in_conus, mask) # Was taking 2.3s unthreaded for 15000 feature HRRR forecasts. No data locality at all.
       X_transformed    = X_transformer(data_masked)
 
       # print("$(count(mask) / length(mask))")
@@ -214,7 +214,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     print(".")
     time = Base.time_ns()
     elapsed = (time - last_time) / 1.0e9
-    # print(elapsed)
+    print(elapsed)
     last_time = time
   end
 
