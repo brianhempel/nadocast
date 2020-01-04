@@ -275,9 +275,16 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     close(wgrib2.in)
     # print("waiting...")
     wait(wgrib2)
+    close(wgrib2)
+  end
 
-    # print("reading layer")
+  for thread_i in 1:Threads.nthreads()
+    out_path = thread_wgrib2_out_path(thread_i)
+    
+    # print("reading layers")
     wgrib2_out = open(out_path)
+
+    layer_is = collect(Iterators.partition(1:layer_count, Threads.nthreads()))[thread_i]
 
     for layer_i in layer_is
 
