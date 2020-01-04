@@ -165,6 +165,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
 
     if X_and_labels_to_inclusion_probabilities != nothing
+      time1 = Base.time_ns()
+
       probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels))
       probabilities = clamp.(probabilities, 0f0, 1f0)
       mask          = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
@@ -174,6 +176,9 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       forecast_labels  = forecast_labels[mask]
       data_masked      = data_in_conus[mask, :]
       X_transformed    = X_transformer(data_masked)
+
+      elapsed1 = (time1 - Base.time_ns()) / 1.0e9
+      print(elapsed1)
 
       # print("$(count(mask) / length(mask))")
     else
@@ -208,7 +213,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     print(".")
     time = Base.time_ns()
     elapsed = (time - last_time) / 1.0e9
-    print(elapsed)
+    # print(elapsed)
     last_time = time
   end
 
