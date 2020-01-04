@@ -112,7 +112,9 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_
 
     out = Array{Float32}(undef, (point_count, hours_feature_count + length(new_features_post)))
 
-    out[:, 1:(3*single_hour_feature_count)] = base_data
+    Threads.@threads for feature_i in 1:(3*single_hour_feature_count)
+      out[:, feature_i] = @view base_data[:, feature_i]
+    end
 
     prior_hour_data    = @view out[:, (0*single_hour_feature_count + 1):(1*single_hour_feature_count)]
     forecast_hour_data = @view out[:, (1*single_hour_feature_count + 1):(2*single_hour_feature_count)]
