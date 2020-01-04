@@ -197,6 +197,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
     data_file_name = Printf.@sprintf "data_%06d.serialized" forecast_i
 
+    !isnothing(serialization_task) && wait(serialization_task) # Make sure we don't get ahead of disk writes.
     serialization_task = serialize_async(save_path(data_file_name), X_transformed)
 
     append!(labels, forecast_labels)
