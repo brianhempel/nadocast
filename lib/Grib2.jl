@@ -235,101 +235,99 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   elseif isdir("/Volumes/RAMDisk")
     temp_path = replace(temp_path, r".*/" => "/Volumes/RAMDisk/")
   end
-  # wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
-  wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $temp_path`, "r+")
 
-  # print("asking for layers...")
   layer_count = length(inventory)
 
-  # Tell wgrib2 which layers we want.
-  for layer_i = 1:layer_count
+  # Establish the number of expected values per layer and the output array.
+
+  # "1:0:npts=1905141\n"
+  expected_layer_raw_value_count = parse(Int64, split(read(`wgrib2 $grib2_path -npts -end`, String), "=")[2])
+
+  if isnothing(crop_downsample_grid)
+    crop_downsampled_value_count = expected_layer_raw_value_count
+  elseif expected_layer_raw_value_count != raw_width*raw_height
+    error("$grib2_path has $expected_layer_raw_value_count values per layer but the crop_downsample_grid expects $(raw_width*raw_height) original values per layer.")
+  end
+
+  out = zeros(Float32, (crop_downsampled_value_count,layer_count))
+
+  # As of Julia 1.3, I/O is thread-safe.
+  # And the preloader should have put the file into the disk cache.
+  # So we can safely random access the file without killing the disk with seeks.
+  # So we can run multiple instances of wgrib2 to read the different layers in parallel!
+
+  thread_wgrib2_out_path(thread_id) = temp_path * "_thread_$(thread_id)"
+
+  Threads.@threads for layer_i = 1:layer_count
+    out_path = thread_wgrib2_out_path(Threads.thread_id())
+
+    wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path`, "r+")
+
+    # print("asking for layers...")
+    # Tell wgrib2 which layer we want.
+
     layer_to_fetch = inventory[layer_i]
     # Only need first two columns (message.submessage and position) plus newline
     println(wgrib2, layer_to_fetch.message_dot_submessage * ":" * layer_to_fetch.position_str)
-  end
-  close(wgrib2.in)
-  # print("waiting...")
-  wait(wgrib2)
 
-  # print("reading layers")
-  wgrib2_out = open(temp_path)
-  output_values_initialized = false
+    close(wgrib2.in)
+    # print("waiting...")
+    wait(wgrib2)
 
-  layer_value_count = UInt32(0)
-  values            = Array{Float32,2}[]
+    # print("reading layer")
+    wgrib2_out = open(out_path)
 
-  # Read out the data in those layers.
-  # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
-  for layer_i = 1:layer_count
-    layer_to_fetch = inventory[layer_i]
+    # Each layer is prefixed and postfixed by a 32bit integer indicating the byte size of the layer's data.
 
-    if !output_values_initialized
-      layer_value_count = div(read(wgrib2_out, UInt32), 4)
-
-      if isnothing(crop_downsample_grid)
-        crop_downsampled_value_count = layer_value_count
-      end
-
-      values = zeros(Float32, (crop_downsampled_value_count,layer_count))
-      output_values_initialized = true
-    else
-      this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
-      if this_layer_value_count != layer_value_count
-        error("value count mismatch, expected $layer_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
-      end
-    end
-
-    if raw_width != -1 && layer_value_count != raw_width*raw_height
-      error("Layer $(Inventories.specific_inventory_line_key(layer_to_fetch)) of $grib2_path had $layer_value_count values but expected $(raw_width*raw_height) values.")
+    this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
+    if this_layer_value_count != expected_layer_raw_value_count
+      error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
     end
 
     # print("read and crop...")
-    layer_values = reinterpret(Float32, read(wgrib2_out, layer_value_count*4))[crop_mask]
+    layer_values = reinterpret(Float32, read(wgrib2_out, expected_layer_raw_value_count*4))[crop_mask]
 
     # print("undefs to 0...")
     # Set undefineds to 0 instead of 9.999f20
     layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
 
     if downsample == 1
-      values[:,layer_i] = layer_values
+      out[:,layer_i] = layer_values
     else
       # print("downsampling...")
       layer_values_2d = reshape(layer_values, (crop_width, crop_height))
 
-      _do_downsample(downsample, crop_height, crop_width, layer_values_2d, layer_i, values)
+      _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, layer_i, out)
     end
 
     this_layer_value_count = div(read(wgrib2_out, UInt32), 4)
-    if this_layer_value_count != layer_value_count
-      error("value count mismatch, expected $layer_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
+    if this_layer_value_count != expected_layer_raw_value_count
+      error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
     end
 
     # if desc == "cloud base" || desc == "cloud top" || abbrev == "RETOP"
     #   # Handle undefined
-    #   values = map((v -> (v > 25000.0f0 || v < -1000.0f0) ? 25000.0f0 : v), values)
+    #   out = map((v -> (v > 25000.0f0 || v < -1000.0f0) ? 25000.0f0 : v), out)
     # end
 
     # print(".")
+
+    # Sanity check that incoming stream is empty
+    if !eof(wgrib2_out)
+      error("wgrib2 sending more data than expected!")
+    end
+    close(wgrib2_out)
+
+    # print("removing temp file...")
+    run(`rm $out_path`)
   end
-
-  # Sanity check that incoming stream is empty
-  if !eof(wgrib2_out)
-    error("wgrib2 sending more data than expected!")
-  end
-  close(wgrib2_out)
-
-  # print("removing temp file...")
-  run(`rm $temp_path`)
-
-  out = values
-  # end
 
   # println("done.")
   out
 end
 
-# Downsamples the given layer and places the result in the approprate location in values.
-function _do_downsample(downsample, crop_height, crop_width, layer_values_2d, layer_i, values)
+# Mutates out. Downsamples the given layer and places the result in the approprate location in out.
+function _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, layer_i, out)
   downsample_y_range = div(downsample+1,2):downsample:crop_height # 1:1:crop_height or 1:2:crop_height or 2:3:crop_height or 2:4:crop_height
   downsample_x_range = div(downsample+1,2):downsample:crop_width  # 1:1:crop_width  or 1:2:crop_width  or 2:3:crop_width  or 2:4:crop_width
 
@@ -349,7 +347,7 @@ function _do_downsample(downsample, crop_height, crop_width, layer_values_2d, la
         end
       end
 
-      values[downsampled_flat_i, layer_i] = downsampled_value / downsampled_value_count
+      out[downsampled_flat_i, layer_i] = downsampled_value / downsampled_value_count
 
       downsampled_flat_i += 1
     end

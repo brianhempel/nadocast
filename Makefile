@@ -46,6 +46,21 @@ crontab:
 lib/href_one_field_for_grid.grib2:
 	wgrib2 test_grib2s/href.t00z.conus.mean.f07.grib2 -end -grib lib/href_one_field_for_grid.grib2
 
+evaluate:
+	# Acquire all needed NWS forecasts for Saturday
+	# Predict for Saturdays
+	# Acquire and rasterize SPC Outlooks for Saturday
+	# Calculate SPC regions' POD (on Saturdays)
+	# Set Nadocast probability thresholds to match SPC regions' POD
+	# When happy with the models, then predict and eval on Sunday.
+
+evaluation/roc:
+
+evaluation/reliability_diagram:
+
+evaluation/performance_diagram:
+
+
 setup:
 	# sudo dpkg-reconfigure tzdata # Choose "Other" to get UTC
 	#
@@ -82,8 +97,8 @@ setup:
 	# wgrib2 -config
 	#
 	# cd ~
-	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz | tar -xvz
-	# ln -s $(pwd)/julia-1.1.0/bin/julia ~/bin/julia
+	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.3/julia-1.3.1-linux-x86_64.tar.gz | tar -xvz
+	# ln -s $(pwd)/julia-1.3.1/bin/julia ~/bin/julia
 	#
 	# cd ~/nadocast
 	# git pull --rebase
