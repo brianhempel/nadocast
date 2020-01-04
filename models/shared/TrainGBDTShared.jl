@@ -117,7 +117,11 @@ function train_with_coordinate_descent_hyperparameter_search(
 
   println("Preparing bin splits by sampling $bin_split_forecast_sample_count training tornado hour forecasts")
 
-  (bin_sample_X, bin_sample_y, _) = TrainingShared.get_data_labels_weights(Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count))
+  (bin_sample_X, bin_sample_y, _) =
+    TrainingShared.get_data_labels_weights(
+      Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
+      X_and_labels_to_inclusion_probabilities = (X, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels))
+    )
   if balance_labels_when_computing_bin_splits
     positive_indices = findall(bin_sample_y .>  0.5f0)
     negative_indices = findall(bin_sample_y .<= 0.5f0)
