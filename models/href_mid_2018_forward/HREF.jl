@@ -9,6 +9,7 @@ import Grids
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import SREFHREFShared
 import FeatureEngineeringShared
+import ThreeHourWindowForecasts
 
 # Techincally, the HREF is on grid 227: http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID227
 # Natively 1473x1025 (5km)
@@ -59,13 +60,66 @@ function forecasts()
   end
 end
 
+get_layer = FeatureEngineeringShared.get_layer
+
+sbcape_key     = "CAPE:surface:hour fcst:wt ens mean"
+mlcape_key     = "CAPE:90-0 mb above ground:hour fcst:wt ens mean"
+# mulayercape_key = "CAPE:180-0 mb above ground:hour fcst:wt ens mean"
+sbcin_key      = "CIN:surface:hour fcst:wt ens mean"
+mlcin_key      = "CIN:90-0 mb above ground:hour fcst:wt ens mean"
+# mulayercin_key = "CIN:180-0 mb above ground:hour fcst:wt ens mean"
+helicity3km_key = "HLCY:3000-0 m above ground:hour fcst:wt ens mean"
+
+function compute_0_6km_BWD(inventory, data)
+  get_layer(data, inventory, "VWSH:6000-0 m above ground:hour fcst:wt ens mean")
+end
+
+interaction_terms = [
+  # 0-3km EHI, roughly
+  (    "SBCAPE*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* get_layer(data, inventory, helicity3km_key)),
+  (    "MLCAPE*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)  .* get_layer(data, inventory, helicity3km_key)),
+  ("sqrtSBCAPE*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* get_layer(data, inventory, helicity3km_key)),
+  ("sqrtMLCAPE*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key)) .* get_layer(data, inventory, helicity3km_key)),
+
+  # Terms following Togstad et al 2011 "Conditional Probability Estimation for Significant Tornadoes Based on Rapid Update Cycle (RUC) Profiles"
+  (    "SBCAPE*BWD0-6km", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_6km_BWD(inventory, data)),
+  (    "MLCAPE*BWD0-6km", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)  .* compute_0_6km_BWD(inventory, data)),
+  ("sqrtSBCAPE*BWD0-6km", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_6km_BWD(inventory, data)),
+  ("sqrtMLCAPE*BWD0-6km", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key)) .* compute_0_6km_BWD(inventory, data)),
+
+  # Pseudo-STP terms
+  (    "SBCAPE*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  ("sqrtSBCAPE*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  (    "MLCAPE*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)  .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+  ("sqrtMLCAPE*(200+MLCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key)) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+
+  (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  (    "MLCAPE*HLCY3000-0m*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)  .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+  ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  ("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key)) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+
+  (    "SBCAPE*BWD0-6km*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+  (    "MLCAPE*BWD0-6km*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)  .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key)) .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+
+  (    "SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)  .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key)) .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+]
+
 function feature_engineered_forecasts()
   FeatureEngineeringShared.feature_engineered_forecasts(
     forecasts();
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
-    new_features_pre = []
+    new_features_pre = interaction_terms
   )
+end
+
+function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(feature_engineered_forecasts())
 end
 
 function example_forecast()
