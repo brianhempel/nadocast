@@ -68,12 +68,9 @@ function mean_prob_grib2s_to_forecast(
     hcat(mean_data, prob_data)
   end
 
-  preload() = begin
-    run(pipeline(`cat $mean_grib2_path`, devnull))
-    run(pipeline(`cat $prob_grib2_path`, devnull))
-  end
+  preload_paths = [mean_grib2_path, prob_grib2_path]
 
-  Forecasts.Forecast(href_or_sref_str, run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data, preload)
+  Forecasts.Forecast(href_or_sref_str, run_year, run_month, run_day, run_hour, forecast_hour, [], grid, get_inventory, get_data, preload_paths)
 end
 
 

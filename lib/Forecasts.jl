@@ -23,7 +23,7 @@ struct Forecast
   grid           :: Grids.Grid
   _get_inventory # :: Function((), Vector{Inventories.InventoryLine}) # For lazy loading.
   _get_data      # :: Function((), Array{Float32,2})                  # For lazy loading.
-  _preload       # :: Union{Nothing, Function((), ())}                # For warming up disk caches etc. Should not do any required work. Called while prior forecast is loading. Should be written synchronously. Code that calls it will be async.
+  preload_paths  :: Vector{String}                                    # For warming up disk caches etc.
 end
 
 function time_in_seconds_since_epoch_utc(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64, forecast_hour = 0) :: Int64
@@ -89,14 +89,6 @@ function data(forecast :: Forecast) :: Array{Float32,2}
   forecast._get_data()
 end
 
-# Optional to call this while prior forecast is loading.
-# For warming up disk caches etc.
-function preload(forecast :: Forecast)
-  if !isnothing(forecast._preload)
-    forecast._preload()
-  end
-end
-
 
 # # Note raw data is W -> E, S -> N.
 # #
@@ -128,8 +120,8 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
 
   forecast = forecasts[i]
 
-  if i+1 <= length(forecasts)
-    @async Forecasts.preload(forecasts[i+1])
+  if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
+    run(pipeline(`cat $(forecasts[i+1].preload_paths)`, devnull), wait=false)
   end
 
   data =
