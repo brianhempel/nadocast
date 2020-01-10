@@ -6,6 +6,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Cache
 import Forecasts
 import ForecastCombinators
+import GeoUtils
 import Grids
 import Inventories
 
@@ -494,6 +495,32 @@ function make_interaction_feature(feature_keys :: Vector{String})
   (feature_name, compute_feature_function)
 end
 
+
+# Mutates out. Use a view.
+function compute_divergence!(grid, u_data, v_data, out)
+  @assert length(grid.point_widths_miles) == length(u_data)
+  @assert length(u_data) == length(v_data)
+  @assert length(v_data) == length(out)
+
+  width = grid.width
+  Threads.@threads for j in 2:(grid.height - 1)
+    for i in 2:(width - 1)
+      flat_i = width*(j-1) + i
+
+      dx = (grid.point_widths_miles[flat_i]  + 0.5*grid.point_widths_miles[flat_i - 1]      + 0.5*grid.point_widths_miles[flat_i + 1])      * GeoUtils.METERS_PER_MILE
+      dy = (grid.point_heights_miles[flat_i] + 0.5*grid.point_heights_miles[flat_i - width] + 0.5*grid.point_heights_miles[flat_i + width]) * GeoUtils.METERS_PER_MILE
+
+      divergence =
+        (u_data[flat_i + 1]     - u_data[flat_i - 1])     / Float32(dx) +
+        (v_data[flat_i + width] - v_data[flat_i - width]) / Float32(dy)
+
+      out[flat_i] = divergence * 100_000
+    end
+  end
+
+  ()
+end
+
 function make_data(
       grid                      :: Grids.Grid,
       inventory                 :: Vector{Inventories.InventoryLine},
@@ -631,7 +658,7 @@ function make_data(
 
 
 
-  # Make 0-5500km(ish) mean wind.
+  # Make 0-5500m(ish) mean wind.
 
   mean_wind_lower_half_atmosphere_us = Array{Float32}(undef, grid_point_count)
   mean_wind_lower_half_atmosphere_vs = Array{Float32}(undef, grid_point_count)

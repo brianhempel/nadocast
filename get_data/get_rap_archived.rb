@@ -10,7 +10,7 @@ base_url = ARGV[0] || raise("Usage: ruby get_rap_archived.rb https://www1.ncdc.n
 THREAD_COUNT = Integer(ARGV[1] || "6")
 BASE_DIRECTORY = ARGV[2] || "/Volumes/RAP_1/rap"
 MIN_FILE_BYTES = 10_000_000
-FORECAST_HOURS = [1,2,5,6,11,12,17,18]
+FORECAST_HOURS = [1,2,3,5,6,7,11,12,13,16,17,18]
 FILE_NAME_REGEXP = /\Arap_130_\w+_(#{FORECAST_HOURS.map {|i| "%03d" % i}.join("|")}).grb2/
 
 html = `curl -s #{base_url}`

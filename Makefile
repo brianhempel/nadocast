@@ -78,8 +78,9 @@ setup:
 	# sudo apt install git
 	# ssh-keygen
 	# cat ~/.ssh/id_rsa.pub (upload to https://github.com/settings/keys)
-	# git clone git@github.com:brianhempel/nadocast.git
-	# cd nadocast
+	# git clone git@github.com:brianhempel/nadocast.git nadocast_dev
+	# git clone git@github.com:brianhempel/nadocast.git nadocast_operational
+	# cd nadocast_dev
 	# sudo apt install curl
 	# crontab crontab.cron
 	#
@@ -93,6 +94,7 @@ setup:
 	# ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
 	# echo 'shell -$SHELL' >> ~/.screenrc
 	# echo 'export PATH=$HOME/bin:$PATH' >> ~/.bash_profile
+	# echo 'PS1="\e[1;30m\h\e[m \e[1;36m\W\e[m\e[0;33m\$(__git_ps1) \$\e[m "' >> ~/.bash_profile
 	# source ~/.bash_profile
 	# wgrib2 -config
 	#
@@ -100,7 +102,7 @@ setup:
 	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.3/julia-1.3.1-linux-x86_64.tar.gz | tar -xvz
 	# ln -s $(pwd)/julia-1.3.1/bin/julia ~/bin/julia
 	#
-	# cd ~/nadocast
+	# cd ~/nadocast_dev
 	# git pull --rebase
 	# echo 'import Pkg; Pkg.instantiate()' | julia --project=.
 	# echo 'export CORE_COUNT=12' >> ~/.bash_profile
@@ -109,7 +111,7 @@ setup:
 	# cd models/sref_mid_2018_forward/
 	# make train_gradient_boosted_decision_trees
 
-	# cd ~/nadocast/models/href_mid_2018_forward/
+	# cd ~/nadocast_dev/models/href_mid_2018_forward/
 	# make train_gradient_boosted_decision_trees
 
 	# cd ~
@@ -136,7 +138,7 @@ setup:
 	# sudo apt install ffmpeg
 
 	# make forecast
-	# scp -r nadocaster:~/nadocast/forecasts remote_forecasts
+	# scp -r nadocaster:~/nadocast_dev/forecasts remote_forecasts
 	# make forecast_and_publish
 
 # Security updates

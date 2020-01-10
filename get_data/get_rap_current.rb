@@ -20,12 +20,13 @@ FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
 MIN_FILE_BYTES = 10_000_000
 BAD_FILES      = %w[]
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_NOMADS ? "2" : "4"))
+FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes")
 
 
-loop { break if Dir.exists?("/Volumes/RAP_1/"); puts "Waiting for RAP_1 to mount...";  sleep 4 }
-loop { break if Dir.exists?("/Volumes/RAP_2/"); puts "Waiting for RAP_2 to mount..."; sleep 4 }
-loop { break if Dir.exists?("/Volumes/RAP_3/"); puts "Waiting for RAP_3 to mount...";  sleep 4 }
-loop { break if Dir.exists?("/Volumes/RAP_4/"); puts "Waiting for RAP_4 to mount..."; sleep 4 }
+loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_1/"); puts "Waiting for RAP_1 to mount...";  sleep 4 }
+loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_2/"); puts "Waiting for RAP_2 to mount..."; sleep 4 }
+loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_3/"); puts "Waiting for RAP_3 to mount...";  sleep 4 }
+loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_4/"); puts "Waiting for RAP_4 to mount..."; sleep 4 }
 
 class RAPForecast < Forecast
   def file_name
@@ -46,15 +47,15 @@ class RAPForecast < Forecast
 
   def base_directory
     if run_date.year <= 2018
-      "/Volumes/RAP_1/rap" # and backup copy on RAP_2
+      "#{FORECASTS_ROOT}/RAP_1/rap" # and backup copy on RAP_2
     else
-      "/Volumes/RAP_3/rap" # and backup copy on RAP_4
+      "#{FORECASTS_ROOT}/RAP_3/rap" # and backup copy on RAP_4
     end
   end
 
   # Backup location
   def alt_directory
-    directory.sub(/^\/Volumes\/RAP_1\//, "/Volumes/RAP_2/").sub(/^\/Volumes\/RAP_3\//, "/Volumes/RAP_4/")
+    directory.sub("/RAP_1/", "/RAP_2/").sub("/RAP_3/", "/RAP_4/")
   end
 
   def alt_path

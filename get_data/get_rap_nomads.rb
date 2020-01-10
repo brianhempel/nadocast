@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "date"
+require File.expand_path("../forecast.rb", __FILE__)
 
 # Nomads has 1 week ago to 1 year ago of RAP data.
 
@@ -22,11 +23,13 @@ BAD_FILES      = %w[
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (INV_OR_GRIB == "inv" ? "8" : "4"))
 
 def alt_location(directory)
-  directory.sub(/^\/Volumes\/RAP_1\//, "/Volumes/RAP_2/")
+  directory.sub(/^\/Volumes\/RAP_1\//, "/Volumes/RAP_2/").sub(/^\/Volumes\/RAP_3\//, "/Volumes/RAP_4/")
 end
 
 loop { break if Dir.exists?("/Volumes/RAP_1/"); puts "Waiting for RAP_1 to mount...";  sleep 4 }
 loop { break if Dir.exists?("/Volumes/RAP_2/"); puts "Waiting for RAP_2 to mount..."; sleep 4 }
+loop { break if Dir.exists?("/Volumes/RAP_3/"); puts "Waiting for RAP_3 to mount...";  sleep 4 }
+loop { break if Dir.exists?("/Volumes/RAP_4/"); puts "Waiting for RAP_4 to mount..."; sleep 4 }
 
 forecasts_to_get = DATES.product(HOURS_OF_DAY, FORECAST_HOURS) + DATES.product(FORECAST_HOURS & [21,9], EXTRA_FORECAST_HOURS_TO_COVER_0Z_12Z_DELAYS)
 forecasts_to_get.sort!

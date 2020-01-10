@@ -14,13 +14,31 @@ forecast_hour_range = 2:38 # 1:87 # 4:39             # SREF files come out 3-4 h
 model_prefix = "gbdt_3hr_window_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
 
 
+# validation loss via prior predictor: 0.0019582207
+# 2019-05-24 21Z +33: 115.09951 (2019-05-26 0600)
+# 2019-05-25 09Z +21: 113.697235 (2019-05-26 0600)
+# 2019-05-25 03Z +27: 113.535645 (2019-05-26 0600)
+# 2019-05-25 15Z +15: 97.07941 (2019-05-26 0600)
+# 2019-05-24 15Z +37: 94.32985 (2019-05-26 0400)
+# 2019-05-25 09Z +19: 93.44213 (2019-05-26 0400)
+# 2019-05-24 21Z +31: 92.04001 (2019-05-26 0400)
+# 2019-05-25 21Z +9: 88.49613 (2019-05-26 0600)
+# 2019-05-25 03Z +25: 86.8154 (2019-05-26 0400)
+# 2019-05-26 03Z +3: 76.79073 (2019-05-26 0600)
+
+# Train with tornadoes up to 2019-8-21
+# Training:   10985931 datapoints with 6555 features each = 72,012,777,705 bytes
+# Validation:
+
+
+
 # Annoyingly, because of world age issues, have to do this at the top level.
 prior_predictor = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/gbdt_f1-39_2019-09-17T14.50.32.041/182_trees_loss_0.0016721075.model")
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
-    # SREF.three_hour_window_feature_engineered_forecasts();
-    SREF.three_hour_window_feature_engineered_forecasts_middle_hour_only(); # Debug
+    SREF.three_hour_window_feature_engineered_forecasts();
+    # SREF.three_hour_window_feature_engineered_forecasts_middle_hour_only(); # Debug
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
 

@@ -11,6 +11,7 @@ import Grids
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import FeatureEngineeringShared
+import ThreeHourWindowForecasts
 
 # RAP is on grid 130: http://www.nco.ncep.noaa.gov/pmb/docs/on388/grids/grid130.gif https://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID130
 #
@@ -185,6 +186,12 @@ function feature_engineered_forecasts()
     layer_blocks_to_make = layer_blocks_to_make,
     new_features_pre = interaction_terms
   )
+end
+
+# Don't have 3-hour windows of data from before mid-2018?
+# Have to be content with 2-hour windows or get the old data.
+function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(feature_engineered_forecasts())
 end
 
 # function forecasts_at_forecast_hour(forecast_hour)
