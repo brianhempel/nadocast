@@ -46,6 +46,10 @@ crontab:
 lib/href_one_field_for_grid.grib2:
 	wgrib2 test_grib2s/href.t00z.conus.mean.f07.grib2 -end -grib lib/href_one_field_for_grid.grib2
 
+# Might use this in the future for archiving predictions
+lib/href_one_field_for_grid_cropped_3x_downsampled.grib2: lib/href_one_field_for_grid.grib2
+	wgrib2 lib/href_one_field_for_grid.grib2 -new_grid_winds grid -new_grid lambert:265.000000:25.000000:25.000000:25.000000 234.906000:387:15237.000000 19.858000:226:15237.000000 lib/href_one_field_for_grid_cropped_3x_downsampled.grib2
+
 evaluate:
 	# Acquire all needed NWS forecasts for Saturday
 	# Predict for Saturdays

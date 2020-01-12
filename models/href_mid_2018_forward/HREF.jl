@@ -20,6 +20,22 @@ import ThreeHourWindowForecasts
 # We'll conservatively cut 214 off the W, 99 off the E, 119 off the S, 228 off the N
 crop = ((1+214):(1473 - 99), (1+119):(1025-228))
 
+# Native:
+#
+# 1:0:grid_template=30:winds(grid):
+# 	Lambert Conformal: (1473 x 1025) input WE:SN output WE:SN res 56
+# 	Lat1 12.190000 Lon1 226.541000 LoV 265.000000
+# 	LatD 25.000000 Latin1 25.000000 Latin2 25.000000
+# 	LatSP 0.000000 LonSP 0.000000
+# 	North Pole (1473 x 1025) Dx 5079.000000 m Dy 5079.000000 m mode 56
+#
+# Native: lambert:265.000000:25.000000:25.000000:25.000000 226.541000:1473:5079.000000 12.190000:1025:5079.000000
+# Crop:   lambert:265.000000:25.000000:25.000000:25.000000 234.906000:387:15237.000000 19.858000:226:15237.000000
+#
+# $ wgrib2 href_one_field_for_grid.grib2 -new_grid_winds grid -new_grid lambert:265.000000:25.000000:25.000000:25.000000 234.906000:387:15237.000000 19.858000:226:15237.000000 href_one_field_for_grid_cropped_3x_downsampled.grib2
+# $ wgrib2 href_one_field_for_grid_cropped_3x_downsampled.grib2 -gridout cropped_downsampled.csv
+
+
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
 layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
@@ -49,6 +65,9 @@ vector_wind_layers = [
 ]
 
 downsample = 3 # 3x downsample, roughly 15km grid.
+
+# lambert:$lov:$latin1:$latin2:$latd $lon1:$nx:$dx $lat1:$ny:$dy
+# wgrib2 IN.grib -new_grid `grid_defn.pl output_grid.grb` OUT.grib
 
 _forecasts = []
 
