@@ -694,6 +694,25 @@ function make_data(
       mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:")
       mean_wind_lower_half_atmosphere_vs .+= get_layer("VGRD:$mb mb:hour fcst:")
       total_weight += 1.0f0
+    else if mb == 600
+      # HRRR/HREF don't have 600mb.
+      # And the HRRR/HREF levels (surface, 925mb, 850mb, 700mb, 500mb) are likely too biased towards the lower atmosphere.
+      # Estimate 600mb winds into the mix.
+      if "GRD:700 mb:hour fcst:wt ens mean" in vector_wind_layers
+        # HREF
+        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:700 mb:hour fcst:wt ens mean")
+        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:700 mb:hour fcst:wt ens mean")
+        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean")
+        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean")
+        total_weight += 1.0f0
+      else
+        # HRRR
+        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:700 mb:hour fcst:")
+        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:700 mb:hour fcst:")
+        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:500 mb:hour fcst:")
+        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:500 mb:hour fcst:")
+        total_weight += 1.0f0
+      end
     end
   end
 
