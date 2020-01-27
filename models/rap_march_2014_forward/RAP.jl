@@ -105,8 +105,6 @@ function forecasts()
   end
 end
 
-get_layer = FeatureEngineeringShared.get_layer
-
 # I think https://rapidrefresh.noaa.gov/hrrr/GRIB2Table_hrrrncep_2d.txt explains the CAPE differences
 
 # These term names end up being the same as the HRRR
@@ -124,59 +122,61 @@ mlcin_key             = "CIN:90-0 mb above ground:hour fcst:"
 helicity1km_key       = "HLCY:1000-0 m above ground:hour fcst:"
 helicity3km_key       = "HLCY:3000-0 m above ground:hour fcst:"
 
-function compute_0_6km_BWD(inventory, data)
-  diff_u = get_layer(data, inventory, "VUCSH:6000-0 m above ground:hour fcst:")
-  diff_v = get_layer(data, inventory, "VVCSH:6000-0 m above ground:hour fcst:")
+function compute_0_6km_BWD(get_layer)
+  diff_u = get_layer("VUCSH:6000-0 m above ground:hour fcst:")
+  diff_v = get_layer("VVCSH:6000-0 m above ground:hour fcst:")
   sqrt.(diff_u.^2 .+ diff_v.^2)
 end
 
 # Some early experiments showed a preference for lifted index over CAPE, so try that here too
 interaction_terms = [
+  ("BWD0-6km", (_, get_layer) -> compute_0_6km_BWD(get_layer)),
+
   # 0-1km EHI, roughly
-  (    "SBCAPE*HLCY1000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* get_layer(data, inventory, helicity1km_key)),
-  (    "MLCAPE*HLCY1000-0m", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* get_layer(data, inventory, helicity1km_key)),
-  (      "LFTX*HLCY1000-0m", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* get_layer(data, inventory, helicity1km_key)),
-  ("sqrtSBCAPE*HLCY1000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* get_layer(data, inventory, helicity1km_key)),
-  ("sqrtMLCAPE*HLCY1000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* get_layer(data, inventory, helicity1km_key)),
+  (    "SBCAPE*HLCY1000-0m", (_, get_layer) ->       get_layer(sbcape_key)       .* get_layer(helicity1km_key)),
+  (    "MLCAPE*HLCY1000-0m", (_, get_layer) ->       get_layer(mlcape_key)       .* get_layer(helicity1km_key)),
+  (      "LFTX*HLCY1000-0m", (_, get_layer) ->       get_layer(lifted_index_key) .* get_layer(helicity1km_key)),
+  ("sqrtSBCAPE*HLCY1000-0m", (_, get_layer) -> sqrt.(get_layer(sbcape_key))      .* get_layer(helicity1km_key)),
+  ("sqrtMLCAPE*HLCY1000-0m", (_, get_layer) -> sqrt.(get_layer(mlcape_key))      .* get_layer(helicity1km_key)),
 
   # 0-3km EHI, roughly
-  (    "SBCAPE*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* get_layer(data, inventory, helicity3km_key)),
-  (    "MLCAPE*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* get_layer(data, inventory, helicity3km_key)),
-  (      "LFTX*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* get_layer(data, inventory, helicity3km_key)),
-  ("sqrtSBCAPE*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* get_layer(data, inventory, helicity3km_key)),
-  ("sqrtMLCAPE*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* get_layer(data, inventory, helicity3km_key)),
+  (    "SBCAPE*HLCY3000-0m", (_, get_layer) ->       get_layer(sbcape_key)       .* get_layer(helicity3km_key)),
+  (    "MLCAPE*HLCY3000-0m", (_, get_layer) ->       get_layer(mlcape_key)       .* get_layer(helicity3km_key)),
+  (      "LFTX*HLCY3000-0m", (_, get_layer) ->       get_layer(lifted_index_key) .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*HLCY3000-0m", (_, get_layer) -> sqrt.(get_layer(sbcape_key))      .* get_layer(helicity3km_key)),
+  ("sqrtMLCAPE*HLCY3000-0m", (_, get_layer) -> sqrt.(get_layer(mlcape_key))      .* get_layer(helicity3km_key)),
 
   # Terms following Togstad et al 2011 "Conditional Probability Estimation for Significant Tornadoes Based on Rapid Update Cycle (RUC) Profiles"
-  (    "SBCAPE*BWD0-6km", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* compute_0_6km_BWD(inventory, data)),
-  (    "MLCAPE*BWD0-6km", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* compute_0_6km_BWD(inventory, data)),
-  (      "LFTX*BWD0-6km", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* compute_0_6km_BWD(inventory, data)),
-  ("sqrtSBCAPE*BWD0-6km", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* compute_0_6km_BWD(inventory, data)),
-  ("sqrtMLCAPE*BWD0-6km", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* compute_0_6km_BWD(inventory, data)),
+  (    "SBCAPE*BWD0-6km", (_, get_layer) ->       get_layer(sbcape_key)       .* get_layer("BWD0-6km")),
+  (    "MLCAPE*BWD0-6km", (_, get_layer) ->       get_layer(mlcape_key)       .* get_layer("BWD0-6km")),
+  (      "LFTX*BWD0-6km", (_, get_layer) ->       get_layer(lifted_index_key) .* get_layer("BWD0-6km")),
+  ("sqrtSBCAPE*BWD0-6km", (_, get_layer) -> sqrt.(get_layer(sbcape_key))      .* get_layer("BWD0-6km")),
+  ("sqrtMLCAPE*BWD0-6km", (_, get_layer) -> sqrt.(get_layer(mlcape_key))      .* get_layer("BWD0-6km")),
 
   # Pseudo-STP terms
-  (    "SBCAPE*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  (    "MLCAPE*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
-  (      "LFTX*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
-  ("sqrtSBCAPE*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  ("sqrtMLCAPE*(200+MLCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+  (    "SBCAPE*(200+SBCIN)", (_, get_layer) ->       get_layer(sbcape_key)       .* (200f0 .+ get_layer(sbcin_key))),
+  (    "MLCAPE*(200+MLCIN)", (_, get_layer) ->       get_layer(mlcape_key)       .* (200f0 .+ get_layer(mlcin_key))),
+  (      "LFTX*(200+MLCIN)", (_, get_layer) ->       get_layer(lifted_index_key) .* (200f0 .+ get_layer(mlcin_key))),
+  ("sqrtSBCAPE*(200+SBCIN)", (_, get_layer) -> sqrt.(get_layer(sbcape_key))      .* (200f0 .+ get_layer(sbcin_key))),
+  ("sqrtMLCAPE*(200+MLCIN)", (_, get_layer) -> sqrt.(get_layer(mlcape_key))      .* (200f0 .+ get_layer(mlcin_key))),
 
-  (    "SBCAPE*HLCY1000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  (    "MLCAPE*HLCY1000-0m*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
-  (      "LFTX*HLCY1000-0m*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
-  ("sqrtSBCAPE*HLCY1000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  ("sqrtMLCAPE*HLCY1000-0m*(200+MLCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+  (    "SBCAPE*HLCY1000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*(200+SBCIN)") .* get_layer(helicity1km_key)),
+  (    "MLCAPE*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*(200+MLCIN)") .* get_layer(helicity1km_key)),
+  (      "LFTX*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(      "LFTX*(200+MLCIN)") .* get_layer(helicity1km_key)),
+  ("sqrtSBCAPE*HLCY1000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*(200+SBCIN)") .* get_layer(helicity1km_key)),
+  ("sqrtMLCAPE*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*(200+MLCIN)") .* get_layer(helicity1km_key)),
 
-  (    "SBCAPE*BWD0-6km*HLCY1000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key)),
-  (    "MLCAPE*BWD0-6km*HLCY1000-0m", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key)),
-  (      "LFTX*BWD0-6km*HLCY1000-0m", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key)),
-  ("sqrtSBCAPE*BWD0-6km*HLCY1000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key)),
-  ("sqrtMLCAPE*BWD0-6km*HLCY1000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key)),
+  (    "SBCAPE*BWD0-6km*HLCY1000-0m", (_, get_layer) -> get_layer(    "SBCAPE*HLCY1000-0m") .* get_layer("BWD0-6km")),
+  (    "MLCAPE*BWD0-6km*HLCY1000-0m", (_, get_layer) -> get_layer(    "MLCAPE*HLCY1000-0m") .* get_layer("BWD0-6km")),
+  (      "LFTX*BWD0-6km*HLCY1000-0m", (_, get_layer) -> get_layer(      "LFTX*HLCY1000-0m") .* get_layer("BWD0-6km")),
+  ("sqrtSBCAPE*BWD0-6km*HLCY1000-0m", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY1000-0m") .* get_layer("BWD0-6km")),
+  ("sqrtMLCAPE*BWD0-6km*HLCY1000-0m", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY1000-0m") .* get_layer("BWD0-6km")),
 
-  (    "SBCAPE*BWD0-6km*HLCY1000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)       .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  (    "MLCAPE*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, mlcape_key)       .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
-  (      "LFTX*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, inventory, data) ->       get_layer(data, inventory, lifted_index_key) .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
-  ("sqrtSBCAPE*BWD0-6km*HLCY1000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key))      .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  ("sqrtMLCAPE*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, mlcape_key))      .* compute_0_6km_BWD(inventory, data) .* get_layer(data, inventory, helicity1km_key) .* (200f0 .+ get_layer(data, inventory, mlcin_key))),
+  (    "SBCAPE*BWD0-6km*HLCY1000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY1000-0m*(200+SBCIN)") .* get_layer("BWD0-6km")),
+  (    "MLCAPE*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
+  (      "LFTX*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(      "LFTX*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
+  ("sqrtSBCAPE*BWD0-6km*HLCY1000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY1000-0m*(200+SBCIN)") .* get_layer("BWD0-6km")),
+  ("sqrtMLCAPE*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
 ]
 
 function feature_engineered_forecasts()

@@ -474,20 +474,16 @@ function get_feature_i(inventory, feature_key)
   end
 end
 
-function get_layer(data, inventory, feature_key)
-  @view data[:, get_feature_i(inventory, feature_key)]
-end
-
 function feature_key_to_interaction_feature_name(feature_key)
   replace(feature_key, r"[: ]" => "")
 end
 
 # Returns (feature_name, compute_feature_function(grid, inventory, data))
 function make_interaction_feature(feature_keys :: Vector{String})
-  compute_feature_function(grid, inventory, data) = begin
-    out = ones(Float32, size(data, 1))
+  compute_feature_function(grid, get_layer) = begin
+    out = ones(Float32, length(grid.latlons))
     for feature_key in feature_keys
-      out .*= get_layer(data, inventory, feature_key)
+      out .*= get_layer(feature_key)
     end
     out
   end
@@ -530,24 +526,15 @@ function make_data(
       twenty_five_mi_mean_is    :: Vector{Vector{Int64}}, # If not using, pass an empty vector.
       unique_fifty_mi_mean_is   :: Vector{Vector{Int64}}, # If not using, pass an empty vector.
       unique_hundred_mi_mean_is :: Vector{Vector{Int64}};  # If not using, pass an empty vector.
-      new_features_pre = [] # list of pairs of (feature_name, compute_feature_function(grid, inventory, data))
+      new_features_pre = [] # list of pairs of (feature_name, compute_feature_function(grid, get_layer_function))
     ) :: Array{Float32,2}
 
-  feature_keys = map(Inventories.inventory_line_key, inventory)
-
-  feature_key_to_i = Dict{String,Int64}()
 
   grid_point_count  = size(data,1)
   raw_feature_count = size(data,2)
   pre_feature_count = raw_feature_count + length(new_features_pre)
   height            = grid.height
   width             = grid.width
-
-  for i in 1:length(inventory)
-    feature_key_to_i[feature_keys[i]] = i
-  end
-
-  get_layer(key) = @view data[:, feature_key_to_i[key]]
 
 
   # Output for each feature:
@@ -569,9 +556,30 @@ function make_data(
 
   out[:,1:raw_feature_count] = data
 
-  Threads.@threads for new_pre_feature_i in 1:length(new_features_pre)
+
+  feature_key_to_i = Dict{String,Int64}()
+  feature_keys = map(Inventories.inventory_line_key, inventory)
+
+  for i in 1:length(inventory)
+    feature_key_to_i[feature_keys[i]] = i
+  end
+
+  # Also load the pre computed features so later such features
+  # can reference features computed earlier.
+  #
+  # Referenced by their plain name, not the inventory feature key
+  for new_pre_feature_i in 1:length(new_features_pre)
+    i = length(inventory) + new_pre_feature_i
+    new_feature_name, _ = new_features_pre[new_pre_feature_i]
+    feature_key_to_i[new_feature_name] = i
+  end
+
+  get_layer(key) = @view out[:, feature_key_to_i[key]]
+
+  # Can't thread here. Terms may depend on prior computed terms.
+  for new_pre_feature_i in 1:length(new_features_pre)
     new_feature_name, compute_new_feature_pre = new_features_pre[new_pre_feature_i]
-    out[:, raw_feature_count + new_pre_feature_i] = compute_new_feature_pre(grid, inventory, data)
+    out[:, raw_feature_count + new_pre_feature_i] = compute_new_feature_pre(grid, get_layer)
   end
 
   block_i = 2

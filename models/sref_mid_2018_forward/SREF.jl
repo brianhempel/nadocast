@@ -84,33 +84,35 @@ sbcape_key      = "CAPE:surface:hour fcst:wt ens mean"
 sbcin_key       = "CIN:surface:hour fcst:wt ens mean"
 helicity3km_key = "HLCY:3000-0 m above ground:hour fcst:wt ens mean"
 
-function compute_0_500mb_BWD(inventory, data)
-  diff_u = get_layer(data, inventory, "UGRD:500 mb:hour fcst:wt ens mean") .- get_layer(data, inventory, "UGRD:10 m above ground:hour fcst:wt ens mean")
-  diff_v = get_layer(data, inventory, "VGRD:500 mb:hour fcst:wt ens mean") .- get_layer(data, inventory, "VGRD:10 m above ground:hour fcst:wt ens mean")
+function compute_0_500mb_BWD(get_layer)
+  diff_u = get_layer("UGRD:500 mb:hour fcst:wt ens mean") .- get_layer("UGRD:10 m above ground:hour fcst:wt ens mean")
+  diff_v = get_layer("VGRD:500 mb:hour fcst:wt ens mean") .- get_layer("VGRD:10 m above ground:hour fcst:wt ens mean")
   sqrt.(diff_u.^2 .+ diff_v.^2)
 end
 
 interaction_terms = [
+  ("BWD0-500mb", (_, get_layer) -> compute_0_500mb_BWD(get_layer)),
+
   # 0-3km EHI, roughly
-  (    "SBCAPE*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* get_layer(data, inventory, helicity3km_key)),
-  ("sqrtSBCAPE*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* get_layer(data, inventory, helicity3km_key)),
+  (    "SBCAPE*HLCY3000-0m", (_, get_layer) ->       get_layer(sbcape_key)  .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*HLCY3000-0m", (_, get_layer) -> sqrt.(get_layer(sbcape_key)) .* get_layer(helicity3km_key)),
 
   # Terms following Togstad et al 2011 "Conditional Probability Estimation for Significant Tornadoes Based on Rapid Update Cycle (RUC) Profiles"
-  (    "SBCAPE*BWD0-500mb", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_500mb_BWD(inventory, data)),
-  ("sqrtSBCAPE*BWD0-500mb", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_500mb_BWD(inventory, data)),
+  (    "SBCAPE*BWD0-500mb", (_, get_layer) ->       get_layer(sbcape_key)  .* get_layer("BWD0-500mb")),
+  ("sqrtSBCAPE*BWD0-500mb", (_, get_layer) -> sqrt.(get_layer(sbcape_key)) .* get_layer("BWD0-500mb")),
 
   # Pseudo-STP terms
-  (    "SBCAPE*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  ("sqrtSBCAPE*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  (    "SBCAPE*(200+SBCIN)", (_, get_layer) ->       get_layer(sbcape_key)  .* (200f0 .+ get_layer(sbcin_key))),
+  ("sqrtSBCAPE*(200+SBCIN)", (_, get_layer) -> sqrt.(get_layer(sbcape_key)) .* (200f0 .+ get_layer(sbcin_key))),
 
-  (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
 
-  (    "SBCAPE*BWD0-500mb*HLCY3000-0m", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
-  ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key)),
+  (    "SBCAPE*BWD0-500mb*HLCY3000-0m", (_, get_layer) -> get_layer(    "SBCAPE*BWD0-500mb") .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m", (_, get_layer) -> get_layer("sqrtSBCAPE*BWD0-500mb") .* get_layer(helicity3km_key)),
 
-  (    "SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) ->       get_layer(data, inventory, sbcape_key)  .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
-  ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, inventory, data) -> sqrt.(get_layer(data, inventory, sbcape_key)) .* compute_0_500mb_BWD(inventory, data) .* get_layer(data, inventory, helicity3km_key) .* (200f0 .+ get_layer(data, inventory, sbcin_key))),
+  (    "SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
+  ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
 ]
 
 function feature_engineered_forecasts()
