@@ -113,7 +113,7 @@ lifted_index_key      = "LFTX:500-1000 mb:hour fcst:" # surface
 # best_lifted_index_key = "4LFTX:180-0 mb above ground:hour fcst:"
 sbcape_key            = "CAPE:surface:hour fcst:"
 mlcape_key            = "CAPE:90-0 mb above ground:hour fcst:"
-# mulayercape_key       = "CAPE:180-0 mb above ground:hour fcst:"
+mulayercape_key       = "CAPE:180-0 mb above ground:hour fcst:"
 # mucape_key            = "CAPE:255-0 mb above ground:hour fcst:"
 sbcin_key             = "CIN:surface:hour fcst:"
 mlcin_key             = "CIN:90-0 mb above ground:hour fcst:"
@@ -177,6 +177,8 @@ interaction_terms = [
   (      "LFTX*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(      "LFTX*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
   ("sqrtSBCAPE*BWD0-6km*HLCY1000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY1000-0m*(200+SBCIN)") .* get_layer("BWD0-6km")),
   ("sqrtMLCAPE*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
+
+  ("SCPish(RM)", (_, get_layer) -> get_layer(mulayercape_key) .* get_layer(helicity3km_key) .* get_layer("BWD0-6km") .* (1f0 / (1000f0 * 50f0 * 20f0)))),
 
   ("Divergence10m*10^5"   , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:10 m above ground:hour fcst:"   ), get_layer("VGRD:10 m above ground:hour fcst:"   ))),
   ("Divergence30-0mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:30-0 mb above ground:hour fcst:"), get_layer("VGRD:30-0 mb above ground:hour fcst:"))),

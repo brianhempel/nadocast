@@ -108,8 +108,9 @@ interaction_terms = [
   (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
   ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
 
-  (    "SBCAPE*BWD0-500mb*HLCY3000-0m", (_, get_layer) -> get_layer(    "SBCAPE*BWD0-500mb") .* get_layer(helicity3km_key)),
-  ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m", (_, get_layer) -> get_layer("sqrtSBCAPE*BWD0-500mb") .* get_layer(helicity3km_key)),
+  # Next one is right-moving SCP more or less.
+  (    "SBCAPE*BWD0-500mb*HLCY3000-0m*10^-6", (_, get_layer) -> get_layer(    "SBCAPE*BWD0-500mb") .* get_layer(helicity3km_key) .* (1f0 / (1000f0 * 50f0 * 20f0))), # Add normalization term to make it the SCP, basically.
+  ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m"      , (_, get_layer) -> get_layer("sqrtSBCAPE*BWD0-500mb") .* get_layer(helicity3km_key)),
 
   (    "SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
   ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),

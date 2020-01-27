@@ -83,7 +83,7 @@ get_layer = FeatureEngineeringShared.get_layer
 
 sbcape_key     = "CAPE:surface:hour fcst:wt ens mean"
 mlcape_key     = "CAPE:90-0 mb above ground:hour fcst:wt ens mean"
-# mulayercape_key = "CAPE:180-0 mb above ground:hour fcst:wt ens mean"
+mulayercape_key = "CAPE:180-0 mb above ground:hour fcst:wt ens mean"
 sbcin_key      = "CIN:surface:hour fcst:wt ens mean"
 mlcin_key      = "CIN:90-0 mb above ground:hour fcst:wt ens mean"
 # mulayercin_key = "CIN:180-0 mb above ground:hour fcst:wt ens mean"
@@ -123,6 +123,8 @@ interaction_terms = [
   (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*HLCY3000-0m*(200+MLCIN)")),
   ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)")),
   ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)")),
+
+  ("SCPish(RM)", (_, get_layer) -> get_layer(mulayercape_key) .* get_layer(helicity3km_key) .* get_layer(bwd_0_6km_key) .* (1f0 / (1000f0 * 50f0 * 20f0)))),
 
   ("Divergence925mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
 
