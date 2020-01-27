@@ -177,6 +177,23 @@ interaction_terms = [
   (      "LFTX*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(      "LFTX*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
   ("sqrtSBCAPE*BWD0-6km*HLCY1000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY1000-0m*(200+SBCIN)") .* get_layer("BWD0-6km")),
   ("sqrtMLCAPE*BWD0-6km*HLCY1000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY1000-0m*(200+MLCIN)") .* get_layer("BWD0-6km")),
+
+  ("Divergence10m*10^5"   , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:10 m above ground:hour fcst:"   ), get_layer("VGRD:10 m above ground:hour fcst:"   ))),
+  ("Divergence30-0mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:30-0 mb above ground:hour fcst:"), get_layer("VGRD:30-0 mb above ground:hour fcst:"))),
+
+  # Following SPC Mesoscale analysis page
+  ("Divergence850mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:850 mb:hour fcst:"), get_layer("VGRD:850 mb:hour fcst:"))),
+  ("Divergence250mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:250 mb:hour fcst:"), get_layer("VGRD:250 mb:hour fcst:"))),
+  ("DifferentialDivergence250-850mb*10^5", (grid, get_layer) -> get_layer("Divergence250mb*10^5") - get_layer("Divergence850mb*10^5")),
+
+  ("ConvergenceOnly10m*10^5"   , (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence10m*10^5"   ))),
+  ("ConvergenceOnly30-0mb*10^5", (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence30-0mb*10^5"))),
+  ("ConvergenceOnly850mb*10^5" , (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5" ))),
+
+  ("AbsVorticity10m*10^5"   , (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:10 m above ground:hour fcst:"   ), get_layer("VGRD:10 m above ground:hour fcst:"   ))),
+  ("AbsVorticity30-0mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:30-0 mb above ground:hour fcst:"), get_layer("VGRD:30-0 mb above ground:hour fcst:"))),
+  ("AbsVorticity850mb*10^5" , (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:850 mb:hour fcst:"              ), get_layer("VGRD:850 mb:hour fcst:"              ))),
+  ("AbsVorticity250mb*10^5" , (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:250 mb:hour fcst:"              ), get_layer("VGRD:250 mb:hour fcst:"              ))),
 ]
 
 function feature_engineered_forecasts()

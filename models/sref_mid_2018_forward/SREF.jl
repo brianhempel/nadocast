@@ -113,6 +113,18 @@ interaction_terms = [
 
   (    "SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
   ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
+
+  ("Divergence10m*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:10 m above ground:hour fcst:wt ens mean"), get_layer("VGRD:10 m above ground:hour fcst:wt ens mean"))),
+
+  # Following SPC Mesoscale analysis page
+  ("Divergence850mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
+  ("Divergence250mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
+  ("DifferentialDivergence250-850mb*10^5", (grid, get_layer) -> get_layer("Divergence250mb*10^5") - get_layer("Divergence850mb*10^5")),
+
+  ("ConvergenceOnly10m*10^5"  , (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence10m*10^5"  ))),
+  ("ConvergenceOnly850mb*10^5", (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5"))),
+
+  ("AbsVorticity10m*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:10 m above ground:hour fcst:wt ens mean"), get_layer("VGRD:10 m above ground:hour fcst:wt ens mean"))),
 ]
 
 function feature_engineered_forecasts()

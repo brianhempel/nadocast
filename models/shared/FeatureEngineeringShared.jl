@@ -491,17 +491,19 @@ function make_interaction_feature(feature_keys :: Vector{String})
   (feature_name, compute_feature_function)
 end
 
-
-# Mutates out. Use a view.
-function compute_divergence!(grid, u_data, v_data, out)
+function compute_divergence_threaded(grid, u_data, v_data)
   @assert length(grid.point_widths_miles) == length(u_data)
   @assert length(u_data) == length(v_data)
-  @assert length(v_data) == length(out)
+
+  out =  Array{Float32}(undef, length(grid.point_widths_miles))
 
   width = grid.width
+
   Threads.@threads for j in 2:(grid.height - 1)
+    row_offset = width*(j-1)
+
     for i in 2:(width - 1)
-      flat_i = width*(j-1) + i
+      flat_i = row_offset + i
 
       dx = (grid.point_widths_miles[flat_i]  + 0.5*grid.point_widths_miles[flat_i - 1]      + 0.5*grid.point_widths_miles[flat_i + 1])      * GeoUtils.METERS_PER_MILE
       dy = (grid.point_heights_miles[flat_i] + 0.5*grid.point_heights_miles[flat_i - width] + 0.5*grid.point_heights_miles[flat_i + width]) * GeoUtils.METERS_PER_MILE
@@ -510,12 +512,63 @@ function compute_divergence!(grid, u_data, v_data, out)
         (u_data[flat_i + 1]     - u_data[flat_i - 1])     / Float32(dx) +
         (v_data[flat_i + width] - v_data[flat_i - width]) / Float32(dy)
 
-      out[flat_i] = divergence * 100_000
+      out[flat_i] = divergence * 100_000f0
     end
+
+    # West/East edges, copy the neighbor.
+    out[row_offset + 1]     = out[row_offset + 2]
+    out[row_offset + width] = out[row_offset + width - 1]
   end
 
-  ()
+  # South/North edges, copy the neighbor.
+  for i in 1:width
+    out[i]                         = out[width + i]
+    out[width*(grid.height-1) + i] = out[width*(grid.height-2) + i]
+  end
+
+  out
 end
+
+function compute_vorticity_threaded(grid, u_data, v_data)
+  @assert length(grid.point_widths_miles) == length(u_data)
+  @assert length(u_data) == length(v_data)
+
+  out =  Array{Float32}(undef, length(grid.point_widths_miles))
+
+  width = grid.width
+
+  Threads.@threads for j in 2:(grid.height - 1)
+    row_offset = width*(j-1)
+
+    for i in 2:(width - 1)
+      flat_i = row_offset + i
+
+      dx = (grid.point_widths_miles[flat_i]  + 0.5*grid.point_widths_miles[flat_i - 1]      + 0.5*grid.point_widths_miles[flat_i + 1])      * GeoUtils.METERS_PER_MILE
+      dy = (grid.point_heights_miles[flat_i] + 0.5*grid.point_heights_miles[flat_i - width] + 0.5*grid.point_heights_miles[flat_i + width]) * GeoUtils.METERS_PER_MILE
+
+      # https://en.wikipedia.org/wiki/Vorticity#Mathematical_definition
+      # dv_y/dx - dv_x/dy
+      vorticity =
+        (v_data[flat_i + 1]     - v_data[flat_i - 1])     / Float32(dx) +
+        (u_data[flat_i + width] - u_data[flat_i - width]) / Float32(dy)
+
+      out[flat_i] = vorticity * 100_000f0
+    end
+
+    # West/East edges, copy the neighbor.
+    out[row_offset + 1]     = out[row_offset + 2]
+    out[row_offset + width] = out[row_offset + width - 1]
+  end
+
+  # South/North edges, copy the neighbor.
+  for i in 1:width
+    out[i]                         = out[width + i]
+    out[width*(grid.height-1) + i] = out[width*(grid.height-2) + i]
+  end
+
+  out
+end
+
 
 function make_data(
       grid                      :: Grids.Grid,

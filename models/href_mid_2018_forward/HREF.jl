@@ -123,6 +123,21 @@ interaction_terms = [
   (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*HLCY3000-0m*(200+MLCIN)")),
   ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)")),
   ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)")),
+
+  ("Divergence925mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
+
+  # Following SPC Mesoscale analysis page
+  ("Divergence850mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
+  ("Divergence250mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
+  ("DifferentialDivergence250-850mb*10^5", (grid, get_layer) -> get_layer("Divergence250mb*10^5") - get_layer("Divergence850mb*10^5")),
+
+  ("ConvergenceOnly925mb*10^5", (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence925mb*10^5"))),
+  ("ConvergenceOnly850mb*10^5", (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5"))),
+
+  ("AbsVorticity925mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity850mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity500mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:500 mb:hour fcst:wt ens mean"), get_layer("VGRD:500 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity250mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
 ]
 
 function feature_engineered_forecasts()
