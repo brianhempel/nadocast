@@ -21,3 +21,4 @@ grib2_decoded_cache/
 remote_forecasts/
 lib/computation_cache/
 data_labels_weights_*
+get_data/rap_archive_*/

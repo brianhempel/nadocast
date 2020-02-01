@@ -47,13 +47,17 @@ threads = THREAD_COUNT.times.map do
         at_byte += 512
         if file_name =~ FILE_NAME_REGEXP
           directory = "#{BASE_DIRECTORY}/#{year_str}#{month_str}/#{year_str}#{month_str}#{day_str}"
+          alt_directory = directory.sub(/^\/Volumes\/RAP_1\//, "/Volumes/RAP_2/")
           system("mkdir -p #{directory} 2> /dev/null")
-          path = "#{directory}/#{file_name}"
+          system("mkdir -p #{alt_directory} 2> /dev/null")
+          path     = "#{directory}/#{file_name}"
+          alt_path = "#{alt_directory}/#{file_name}"
           if (File.size(path) rescue 0) < MIN_FILE_BYTES
             puts "#{file_name} -> #{path}"
             data = `curl -f -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}" #{tar_url}`
             if data.bytesize == file_size
               File.write(path, data)
+              File.write(alt_path, data)
             else
               STDERR.puts "Asked for #{file_size} bytes of #{file_name} but only got #{data.size}!!! Not saved."
             end
