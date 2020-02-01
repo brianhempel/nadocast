@@ -164,7 +164,7 @@ def check_outstanding_orders(outstanding_orders, orders_downloading)
     elsif html_str =~ /In Progress/
       progress = html_str.scan(/In Progress.*\s(\d+)%/).flatten.map(&:to_i).max
       puts "#{order_name}\t#{progress}%"
-    elsif html_str =~ /Completed/
+    elsif html_str =~ /Complete.*100%/
       order_url = html_str[/href="([^"]+#{order_name}[^"]*)"/i, 1].sub("http:", "https:")
       outstanding_orders.delete(order_name)
       orders_downloading[order_name] = order_url
