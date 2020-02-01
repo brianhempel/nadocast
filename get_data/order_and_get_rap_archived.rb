@@ -136,9 +136,15 @@ def make_order(dates_to_order, outstanding_orders)
 
   print "Ordering RAP from #{order_start_date} to #{order_end_date}..."
 
-  response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-    http.request(request)
-  end
+  response =
+    begin
+      Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, read_timeout: 3*60 ) do |http|
+        http.request(request)
+      end
+    rescue Net::ReadTimeout
+      STDERR.puts "read timeout (3 minutes)"
+      return
+    end
 
   case response
   when Net::HTTPSuccess
