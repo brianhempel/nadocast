@@ -79,7 +79,16 @@ function forecasts()
   end
 end
 
-get_layer = FeatureEngineeringShared.get_layer
+_twenty_five_mi_mean_is = nothing
+
+function get_twenty_five_mi_mean_is()
+  global _twenty_five_mi_mean_is
+  if isnothing(_twenty_five_mi_mean_is)
+    _twenty_five_mi_mean_is, _, _ = FeatureEngineeringShared.compute_mean_is(grid())
+  end
+  _twenty_five_mi_mean_is
+end
+
 
 sbcape_key     = "CAPE:surface:hour fcst:wt ens mean"
 mlcape_key     = "CAPE:90-0 mb above ground:hour fcst:wt ens mean"
@@ -89,6 +98,39 @@ mlcin_key      = "CIN:90-0 mb above ground:hour fcst:wt ens mean"
 # mulayercin_key = "CIN:180-0 mb above ground:hour fcst:wt ens mean"
 helicity3km_key = "HLCY:3000-0 m above ground:hour fcst:wt ens mean"
 bwd_0_6km_key   = "VWSH:6000-0 m above ground:hour fcst:wt ens mean"
+
+low_level_u_key = "UGRD:925 mb:hour fcst:wt ens mean"
+low_level_v_key = "VGRD:925 mb:hour fcst:wt ens mean"
+
+dpt_key  = "DPT:2 m above ground:hour fcst:wt ens mean"
+rain_key = "CRAIN:surface:hour fcst:wt ens mean"
+
+function meanify_25mi(feature_data)
+  FeatureEngineeringShared.meanify_threaded(feature_data, get_twenty_five_mi_mean_is())
+end
+
+# Upstream feature gated by SCP > 0.1
+# Computed output gated by SCP > 1
+function storm_upstream_feature_gated_by_SCP(grid, get_layer, key; hours)
+  FeatureEngineeringShared.compute_upstream_mean_threaded(
+    grid         = grid,
+    u_data       = get_layer("UGRD:700 mb:hour fcst:wt ens mean"),
+    v_data       = get_layer("VGRD:700 mb:hour fcst:wt ens mean"),
+    feature_data = meanify_25mi(get_layer(key) .* Float32.(get_layer("SCPish(RM)") .> 0.1f0)),
+    hours        = hours
+  ) .* get_layer("SCPish(RM)>1")
+end
+
+function upstream_feature(grid, get_layer, u_key, v_key, feature_key; hours)
+  FeatureEngineeringShared.compute_upstream_mean_threaded(
+    grid         = grid,
+    u_data       = get_layer(u_key),
+    v_data       = get_layer(v_key),
+    feature_data = get_layer(feature_key),
+    hours        = hours
+  )
+end
+
 
 interaction_terms = [
   # 0-3km EHI, roughly
@@ -140,6 +182,40 @@ interaction_terms = [
   ("AbsVorticity850mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
   ("AbsVorticity500mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:500 mb:hour fcst:wt ens mean"), get_layer("VGRD:500 mb:hour fcst:wt ens mean"))),
   ("AbsVorticity250mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
+
+  # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
+  #
+  # Latent supercell indicator based on SCP and convergence upstream (following storm motion).
+  #
+  # Should follow goldilocks principle: too much and too little are both bad.
+
+  ("SCPish(RM)>1", (grid, get_layer) -> Float32.(meanify_25mi(get_layer("SCPish(RM)")) .> 1f0)),
+
+  ("StormUpstream925mbConvergence3hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly925mb*10^5"           , hours = 3)),
+  ("StormUpstream925mbConvergence6hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly925mb*10^5"           , hours = 6)),
+  ("StormUpstream925mbConvergence9hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly925mb*10^5"           , hours = 9)),
+
+  ("StormUpstream850mbConvergence3hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly850mb*10^5"           , hours = 3)),
+  ("StormUpstream850mbConvergence6hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly850mb*10^5"           , hours = 6)),
+  ("StormUpstream850mbConvergence9hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly850mb*10^5"           , hours = 9)),
+
+  ("StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP", (grid, get_layer) -> max.(0f0, storm_upstream_feature_gated_by_SCP(grid, get_layer, "DifferentialDivergence250-850mb*10^5", hours = 3))),
+  ("StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP", (grid, get_layer) -> max.(0f0, storm_upstream_feature_gated_by_SCP(grid, get_layer, "DifferentialDivergence250-850mb*10^5", hours = 6))),
+  ("StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP", (grid, get_layer) -> max.(0f0, storm_upstream_feature_gated_by_SCP(grid, get_layer, "DifferentialDivergence250-850mb*10^5", hours = 9))),
+
+  # Low level upstream features. What kind of air is the storm ingesting?
+
+  ("UpstreamSBCAPE1hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, sbcape_key, hours = 1)),
+  ("UpstreamSBCAPE2hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, sbcape_key, hours = 2)),
+
+  ("UpstreamMLCAPE1hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, mlcape_key, hours = 1)),
+  ("UpstreamMLCAPE2hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, mlcape_key, hours = 2)),
+
+  ("Upstream2mDPT1hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, dpt_key   , hours = 1)),
+  ("Upstream2mDPT2hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, dpt_key   , hours = 2)),
+
+  ("UpstreamCRAIN1hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, rain_key  , hours = 1)),
+  ("UpstreamCRAIN2hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, rain_key  , hours = 2)),
 ]
 
 function feature_engineered_forecasts()

@@ -52,6 +52,18 @@ forecast_hour_feature_post(grid) =
   , forecast -> fill(Float32(div(forecast.forecast_hour, 10)), length(grid.latlons))
   )
 
+# Returns twenty_five_mi_mean_is, unique_fifty_mi_mean_is, unique_hundred_mi_mean_is
+function compute_mean_is(grid)
+  print("computing radius indices...")
+  point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
+  cache_folder = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
+  twenty_five_mi_mean_is    = Cache.cached(() -> Grids.radius_grid_is(grid, 25.0),                                                                       [cache_folder], "twenty_five_mi_mean_is")
+  unique_fifty_mi_mean_is   = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is),                                 [cache_folder], "unique_fifty_mi_mean_is")
+  unique_hundred_mi_mean_is = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is)), [cache_folder], "unique_hundred_mi_mean_is")
+  println("done")
+
+  return (twenty_five_mi_mean_is, unique_fifty_mi_mean_is, unique_hundred_mi_mean_is)
+end
 
 # new_features_pre should be a list of pairs of (feature_name, compute_feature_function(grid, inventory, data))
 function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_blocks_to_make, new_features_pre = [])
@@ -64,13 +76,7 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
 
   grid = base_forecasts[1].grid
 
-  print("computing radius indices...")
-  point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
-  cache_folder = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
-  twenty_five_mi_mean_is    = Cache.cached(() -> Grids.radius_grid_is(grid, 25.0),                                                                       [cache_folder], "twenty_five_mi_mean_is")
-  unique_fifty_mi_mean_is   = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is),                                 [cache_folder], "unique_fifty_mi_mean_is")
-  unique_hundred_mi_mean_is = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is)), [cache_folder], "unique_hundred_mi_mean_is")
-  println("done")
+  twenty_five_mi_mean_is, unique_fifty_mi_mean_is, unique_hundred_mi_mean_is = compute_mean_is(grid)
 
   inventory_transformer(base_forecast, base_inventory) = begin
 
@@ -493,7 +499,7 @@ end
 
 function compute_divergence_threaded(grid, u_data, v_data)
   @assert length(grid.point_widths_miles) == length(u_data)
-  @assert length(u_data) == length(v_data)
+  @assert length(grid.point_widths_miles) == length(v_data)
 
   out =  Array{Float32}(undef, length(grid.point_widths_miles))
 
@@ -502,7 +508,7 @@ function compute_divergence_threaded(grid, u_data, v_data)
   Threads.@threads for j in 2:(grid.height - 1)
     row_offset = width*(j-1)
 
-    for i in 2:(width - 1)
+    @inbounds for i in 2:(width - 1)
       flat_i = row_offset + i
 
       dx = (grid.point_widths_miles[flat_i]  + 0.5*grid.point_widths_miles[flat_i - 1]      + 0.5*grid.point_widths_miles[flat_i + 1])      * GeoUtils.METERS_PER_MILE
@@ -531,7 +537,7 @@ end
 
 function compute_vorticity_threaded(grid, u_data, v_data)
   @assert length(grid.point_widths_miles) == length(u_data)
-  @assert length(u_data) == length(v_data)
+  @assert length(grid.point_widths_miles) == length(v_data)
 
   out =  Array{Float32}(undef, length(grid.point_widths_miles))
 
@@ -540,7 +546,7 @@ function compute_vorticity_threaded(grid, u_data, v_data)
   Threads.@threads for j in 2:(grid.height - 1)
     row_offset = width*(j-1)
 
-    for i in 2:(width - 1)
+    @inbounds for i in 2:(width - 1)
       flat_i = row_offset + i
 
       dx = (grid.point_widths_miles[flat_i]  + 0.5*grid.point_widths_miles[flat_i - 1]      + 0.5*grid.point_widths_miles[flat_i + 1])      * GeoUtils.METERS_PER_MILE
@@ -568,6 +574,70 @@ function compute_vorticity_threaded(grid, u_data, v_data)
 
   out
 end
+
+# Follow wind vectors upstream so many hours and compute an average of the given feature.
+#
+# No interpolation along the way.
+function compute_upstream_mean_threaded(; grid, u_data, v_data, feature_data, hours, step_size = 10*60)
+  @assert length(grid.point_widths_miles) == length(u_data)
+  @assert length(grid.point_widths_miles) == length(v_data)
+  @assert length(grid.point_widths_miles) == length(feature_data)
+
+  out =  Array{Float32}(undef, length(grid.point_widths_miles))
+
+  width  = grid.width
+  height = grid.height
+
+  Threads.@threads for j in 1:height
+    for i in 1:width
+      j_float = j
+      i_float = i
+      value   = 0f0
+      weight  = 0.00001f0
+      seconds = 0f0
+
+      @inbounds while true
+        j_closest = clamp(Int64(round(j_float)), 1, height)
+        i_closest = clamp(Int64(round(i_float)), 1, width)
+        flat_i_closest = width*(j_closest-1) + i_closest
+
+        value  += feature_data[flat_i_closest]
+        weight += 1f0
+
+        seconds += step_size
+
+        if seconds > hours*60*60
+          break
+        end
+
+        j_float -= step_size * v_data[flat_i_closest] / Float32(grid.point_heights_miles[flat_i_closest] * GeoUtils.METERS_PER_MILE)
+        i_float -= step_size * u_data[flat_i_closest] / Float32(grid.point_widths_miles[flat_i_closest]  * GeoUtils.METERS_PER_MILE)
+      end
+
+      out[width*(j-1) + i] = value / weight
+    end
+  end
+
+  out
+end
+
+# Sometimes needed before compute_upstream_mean_threaded
+function meanify_threaded(feature_data, mean_is)
+  out = zeros(Float32, size(feature_data))
+
+  Threads.@threads for grid_i in 1:length(feature_data)
+    val = 0f0
+
+    @inbounds for near_i in mean_is[grid_i]
+      val += feature_data[near_i]
+    end
+
+    out[grid_i] = val / Float32(length(mean_is[grid_i]))
+  end
+
+  out
+end
+
 
 
 function make_data(
@@ -755,7 +825,7 @@ function make_data(
       mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:")
       mean_wind_lower_half_atmosphere_vs .+= get_layer("VGRD:$mb mb:hour fcst:")
       total_weight += 1.0f0
-    else if mb == 600
+    elseif mb == 600
       # HRRR/HREF don't have 600mb.
       # And the HRRR/HREF levels (surface, 925mb, 850mb, 700mb, 500mb) are likely too biased towards the lower atmosphere.
       # Estimate 600mb winds into the mix.
@@ -918,9 +988,27 @@ function make_data(
     end
   end
 
+  # Let's estimate supercell likelihood to try not to miss events like Kansas 2019-5-17
+  #
+  # Reports:    https://www.spc.noaa.gov/climo/reports/190517_rpts.html
+  # Prediction: https://twitter.com/nadocast/status/1129390878269874176
+  #
+  # Algorithm to estimate initial forcing:
+  #
+  # 1. If SCP > 0, follow the bunkers storm motion upstream until SCP < 0.
+  # 2. Walk upstream one more hour. Now we've reached (presumably) the initiation zone.
+  # 3. Begin walking forwards. Sum up convergence. Continue walking/summing for 2 at least hours, continue until convergence <= 2.
+  # 4. The above mechanism estimates the amount of initiation forcing.
+  #
+  # Other considerations:
+  # 1. Abort and return 0 if the max SCP along the path < 1.
+  # 2. Abort and return 0 if we hit the edge.
+  #
+  # Actually maybe should just do 3-hour and 6-hour and 9-hour upstream convergence sum, gated by SCP > 1 + 1 hour.
 
 
-  # Make ~500m - ~500m shear vector relative to which we will rotate the winds
+
+  # Make ~500m - ~5000m shear vector relative to which we will rotate the winds
 
 
   if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
