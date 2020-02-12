@@ -23,7 +23,7 @@ FORECAST_HOURS = [1,2,3,5,6,7,11,12,13,16,17,18]
 RUN_HOURS      = (0..23).to_a
 FILE_NAME_REGEXP = /\Arap_130_\w+_(#{FORECAST_HOURS.map {|i| "%03d" % i}.join("|")}).grb2/
 
-MAX_SIMULTANEOUS_ORDERS = 1
+MAX_SIMULTANEOUS_ORDERS = 2
 DAYS_PER_ORDER          = 15
 
 class PersistentHash
