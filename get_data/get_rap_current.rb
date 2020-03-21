@@ -46,7 +46,7 @@ class RAPForecast < Forecast
   end
 
   def base_directory
-    if run_date.year <= 2018
+    if ([run_date.year, run_date.month] <=> [2018, 9]) <= 0
       "#{FORECASTS_ROOT}/RAP_1/rap" # and backup copy on RAP_2
     else
       "#{FORECASTS_ROOT}/RAP_3/rap" # and backup copy on RAP_4
