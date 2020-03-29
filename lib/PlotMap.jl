@@ -65,7 +65,7 @@ function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals)
 
     println(f, "gmt end")
 
-    println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
+    # println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
     println(f, "rm $base_path.nc")
     println(f, "rm $base_path.xyz")

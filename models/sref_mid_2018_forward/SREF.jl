@@ -22,6 +22,10 @@ forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
 layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
+# Didn't realize the 1hrly file didn't have hours divisible by 3 and needed to grab the 3hrly files too.
+# 2019-1-9 is the first day with all hours.
+
+
 # # For elasticnet models:
 # layer_blocks_to_make = [
 #   FeatureEngineeringShared.raw_features_block,
