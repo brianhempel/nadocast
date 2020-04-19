@@ -14,6 +14,7 @@ DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = false
 
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap_current.rb
+# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_rap_current.rb --from-nomads
 
 RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
@@ -35,7 +36,7 @@ class RAPForecast < Forecast
 
   def archive_url
     if FROM_NOMADS
-      "https://nomads.ncdc.noaa.gov/data/rap130/#{year_month}/#{year_month_day}/rap_130_#{year_month_day}_#{run_hour}00_0#{forecast_hour_str}.grb2"
+      "https://nomads.ncdc.noaa.gov/data/rap130/#{year_month}/#{year_month_day}/#{file_name}"
     else
       raise "see get_rap_archived.rb for pulling from NCDC's long term storage request system"
     end
