@@ -9,15 +9,27 @@ push!(LOAD_PATH, @__DIR__)
 import SREF
 
 
-forecast_hour_range = 2:38 # 1:87 # 4:39             # SREF files come out 3-4 hours after run time
+# SREF files come out 3-4 hours after run time
 
-model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
+forecast_hour_range =
+  if occursin(r"^\d+:\d+$", ENV["FORECAST_HOUR_RANGE"])
+    start, stop = map(str -> parse(Int64, str), split(ENV["FORECAST_HOUR_RANGE"], ":"))
+    start:stop
+  else
+    2:38 # 1:87 # 4:39
+  end
+
+
+hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
+
+model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(repr(Dates.now()), ":" => "."))"
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
+    save_dir     = "sref_$(hour_range_str)",
 
     training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.2f0, labels),
     validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.2f0, labels),

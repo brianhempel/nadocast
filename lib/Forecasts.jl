@@ -110,9 +110,9 @@ function iterate_data_of_uncorrupted_forecasts(forecasts)
   UncorruptedForecastsDataIteratorNoCache(collect(forecasts))
 end
 
-function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1)
-  i         = state
-  forecasts = iterator.forecasts
+function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(1, nothing))
+  i, preload_process = state
+  forecasts          = iterator.forecasts
 
   if i > length(forecasts)
     return nothing
@@ -120,12 +120,19 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
 
   forecast = forecasts[i]
 
+  # Make sure we don't thrash by sending multiple reads to disk at once.
+  if !isnothing(preload_process)
+    wait(preload_process)
+  end
+
   if i == 1
     # Don't trash the disk with mad seeks on the first iteration.
-    run(pipeline(`cat $(forecasts[i].preload_paths)`, devnull))
+    preload_process = run(pipeline(`cat $(forecasts[i].preload_paths)`, devnull))
   end
   if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
-    run(pipeline(`cat $(forecasts[i+1].preload_paths)`, devnull), wait=false)
+    preload_process = run(pipeline(`cat $(forecasts[i+1].preload_paths)`, devnull), wait=false)
+  else
+    preload_process = nothing
   end
 
   data =
@@ -144,7 +151,7 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=1
       end
     end
 
-  ((forecast, data), i+1)
+  ((forecast, data), (i+1, preload_process))
 end
 
 

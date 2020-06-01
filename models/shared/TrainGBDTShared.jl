@@ -1,6 +1,7 @@
 module TrainGBDTShared
 
 import Random
+import Serialization
 
 import MemoryConstrainedTreeBoosting
 
@@ -83,8 +84,11 @@ function train_with_coordinate_descent_hyperparameter_search(
     bin_split_forecast_sample_count = 100,
     balance_labels_when_computing_bin_splits = true,
     max_iterations_without_improvement = 20,
+    save_dir = nothing,
     configs...
   )
+
+  specific_save_dir(suffix) = isnothing(save_dir) ? nothing : save_dir * "_" * suffix
 
   (train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
@@ -101,9 +105,9 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   # Returns (X_binned, labels, weights)
-  get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities; prior_predictor = nothing) = begin
+  get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
   end
 
   # Returns path
@@ -120,7 +124,8 @@ function train_with_coordinate_descent_hyperparameter_search(
   (bin_sample_X, bin_sample_y, _) =
     TrainingShared.get_data_labels_weights(
       Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
-      X_and_labels_to_inclusion_probabilities = (X, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels))
+      X_and_labels_to_inclusion_probabilities = (X, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
+      save_dir = specific_save_dir("samples_for_bin_splits")
     )
   if balance_labels_when_computing_bin_splits
     positive_indices = findall(bin_sample_y .>  0.5f0)
@@ -144,11 +149,11 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   println("Loading training data")
-  X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities; prior_predictor = prior_predictor)
+  X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities, "training"; prior_predictor = prior_predictor)
   println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
 
   println("Loading validation data")
-  validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities; prior_predictor = prior_predictor)
+  validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities, "validation"; prior_predictor = prior_predictor)
   println("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.")
 
 
