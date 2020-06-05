@@ -310,7 +310,7 @@ version = "0.3.0"
 
 [[MemoryConstrainedTreeBoosting]]
 deps = ["BSON", "Random"]
-git-tree-sha1 = "3ac4bdfd89520ff74ec42faa66123817c6f0c1e4"
+git-tree-sha1 = "d025108c058d51e9d5eb56bdba224adb16c602f8"
 repo-rev = "master"
 repo-url = "https://github.com/brianhempel/MemoryConstrainedTreeBoosting.jl"
 uuid = "892701ce-1da2-11e9-2428-fd1c8d726794"
