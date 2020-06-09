@@ -19,20 +19,67 @@ forecast_hour_range =
     2:38 # 1:87 # 4:39
   end
 
+data_subset_ratio = Float32(get(ENV, "DATA_SUBSET_RATIO", 0.2))
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(repr(Dates.now()), ":" => "."))"
+
+# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# 6828 for training. (1150 with tornadoes.)
+# 1436 for validation.
+# 1304 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 1106 positive and 10015 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6925825 datapoints with 18759 features each.
+#
+# 64:23:23 elapsed Best hyperparameters (loss = 0.001277702): Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+
+
+# $ FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# 6828 for training. (1150 with tornadoes.)
+# 1436 for validation.
+# 1304 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 1129 positive and 10004 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6925826 datapoints with 18759 features each.
+# Loading validation data
+# done. 1456007 datapoints with 18759 features each.
+#
+# 31:14:05 elapsed Best hyperparameters (loss = 0.0013720567): Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 18000.0)
+
+# Take 2, trying to see if tiling makes training faster. Seems to. Also accidently got a slightly better model.
+#
+# $ FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# 6828 for training. (1150 with tornadoes.)
+# 1436 for validation.
+# 1304 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 1129 positive and 10004 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6925826 datapoints with 18759 features each.
+# Loading validation data
+# done. 1456007 datapoints with 18759 features each.
+#
+# 21:47:20 elapsed Best hyperparameters (loss = 0.0013716344): Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+
+# $ FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.15 make train_gradient_boosted_decision_trees
+#
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    save_dir     = "sref_$(hour_range_str)",
+    save_dir     = "sref_$(hour_range_str)_$(data_subset_ratio)",
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.2f0, labels),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.2f0, labels),
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(data_subset_ratio, labels),
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(data_subset_ratio, labels),
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
