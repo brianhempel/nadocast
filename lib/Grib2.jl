@@ -345,9 +345,12 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
       error("wgrib2 sending more data than expected!")
     end
     close(wgrib2_out)
+  end
 
+  # run(`rm $out_path`) in threads was trouble.
+  for thread_i in 1:Threads.nthreads()
     # print("removing temp file...")
-    run(`rm $out_path`)
+    rm(thread_wgrib2_out_path(thread_i), force=true)
   end
 
   # println("done.")
