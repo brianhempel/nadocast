@@ -70,6 +70,17 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 
 # $ FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.15 make train_gradient_boosted_decision_trees
 #
+# 10242 for training. (1725 with tornadoes.)
+# 2154 for validation.
+# 1956 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 1097 positive and 10012 negative labels...computing bin splits...done.
+# Loading training data
+# done. 7794745 datapoints with 18759 features each.
+# Loading validation data
+# done. 1638326 datapoints with 18759 features each.
+#
+# 28:33:08 elapsed Best hyperparameters (loss = 0.0013992075): Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 56000.0)
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
