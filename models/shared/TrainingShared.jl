@@ -279,44 +279,66 @@ end
 
 # Provide a function that returns a loss and kwargs that contain arrays of values to try.
 # *** Assumes each array of values is in order ***
-function coordinate_descent_hyperparameter_search(f; kwargs...)
+function coordinate_descent_hyperparameter_search(f; random_start_count = 0, kwargs...)
   combos_tried = []
 
   last_iteration_best_loss = Inf32
   best_loss                = Inf32
   iteration_i = 1
 
-  best_combo =
-    map(collect(kwargs)) do (arg_name, values)
-      middle_value = values[1 + div(length(values)-1,2)]
-      arg_name => middle_value
+  hyperparameters_to_combo(pick_value) =
+    Dict(
+      map(collect(kwargs)) do (arg_name, values)
+        arg_name => pick_value(values)
+      end
+    )
+
+  initial_combo =
+    hyperparameters_to_combo() do values
+      values[1 + div(length(values)-1,2)] # middle_value
     end
 
-  best_combo = Dict(best_combo)
+  random_combos =
+    map(1:random_start_count) do _
+      hyperparameters_to_combo(rand)
+    end
 
-  try_combo(arg_name, value) = begin
+  best_combo = Dict(initial_combo)
+
+  # Returns (is_best, loss)
+  try_combo(combo) = begin
+    loss = f(; combo...)
+    push!(combos_tried, combo)
+
+    if loss < best_loss
+      best_combo = combo
+      best_loss  = loss
+      println("New best! Loss: $best_loss")
+      println(best_combo)
+      (true, loss)
+    else
+      (false, loss)
+    end
+  end
+
+  for combo in [initial_combo; random_combos]
+    print("Trying ")
+    println(combo)
+    try_combo(combo)
+  end
+
+  # Returns true if combo is better than best, or false if not or already tried
+  try_combo_modification(arg_name, value) = begin
     combo = merge(best_combo, Dict(arg_name => value))
     if !(combo in combos_tried)
       println("Trying $(arg_name) = $(value)")
-      loss = f(; combo...)
+      is_best, loss = try_combo(combo)
       println("Loss = $(loss) for $(arg_name) = $(value)")
-      push!(combos_tried, combo)
-
-      if loss < best_loss
-        best_combo = combo
-        best_loss  = loss
-        println("New best!")
-        println(best_combo)
-        true
-      else
-        false
-      end
+      is_best
     else
       false
     end
   end
-
-  try_combo(first(best_combo)[1], first(best_combo)[2]) # Ensure initial combo has a loss
 
   while true
     println("Hyperparameter coordinate descent iteration $iteration_i")
@@ -324,15 +346,15 @@ function coordinate_descent_hyperparameter_search(f; kwargs...)
     for (arg_name, values) in kwargs
       best_value_i = findfirst(isequal(best_combo[arg_name]), values)
       direction    = nothing
-      if best_value_i + 1 <= length(values) && try_combo(arg_name, values[best_value_i + 1])
+      if best_value_i + 1 <= length(values) && try_combo_modification(arg_name, values[best_value_i + 1])
         direction     = 1
         best_value_i += 1
-      elseif best_value_i - 1 >= 1 && try_combo(arg_name, values[best_value_i - 1])
+      elseif best_value_i - 1 >= 1 && try_combo_modification(arg_name, values[best_value_i - 1])
         direction     = -1
         best_value_i -= 1
       end
 
-      while direction != nothing && ((best_value_i + direction) in 1:length(values)) && try_combo(arg_name, values[best_value_i + direction])
+      while direction != nothing && ((best_value_i + direction) in 1:length(values)) && try_combo_modification(arg_name, values[best_value_i + direction])
         best_value_i += direction
       end
     end

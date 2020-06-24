@@ -12,7 +12,7 @@ import SREF
 # SREF files come out 3-4 hours after run time
 
 forecast_hour_range =
-  if occursin(r"^\d+:\d+$", ENV["FORECAST_HOUR_RANGE"])
+  if occursin(r"^\d+:\d+$", get(ENV, "FORECAST_HOUR_RANGE", ""))
     start, stop = map(str -> parse(Int64, str), split(ENV["FORECAST_HOUR_RANGE"], ":"))
     start:stop
   else
@@ -94,6 +94,9 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
+
+    # Start with middle value for each parameter, plus some number of random choices, before beginning coordinate descent.
+    random_start_count      = 15,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
     min_data_weight_in_leaf = [10.0, 18.0, 32.0, 56.0, 100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
