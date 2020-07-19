@@ -68,6 +68,54 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 #
 # 21:47:20 elapsed Best hyperparameters (loss = 0.0013716344): Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
 
+# FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 6828 for training. (1150 with tornadoes.)
+# 1436 for validation.
+# 1304 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 1129 positive and 10004 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6925826 datapoints with 18759 features each.
+# Loading validation data
+# done. 1456007 datapoints with 18759 features each.
+# Middle config:
+# Trying Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+# New best! Loss: 0.0013713938
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+# ...
+# Best after random: Loss: 0.0013599272 Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.32,:learning_rate => 0.1,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 1.0,:min_data_weight_in_leaf => 1.0e6)
+#
+# After coordinate descent from there:
+# 123:55:50 elapsed Best hyperparameters (loss = 0.0013549898): Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.1,:max_leaves => 30,:l2_regularization => 1.8,:feature_fraction => 0.5,:bagging_temperature => 1.0,:min_data_weight_in_leaf => 1.8e6)
+
+# min_gain_to_split, doesn't help
+# but exploring more random options first did
+#
+# $ FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# 6828 for training. (1150 with tornadoes.)
+# 1436 for validation.
+# 1304 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 1129 positive and 10004 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6925826 datapoints with 18759 features each.
+# Loading validation data
+# done. 1456007 datapoints with 18759 features each.
+# Middle config:
+# Trying Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:min_gain_to_split => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+# New best! Loss: 0.0013759497
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 5.6,:feature_fraction => 0.5,:min_gain_to_split => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+#
+# Best Random:
+# New best! Loss: 0.0013581899
+# Dict{Symbol,Real}(:max_depth => 9,:max_delta_score => 1.0,:learning_rate => 0.025,:max_leaves => 12,:l2_regularization => 3.2,:feature_fraction => 1.0,:min_gain_to_split => 0.03,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 560000.0)
+#
+# had to stop during coordinate descent, taking too long
+#
+# New best! Loss: 0.0013524442
+# Dict{Symbol,Real}(:max_depth => 9,:max_delta_score => 1.0,:learning_rate => 0.016,:max_leaves => 12,:l2_regularization => 3.2,:feature_fraction => 1.0,:min_gain_to_split => 0.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 1.8e6)
+
 # $ FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.15 make train_gradient_boosted_decision_trees
 #
 # 10242 for training. (1725 with tornadoes.)
@@ -99,13 +147,13 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     random_start_count      = 20,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
-    min_data_weight_in_leaf = [10.0, 18.0, 32.0, 56.0, 100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
-    min_gain_to_split       = [0.0, 0.03, 0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
-    l2_regularization       = [0.0, 0.5, 1.0, 1.8, 3.2, 5.6, 10.0, 18.0, 32.0, 56.0, 100.0],
-    max_leaves              = [3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
-    max_depth               = [2, 3, 4, 5, 6, 7, 8, 9],
-    max_delta_score         = [0.32, 0.56, 1.0, 1.8, 3.2, 5.6, 10.0, 18.0, 32.0, 56.0, 100.0],
-    learning_rate           = [0.016, 0.025, 0.040, 0.063, 0.1, 0.16, 0.25], # factors of 1.585 (5 steps per power of 10)
-    feature_fraction        = [0.1, 0.25, 0.5, 0.75, 1.0],
-    bagging_temperature     = [0.0, 0.1, 0.25, 0.5, 0.75, 1.0]
+    min_data_weight_in_leaf     = [10.0, 18.0, 32.0, 56.0, 100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
+    l2_regularization           = [3.2],
+    max_leaves                  = [3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
+    max_depth                   = [2, 3, 4, 5, 6, 7, 8, 9],
+    max_delta_score             = [0.32, 0.56, 1.0, 1.8, 3.2, 5.6, 10.0, 18.0, 32.0, 56.0, 100.0],
+    learning_rate               = [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
+    feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
+    bagging_temperature         = [0.25],
+    min_data_to_regress_in_leaf = [10000, typemax(Int64)]
   )
