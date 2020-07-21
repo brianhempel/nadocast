@@ -117,6 +117,26 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Dict{Symbol,Real}(:max_depth => 9,:max_delta_score => 1.0,:learning_rate => 0.016,:max_leaves => 12,:l2_regularization => 3.2,:feature_fraction => 1.0,:min_gain_to_split => 0.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 1.8e6)
 # 315:09:24 elapsed
 
+# Trying with regression in leaves. Doesn't seem to help.
+#
+# $ FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# Loading training data
+# done. 6925826 datapoints with 18759 features each.
+# Loading validation data
+# done. 1456007 datapoints with 18759 features each.
+# Middle config:
+# New best! Loss: 0.0013605118
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:min_data_to_regress_in_leaf => 10000,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+#
+# Best random:
+# New best! Loss: 0.0013546386
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.0,:learning_rate => 0.025,:max_leaves => 12,:l2_regularization => 3.2,:feature_fraction => 0.1,:min_data_to_regress_in_leaf => 9223372036854775807,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180000.0)
+#
+# Best hyperparameters (loss = 0.0013517824):
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.0,:learning_rate => 0.025,:max_leaves => 12,:l2_regularization => 3.2,:feature_fraction => 0.1,:min_data_to_regress_in_leaf => 9223372036854775807,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320000.0)
+
+
 # $ FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.15 make train_gradient_boosted_decision_trees
 #
 # 10242 for training. (1725 with tornadoes.)
@@ -148,11 +168,11 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     random_start_count = 20,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
-    min_data_weight_in_leaf     = [10.0, 18.0, 32.0, 56.0, 100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
+    min_data_weight_in_leaf     = [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0, 18000000.0, 32000000.0, 56000000.0, 100000000.0],
     l2_regularization           = [3.2],
     max_leaves                  = [3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
     max_depth                   = [2, 3, 4, 5, 6, 7, 8, 9],
-    max_delta_score             = [0.32, 0.56, 1.0, 1.8, 3.2, 5.6, 10.0, 18.0, 32.0, 56.0, 100.0],
+    max_delta_score             = [0.32, 0.56, 1.0, 1.8, 3.2, 5.6, 10.0],
     learning_rate               = [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
     feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
     bagging_temperature         = [0.25],
