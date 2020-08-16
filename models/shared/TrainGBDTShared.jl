@@ -166,7 +166,7 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     callback_to_track_validation_loss =
       MemoryConstrainedTreeBoosting.make_callback_to_track_validation_loss(
-          validation_X_binned, validation_y, bin_splits;
+          validation_X_binned, validation_y;
           validation_weights                 = validation_weights,
           max_iterations_without_improvement = max_iterations_without_improvement
         )
@@ -181,7 +181,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       if validation_loss < best_loss
         best_model_path = save(validation_loss, bin_splits, trees)
 
-        validation_scores = MemoryConstrainedTreeBoosting.apply_trees(validation_X_binned, trees, bin_splits)
+        validation_scores = MemoryConstrainedTreeBoosting.apply_trees(validation_X_binned, trees)
         write("$(model_prefix)/$(length(trees))_trees_loss_$(validation_loss).validation_scores", validation_scores)
         write("$(model_prefix)/validation_labels", validation_y)
         write("$(model_prefix)/validation_weights", validation_weights)
@@ -191,7 +191,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     end
 
     MemoryConstrainedTreeBoosting.train_on_binned(
-      X_binned, y, bin_splits;
+      X_binned, y;
       weights            = weights,
       iteration_count    = Int64(round(30 / config[:learning_rate])),
       iteration_callback = iteration_callback,
