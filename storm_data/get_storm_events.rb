@@ -33,6 +33,10 @@ ROOT_URL = "https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
 
 file_names = `curl #{ROOT_URL}`.scan(/StormEvents_details-ftp_v1\.0_d\d\d\d\d_c\d+\.csv\.gz/).uniq
 
+if file_names.empty?
+  STDERR.puts "Could not retreive storm event database file list from https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
+  exit 1
+end
 
 tornadoes_file   = open(tornadoes_csv_out_path, "w")
 wind_events_file = open(wind_events_csv_out_path, "w")
