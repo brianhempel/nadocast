@@ -207,7 +207,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Loading validation data
 # done. 1681584 datapoints with 18759 features each.
 #
-# Middle confif:
+# Middle config:
 # New best! Loss: 0.0013057644
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:min_data_to_regress_in_leaf => 10000,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
 #
@@ -219,6 +219,31 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Best hyperparameters (loss = 0.0012903158):
 # Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 15,:l2_regularization => 3.2,:feature_fraction => 0.75,:min_data_to_regress_in_leaf => 9223372036854775807,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320000.0)
 # 369:44:50 elapsed
+
+# $ FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.15 make train_gradient_boosted_decision_trees
+# 12212 for training. (2344 with tornadoes.)
+# 2487 for validation.
+# 2221 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 956 positive and 10015 negative labels...computing bin splits...done.
+# Loading training data
+# done. 9295159 datapoints with 18759 features each.
+# Loading validation data
+# done. 1892074 datapoints with 18759 features each.
+#
+# Middle config:
+# New best! Loss: 0.0014386413
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.00143153
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 5.6,:learning_rate => 0.063,:max_leaves => 35,:l2_regularization => 3.2,:feature_fraction => 0.75,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
+#
+# Best after coordinate descent (4th round):
+# Best hyperparameters (loss = 0.00141136):
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320.0)
+# 186:47:56 elapsed
+
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
