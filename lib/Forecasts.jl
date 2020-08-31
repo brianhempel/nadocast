@@ -135,23 +135,25 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
     preload_process = nothing
   end
 
+  next_state = (i+1, preload_process)
+
   data =
     try
       Forecasts.data(forecast)
     catch exception
       if isa(exception, Inventories.FieldMissing)
         println(exception)
-        return Base.iterate(iterator, i+1)
+        return Base.iterate(iterator, next_state)
       elseif isa(exception, EOFError) || isa(exception, ErrorException) || isa(exception, ProcessFailedException)
         println(exception)
         println("Bad forecast: $(forecast.model_name) $(Forecasts.time_title(forecast))")
-        return Base.iterate(iterator, i+1)
+        return Base.iterate(iterator, next_state)
       else
         rethrow(exception)
       end
     end
 
-  ((forecast, data), (i+1, preload_process))
+  ((forecast, data), next_state)
 end
 
 
