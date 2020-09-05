@@ -21,13 +21,43 @@ forecast_hour_range =
 # 13:24
 # 24:35
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.03"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.025"))
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(repr(Dates.now()), ":" => "."))"
 
-# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.03 make train_gradient_boosted_decision_trees
+# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.025 make train_gradient_boosted_decision_trees
+# ulimit -n 8192; JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+# Loading tornadoes...
+# Loading wind events...
+# Loading hail events...
+# 11165 for training. (1970 with tornadoes.)
+# 2282 for validation.
+# 2125 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 6990 positive and 71820 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10129095 datapoints with 17758 features each.
+# Loading validation data
+# done. 2074205 datapoints with 17758 features each.
+# 
+# Middle config:
+# New best! Loss: 0.0010878555
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010728862
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 3.2,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
+#
+# Best after coordinate descent:
+# Best hyperparameters (loss = 0.0010708775):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 3.2,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320.0)
+# 102:45:03 elapsed
+
+# $ FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.025 make train_gradient_boosted_decision_trees
+
+
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
