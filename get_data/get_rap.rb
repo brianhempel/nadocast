@@ -13,8 +13,8 @@ FROM_NOMADS     = ARGV.include?("--from-nomads") # (ARGV[0] == "--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = false
 
-# RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap_current.rb
-# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_rap_current.rb --from-nomads
+# RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap.rb
+# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_rap.rb --from-nomads
 
 RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
