@@ -80,6 +80,32 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
 # 121:39:50 elapsed
 
+# $ FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.025 make train_gradient_boosted_decision_trees
+# ulimit -n 8192; JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+# Loading tornadoes...
+# Loading wind events...
+# Loading hail events...
+# 11121 for training. (1969 with tornadoes.)
+# 2251 for validation.
+# 2114 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 6673 positive and 71822 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10083624 datapoints with 17758 features each.
+# Loading validation data
+# done. 2045972 datapoints with 17758 features each.
+# 
+# Middle config:
+# New best! Loss: 0.0011902072
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0011777475
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
+#
+# Best after coordinate descent:
+# New best! Loss: 0.0011718384
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
