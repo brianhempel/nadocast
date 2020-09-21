@@ -17,7 +17,6 @@ require 'date'
 require 'fileutils'
 
 
-BASE_DIRECTORY = "/Volumes/RAP_1/rap"
 MIN_FILE_BYTES = 10_000_000
 FORECAST_HOURS = [1,2,3,5,6,7,11,12,13,16,17,18]
 RUN_HOURS      = (0..23).to_a

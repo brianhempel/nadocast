@@ -36,7 +36,7 @@ class RAPForecast < Forecast
 
   def archive_url
     if FROM_NOMADS
-      "https://nomads.ncdc.noaa.gov/data/rap130/#{year_month}/#{year_month_day}/#{file_name}"
+      "https://www.ncei.noaa.gov/data/rapid-refresh/access/rap-130-13km/forecast/#{year_month}/#{year_month_day}/#{file_name}"
     else
       raise "see get_rap_archived.rb for pulling from NCDC's long term storage request system"
     end
