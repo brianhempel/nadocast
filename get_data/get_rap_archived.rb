@@ -5,6 +5,8 @@
 
 # Usage: ruby get_rap_archived.rb https://www1.ncdc.noaa.gov/pub/has/model/HAS011081869/ [thread_count]
 
+require 'date'
+
 base_url = ARGV[0] || raise("Usage: ruby get_rap_archived.rb https://www1.ncdc.noaa.gov/pub/has/model/HAS011081869/ [thread_count] [base_directory]")
 
 THREAD_COUNT = Integer(ARGV[1] || "6")
