@@ -83,7 +83,8 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
     unless downloaded?
       puts "#{url_to_get} -> #{path}"
       return if DRY_RUN
-      data = `curl -f -s --show-error #{url_to_get}`
+      # The pando HRRR archive server doesn't like TLS 1.2? Or is it just nadocaster?
+      data = `curl -f -s --show-error --tls-max 1.1 #{url_to_get}`
       if $?.success? && data.size >= min_file_bytes
         File.write(path, data)
         if alt_path
