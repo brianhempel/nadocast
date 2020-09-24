@@ -27,7 +27,7 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 RUN_HOURS        = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS   = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 11, 12, 13, 18]
 MIN_FILE_BYTES   = 80_000_000
-THREAD_COUNT     = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
+THREAD_COUNT     = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "1" : "4"))
 HALF_WINDOW_SIZE = 90*MINUTE # Grab forecasts valid within this many minutes of a geocoded storm event
 
 loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
@@ -169,6 +169,7 @@ threads = THREAD_COUNT.times.map do
   Thread.new do
     while forecast_to_get = forecasts_to_get.shift
       forecast_to_get.ensure_downloaded!(from_archive: FROM_ARCHIVE)
+      sleep 5 if FROM_ARCHIVE # Rate limiting?!?!?!
     end
   end
 end
