@@ -165,13 +165,20 @@ end
 
 # hrrr.t02z.wrfsfcf18.grib2
 
-threads = THREAD_COUNT.times.map do
-  Thread.new do
-    while forecast_to_get = forecasts_to_get.shift
-      forecast_to_get.ensure_downloaded!(from_archive: FROM_ARCHIVE)
-      sleep 5 if FROM_ARCHIVE # Rate limiting?!?!?!
+if FROM_ARCHIVE
+  while forecast_to_get = forecasts_to_get.shift
+    forecast_to_get.ensure_downloaded!(from_archive: true)
+    sleep 5
+  end
+else
+  threads = THREAD_COUNT.times.map do
+    Thread.new do
+      while forecast_to_get = forecasts_to_get.shift
+        forecast_to_get.ensure_downloaded!(from_archive: FROM_ARCHIVE)
+      end
     end
   end
+  
+  threads.each(&:join)
 end
 
-threads.each(&:join)
