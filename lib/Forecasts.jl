@@ -144,7 +144,7 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
       if isa(exception, Inventories.FieldMissing)
         println(exception)
         return Base.iterate(iterator, next_state)
-      elseif isa(exception, EOFError) || isa(exception, ErrorException) || isa(exception, ProcessFailedException)
+      elseif isa(exception, EOFError) || isa(exception, ErrorException) || isa(exception, ProcessFailedException) || isa(exception, TaskFailedException)
         println(exception)
         println("Bad forecast: $(forecast.model_name) $(Forecasts.time_title(forecast))")
         return Base.iterate(iterator, next_state)
