@@ -173,7 +173,7 @@ end
 if FROM_ARCHIVE
   while forecast_to_get = forecasts_to_get.shift
     forecast_to_get.ensure_downloaded!(from_archive: true)
-    sleep 5
+    # sleep 5
   end
 else
   threads = THREAD_COUNT.times.map do
