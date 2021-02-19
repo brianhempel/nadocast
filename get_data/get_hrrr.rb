@@ -13,7 +13,12 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 # Runs 2018-11 onward are stored on HRRR_2
 
 # For training:
-# ruby get_hrrr.rb --from-archive --delete-unneeded
+# --from-archive flag implies storm event hours±1 only (HALF_WINDOW_SIZE below)
+# Don't have enough disk space to store them all at once :(
+# Download next set after one set has loaded and is training.
+# FORECAST_HOURS=2,6,11,12,13,18 ruby get_hrrr.rb --from-archive --delete-unneeded
+# FORECAST_HOURS=1,2,3,6,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
+# FORECAST_HOURS=2,6,12,16,17,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 
 # Forecaster runs these:
 # RUN_HOURS=8,9,10   FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
@@ -178,7 +183,7 @@ else
       end
     end
   end
-  
+
   threads.each(&:join)
 end
 
