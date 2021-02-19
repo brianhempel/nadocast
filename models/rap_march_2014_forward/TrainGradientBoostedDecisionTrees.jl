@@ -108,27 +108,39 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # 257:25:54 elapsed
 
 
+# "RAP forecast 2018-06-05 00Z +18 does not have HGT:1000 mb:hour fcst::"
+# Weird. labeled as "anl". Just removed it.
+# "RAP forecast 2018-12-13 15Z +16 does not have HGT:950 mb:hour fcst::"
+# Only has selected height levels. Removed it.
+
 # $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.007 make train_gradient_boosted_decision_trees
 # ulimit -n 8192; JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
-# ┌ Warning: The call to compilecache failed to create a usable precompiled cache file for TrainingShared [top-level]
-# │   exception = Required dependency Conus [top-level] failed to load from a cache file.
-# └ @ Base loading.jl:1036
-# ┌ Warning: The call to compilecache failed to create a usable precompiled cache file for TrainGBDTShared [top-level]
-# │   exception = Required dependency Conus [top-level] failed to load from a cache file.
-# └ @ Base loading.jl:1036
-# ┌ Warning: The call to compilecache failed to create a usable precompiled cache file for TrainingShared [top-level]
-# │   exception = Required dependency Conus [top-level] failed to load from a cache file.
-# └ @ Base loading.jl:1036
-# filtering
-# sorting...done
-# computing radius indices...done
 # Loading tornadoes...
 # Loading wind events...
 # Loading hail events...
-# 18818 for training. (2855 with tornadoes.)
+# 18816 for training. (2855 with tornadoes.)
 # 3693 for validation.
 # 3686 for testing.
 # Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 8698 positive and 90688 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6141096 datapoints with 27222 features each.
+# Loading validation data
+# done. 1202767 datapoints with 27222 features each.
+
+# Middle config:
+# New best! Loss: 0.0010086043
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+
+# Best random:
+# New best! Loss: 0.0009980386
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 35,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+
+# Best after coordinate descent:
+# Best hyperparameters (loss = 0.0009955188):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 35,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 18000.0)
+
+# 66:07:37 elapsed (all data was loaded in failed runs)
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
