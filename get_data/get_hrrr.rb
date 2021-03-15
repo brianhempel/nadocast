@@ -156,7 +156,7 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
 
   forecasts_to_get =
     forecasts_in_range.select do |forecast|
-      FORECAST_HOURS.include?(forecast.forecast_hour) && storm_event_times.include?(forecast.valid_time)
+      FORECAST_HOURS.include?(forecast.forecast_hour) && forecast.base_directory == "/Volumes/HRRR_2/hrrr" && storm_event_times.include?(forecast.valid_time)
     end
 
   forecasts_to_remove = DELETE_UNNEEDED ? (forecasts_in_range - forecasts_to_get) : []
