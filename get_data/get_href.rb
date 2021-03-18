@@ -972,7 +972,7 @@ threads = THREAD_COUNT.times.map do
       run_hour_str      = "%02d" % [run_hour]
       forecast_hour_str = "%02d" % [forecast_hour]
 
-      base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 ? BASE_DIRECTORY_2
+      base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
       file_name         = "href_conus_#{year_month_day}_t#{run_hour_str}z_#{type}_f#{forecast_hour_str}.grib2"
       url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
       directory         = "#{base_directory}/#{year_month}/#{year_month_day}"

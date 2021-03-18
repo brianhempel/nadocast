@@ -37,7 +37,7 @@ threads = THREAD_COUNT.times.map do
       year_month        = year_month_day[0...6]
       run_hour_str      = "%02d" % [run_hour]
 
-      base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 ? BASE_DIRECTORY_2
+      base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
       file_name         = "sref_#{year_month_day}_t#{run_hour_str}z_#{type}.grib2"
       url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/sref.#{year_month_day}/#{run_hour_str}/ensprod/sref.t#{run_hour_str}z.pgrb212.#{type}.grib2"
       directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
