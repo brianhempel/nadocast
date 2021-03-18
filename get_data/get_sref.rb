@@ -13,17 +13,17 @@ require "date"
 TYPES          = ["mean_1hrly", "mean_3hrly", "prob_1hrly", "prob_3hrly"]
 YMDS           = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/`.scan(/\bsref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [3, 9, 15, 21]
-BASE_DIRECTORY = "/Volumes/SREF_HREF_1/sref"
+BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/sref"
+BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/sref"
 MIN_FILE_BYTES = 20_000_000
-BAD_FILES      = %w[]
-THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
+THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "2")
 
 def alt_location(directory)
-  directory.sub(/^\/Volumes\/SREF_HREF_1\//, "/Volumes/SREF_HREF_2/")
+  directory.sub(/^\/Volumes\/SREF_HREF_1\//, "/Volumes/SREF_HREF_2/").sub(/^\/Volumes\/SREF_HREF_3\//, "/Volumes/SREF_HREF_4/")
 end
 
-loop { break if Dir.exists?("/Volumes/SREF_HREF_1/"); puts "Waiting for SREF_HREF_1 to mount...";  sleep 4 }
-loop { break if Dir.exists?("/Volumes/SREF_HREF_2/"); puts "Waiting for SREF_HREF_2 to mount..."; sleep 4 }
+loop { break if Dir.exists?("/Volumes/SREF_HREF_3/"); puts "Waiting for SREF_HREF_3 to mount..."; sleep 4 }
+loop { break if Dir.exists?("/Volumes/SREF_HREF_4/"); puts "Waiting for SREF_HREF_4 to mount..."; sleep 4 }
 
 
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2
@@ -37,10 +37,10 @@ threads = THREAD_COUNT.times.map do
       year_month        = year_month_day[0...6]
       run_hour_str      = "%02d" % [run_hour]
 
+      base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 ? BASE_DIRECTORY_2
       file_name         = "sref_#{year_month_day}_t#{run_hour_str}z_#{type}.grib2"
-      next if BAD_FILES.include?(file_name)
       url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/sref.#{year_month_day}/#{run_hour_str}/ensprod/sref.t#{run_hour_str}z.pgrb212.#{type}.grib2"
-      directory         = "#{BASE_DIRECTORY}/#{year_month}/#{year_month_day}"
+      directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
       path              = "#{directory}/#{file_name}"
       alt_directory     = alt_location(directory)
       alt_path          = alt_location(path)
