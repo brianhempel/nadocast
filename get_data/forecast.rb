@@ -37,6 +37,9 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
     raise "unimplemented"
   end
 
+  def alt_archive_url
+  end
+
   def ncep_url
     raise "unimplemented"
   end
@@ -89,6 +92,17 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
         File.write(path, data)
         if alt_path
           File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < min_file_bytes
+        end
+      elsif from_archive && alt_archive_url
+        url_to_get = alt_archive_url
+        puts "#{url_to_get} -> #{path}"
+        return if DRY_RUN
+        data = `curl -f -s --show-error #{url_to_get}`
+        if $?.success? && data.size >= min_file_bytes
+          File.write(path, data)
+          if alt_path
+            File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < min_file_bytes
+          end
         end
       end
     end
