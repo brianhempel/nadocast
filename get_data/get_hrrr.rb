@@ -18,7 +18,7 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 # Download next set after one set has loaded and is training.
 # FORECAST_HOURS=2,6,11,12,13,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # FORECAST_HOURS=1,2,3,6,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
-# FORECAST_HOURS=2,5,6,7,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
+# THREAD_COUNT=2 FORECAST_HOURS=2,5,6,7,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # FORECAST_HOURS=2,6,12,16,17,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 
 # Forecaster runs these:
@@ -178,3 +178,5 @@ threads = THREAD_COUNT.times.map do
     end
   end
 end
+
+threads.each(&:join)
