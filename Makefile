@@ -94,7 +94,7 @@ setup:
 	# sudo apt install make
 	# sudo apt install gfortran
 	# cd grib2/
-	# CC=gcc FC=gfortran make  # CC=gcc-8 FC=gfortran-8 make on my Mac
+	# CC=gcc FC=gfortran make  # CC=gcc-10 FC=gfortran-10 make on my Mac
 	# mkdir ~/bin
 	# ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
 	# echo 'shell -$SHELL' >> ~/.screenrc

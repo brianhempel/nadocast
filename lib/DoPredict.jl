@@ -53,10 +53,8 @@ HRRR_VS_OTHERS_WEIGHT =
   end
 
 
-sref_model_path = (@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model"
-
 # print("Gather SREF forecasts...")
-all_sref_forecasts = SREF.feature_engineered_forecasts()
+all_sref_forecasts = SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 # println("done.")
 
 sref_run_time_seconds =
@@ -74,7 +72,10 @@ sref_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_
 # mkpath(out_dir)
 
 # print("Load SREF model...")
-sref_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(sref_model_path)
+# sref_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model")
+sref_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2020-08-01T06.24.27.615/177_trees_loss_0.0012903158.model")
+sref_predict_f12_to_f23 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2020-07-26T07.54.57.491/173_trees_loss_0.0013711528.model")
+sref_predict_f21_to_f38 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2020-08-16T18.14.40.282/147_trees_loss_0.00141136.model")
 # println("done.")
 
 
@@ -127,11 +128,9 @@ hrrr_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(hrrr_model_
 
 
 
-
-href_model_path = (@__DIR__) * "/../models/href_mid_2018_forward/gbdt_f1-36_2019-03-28T13.34.42.186/99_trees_annealing_round_1_loss_0.0012652115.model"
-
 # print("Load HREF forecasts...")
-all_href_forecasts = HREF.feature_engineered_forecasts()
+# all_href_forecasts = HREF.feature_engineered_forecasts()
+all_href_forecasts = HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 # println("done.")
 
 href_run_time_seconds =
@@ -144,7 +143,10 @@ href_run_time_seconds =
   end
 
 # print("Load HREF model...")
-href_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(href_model_path)
+# href_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(href_model_path)
+href_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2020-08-31T01.09.34.597/165_trees_loss_0.0010708775.model")
+href_predict_f13_to_f24 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2020-09-05T14.17.00.494/205_trees_loss_0.0011394698.model")
+href_predict_f24_to_f35 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2020-09-11T02.05.26.327/192_trees_loss_0.0011718384.model")
 # println("done.")
 
 nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
@@ -175,8 +177,8 @@ period_rap_run_hours                   = Int64[]
 
 # println("Compute upsamplers")
 sref_to_href_layer_upsampler = Grids.get_interpolating_upsampler(SREF.grid(), HREF.grid())
-rap_to_href_layer_upsampler  = Grids.get_upsampler(RAP.grid(), HREF.grid())
-hrrr_to_href_layer_resampler = Grids.get_upsampler(HRRR.grid(), HREF.grid())
+rap_to_href_layer_upsampler  = !isempty(rap_forecast_candidates)  ? Grids.get_upsampler(RAP.grid(),  HREF.grid()) : nothing
+hrrr_to_href_layer_resampler = !isempty(hrrr_forecast_candidates) ? Grids.get_upsampler(HRRR.grid(), HREF.grid()) : nothing
 
 # for (run_hour, hrrr_run_hour, rap_run_hour, href_run_hour, sref_run_hour) in FORECAST_SCHEDULE
 #   run_time_in_seconds_since_epoch_utc = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
@@ -220,10 +222,30 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
     println(path)
 
     # print("Predicting SREF...")
-    sref_predictions = sref_predict(sref_data)
+    sref_predictions =
+      if sref_forecast.forecast_hour in 21:38
+        sref_predict_f21_to_f38(sref_data)
+      elseif sref_forecast.forecast_hour in 12:23
+        sref_predict_f12_to_f23(sref_data)
+      elseif sref_forecast.forecast_hour in 2:13
+        sref_predict_f2_to_f13(sref_data)
+      else
+        error("SREF forecast hour $(sref_forecast.forecast_hour) not in 2:38")
+      end
+    # sref_predict(sref_data)
     # println("done.")
     # print("Predicting HREF...")
-    href_predictions = href_predict(href_data)
+    href_predictions =
+      if href_forecast.forecast_hour in 24:35
+        href_predict_f24_to_f35(href_data)
+      elseif href_forecast.forecast_hour in 13:24
+        href_predict_f13_to_f24(href_data)
+      elseif href_forecast.forecast_hour in 2:13
+        href_predict_f2_to_f13(href_data)
+      else
+        error("HREF forecast hour $(href_forecast.forecast_hour) not in 2:35")
+      end
+    # href_predict(href_data)
     # println("done.")
 
     sref_predictions_upsampled = sref_to_href_layer_upsampler(sref_predictions)
@@ -406,22 +428,22 @@ for path in paths
   end
 end
 
-if !isnothing(animation_glob_path)
-  println("Making hourlies movie out of $(animation_glob_path)...")
-  hourlies_movie_path = out_path_prefix * "_hourlies"
-  run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
-end
+# if !isnothing(animation_glob_path)
+#   println("Making hourlies movie out of $(animation_glob_path)...")
+#   hourlies_movie_path = out_path_prefix * "_hourlies"
+#   run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
+# end
 
 if get(ENV, "TWEET", "false") == "true"
   tweet_script_path = (@__DIR__) * "/tweet.rb"
 
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
-    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast" $path.png`)
+    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast (new HREF/SREF models)" $path.png`)
   end
 
-  if !isnothing(animation_glob_path)
-    println("Tweeting hourlies $(hourlies_movie_path)...")
-    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
-  end
+  # if !isnothing(animation_glob_path)
+  #   println("Tweeting hourlies $(hourlies_movie_path)...")
+  #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
+  # end
 end
