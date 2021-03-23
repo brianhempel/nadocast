@@ -14,9 +14,62 @@ forecast_hour_range = forecast_hour:forecast_hour
 # 12
 # 17
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.04"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.01"))
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
+
+# $ FORECAST_HOUR=12 DATA_SUBSET_RATIO=0.01 make train_gradient_boosted_decision_trees
+# JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+# Loading tornadoes...
+# Loading wind events...
+# Loading hail events...
+# 10097 for training. (1868 with tornadoes.)
+# 2065 for validation.
+# 2020 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 20161 positive and 193071 negative labels...computing bin splits...done.
+# Loading training data
+# done. 9957559 datapoints with 18577 features each.
+# Loading validation data
+# done. 2039162 datapoints with 18577 features each.
+#
+# Middle config:
+# New best! Loss: 0.0011770464
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0011733025
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 12,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0011668991):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 15,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 560.0)
+
+
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.01 make train_gradient_boosted_decision_trees
+# JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+# Loading tornadoes...
+# Loading wind events...
+# Loading hail events...
+# 10108 for training. (1873 with tornadoes.)
+# 2066 for validation.
+# 2019 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 19921 positive and 193093 negative labels...computing bin splits...done.
+# Loading training data
+# done. 9966102 datapoints with 18577 features each.
+# Loading validation data
+# done. 2039147 datapoints with 18577 features each.
+#
+# Middle config:
+# New best! Loss: 0.0010063316
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0009928169
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 35,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3200.0)
+
+
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HRRR.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
