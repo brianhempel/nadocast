@@ -64,9 +64,6 @@ end
 if FROM_NOMADS
   DATES = (Date.today - 365..Date.today).to_a
 
-  # storm_event_times =
-  #   conus_event_hours_set(STORM_EVENTS, HALF_WINDOW_SIZE)
-
   forecasts_in_range =
     DATES.product(RUN_HOURS, (0..21).to_a).map do |date, run_hour, forecast_hour|
       RAPForecast.new(date, run_hour, forecast_hour)

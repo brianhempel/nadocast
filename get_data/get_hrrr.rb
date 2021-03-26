@@ -9,8 +9,8 @@ FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time range not associated with storm events.
 
-# Runs through 2018-10 are stored on HRRR_1
-# Runs 2018-11 onward are stored on HRRR_2
+# Runs through 2018-5 are stored on HRRR_1
+# Runs 2018-6 onward are stored on HRRR_2
 
 # For training:
 # --from-archive flag implies storm event hours±1 only (HALF_WINDOW_SIZE below)
@@ -77,7 +77,7 @@ class HRRRForecast < Forecast
   end
 
   def base_directory
-    if ([run_date.year, run_date.month] <=> [2018, 10]) <= 0
+    if ([run_date.year, run_date.month] <=> [2018, 5]) <= 0
       "/Volumes/HRRR_1/hrrr"
     else
       "/Volumes/HRRR_2/hrrr"
@@ -161,7 +161,10 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
 
   forecasts_to_get =
     forecasts_in_range.select do |forecast|
-      FORECAST_HOURS.include?(forecast.forecast_hour) && storm_event_times.include?(forecast.valid_time)
+      FORECAST_HOURS.include?(forecast.forecast_hour) &&
+        (storm_event_times.include?(forecast.valid_time)
+        || storm_event_times.include?(forecast.valid_time + HOUR)
+        || storm_event_times.include?(forecast.valid_time - HOUR))
     end
 
   forecasts_to_remove = DELETE_UNNEEDED ? (forecasts_in_range - forecasts_to_get) : []
