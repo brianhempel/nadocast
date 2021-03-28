@@ -74,15 +74,15 @@ function reload_forecasts()
 
   href_predict(forecast, data) =
     if forecast.forecast_hour in 25:35
-      href_predict_f24_to_f35(href_data)
+      href_predict_f24_to_f35(data)
     elseif forecast.forecast_hour in 24:24
       0.5 .* (href_predict_f24_to_f35(data) .+ href_predict_f13_to_f24(data))
     elseif forecast.forecast_hour in 14:23
-      href_predict_f13_to_f24(href_data)
+      href_predict_f13_to_f24(data)
     elseif forecast.forecast_hour in 13:13
       0.5 .* (href_predict_f13_to_f24(data) .+ href_predict_f2_to_f13(data))
     elseif forecast.forecast_hour in 2:12
-      href_predict_f2_to_f13(href_data)
+      href_predict_f2_to_f13(data)
     else
       error("HREF forecast hour $(forecast.forecast_hour) not in 2:35")
     end
