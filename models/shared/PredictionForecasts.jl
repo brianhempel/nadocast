@@ -122,7 +122,7 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 # end
 
 
-
+# model_predict takes forecast, data
 function simple_prediction_forecasts(base_forecasts, model_predict)
 
   inventory_transformer(base_inventory, base_data) = begin
@@ -136,14 +136,14 @@ function simple_prediction_forecasts(base_forecasts, model_predict)
         "calculated",                               # level                  :: String # "180-0 mb above ground"
         "$(base_forecast.forecast_hour) hour fcst", # forecast_hour_str      :: String # "7 hour fcst" or "6-hour acc fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
         "calculated prob",                          # misc                   :: String # "wt ens mean" or "prob >2.54"
-        ""
+        ""                                          # feature_engineering    :: String # "" or "25mi mean" or "100mi forward grad" etc
       )
 
     [prediction_inventory_line]
   end
 
   data_transformer(base_forecast, base_data) = begin
-    reshape(Float32.(model_predict(base_data)), (:,1)) # Make the predictions a 2D features array with 1 feature
+    reshape(Float32.(model_predict(base_forecast, base_data)), (:,1)) # Make the predictions a 2D features array with 1 feature
   end
 
   ForecastCombinators.map_forecasts(base_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
@@ -183,7 +183,7 @@ function feature_engineered_prediction_forecasts(base_forecasts, model_predict; 
     )
   end
 
-  basic_prediction_forecasts                = simple_prediction_forecasts(base_forecasts, model_predict)
+  basic_prediction_forecasts                = simple_prediction_forecasts(base_forecasts, (_, data) -> model_predict(data))
   forecasts_with_predictions                = ForecastCombinators.concat_forecasts(Iterators.zip(basic_prediction_forecasts, base_forecasts_no_feature_engineering))
   forecasts_with_predictions_and_winds_only = ForecastCombinators.filter_features_forecasts(forecasts_with_predictions, is_wind_or_prediction_layer)
   forecasts_feature_engineered_predictions_and_winds  =
