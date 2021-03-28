@@ -14,7 +14,9 @@ forecast_hour_range = forecast_hour:forecast_hour
 # 12
 # 17
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.01"))
+# Google archive only has up to f15 until 2016-8-25...and the Utah archive got rid of their 2016 data for some reason. So f17 is missing a couple months relative to the others.
+
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.006"))
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
 
@@ -68,6 +70,11 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Best random:
 # New best! Loss: 0.0009928169
 # Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 35,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3200.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0009847874):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.75,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5600.0)
+
 
 
 

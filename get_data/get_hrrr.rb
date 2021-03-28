@@ -12,6 +12,8 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 # Runs through 2018-5 are stored on HRRR_1
 # Runs 2018-6 onward are stored on HRRR_2
 
+# Google archive only has up to f15 until 2016-8-25...and the Utah archive got rid of their 2016 data for some reason. So f16,f17,f18 is missing a couple months relative to the others.
+
 # For training:
 # --from-archive flag implies storm event hours±1 only (HALF_WINDOW_SIZE below)
 # Don't have enough disk space to store them all at once :(
@@ -77,7 +79,7 @@ class HRRRForecast < Forecast
   end
 
   def base_directory
-    if ([run_date.year, run_date.month] <=> [2018, 5]) <= 0
+    if ([run_date.year, run_date.month] <=> [2017, 12]) <= 0
       "/Volumes/HRRR_1/hrrr"
     else
       "/Volumes/HRRR_2/hrrr"
@@ -146,7 +148,7 @@ class HRRRForecast < Forecast
 end
 
 if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +12 +18 forecasts.
-  start_date_parts = ENV["START_DATE"]&.split("-")&.map(&:to_i) || [2016,7,15]
+  start_date_parts = ENV["START_DATE"]&.split("-")&.map(&:to_i) || [2014,9,30]
 
   # https://pando-rgw01.chpc.utah.edu/hrrr/sfc/20180101/hrrr.t00z.wrfsfcf00.grib2
   DATES = (Date.new(*start_date_parts)..Date.today).to_a
