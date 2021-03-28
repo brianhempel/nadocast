@@ -68,9 +68,9 @@ function reload_forecasts()
 
   href_forecasts = HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 
-  href_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2020-08-31T01.09.34.597/165_trees_loss_0.0010708775.model")
-  href_predict_f13_to_f24 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2020-09-05T14.17.00.494/205_trees_loss_0.0011394698.model")
-  href_predict_f24_to_f35 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2020-09-11T02.05.26.327/192_trees_loss_0.0011718384.model")
+  href_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2020-08-31T01.09.34.597/165_trees_loss_0.0010708775.model")
+  href_predict_f13_to_f24 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2020-09-05T14.17.00.494/205_trees_loss_0.0011394698.model")
+  href_predict_f24_to_f35 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2020-09-11T02.05.26.327/192_trees_loss_0.0011718384.model")
 
   href_predict(forecast, data) =
     if forecast.forecast_hour in 25:35
