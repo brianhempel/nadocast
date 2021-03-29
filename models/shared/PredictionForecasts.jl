@@ -125,7 +125,7 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 # model_predict takes forecast, data
 function simple_prediction_forecasts(base_forecasts, model_predict)
 
-  inventory_transformer(base_inventory, base_data) = begin
+  inventory_transformer(base_forecast, base_inventory) = begin
     # Need just enough for FeatureEngineeringShared.make_data
     prediction_inventory_line =
       Inventories.InventoryLine(
