@@ -1,0 +1,97 @@
+REFC:entire atmosphere:hour fcst:
+RETOP:cloud top:hour fcst:
+VIL:entire atmosphere:hour fcst:
+VIS:surface:hour fcst:
+REFD:1000 m above ground:hour fcst:
+REFD:4000 m above ground:hour fcst:
+GUST:surface:hour fcst:
+HGT:500 mb:hour fcst:
+TMP:500 mb:hour fcst:
+DPT:500 mb:hour fcst:
+UGRD:500 mb:hour fcst:
+VGRD:500 mb:hour fcst:
+HGT:700 mb:hour fcst:
+TMP:700 mb:hour fcst:
+DPT:700 mb:hour fcst:
+UGRD:700 mb:hour fcst:
+VGRD:700 mb:hour fcst:
+HGT:850 mb:hour fcst:
+TMP:850 mb:hour fcst:
+DPT:850 mb:hour fcst:
+UGRD:850 mb:hour fcst:
+VGRD:850 mb:hour fcst:
+TMP:925 mb:hour fcst:
+DPT:925 mb:hour fcst:
+UGRD:925 mb:hour fcst:
+VGRD:925 mb:hour fcst:
+TMP:1000 mb:hour fcst:
+DPT:1000 mb:hour fcst:
+UGRD:1000 mb:hour fcst:
+VGRD:1000 mb:hour fcst:
+MAXUVV:400-1000 mb above ground:one hour long max fcst:
+MAXDVV:400-1000 mb above ground:one hour long max fcst:
+DZDT:0.5-0.8 sigma layer:one hour long ave fcst:
+HGT:1000 mb:hour fcst:
+MAXREF:1000 m above ground:one hour long max fcst:
+MXUPHL:5000-2000 m above ground:one hour long max fcst:
+TCOLG:entire atmosphere:one hour long max fcst:
+UGRD:80 m above ground:hour fcst:
+VGRD:80 m above ground:hour fcst:
+PRES:surface:hour fcst:
+HGT:surface:hour fcst:
+TMP:surface:hour fcst:
+MSTAV:0 m underground:hour fcst:
+WEASD:surface:hour fcst:
+SNOWC:surface:hour fcst:
+SNOD:surface:hour fcst:
+TMP:2 m above ground:hour fcst:
+SPFH:2 m above ground:hour fcst:
+DPT:2 m above ground:hour fcst:
+UGRD:10 m above ground:hour fcst:
+VGRD:10 m above ground:hour fcst:
+WIND:10 m above ground:one hour long max fcst:
+CPOFP:surface:hour fcst:
+PRATE:surface:hour fcst:
+APCP:surface:one hour long acc fcst:
+WEASD:surface:one hour long acc fcst:
+CSNOW:surface:hour fcst:
+CICEP:surface:hour fcst:
+CFRZR:surface:hour fcst:
+CRAIN:surface:hour fcst:
+VGTYP:surface:hour fcst:
+LFTX:500-1000 mb:hour fcst:
+CAPE:surface:hour fcst:
+CIN:surface:hour fcst:
+PWAT:entire atmosphere:hour fcst:
+LCDC:low cloud layer:hour fcst:
+MCDC:middle cloud layer:hour fcst:
+HCDC:high cloud layer:hour fcst:
+TCDC:entire atmosphere:hour fcst:
+PRES:cloud base:hour fcst:
+HGT:cloud base:hour fcst:
+HGT:cloud ceiling:hour fcst:
+PRES:cloud top:hour fcst:
+HGT:cloud top:hour fcst:
+ULWRF:top of atmosphere:hour fcst:
+DSWRF:surface:hour fcst:
+HLCY:3000-0 m above ground:hour fcst:
+HLCY:1000-0 m above ground:hour fcst:
+USTM:6000-0 m above ground:hour fcst:
+VSTM:6000-0 m above ground:hour fcst:
+VUCSH:1000-0 m above ground:hour fcst:
+VVCSH:1000-0 m above ground:hour fcst:
+VUCSH:6000-0 m above ground:hour fcst:
+VVCSH:6000-0 m above ground:hour fcst:
+4LFTX:180-0 mb above ground:hour fcst:
+CAPE:180-0 mb above ground:hour fcst:
+CIN:180-0 mb above ground:hour fcst:
+HPBL:surface:hour fcst:
+HGT:level of adiabatic condensation from sfc:hour fcst:
+CAPE:90-0 mb above ground:hour fcst:
+CIN:90-0 mb above ground:hour fcst:
+CAPE:255-0 mb above ground:hour fcst:
+CIN:255-0 mb above ground:hour fcst:
+HGT:equilibrium level:hour fcst:
+PLPL:255-0 mb above ground:hour fcst:
+LAND:surface:hour fcst:
+ICEC:surface:hour fcst:

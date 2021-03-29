@@ -25,7 +25,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../models/rap_march_2014_forward")
 import RAP
 
 # println("Loading HRRR module")
-push!(LOAD_PATH, (@__DIR__) * "/../models/hrrr_mid_july_2016_forward")
+push!(LOAD_PATH, (@__DIR__) * "/../models/hrrr_late_aug_2016_forward")
 import HRRR
 
 # println("BEGIN")
@@ -96,7 +96,7 @@ sref_predict_f21_to_f38 = MemoryConstrainedTreeBoosting.load_unbinned_predictor(
 
 
 rap_model_path  = (@__DIR__) * "/../models/rap_march_2014_forward/gbdt_f12_2019-04-17T19.27.16.893/568_trees_loss_0.0012037802.model"
-hrrr_model_path = (@__DIR__) * "/../models/hrrr_mid_july_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
+hrrr_model_path = (@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
 
 # print("Load RAP forecasts...")
 all_rap_forecasts = RAP.feature_engineered_forecasts()

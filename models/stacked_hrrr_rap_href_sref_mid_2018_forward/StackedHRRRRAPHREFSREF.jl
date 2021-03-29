@@ -14,7 +14,7 @@ import StormEvents
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import PredictionForecasts
 
-push!(LOAD_PATH, (@__DIR__) * "/../hrrr_mid_july_2016_forward")
+push!(LOAD_PATH, (@__DIR__) * "/../hrrr_late_aug_2016_forward")
 import HRRR
 
 push!(LOAD_PATH, (@__DIR__) * "/../rap_march_2014_forward")
@@ -27,7 +27,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../sref_mid_2018_forward")
 import SREF
 
 RAP_MODEL_PATH  = (@__DIR__) * "/../rap_march_2014_forward/gbdt_f12_2019-04-17T19.27.16.893/568_trees_loss_0.0012037802.model"
-HRRR_MODEL_PATH = (@__DIR__) * "/../hrrr_mid_july_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
+HRRR_MODEL_PATH = (@__DIR__) * "/../hrrr_late_aug_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
 HREF_MODEL_PATH = (@__DIR__) * "/../href_mid_2018_forward/gbdt_f1-36_2019-03-28T13.34.42.186/99_trees_annealing_round_1_loss_0.0012652115.model"
 SREF_MODEL_PATH = (@__DIR__) * "/../sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model"
 
