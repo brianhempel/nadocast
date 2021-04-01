@@ -13,6 +13,7 @@ import Grids
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import PredictionForecasts
+import Climatology
 
 push!(LOAD_PATH, (@__DIR__) * "/../href_mid_2018_forward")
 import HREF
@@ -73,6 +74,7 @@ function forecasts_sref_newer_with_blurs_and_hour_climatology()
   else
     _forecasts_sref_newer_with_blurs_and_hour_climatology
   end
+
 end
 
 blur_radii = [10, 15, 25, 35, 50, 70, 100]
@@ -128,13 +130,13 @@ function with_blurs_and_hour_climatology(href_sref_prediction_forecasts)
     feature_i += 1
     out[:, feature_i] .= Float32(base_forecast.forecast_hour)
     feature_i += 1
-    out[:, feature_i] = Climatology.forecast_hour_tornado_probability_feature(grid)[2](base_forecast),
+    out[:, feature_i] = Climatology.forecast_hour_tornado_probability_feature(grid)[2](base_forecast)
     feature_i += 1
-    out[:, feature_i] = Climatology.forecast_hour_severe_probability_feature(grid)[2](base_forecast),
+    out[:, feature_i] = Climatology.forecast_hour_severe_probability_feature(grid)[2](base_forecast)
     feature_i += 1
-    out[:, feature_i] = Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[2](base_forecast),
+    out[:, feature_i] = Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[2](base_forecast)
     feature_i += 1
-    out[:, feature_i] = Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[2](base_forecast),
+    out[:, feature_i] = Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[2](base_forecast)
 
     out
   end
