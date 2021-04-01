@@ -14,6 +14,7 @@ import Grids
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import PredictionForecasts
 import Climatology
+import FeatureEngineeringShared
 
 push!(LOAD_PATH, (@__DIR__) * "/../href_mid_2018_forward")
 import HREF
