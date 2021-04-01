@@ -10,6 +10,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import ForecastCombinators
 import Grids
+import Inventories
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import PredictionForecasts
@@ -97,8 +98,8 @@ function with_blurs_and_hour_climatology(href_sref_prediction_forecasts)
     ]
 
     for miles in blur_radii
-      push!(new_inventory, revise_with_feature_engineering(href_line, "$(miles)mi mean"))
-      push!(new_inventory, revise_with_feature_engineering(sref_line, "$(miles)mi mean"))
+      push!(new_inventory, Inventories.revise_with_feature_engineering(href_line, "$(miles)mi mean"))
+      push!(new_inventory, Inventories.revise_with_feature_engineering(sref_line, "$(miles)mi mean"))
     end
 
     push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, "forecast_hour",                                                                        "calculated", "hour fcst", "", ""))
