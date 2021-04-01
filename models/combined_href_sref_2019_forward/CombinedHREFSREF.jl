@@ -57,11 +57,98 @@ function grid()
   HREF.grid()
 end
 
+function forecasts_href_newer_with_blurs_and_hour_climatology()
+  if isempty(_forecasts_href_newer_with_blurs_and_hour_climatology)
+    reload_forecasts()
+    _forecasts_href_newer_with_blurs_and_hour_climatology
+  else
+    _forecasts_href_newer_with_blurs_and_hour_climatology
+  end
+end
+
+function forecasts_sref_newer_with_blurs_and_hour_climatology()
+  if isempty(_forecasts_sref_newer_with_blurs_and_hour_climatology)
+    reload_forecasts()
+    _forecasts_sref_newer_with_blurs_and_hour_climatology
+  else
+    _forecasts_sref_newer_with_blurs_and_hour_climatology
+  end
+end
+
+blur_radii = [10, 15, 25, 35, 50, 70, 100]
+
+function with_blurs_and_hour_climatology(href_sref_prediction_forecasts)
+  grid = href_sref_prediction_forecasts[1].grid
+
+  blur_radii_grid_is = map(miles -> Grids.radius_grid_is(grid, miles), Float64.(blur_radii))
+
+  inventory_transformer(base_forecast, base_inventory) = begin
+    href_line = base_inventory[1]
+    sref_line = base_inventory[2]
+
+    new_inventory = [
+      href_line,
+      sref_line
+    ]
+
+    for miles in blur_radii
+      push!(new_inventory, revise_with_feature_engineering(href_line, "$(miles)mi mean"))
+      push!(new_inventory, revise_with_feature_engineering(sref_line, "$(miles)mi mean"))
+    end
+
+    push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, "forecast_hour",                                                                        "calculated", "hour fcst", "", ""))
+    push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_tornado_probability_feature(grid)[1],                         "calculated", "hour fcst", "", ""))
+    push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_severe_probability_feature(grid)[1],                          "calculated", "hour fcst", "", ""))
+    push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[1],            "calculated", "hour fcst", "", ""))
+    push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[1], "calculated", "hour fcst", "", ""))
+
+    new_inventory
+  end
+
+  data_transformer(base_forecast, base_data) = begin
+    point_count               = size(base_data, 1)
+
+    out = Array{Float32}(undef, (point_count, 2 + 2*length(blur_radii) + 5))
+
+    href_data = @view base_data[:, 1]
+    sref_data = @view base_data[:, 2]
+
+    feature_i = 1
+    out[:, feature_i] = href_data
+    feature_i += 1
+    out[:, feature_i] = sref_data
+
+    for blur_i in 1:length(blur_radii)
+      feature_i += 1
+      out[:, feature_i] = FeatureEngineeringShared.meanify_threaded(href_data, blur_radii_grid_is[blur_i])
+      feature_i += 1
+      out[:, feature_i] = FeatureEngineeringShared.meanify_threaded(sref_data, blur_radii_grid_is[blur_i])
+    end
+
+    feature_i += 1
+    out[:, feature_i] .= Float32(base_forecast.forecast_hour)
+    feature_i += 1
+    out[:, feature_i] = Climatology.forecast_hour_tornado_probability_feature(grid)[2](base_forecast),
+    feature_i += 1
+    out[:, feature_i] = Climatology.forecast_hour_severe_probability_feature(grid)[2](base_forecast),
+    feature_i += 1
+    out[:, feature_i] = Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[2](base_forecast),
+    feature_i += 1
+    out[:, feature_i] = Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[2](base_forecast),
+
+    out
+  end
+
+  ForecastCombinators.map_forecasts(href_sref_prediction_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
+end
+
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
 
   global _forecasts_href_newer
   global _forecasts_sref_newer
+  global _forecasts_href_newer_with_blurs_and_hour_climatology
+  global _forecasts_sref_newer_with_blurs_and_hour_climatology
 
   _forecasts_href_newer = []
   _forecasts_sref_newer = []
@@ -167,6 +254,9 @@ function reload_forecasts()
 
   _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer)
   _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer)
+
+  _forecasts_href_newer_with_blurs_and_hour_climatology = with_blurs_and_hour_climatology(_forecasts_href_newer)
+  _forecasts_sref_newer_with_blurs_and_hour_climatology = with_blurs_and_hour_climatology(_forecasts_sref_newer)
 
   ()
 end
