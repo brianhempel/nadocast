@@ -29,6 +29,8 @@ HOUR   = 60*MINUTE
 
 _forecasts_href_newer = []
 _forecasts_sref_newer = []
+_forecasts_href_newer_with_blurs_and_hour_climatology = []
+_forecasts_sref_newer_with_blurs_and_hour_climatology = []
 
 # SREF 3 hours behind HREF
 function forecasts_href_newer()
