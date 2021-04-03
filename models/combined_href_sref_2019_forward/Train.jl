@@ -11,13 +11,13 @@ import CombinedHREFSREF
 
 # (train_forecasts_0z, validation_forecasts_0z, _) = TrainingShared.forecasts_train_validation_test(forecasts_0z);
 # (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer());
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_with_blurs_and_hour_climatology());
+(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_with_blurs_and_forecast_hour());
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
 logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
-X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_href_newer_with_blurs_and_hour_climatology");
+X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_href_newer_with_blurs_and_forecast_hour");
 
 function try_combine(combiner)
   ŷ = map(i -> combiner(X[i, :]), 1:length(y))
@@ -29,6 +29,7 @@ println( try_combine(minimum) )
 println( try_combine(maximum) )
 println( try_combine(x -> x[2]) )
 println( try_combine(x -> x[1]) )
+println( try_combine(x -> 0.8f0*x[1] + 0.2f0*x[2]) )
 println( try_combine(x -> 0.9f0*x[1] + 0.1f0*x[2]) ) # best so far, via logloss; best for AUC is 0.8 and 0.2
 
 
@@ -37,7 +38,6 @@ println( try_combine(x -> 0.9f0*x[1] + 0.1f0*x[2]) ) # best so far, via logloss;
 # ŷ = map(i -> X[i, 2], 1:length(y));
 
 sort_perm = sortperm(ŷ);
-
 X       = X[sort_perm, :]
 y       = y[sort_perm]
 ŷ       = ŷ[sort_perm]
@@ -92,8 +92,7 @@ for bin_i in 1:length(bins_Σy)
   println("$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
 end
 
-function roc_auc(ŷ, y, weights)
-  sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort)
+function roc_auc(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort))
   y       = y[sort_perm]
   ŷ       = ŷ[sort_perm]
   weights = Float64.(weights[sort_perm])
@@ -231,3 +230,112 @@ end
 # Don't worry about tiny regions (yet)
 #
 # Compare to SPC over validation set
+
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
+import Inventories
+inventory = Forecasts.inventory(validation_forecasts[1])
+# 17-element Array{Inventories.InventoryLine,1}:
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "10mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "10mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "15mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "15mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "25mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "25mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "35mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "35mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "50mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "50mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "70mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "70mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "tornado probability", "calculated", "30 hour fcst", "calculated prob", "100mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011803", "tornado probability", "calculated", "33 hour fcst", "calculated prob", "100mi mean")
+#  Inventories.InventoryLine("", "", "d=2019011806", "forecast_hour", "calculated", "hour fcst", "", "")
+
+# for j in 1:(length(inventory) - 5)
+#   println("$j $(Inventories.inventory_line_description(inventory[j]))")
+#   println("AUC: $(roc_auc((@view X[:,j]), y, weights))")
+# end
+
+# Best is 25mi for both HREF/SREF
+
+forecast_hour_j = 17
+
+blur_radii = [0; CombinedHREFSREF.blur_radii]
+
+# Cache locality...maybe???
+# sort_perm = sortperm(X[mask, 1]);
+# X       = X[sort_perm, :]
+# y       = y[sort_perm]
+# weights = weights[sort_perm]
+
+window_size = 6
+println("$window_size hour windows")
+for forecast_hour in (2 + window_size):35
+  mask           = ((@view X[:,forecast_hour_j]) .>= forecast_hour - window_size) .& ((@view X[:,forecast_hour_j]) .<= forecast_hour)
+  masked_y       = y[mask]
+  masked_weights = weights[mask]
+
+  href_best_blur_j = nothing
+  sref_best_blur_j = nothing
+  href_best_auc    = 0.0
+  sref_best_auc    = 0.0
+
+  for blur_j in 1:length(blur_radii)
+    href_auc = roc_auc(X[mask, blur_j*2 - 1], masked_y, masked_weights)
+    sref_auc = roc_auc(X[mask, blur_j*2    ], masked_y, masked_weights)
+
+    if href_auc > href_best_auc
+      href_best_blur_j = blur_j
+      href_best_auc    = href_auc
+    end
+    if sref_auc > sref_best_auc
+      sref_best_blur_j = blur_j
+      sref_best_auc    = sref_auc
+    end
+  end
+
+  println("$forecast_hour\t$(blur_radii[href_best_blur_j])\t$(Float32(href_best_auc))\t$(blur_radii[sref_best_blur_j])\t$(Float32(sref_best_auc))")
+end
+
+
+# 25 to 35mi for HREF
+# 0 to 35mi for SREF
+
+# Baselines, 0mi and 25mi
+for j in [1,2,7,8]
+  println("$j $(Inventories.inventory_line_description(inventory[j]))")
+  println("AUC: $(roc_auc((@view X[:,j]), y, weights))")
+end
+
+function forecast_ratio(hour)
+  (hour - 2f0) * (1f0/(35f0-2f0))
+end
+
+href_25mi = @view X[:,7];
+href_35mi = @view X[:,9];
+println("HREF f2 25mi to f35 35mi blur")
+href_ŷ = href_25mi .* (1f0 .- forecast_ratio.(X[:,forecast_hour_j])) .+ href_35mi .* forecast_ratio.(X[:,forecast_hour_j]);
+println("AUC: $(roc_auc(href_ŷ, y, weights))")
+# AUC: 0.986558029390843
+
+sref_0mi = @view X[:,2];
+sref_35mi = @view X[:,10];
+println("SREF f2 0mi to f35 35mi blur")
+sref_ŷ = sref_0mi .* (1f0 .- forecast_ratio.(X[:,forecast_hour_j])) .+ sref_35mi .* forecast_ratio.(X[:,forecast_hour_j]);
+println("AUC: $(roc_auc(sref_ŷ, y, weights))")
+# AUC: 0.980728253567435
+
+# % better than 25mi only	HREF: 0.145%	SREF: 0.172%
+# % better than 0mi	 only HREF: 2.422%	SREF: 0.427%
+
+# Checking:
+
+(_, validation_forecasts2, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_blurred_and_hour_climatology());
+
+X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts2; save_dir = "validation_forecasts_href_newer_blurred_and_hour_climatology");
+
+println("HREF AUC: $(roc_auc(X[:,1], y, weights))")
+println("SREF AUC: $(roc_auc(X[:,2], y, weights))")

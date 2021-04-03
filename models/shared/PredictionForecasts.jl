@@ -123,7 +123,7 @@ layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
 
 # model_predict takes forecast, data
-function simple_prediction_forecasts(base_forecasts, model_predict)
+function simple_prediction_forecasts(base_forecasts, model_predict; inventory_misc = "calculated_prob")
 
   inventory_transformer(base_forecast, base_inventory) = begin
     # Need just enough for FeatureEngineeringShared.make_data
@@ -135,7 +135,7 @@ function simple_prediction_forecasts(base_forecasts, model_predict)
         "tornado probability",                      # abbrev                 :: String # "CAPE"
         "calculated",                               # level                  :: String # "180-0 mb above ground"
         "$(base_forecast.forecast_hour) hour fcst", # forecast_hour_str      :: String # "7 hour fcst" or "6-hour acc fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
-        "calculated prob",                          # misc                   :: String # "wt ens mean" or "prob >2.54"
+        inventory_misc,                             # misc                   :: String # "wt ens mean" or "prob >2.54"
         ""                                          # feature_engineering    :: String # "" or "25mi mean" or "100mi forward grad" etc
       )
 
