@@ -11,7 +11,7 @@ import CombinedHREFSREF
 
 # (train_forecasts_0z, validation_forecasts_0z, _) = TrainingShared.forecasts_train_validation_test(forecasts_0z);
 # (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer());
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_with_blurs_and_forecast_hour());
+(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
@@ -333,7 +333,7 @@ println("AUC: $(roc_auc(sref_ŷ, y, weights))")
 
 # Checking:
 
-(_, validation_forecasts2, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_blurred_and_hour_climatology());
+(_, validation_forecasts2, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_blurred_and_hour_climatology(); just_hours_near_storm_events = false);
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts2; save_dir = "validation_forecasts_href_newer_blurred_and_hour_climatology");
 

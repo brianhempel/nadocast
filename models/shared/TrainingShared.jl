@@ -83,11 +83,15 @@ end
 
 
 # returns (train_forecasts, validation_forecasts, test_forecasts)
-function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:10000)
+function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:10000, just_hours_near_storm_events = true)
   # This filtering here is probably pretty slow.
   forecasts =
-    filter(all_forecasts) do forecast
-      (forecast.forecast_hour in forecast_hour_range) && is_relevant_forecast(forecast)
+    if just_hours_near_storm_events
+      filter(all_forecasts) do forecast
+        (forecast.forecast_hour in forecast_hour_range) && is_relevant_forecast(forecast)
+      end
+    else
+      all_forecasts
     end
 
   train_forecasts      = filter(is_train, forecasts)
