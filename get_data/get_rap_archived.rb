@@ -52,7 +52,7 @@ threads = THREAD_COUNT.times.map do
 
         if file_name =~ FILE_NAME_REGEXP
           base_directory =
-            if ([run_date.year, run_date.month] <=> [2018, 9]) <= 0
+            if ([run_date.year, run_date.month] <=> [2017, 12]) <= 0
               "#{FORECASTS_ROOT}/RAP_1/rap" # and backup copy on RAP_2
             else
               "#{FORECASTS_ROOT}/RAP_3/rap" # and backup copy on RAP_4
