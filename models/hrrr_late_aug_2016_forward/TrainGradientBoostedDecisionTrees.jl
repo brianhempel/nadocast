@@ -16,7 +16,7 @@ forecast_hour_range = forecast_hour:forecast_hour
 
 # Google archive only has up to f15 until 2016-8-25...and the Utah archive got rid of their 2016 data for some reason. So f17 is missing a couple months relative to the others.
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.006"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.009"))
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
 
@@ -76,6 +76,49 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.75,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5600.0)
 
 
+
+# Whoops, didn't have forecasts for ±1hr of all storm events. Fixed that.
+#
+# $ FORECAST_HOUR=6 DATA_SUBSET_RATIO=0.009 make train_gradient_boosted_decision_trees
+# JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+# Loading tornadoes...
+# Loading wind events...
+# Loading hail events...
+# 11155 for training. (1798 with tornadoes.)
+# 2273 for validation.
+# 2206 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 18136 positive and 193094 negative labels...computing bin splits...done.
+# Loading training data
+# done. 9897675 datapoints with 18577 features each.
+# Loading validation data
+# done. 2018659 datapoints with 18577 features each.
+# Trying Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+# Best validation loss: 0.0009561085    36.740812071 sec/tree
+#
+# Middle config:
+# New best! Loss: 0.0009561085
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0009519324
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3.2e6)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0009482468):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.75,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5.6e6)
+#
+# 289:52:10 elapsed
+
+
+# $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.009 make train_gradient_boosted_decision_trees
+# JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
+# Loading tornadoes...
+# Loading wind events...
+# Loading hail events...
+# 11160 for training. (1800 with tornadoes.)
+# 2251 for validation.
+# 2201 for testing.
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
