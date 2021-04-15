@@ -10,6 +10,28 @@ import GeoUtils
 import Grids
 import Inventories
 
+# Data loading (including reading and downsampling and feature engineering)
+#
+#  Performance counter stats for 'system wide':
+#
+#       9,601,096.66 msec cpu-clock                 #   31.998 CPUs utilized
+#          3,283,448      context-switches          #    0.342 K/sec
+#             66,050      cpu-migrations            #    0.007 K/sec
+#        121,015,667      page-faults               #    0.013 M/sec
+# 13,613,969,087,148      cycles                    #    1.418 GHz                      (39.99%)
+# 13,648,607,135,453      stalled-cycles-frontend   #  100.25% frontend cycles idle     (49.99%)
+# 10,514,390,725,051      stalled-cycles-backend    #   77.23% backend cycles idle      (50.00%)
+# 11,870,389,799,395      instructions              #    0.87  insn per cycle
+#                                                   #    1.15  stalled cycles per insn  (60.00%)
+#  1,624,047,459,493      branches                  #  169.152 M/sec                    (60.00%)
+#      7,294,827,058      branch-misses             #    0.45% of all branches          (60.00%)
+#  3,593,999,313,044      L1-dcache-loads           #  374.332 M/sec                    (31.93%)
+#    448,398,167,181      L1-dcache-load-misses     #   12.48% of all L1-dcache hits    (32.89%)
+#     78,116,932,543      LLC-loads                 #    8.136 M/sec                    (20.00%)
+#     19,414,613,907      LLC-load-misses           #   24.85% of all LL-cache hits     (29.99%)
+#
+#      300.052759769 seconds time elapsed
+
 
 feature_block_names = [
   "",
