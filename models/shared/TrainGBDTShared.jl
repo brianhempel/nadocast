@@ -84,11 +84,11 @@ function train_with_coordinate_descent_hyperparameter_search(
     bin_split_forecast_sample_count = 100,
     balance_labels_when_computing_bin_splits = true,
     max_iterations_without_improvement = 20,
-    save_dir = nothing,
+    save_dir,
     configs...
   )
 
-  specific_save_dir(suffix) = isnothing(save_dir) ? nothing : save_dir * "_" * suffix
+  specific_save_dir(suffix) = save_dir * "_" * suffix
 
   (train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
@@ -119,34 +119,47 @@ function train_with_coordinate_descent_hyperparameter_search(
     MemoryConstrainedTreeBoosting.save("$(model_prefix)/$(length(trees))_trees_loss_$(validation_loss).model", bin_splits, trees)
   end
 
-  println("Preparing bin splits by sampling $bin_split_forecast_sample_count training tornado hour forecasts")
-
-  (bin_sample_X, bin_sample_y, _) =
-    TrainingShared.get_data_labels_weights(
-      Iterators.take(Random.shuffle(train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
-      X_and_labels_to_inclusion_probabilities = (X, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
-      save_dir = specific_save_dir("samples_for_bin_splits")
-    )
-  if balance_labels_when_computing_bin_splits
-    positive_indices = findall(bin_sample_y .>  0.5f0)
-    negative_indices = findall(bin_sample_y .<= 0.5f0)
-    print("filtering to balance $(length(positive_indices)) positive and $(length(negative_indices)) negative labels...")
-    if length(positive_indices) > length(negative_indices)
-      positive_indices = collect(Iterators.take(Random.shuffle(positive_indices), length(negative_indices)))
+  bin_splits_path = joinpath(specific_save_dir("samples_for_bin_splits"), "bin_splits")
+  bin_splits =
+    if isfile(bin_splits_path)
+      println("Loading previously computed bin splits from $bin_splits_path")
+      bin_splits, _ = MemoryConstrainedTreeBoosting.load(bin_splits_path)
+      bin_splits
     else
-      negative_indices = collect(Iterators.take(Random.shuffle(negative_indices), length(positive_indices)))
+      println("Preparing bin splits by sampling $bin_split_forecast_sample_count training tornado hour forecasts")
+
+      rng = Random.MersenneTwister(123456)
+      (bin_sample_X, bin_sample_y, _) =
+        TrainingShared.get_data_labels_weights(
+          Iterators.take(Random.shuffle(rng, train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
+          X_and_labels_to_inclusion_probabilities = (X, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
+          save_dir = specific_save_dir("samples_for_bin_splits")
+        )
+      if balance_labels_when_computing_bin_splits
+        # Deterministic randomness for bin splitting
+        # So we choose the same bin splits every time
+        rng = Random.MersenneTwister(1234567)
+
+        positive_indices = findall(bin_sample_y .>  0.5f0)
+        negative_indices = findall(bin_sample_y .<= 0.5f0)
+        print("filtering to balance $(length(positive_indices)) positive and $(length(negative_indices)) negative labels...")
+        if length(positive_indices) > length(negative_indices)
+          positive_indices = collect(Iterators.take(Random.shuffle(rng, positive_indices), length(negative_indices)))
+        else
+          negative_indices = collect(Iterators.take(Random.shuffle(rng, negative_indices), length(positive_indices)))
+        end
+        indicies_to_sample = sort(vcat(positive_indices, negative_indices)) # Vain hopes of gaining cache locality.
+
+        bin_sample_X = bin_sample_X[indicies_to_sample, :]
+      end
+      print("computing bin splits...")
+      bin_splits   = MemoryConstrainedTreeBoosting.prepare_bin_splits(bin_sample_X)
+      MemoryConstrainedTreeBoosting.save(bin_splits_path, bin_splits, [])
+      bin_sample_X = nothing # freeeeeeee
+      bin_sample_y = nothing # freeeeeeee
+
+      println("done.")
     end
-    indicies_to_sample = sort(vcat(positive_indices, negative_indices)) # Vain hopes of gaining cache locality.
-
-    bin_sample_X = bin_sample_X[indicies_to_sample, :]
-  end
-  print("computing bin splits...")
-  bin_splits           = MemoryConstrainedTreeBoosting.prepare_bin_splits(bin_sample_X)
-  bin_sample_X         = nothing # freeeeeeee
-  bin_sample_y         = nothing # freeeeeeee
-
-  println("done.")
-
 
   println("Loading training data")
   X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities, "training"; prior_predictor = prior_predictor)
