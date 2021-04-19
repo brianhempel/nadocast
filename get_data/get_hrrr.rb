@@ -24,7 +24,7 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 # FORECAST_HOURS=1,2,3,6,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # THREAD_COUNT=2 FORECAST_HOURS=2,5,6,7,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # FORECAST_HOURS=2,6,12,16,17,18 ruby get_hrrr.rb --from-archive --delete-unneeded
-# THREAD_COUNT=3 FORECAST_HOURS=11,12,13,16,17,18 ruby get_hrrr.rb --from-archive --delete-unneeded
+# THREAD_COUNT=3 FORECAST_HOURS=11,12,13,16,17,18 VALIDATION_RUN_HOURS=8,9,10,12,13,14 ruby get_hrrr.rb --from-archive --delete-unneeded
 
 # Forecaster runs these:
 # RUN_HOURS=8,9,10   FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb

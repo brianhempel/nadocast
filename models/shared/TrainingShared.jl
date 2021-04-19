@@ -174,7 +174,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
     forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask] :: Array{Float32,1}
 
-    if X_and_labels_to_inclusion_probabilities != nothing
+    if !isnothing(X_and_labels_to_inclusion_probabilities)
       probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels))
       probabilities = clamp.(probabilities, 0f0, 1f0)
       mask          = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)

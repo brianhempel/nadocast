@@ -335,7 +335,29 @@ println("AUC: $(roc_auc(sref_ŷ, y, weights))")
 
 (_, validation_forecasts2, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_blurred_and_hour_climatology(); just_hours_near_storm_events = false);
 
-X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts2; save_dir = "validation_forecasts_href_newer_blurred_and_hour_climatology");
+import ForecastCombinators
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
+import Inventories
+inventory = Forecasts.inventory(validation_forecasts2[1])
+
+# For the purposes of AUC checking, we only need the first two features (the predictions)
+# Trying to save some memory
+validation_forecasts2_trimmed =
+  ForecastCombinators.filter_features_forecasts(validation_forecasts2, line -> line.abbrev == "tornado probability");
+
+X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts2_trimmed; save_dir = "validation_forecasts_href_newer_blurred_and_hour_climatology_predictions_only");
 
 println("HREF AUC: $(roc_auc(X[:,1], y, weights))")
 println("SREF AUC: $(roc_auc(X[:,2], y, weights))")
+
+
+
+
+n_folds = 3 # Choose something not divisible by 7, they're already partitioned by that
+folds = map(1:n_folds) do n
+  fold_forecasts = filter(forecast -> Forecasts.valid_time_in_convective_days_since_epoch_utc(forecast) % n_folds == n-1, validation_forecasts2)
+  fold_X, fold_y, fold_weights = TrainingShared.get_data_labels_weights(fold_forecasts; save_dir = "validation_forecasts_href_newer_blurred_and_hour_climatology_fold_$(n)");
+  (X = fold_X, y = fold_y, weights = fold_weights)
+end
+
