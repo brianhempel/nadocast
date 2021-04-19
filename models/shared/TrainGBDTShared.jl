@@ -159,6 +159,8 @@ function train_with_coordinate_descent_hyperparameter_search(
       bin_sample_y = nothing # freeeeeeee
 
       println("done.")
+
+      bin_splits
     end
 
   println("Loading training data")
