@@ -19,10 +19,10 @@ module StormEvent
 
   def looks_okay?
     if duration >= 4*HOUR
-      STDERR.puts "Event starting #{start_time} ending #{end_time} is #{duration / HOUR} hours long! discarding")
+      STDERR.puts "Event starting #{start_time} ending #{end_time} is #{duration / HOUR} hours long! discarding"
       false
     elsif duration < 0
-      STDERR.puts "Event starting #{start_time} ending #{end_time} is #{duration / 60} minutes long! discarding")
+      STDERR.puts "Event starting #{start_time} ending #{end_time} is #{duration / 60} minutes long! discarding"
       false
     else
       true
