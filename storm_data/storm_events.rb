@@ -5,10 +5,28 @@ TORNADOES_CSV_PATH   = File.expand_path("../tornadoes.csv", __FILE__)
 HAIL_EVENTS_CSV_PATH = File.expand_path("../hail_events.csv", __FILE__)
 WIND_EVENTS_CSV_PATH = File.expand_path("../wind_events.csv", __FILE__)
 
+HOUR = 60*60
+
 module StormEvent
   def on_ground_during(time_range)
     start_time < time_range.end &&
     end_time   > time_range.begin
+  end
+
+  def duration
+    end_time - start_time
+  end
+
+  def looks_okay?
+    if duration >= 4*HOUR
+      STDERR.puts "Event starting #{start_time} ending #{end_time} is #{duration / HOUR} hours long! discarding")
+      false
+    elsif duration < 0
+      STDERR.puts "Event starting #{start_time} ending #{end_time} is #{duration / 60} minutes long! discarding")
+      false
+    else
+      true
+    end
   end
 
   def in_conus?
@@ -32,6 +50,7 @@ class WindEvent < Struct.new(:start_time, :end_time, :kind, :speed, :speed_type,
 end
 
 
+STDERR.puts "Loading tornadoes..."
 TORNADOES = CSV.read(TORNADOES_CSV_PATH).drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, rating_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
   Tornado.new(
     Time.at(Integer(start_seconds_str)).utc,
@@ -42,8 +61,9 @@ TORNADOES = CSV.read(TORNADOES_CSV_PATH).drop(1).map do |start_time_str, start_s
     Float(end_lat_str),
     Float(end_lon_str),
   )
-end
+end.select(&:looks_okay?)
 
+STDERR.puts "Loading hail events..."
 HAIL_EVENTS = CSV.read(HAIL_EVENTS_CSV_PATH).drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, kind_str, inches_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
   HailEvent.new(
     Time.at(Integer(start_seconds_str)).utc,
@@ -55,9 +75,10 @@ HAIL_EVENTS = CSV.read(HAIL_EVENTS_CSV_PATH).drop(1).map do |start_time_str, sta
     Float(end_lat_str),
     Float(end_lon_str),
   )
-end
+end.select(&:looks_okay?)
 
 # Some wind events are not geocoded. One LSR event is geocoded as "LA,32.86,LA,32.86"
+STDERR.puts "Loading wind events..."
 WIND_EVENTS = CSV.read(WIND_EVENTS_CSV_PATH).drop(1).map do |start_time_str, start_seconds_str, end_time_str, end_seconds_str, kind_str, speed_str, speed_type_str, start_lat_str, start_lon_str, end_lat_str, end_lon_str|
   if start_lat_str.to_f == 0.0
     start_lat = Float::NAN
@@ -81,7 +102,7 @@ WIND_EVENTS = CSV.read(WIND_EVENTS_CSV_PATH).drop(1).map do |start_time_str, sta
     end_lat,
     end_lon,
   )
-end
+end.select(&:looks_okay?)
 
 STORM_EVENTS = TORNADOES + HAIL_EVENTS + WIND_EVENTS
 
@@ -107,13 +128,11 @@ STORM_EVENTS = TORNADOES + HAIL_EVENTS + WIND_EVENTS
 #
 # Returns a set of Time objects representing the set of hours covered by the given storm events that are in the CONUS.
 def conus_event_hours_set(events, event_time_window_half_size)
-  hour = 60*60
-
   events.select(&:in_conus?).flat_map do |event|
     event_time_range = (event.start_time.to_f.round - event_time_window_half_size ... event.end_time.to_f.round + event_time_window_half_size)
 
-    (event_time_range.begin / hour .. event_time_range.end / hour).map do |hour_from_epoch|
-      hour_second = hour_from_epoch*hour
+    (event_time_range.begin / HOUR .. event_time_range.end / HOUR).map do |hour_from_epoch|
+      hour_second = hour_from_epoch*HOUR
       if event_time_range.include?(hour_second)
         Time.at(hour_second).utc
       end

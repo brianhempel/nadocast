@@ -1,5 +1,6 @@
 module StormEvents
 
+import Dates
 import DelimitedFiles
 
 push!(LOAD_PATH, @__DIR__)
@@ -38,6 +39,19 @@ _conus_wind_events = nothing
 _conus_hail_events = nothing
 _conus_events      = nothing
 
+function event_looks_okay(event :: Event) :: Bool
+  duration = event.end_seconds_from_epoch_utc - event.start_seconds_from_epoch_utc
+  if duration >= 4*HOUR
+    println("Event starting $(Dates.unix2datetime(event.start_seconds_from_epoch_utc)) ending $(Dates.unix2datetime(event.end_seconds_from_epoch_utc)) is $(duration / HOUR) hours long! discarding")
+    false
+  elseif duration < 0
+    println("Event starting $(Dates.unix2datetime(event.start_seconds_from_epoch_utc)) ending $(Dates.unix2datetime(event.end_seconds_from_epoch_utc)) is $(duration / MINUTE) minutes long! discarding")
+    false
+  else
+    true
+  end
+end
+
 function read_events_csv(path) ::Vector{Event}
   event_rows, event_headers = DelimitedFiles.readdlm(path, ','; header=true)
 
@@ -70,7 +84,8 @@ function read_events_csv(path) ::Vector{Event}
     Event(start_seconds, end_seconds, start_latlon, end_latlon)
   end
 
-  mapslices(row_to_event, event_rows, dims = [2])[:,1]
+  events_raw = mapslices(row_to_event, event_rows, dims = [2])[:,1]
+  filter(event_looks_okay, events_raw)
 end
 
 function tornadoes() :: Vector{Event}
@@ -163,9 +178,16 @@ end
 
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of the tornadoes
-function grid_to_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
-  grid_to_event_neighborhoods(tornadoes(), grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
+function grid_to_conus_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
+  grid_to_event_neighborhoods(conus_tornadoes(), grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
 end
+
+# Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of any storm event
+function grid_to_conus_event_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
+  grid_to_event_neighborhoods(conus_events(), grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
+end
+
+
 
 function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
   event_segments = event_segments_around_time(events, seconds_from_utc_epoch, seconds_before_and_after)
@@ -192,10 +214,10 @@ function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid
   out
 end
 
-# Returns list of (start_latlon, end_latlon) of where the tornadoes were around during the time period.
-function tornado_segments_around_time(seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
-  event_segments_around_time(tornadoes(), seconds_from_utc_epoch, seconds_before_and_after)
-end
+# # Returns list of (start_latlon, end_latlon) of where the tornadoes were around during the time period.
+# function tornado_segments_around_time(seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
+#   event_segments_around_time(tornadoes(), seconds_from_utc_epoch, seconds_before_and_after)
+# end
 
 function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
   period_start_seconds = seconds_from_utc_epoch - seconds_before_and_after
