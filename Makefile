@@ -104,13 +104,13 @@ setup:
 	# wgrib2 -config
 	#
 	# cd ~
-	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.0-linux-x86_64.tar.gz | tar -xvz
-	# ln -s $(pwd)/julia-1.6.0/bin/julia ~/bin/julia
+	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.5.4/julia-1.5.4-linux-x86_64.tar.gz | tar -xvz
+	# ln -s $(pwd)/julia-1.5.4/bin/julia ~/bin/julia
 	#
 	# cd ~/nadocast_dev
 	# git pull --rebase
 	# echo 'import Pkg; Pkg.instantiate()' | julia --project=.
-	# echo 'export CORE_COUNT=12' >> ~/.bash_profile
+	# echo 'export CORE_COUNT=16' >> ~/.bash_profile
 	# source ~/.bash_profile
 
 	# cd models/sref_mid_2018_forward/
