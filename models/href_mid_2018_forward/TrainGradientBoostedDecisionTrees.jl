@@ -41,7 +41,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # done. 10129095 datapoints with 17758 features each.
 # Loading validation data
 # done. 2074205 datapoints with 17758 features each.
-# 
+#
 # Middle config:
 # New best! Loss: 0.0010878555
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
@@ -69,13 +69,13 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # done. 10105131 datapoints with 17758 features each.
 # Loading validation data
 # done. 2061642 datapoints with 17758 features each.
-# 
+#
 # Middle config:
 # New best! Loss: 0.0011394698
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
-# 
+#
 # Remained the best config through random search and coordinate descent.
-# 
+#
 # Best hyperparameters (loss = 0.0011394698):
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
 # 121:39:50 elapsed
@@ -94,7 +94,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # done. 10083624 datapoints with 17758 features each.
 # Loading validation data
 # done. 2045972 datapoints with 17758 features each.
-# 
+#
 # Middle config:
 # New best! Loss: 0.0011902072
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
@@ -113,8 +113,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     model_prefix = model_prefix,
     save_dir     = "href_$(hour_range_str)_$(data_subset_ratio)",
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(data_subset_ratio, labels),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(data_subset_ratio, labels),
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,

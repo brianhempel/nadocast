@@ -132,7 +132,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       (bin_sample_X, bin_sample_y, _) =
         TrainingShared.get_data_labels_weights(
           Iterators.take(Random.shuffle(rng, train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
-          X_and_labels_to_inclusion_probabilities = (X, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
+          X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
           save_dir = specific_save_dir("samples_for_bin_splits")
         )
       if balance_labels_when_computing_bin_splits
