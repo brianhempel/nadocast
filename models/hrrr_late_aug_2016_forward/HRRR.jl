@@ -266,8 +266,8 @@ end
 common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers.txt"), String), "\n"))
 
 function reload_forecasts()
-  # HRRR_1 contains runs through 2017-12
-  # HRRR_2 contains runs 2018-1 and forward
+  # HRRR_1 contains runs through 2018-10
+  # HRRR_2 contains runs 2018-11 and forward
   hrrr_paths = vcat(
     Grib2.all_grib2_file_paths_in("$(forecasts_root())/HRRR_1/hrrr"),
     Grib2.all_grib2_file_paths_in("$(forecasts_root())/HRRR_2/hrrr")

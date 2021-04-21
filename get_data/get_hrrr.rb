@@ -9,8 +9,8 @@ FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time range not associated with storm events.
 
-# Runs through 2018-5 are stored on HRRR_1
-# Runs 2018-6 onward are stored on HRRR_2
+# Runs through 2018-10 are stored on HRRR_1
+# Runs 2018-11 onward are stored on HRRR_2
 
 # Google archive only has up to f15 until 2016-8-25...and the Utah archive got rid of their 2016 data for some reason.
 # 2016-8-24 is where the 250mb winds, lightning, and surface RH appear, which our models assume.
@@ -84,7 +84,7 @@ class HRRRForecast < Forecast
   end
 
   def base_directory
-    if ([run_date.year, run_date.month] <=> [2018, 7]) <= 0
+    if ([run_date.year, run_date.month] <=> [2018, 10]) <= 0
       "/Volumes/HRRR_1/hrrr"
     else
       "/Volumes/HRRR_2/hrrr"
