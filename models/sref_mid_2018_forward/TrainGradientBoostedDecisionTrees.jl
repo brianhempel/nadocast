@@ -245,6 +245,35 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # 186:47:56 elapsed
 
 
+# TAKE ONE MILLION, now with data through Nov 2020. But we'll remember the bin splits this time if we restart training after data loading.
+# Also don't subset points within 100mi/90min of any storm event
+
+# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.13 make train_gradient_boosted_decision_trees
+# 11797 for training. (1796 with tornadoes.)
+# 2486 for validation.
+# 2294 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 974 positive and 10014 negative labels...computing bin splits...done.
+# Loading training data
+# done. 9767559 datapoints with 18759 features each.
+# Loading validation data
+# done. 2079870 datapoints with 18759 features each.
+#
+# Middle config:
+# New best! Loss: 0.0011453986
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.001133833
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 20,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3200.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0011276418):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 20,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+#
+# 35:39:50 elapsed
+
+
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
