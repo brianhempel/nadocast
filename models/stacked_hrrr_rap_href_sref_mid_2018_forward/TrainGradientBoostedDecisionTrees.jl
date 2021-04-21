@@ -11,7 +11,7 @@ import StackedHRRRRAPHREFSREF
 forecast_hour = parse(Int64, ENV["FORECAST_HOUR"]) # 1, 5, 11, or 16
 forecast_hour_range = forecast_hour:forecast_hour
 
-model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
 stacked_forecasts = StackedHRRRRAPHREFSREF.forecasts()
 

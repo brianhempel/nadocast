@@ -23,7 +23,7 @@ data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.13"))
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
-model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
 
 # $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
 #

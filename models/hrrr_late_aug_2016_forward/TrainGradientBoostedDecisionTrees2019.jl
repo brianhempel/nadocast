@@ -9,7 +9,7 @@ import HRRR
 forecast_hour = parse(Int64, ENV["FORECAST_HOUR"])
 forecast_hour_range = forecast_hour:forecast_hour
 
-model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
 hrrr_forecasts = HRRR.forecasts()
 # hrrr_forecasts = hrrr_forecasts[1:200:length(hrrr_forecasts)] # Subset the data

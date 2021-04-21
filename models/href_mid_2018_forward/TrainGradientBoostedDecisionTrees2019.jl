@@ -9,7 +9,7 @@ import HREF
 
 forecast_hour_range = 1:36 # HREF files come out 2-3 hours after run time
 
-model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(string(Dates.now()), ":" => "."))"
 
 href_forecasts = HREF.forecasts()
 # href_forecasts = href_forecasts[1:100:length(href_forecasts)] # Subset the data

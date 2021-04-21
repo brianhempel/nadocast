@@ -9,7 +9,7 @@ import RAP
 forecast_hour = parse(Int64, ENV["FORECAST_HOUR"])
 forecast_hour_range = forecast_hour:forecast_hour
 
-model_prefix = "gbdt_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
 rap_forecasts = RAP.forecasts()
 # rap_forecasts = rap_forecasts[1:200:length(rap_forecasts)] # Subset the data

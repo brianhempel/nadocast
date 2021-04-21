@@ -11,7 +11,7 @@ import SREF
 
 forecast_hour_range = 1:39 # 1:87 # 4:39             # SREF files come out 3-4 hours after run time
 
-model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(string(Dates.now()), ":" => "."))"
 
 
 # Best (loss = 0.00480496), for SREF tornado hours, with 50mi features

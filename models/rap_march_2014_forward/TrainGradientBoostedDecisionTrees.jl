@@ -16,7 +16,7 @@ forecast_hour_range = forecast_hour:forecast_hour
 
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.007"))
 
-model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
 # $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.007 make train_gradient_boosted_decision_trees
 # ulimit -n 8192; JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl

@@ -11,7 +11,7 @@ import SREF
 
 forecast_hour_range = 2:38 # 1:87 # 4:39             # SREF files come out 3-4 hours after run time
 
-model_prefix = "gbdt_3hr_window_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_3hr_window_f$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(string(Dates.now()), ":" => "."))"
 
 
 # validation loss via prior predictor: 0.0019582207

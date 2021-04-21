@@ -18,7 +18,7 @@ import StackedHREFSREF
 
 if ENV["HREF_NEWER_THAN_SREF"] == "true"
   forecast_hour_range = 23:34
-  model_prefix = "gbdt_href_newer_nadocastf$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
+  model_prefix = "gbdt_href_newer_nadocastf$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(string(Dates.now()), ":" => "."))"
   stacked_href_sref_prediction_forecasts = StackedHREFSREF.forecasts_with_href_newer_than_sref()
 
   # 1709 for training. (336 with tornadoes.)
@@ -36,7 +36,7 @@ if ENV["HREF_NEWER_THAN_SREF"] == "true"
 
 else
   forecast_hour_range = 19:30 # On the HREF, this works out to the same range of hours as the above.
-  model_prefix = "gbdt_sref_newer_nadocastf$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(repr(Dates.now()), ":" => "."))"
+  model_prefix = "gbdt_sref_newer_nadocastf$(forecast_hour_range.start)-$(forecast_hour_range.stop)_$(replace(string(Dates.now()), ":" => "."))"
   stacked_href_sref_prediction_forecasts = StackedHREFSREF.forecasts_with_sref_newer_than_href()
 
   # 1703 for training. (332 with tornadoes.)
