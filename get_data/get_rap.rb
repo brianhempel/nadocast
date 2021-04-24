@@ -33,6 +33,7 @@ class RAPForecast < Forecast
 
   def archive_url
     if FROM_NOMADS
+      # I think this is busted now.
       "https://www.ncei.noaa.gov/data/rapid-refresh/access/rap-130-13km/forecast/#{year_month}/#{year_month_day}/#{file_name}"
     else
       raise "see get_rap_archived.rb for pulling from NCDC's long term storage request system"
