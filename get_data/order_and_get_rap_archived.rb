@@ -8,9 +8,12 @@
 #
 # $ ruby order_and_get_rap_archived.rb
 
-# Automates and downloading from the long term storage request system at https://www.ncdc.noaa.gov/has/HAS.FileAppRouter?datasetname=RAP130&subqueryby=STATION&applname=&outdest=FILE
+# Automates and downloading from the long term storage request system at https://www.ncei.noaa.gov/has/HAS.FileAppRouter?datasetname=RAP130&subqueryby=STATION&applname=&outdest=FILE
 #
 # Relys on get_rap_archived.rb to download once the order is processed.
+
+# ruby order_and_get_rap_archived.rb 2020-8-1 2020-10-31
+
 
 require 'net/http'
 require 'date'
@@ -100,7 +103,7 @@ def make_order(dates_to_order, outstanding_orders)
 
   order_dates = all_dates_to_order.select { |date| order_date_range.cover?(date) }
 
-  uri = URI('https://www.ncdc.noaa.gov/has/HAS.FileSelect')
+  uri = URI('https://www.ncei.noaa.gov/has/HAS.FileSelect')
   request = Net::HTTP::Post.new(uri)
   request.set_form_data(
     'satdisptype'   => "N/A",
@@ -148,7 +151,7 @@ def make_order(dates_to_order, outstanding_orders)
   when Net::HTTPSuccess
     html_str = response.body
     order_name       = html_str[/Order Number:.*>(HAS\d+)</, 1]
-    order_status_url = "https://www.ncdc.noaa.gov/has/" + html_str[/href="(HAS.CheckOrderStatus\?[^"]+)"/i, 1]
+    order_status_url = "https://www.ncei.noaa.gov/has/" + html_str[/href="(HAS.CheckOrderStatus\?[^"]+)"/i, 1]
     outstanding_orders[order_name] = order_status_url
     puts "ordered. (#{order_status_url})"
     order_dates.each do |date|
@@ -201,12 +204,12 @@ end
 # Example request from Chrome:
 #
 # POST /has/HAS.FileSelect HTTP/1.1
-# Host: www.ncdc.noaa.gov
+# Host: www.ncei.noaa.gov
 # Connection: keep-alive
 # Content-Length: 394
 # Pragma: no-cache
 # Cache-Control: no-cache
-# Origin: https://www.ncdc.noaa.gov
+# Origin: https://www.ncei.noaa.gov
 # Upgrade-Insecure-Requests: 1
 # DNT: 1
 # Content-Type: application/x-www-form-urlencoded
@@ -215,7 +218,7 @@ end
 # Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
 # Sec-Fetch-Site: same-origin
 # Sec-Fetch-Mode: navigate
-# Referer: https://www.ncdc.noaa.gov/has/HAS.FileAppRouter?datasetname=RAP130&subqueryby=STATION&applname=&outdest=FILE
+# Referer: https://www.ncei.noaa.gov/has/HAS.FileAppRouter?datasetname=RAP130&subqueryby=STATION&applname=&outdest=FILE
 # Accept-Encoding: gzip, deflate, br
 # Accept-Language: en-US,en;q=0.9
 # satdisptype=N%2FA&stations=00&stations=01&stations=03&station_lst=&typeofdata=MODEL&dtypelist=&begdatestring=&enddatestring=&begyear=2014&begmonth=03&begday=01&beghour=&begmin=&endyear=2014&endmonth=03&endday=02&endhour=&endmin=&outmed=FTP&outpath=&pri=500&datasetname=RAP130&directsub=N&emailadd=brianhempel%40uchicago.edu&outdest=FILE&applname=&subqueryby=STATION&tmeth=Awaiting-Data-Transfer
