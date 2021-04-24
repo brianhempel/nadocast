@@ -104,11 +104,12 @@ setup:
 	# wgrib2 -config
 	#
 	# cd ~
-	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.5.4/julia-1.5.4-linux-x86_64.tar.gz | tar -xvz
+	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.4-linux-x86_64.tar.gz | tar -xvz
 	# ln -s $(pwd)/julia-1.5.4/bin/julia ~/bin/julia
 	#
 	# cd ~/nadocast_dev
 	# git pull --rebase
+	# sudo apt install libtool
 	# echo 'import Pkg; Pkg.instantiate()' | julia --project=.
 	# echo 'export CORE_COUNT=16' >> ~/.bash_profile
 	# source ~/.bash_profile
