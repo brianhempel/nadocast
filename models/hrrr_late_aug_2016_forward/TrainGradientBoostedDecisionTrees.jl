@@ -16,7 +16,8 @@ forecast_hour_range = forecast_hour:forecast_hour
 
 # Google archive only has up to f15 until 2016-8-25...and the Utah archive got rid of their 2016 data for some reason. So f17 is missing a couple months relative to the others.
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.009"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.0015"))
+near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.2"))
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
@@ -110,7 +111,6 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 #
 # 289:52:10 elapsed
 
-
 # $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.009 make train_gradient_boosted_decision_trees
 # JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
 # Loading tornadoes...
@@ -125,22 +125,31 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # done. 9905823 datapoints with 18577 features each.
 # Loading validation data
 # done. 1997355 datapoints with 18577 features each.
-
+#
 # Middle config:
 # New best! Loss: 0.0010500954
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
 
-# (restarted with Julia 1.6.0 and faster MCTB.jl)
+
+
+# TAKE ONE MILLION, now with data through Oct 2020. But we'll remember the bin splits this time if we restart training after data loading.
+# Also don't subset points so much within 100mi/90min of any storm event
+
+# $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.009 make train_gradient_boosted_decision_trees # est training size: 1150gb
+# $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.001 make train_gradient_boosted_decision_trees # est training size: 650gb
+
+# So 63,000gb is far away points and 600gb is near the storm
+# $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est training size: 650gb
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HRRR.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    save_dir     = "hrrr_f$(forecast_hour)_$(data_subset_ratio)",
+    save_dir     = "hrrr_f$(forecast_hour)_$(data_subset_ratio)_$(near_storm_ratio)",
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
