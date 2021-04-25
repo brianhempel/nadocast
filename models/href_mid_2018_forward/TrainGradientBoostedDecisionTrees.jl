@@ -21,7 +21,9 @@ forecast_hour_range =
 # 13:24
 # 24:35
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.025"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.015"))
+near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
+load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
@@ -111,10 +113,11 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    save_dir     = "href_$(hour_range_str)_$(data_subset_ratio)",
+    save_dir     = "href_$(hour_range_str)_$(data_subset_ratio)_$(near_storm_ratio)",
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    load_only                                          = load_only,
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
