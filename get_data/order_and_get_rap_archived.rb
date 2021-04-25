@@ -158,6 +158,8 @@ def make_order(dates_to_order, outstanding_orders)
       dates_to_order.delete(date.to_s)
     end
   else
+    STDERR.puts request.inspect
+    STDERR.puts request.body
     STDERR.puts response.inspect
     STDERR.puts response.body
   end
