@@ -18,6 +18,7 @@ forecast_hour_range = forecast_hour:forecast_hour
 
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.0015"))
 near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.2"))
+load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
@@ -139,7 +140,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.001 make train_gradient_boosted_decision_trees # est training size: 650gb
 
 # So 63,000gb is far away points and 600gb is near the storm
-# $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est training size: 650gb
+# $ FORECAST_HOUR=17 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est training size: 215gb
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
@@ -150,6 +151,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
     training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
     validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    load_only                                          = load_only,
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,

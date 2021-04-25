@@ -122,16 +122,34 @@ end
 # If prior_predictor is provided, computes prior predictor's loss during loading.
 # prior_predictor is fed the untransformed data.
 #
-# If save_dir already exists, reads the data in from disk.
+# If save_dir already exists and loading appears to have happened, reads the data in from disk.
+function finished_loading(save_dir)
+  isdir(save_dir) && isfile(joinpath(save_dir, "labels.serialized")) && isfile(joinpath(save_dir, "weights.serialized"))
+end
+
 function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
-  if !isdir(save_dir)
+  if !finished_loading(save_dir)
     load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
   end
   read_data_labels_weights_from_disk(save_dir)
 end
+
+# Loads the data to disk but does not read it back.
+# Returns (data_count, feature_count) if the data wasn't already saved to disk.
+function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
+  if isnothing(save_dir)
+    save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
+  end
+  if finished_loading(save_dir)
+    println("$save_dir appears to have finished loading. Skipping.")
+    return (nothing, nothing)
+  end
+  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
+end
+
 
 function mask_rows_threaded(data, mask; final_row_count=count(mask))
   out = Array{Float32}(undef, (final_row_count, size(data, 2)))
@@ -175,6 +193,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   start_time = time_ns()
 
   serialization_task = nothing
+  feature_count = 0
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     data_in_conus = mask_rows_threaded(data, conus_grid_bitmask; final_row_count=conus_point_count)
@@ -206,6 +225,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     if forecast_i == 1
       inventory_lines      = Forecasts.inventory(forecast)
       feature_descriptions = Inventories.inventory_line_description.(inventory_lines)
+      feature_count        = size(X_transformed, 2)
+      @assert feature_count == length(inventory_lines)
       write(save_path("features.txt"), join(feature_descriptions, "\n"))
     end
 
@@ -249,7 +270,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   println("")
 
-  ()
+  (length(labels), feature_count)
 end
 
 function read_data_labels_weights_from_disk(save_dir)
