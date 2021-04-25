@@ -24,8 +24,8 @@ require 'fileutils'
 
 RUN_HOURS      = (0..23).to_a
 
-MAX_SIMULTANEOUS_ORDERS = 2
-DAYS_PER_ORDER          = 15
+MAX_SIMULTANEOUS_ORDERS = ENV["MAX_SIMULTANEOUS_ORDERS"]&.to_i || 2
+DAYS_PER_ORDER          = ENV["DAYS_PER_ORDER"]&.to_i          || 15
 
 class PersistentHash
   include Enumerable
