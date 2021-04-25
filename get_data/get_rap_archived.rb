@@ -59,18 +59,18 @@ threads = THREAD_COUNT.times.map do
               "#{FORECASTS_ROOT}/RAP_3/rap" # and backup copy on RAP_4
             end
           directory = "#{base_directory}/#{year_str}#{month_str}/#{year_str}#{month_str}#{day_str}"
-          # Backup location
-          alt_directory = directory.sub("/RAP_1/", "/RAP_2/").sub("/RAP_3/", "/RAP_4/")
+          # # Backup location
+          # alt_directory = directory.sub("/RAP_1/", "/RAP_2/").sub("/RAP_3/", "/RAP_4/")
           system("mkdir -p #{directory} 2> /dev/null")
-          system("mkdir -p #{alt_directory} 2> /dev/null")
+          # system("mkdir -p #{alt_directory} 2> /dev/null")
           path     = "#{directory}/#{file_name}"
-          alt_path = "#{alt_directory}/#{file_name}"
+          # alt_path = "#{alt_directory}/#{file_name}"
           if (File.size(path) rescue 0) < MIN_FILE_BYTES
             puts "#{file_name} -> #{path}"
             data = `curl -f -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}" #{tar_url}`
             if data.bytesize == file_size
               File.write(path, data)
-              File.write(alt_path, data)
+              # File.write(alt_path, data)
             else
               STDERR.puts "Asked for #{file_size} bytes of #{file_name} but only got #{data.size}!!! Not saved."
             end
