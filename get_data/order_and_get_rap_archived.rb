@@ -177,7 +177,7 @@ def check_outstanding_orders(outstanding_orders, orders_downloading)
     elsif html_str =~ /Complete.*100%/
       order_url = html_str[/href="([^"]+#{order_name}[^"]*)"/i, 1].sub("http:", "https:")
       outstanding_orders.delete(order_name)
-      download_order(orders_downloading, order_url)
+      download_order(orders_downloading, order_name, order_url)
     else
       STDERR.puts "Unsuccessful check of #{order_name} #{order_status_url}"
       STDERR.puts html_str
@@ -185,7 +185,7 @@ def check_outstanding_orders(outstanding_orders, orders_downloading)
   end
 end
 
-def download_order(orders_downloading, order_url)
+def download_order(orders_downloading, order_name, order_url)
   orders_downloading[order_name] = order_url
   Thread.new do
     cmd = "ruby #{File.expand_path("../get_rap_archived.rb", __FILE__)} #{order_url}"
@@ -200,7 +200,7 @@ end
 
 orders_downloading.each do |order_name, order_url|
   puts "Resuming download of #{order_name}"
-  download_order(orders_downloading, order_url)
+  download_order(orders_downloading, order_name, order_url)
 end
 
 loop do
