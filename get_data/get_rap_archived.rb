@@ -21,7 +21,7 @@ html = `curl -s #{base_url}`
 urls_to_get = html.scan(/\w+\.g2\.tar\b/).uniq
 
 if urls_to_get.empty?
-  puts html
+  STDERR.puts html
   exit 1
 end
 
@@ -43,9 +43,17 @@ threads = THREAD_COUNT.times.map do
       # There's extra weirdo "./PaxHeaders.6294/rap_130_20170101_0400_000.grb2" files that we want to skip.
       loop do
         header = `curl -s -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`
-        break unless $?.success?
+        if !$?.success?
+          STDERR.puts "Failed reading #{tar_url}"
+          STDERR.puts header
+          exit 1
+        end
         file_name = header[0...100][/\A[^\x0]+/]
-        break unless file_name
+        if !file_name
+          STDERR.puts "Failed reading file name from #{tar_url}"
+          STDERR.puts header
+          exit 1
+        end
         # puts file_name
         file_size = header[124...135].to_i(8) # Wikipedia says 12 bytes, but last byte appears to always be a null
 
@@ -71,8 +79,12 @@ threads = THREAD_COUNT.times.map do
             if data.bytesize == file_size
               File.write(path, data)
               # File.write(alt_path, data)
+            elsif !$?.success?
+              STDERR.puts "Failed: curl -f -s --show-error -H\"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}\" #{tar_url}"
+              exit 1
             else
               STDERR.puts "Asked for #{file_size} bytes of #{file_name} but only got #{data.size}!!! Not saved."
+              exit 1
             end
           end
         end
