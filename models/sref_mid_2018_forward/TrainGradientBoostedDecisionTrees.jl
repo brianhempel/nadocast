@@ -245,7 +245,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # 186:47:56 elapsed
 
 
-# TAKE ONE MILLION, now with data through Nov 2020. But we'll remember the bin splits this time if we restart training after data loading.
+# TAKE ONE MILLION, now with data through Oct 2020. But we'll remember the bin splits this time if we restart training after data loading.
 # Also don't subset points within 100mi/90min of any storm event
 
 # $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.13 make train_gradient_boosted_decision_trees
@@ -296,6 +296,28 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Best hyperparameters (loss = 0.0012076722):
 # Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 20,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180000.0)
 
+# FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.085 make train_gradient_boosted_decision_trees
+# 17700 for training. (2686 with tornadoes.)
+# 3729 for validation.
+# 3457 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 998 positive and 10018 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10764043 datapoints with 18759 features each.
+# Loading validation data
+# done. 2304500 datapoints with 18759 features each.
+#
+# Middle config:
+# New best! Loss: 0.0012628168
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.001240725
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 560.0)
+#
+# After coordinate descent (no improvements):
+# Best hyperparameters (loss = 0.001240725):
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 560.0)
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
