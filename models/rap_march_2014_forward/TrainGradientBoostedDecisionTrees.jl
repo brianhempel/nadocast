@@ -14,7 +14,9 @@ forecast_hour_range = forecast_hour:forecast_hour
 # 12
 # 17
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.007"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.003"))
+near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.2"))
+load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(replace(string(Dates.now()), ":" => "."))"
 
@@ -143,14 +145,21 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # 66:07:37 elapsed (all data was loaded in failed runs)
 
 
+# TAKE ONE MILLION, now with data through Oct 2020. But we'll remember the bin splits this time if we restart training after data loading.
+# Also don't subset points so much within 100mi/90min of any storm event
+
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.003 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+
+
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     RAP.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    save_dir     = "rap_f$(forecast_hour)_$(data_subset_ratio)",
+    save_dir     = "rap_f$(forecast_hour)_$(data_subset_ratio)_$(near_storm_ratio)",
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
+    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    load_only                                          = load_only,
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
