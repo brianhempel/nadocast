@@ -188,7 +188,7 @@ end
 def download_order(orders_downloading, order_name, order_url)
   orders_downloading[order_name] = order_url
   Thread.new do
-    cmd = "ruby #{File.expand_path("../get_rap_archived.rb", __FILE__)} 2 #{order_url}"
+    cmd = "ruby #{File.expand_path("../get_rap_archived.rb", __FILE__)} #{order_url}"
     puts cmd
     while !system(cmd)
       sleep(15*60)

@@ -40,17 +40,18 @@ threads = THREAD_COUNT.times.map do
 
       at_byte = 0
 
-      puts "Walking #{tar_url}"
+      # puts "Walking #{tar_url}"
 
       # There's extra weirdo "./PaxHeaders.6294/rap_130_20170101_0400_000.grb2" files that we want to skip.
       loop do
-        header = `curl -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`
-        puts [at_byte, header].inspect
+        header = `curl -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`.force_encoding("ASCII-8BIT")
+        # puts [at_byte, header].inspect
         if !$?.success?
           STDERR.puts "Failed reading #{tar_url}"
           STDERR.puts header.inspect
           exit 1
         end
+        break if header.bytes.sum == 0 # End of tar file
         file_name = header[0...100][/\A[^\x0]+/]
         if !file_name
           STDERR.puts "Failed reading file name from #{tar_url}"
@@ -60,7 +61,7 @@ threads = THREAD_COUNT.times.map do
         # puts file_name
         file_size = header[124...135].to_i(8) # Wikipedia says 12 bytes, but last byte appears to always be a null
 
-        puts file_size
+        # puts file_size
 
         at_byte += 512
 
