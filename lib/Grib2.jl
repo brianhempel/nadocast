@@ -14,6 +14,12 @@ import Inventories
 # Deeply traverse root_path to find grib2 file paths
 function all_grib2_file_paths_in(root_path)
   grib2_paths = []
+  if !isdir(root_path)
+    println("")
+    println("$root_path does not exist! Can't read Grib2s!!")
+    println("")
+    return grib2_paths
+  end
   for (dir_path, _, file_names) in walkdir(root_path)
     for file_name in file_names
       if endswith(file_name, ".grb2") || endswith(file_name, ".grib2")
