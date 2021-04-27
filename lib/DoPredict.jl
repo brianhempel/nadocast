@@ -35,7 +35,7 @@ HREF_WEIGHT =
   if haskey(ENV, "HREF_WEIGHT")
     parse(Float32, ENV["HREF_WEIGHT"])
   else
-    0.75
+    0.85
   end
 
 RAP_VS_HREF_SREF_WEIGHT =
