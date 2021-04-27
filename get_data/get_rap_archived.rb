@@ -42,16 +42,16 @@ threads = THREAD_COUNT.times.map do
 
       # There's extra weirdo "./PaxHeaders.6294/rap_130_20170101_0400_000.grb2" files that we want to skip.
       loop do
-        header = `curl -s -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`
+        header = `curl -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`
         if !$?.success?
           STDERR.puts "Failed reading #{tar_url}"
-          STDERR.puts header
+          STDERR.puts header.inspect
           exit 1
         end
         file_name = header[0...100][/\A[^\x0]+/]
         if !file_name
           STDERR.puts "Failed reading file name from #{tar_url}"
-          STDERR.puts header
+          STDERR.puts header.inspect
           exit 1
         end
         # puts file_name
