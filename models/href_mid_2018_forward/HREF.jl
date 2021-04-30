@@ -161,10 +161,10 @@ interaction_terms = [
   ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer) -> get_layer("sqrtSBCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
   ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer) -> get_layer("sqrtMLCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
 
-  (    "SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)")),
-  (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*HLCY3000-0m*(200+MLCIN)")),
-  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)")),
-  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)")),
+  (    "SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer(bwd_0_6km_key)),
+  (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*HLCY3000-0m*(200+MLCIN)") .* get_layer(bwd_0_6km_key)),
+  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer(bwd_0_6km_key)),
+  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)") .* get_layer(bwd_0_6km_key)),
 
   ("SCPish(RM)", (_, get_layer) -> get_layer(mulayercape_key) .* get_layer(helicity3km_key) .* get_layer(bwd_0_6km_key) .* (1f0 / (1000f0 * 50f0 * 20f0))),
 
