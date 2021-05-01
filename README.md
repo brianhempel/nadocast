@@ -7,8 +7,6 @@ If all goes well, the expected possible advantages over Storm Prediction Center'
 1. Finer temporal resolution: indicating _when_ during the day tornadoes are expected.
 2. Hopefully more skill by using machine learning approaches.
 
-## Setup
-
 ## Status
 
 - [x] Get Some Data
@@ -19,16 +17,16 @@ If all goes well, the expected possible advantages over Storm Prediction Center'
 - [x] Get some storm events
 - [x] Read the weather data
 - [x] Build background climatology (spacial, diurnal, annual)
-- [ ] Storm mode?
+- [x] Storm mode? (some parameters for that, sans estimates from reflectivity)
 - [x] Add some interaction terms
 - [x] Faster training
 - [ ] Faster loading
-- [ ] Tree refitting
+- [x] ~~Tree refitting~~ didn't help, slow
 - [ ] Loss-based tree pruning
 - [ ] Set up process:
   - [ ] Retrain SREF with 3-hour chunks
   - [ ] Retrain HREF with 3-hour chunks
-  - [ ] Retrain RAP with 2-hour chunks
+  - [ ] Retrain RAP with 3-hour chunks
   - [ ] Retrain HRRR with 3-hour chunks
   - [ ] Optimize hourly weighted combo
   - [ ] Combine into daily
