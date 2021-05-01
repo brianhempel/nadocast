@@ -58,7 +58,10 @@ all_sref_forecasts = SREF.three_hour_window_three_hour_min_mean_max_delta_featur
 # println("done.")
 
 sref_run_time_seconds =
-  if haskey(ENV, "FORECAST_DATE")
+  if haskey(ENV, "SREF_RUN_TIME") # e.g. 2017-4-6t21z
+    year, month, day, run_hour = map(num_str -> parse(Int64, num_str), split(ENV["SREF_RUN_TIME"], r"[^0-9]+")[1:4])
+    Forecasts.time_in_seconds_since_epoch_utc(year, month, day, run_hour)
+  elseif haskey(ENV, "FORECAST_DATE")
     # Use 3z SREF and 6z HREF, both should be out before 12z
     year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
     Forecasts.time_in_seconds_since_epoch_utc(year, month, day, 3)
@@ -99,11 +102,11 @@ rap_model_path  = (@__DIR__) * "/../models/rap_march_2014_forward/gbdt_f12_2019-
 hrrr_model_path = (@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
 
 # print("Load RAP forecasts...")
-all_rap_forecasts = RAP.feature_engineered_forecasts()
+all_rap_forecasts = haskey(ENV, "USE_RAP") && !parse(Bool, ENV["USE_RAP"]) ? [] : RAP.feature_engineered_forecasts()
 # println("done.")
 
 # print("Load HRRR forecasts...")
-all_hrrr_forecasts = HRRR.feature_engineered_forecasts()
+all_hrrr_forecasts = haskey(ENV, "USE_HRRR") && !parse(Bool, ENV["USE_HRRR"]) ? [] : HRRR.feature_engineered_forecasts()
 # println("done.")
 
 rap_forecast_candidates  = filter(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) >= sref_run_time_seconds, all_rap_forecasts)
@@ -134,7 +137,10 @@ all_href_forecasts = HREF.three_hour_window_three_hour_min_mean_max_delta_featur
 # println("done.")
 
 href_run_time_seconds =
-  if haskey(ENV, "FORECAST_DATE")
+  if haskey(ENV, "HREF_RUN_TIME") # e.g. 2017-4-6t0z
+    year, month, day, run_hour = map(num_str -> parse(Int64, num_str), split(ENV["HREF_RUN_TIME"], r"[^0-9]+")[1:4])
+    Forecasts.time_in_seconds_since_epoch_utc(year, month, day, run_hour)
+  elseif haskey(ENV, "FORECAST_DATE")
     # Use 9z SREF and 6z HREF, both should be out before 12z
     year, month, day = map(num_str -> parse(Int64, num_str), split(ENV["FORECAST_DATE"], "-"))
     Forecasts.time_in_seconds_since_epoch_utc(year, month, day, 6)
