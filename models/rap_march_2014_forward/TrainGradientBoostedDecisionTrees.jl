@@ -145,10 +145,21 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # 66:07:37 elapsed (all data was loaded in failed runs)
 
 
+
 # TAKE ONE MILLION, now with data through Oct 2020. But we'll remember the bin splits this time if we restart training after data loading.
 # Also don't subset points so much within 100mi/90min of any storm event
 
-# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.003 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.003 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est size 370gb
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est size 270gb
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.0008 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est size 270gb
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
+# 20237 for training. (2963 with tornadoes.)
+# 4070 for validation.
+# 4060 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# Loading previously computed bin splits from rap_f2_0.001_0.15_samples_for_bin_splits/bin_splits
+# Loading training data
+# NOPE it crashed the training process because this process uses more memory over time, it seems.
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(

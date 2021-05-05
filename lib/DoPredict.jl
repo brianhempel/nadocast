@@ -3,6 +3,10 @@ import MemoryConstrainedTreeBoosting
 # To predict the past, set FORECAST_DATE=2019-4-7 in the environment:
 #
 # $ FORECAST_DATE=2019-4-7 TWEET=true FORECASTS_ROOT=$(pwd)/test_grib2s make forecast
+#
+# or
+#
+# $ SREF_RUN_TIME=2021-4-22t21 HREF_RUN_TIME=2021-4-23t0 USE_HRRR=false USE_RAP=false make forecast
 
 import Dates
 using Printf

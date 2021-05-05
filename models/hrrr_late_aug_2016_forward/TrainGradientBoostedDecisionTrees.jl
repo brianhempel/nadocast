@@ -140,7 +140,61 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.001 make train_gradient_boosted_decision_trees # est training size: 650gb
 
 # So 63,000gb is far away points and 600gb is near the storm
-# $ FORECAST_HOUR=17 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est training size: 215gb
+# $ FORECAST_HOUR=17 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # Total size: 237gb
+# 12782 for training. (1915 with tornadoes.)
+# 2628 for validation.
+# 2577 for testing.
+# Loading previously computed bin splits from hrrr_f17_0.0015_0.2_samples_for_bin_splits/bin_splits
+# Loading training data
+# done. 11290932 datapoints with 18577 features each.
+# Loading validation data
+# done. 2335755 datapoints with 18577 features each.
+# 121:37:24 elapsed
+# Need 1 forecast for grid
+# $ scp /Volumes/HRRR_1/hrrr/201608/20160824/hrrr_conus_sfc_20160824_t00z_f05.grib2 nadocaster:~/nadocast_dev/test_grib2s/HRRR_1/hrrr/201608/20160824/hrrr_conus_sfc_20160824_t00z_f05.grib2
+# $ FORECASTS_ROOT=/home/brian/nadocast_dev/test_grib2s/ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# Loading previously computed bin splits from hrrr_f17_0.0015_0.2_samples_for_bin_splits/bin_splits
+# Loading training data
+# done. 11290932 datapoints with 18577 features each.
+# Loading validation data
+# done. 2335755 datapoints with 18577 features each.
+#
+# Middle config:
+# New best! Loss: 0.0010209968
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010147324
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 18000.0)
+#
+# After coordinate descent (no effective change):
+# Best hyperparameters (loss = 0.0010138382):
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 18000.0)
+#
+# 35:53:17 elapsed
+
+
+# $ FORECAST_HOUR=12 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 12783 for training. (1914 with tornadoes.)
+# 2639 for validation.
+# 2577 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 20306 positive and 193077 negative labels...computing bin splits...done.
+# Loading training data
+# done. 11296524 datapoints with 18577 features each.
+# Loading validation data
+# done. 2344934 datapoints with 18577 features each.
+# 138:43:32 elapsed
+# $
+
+
+# $ FORECAST_HOUR=6 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 12774 for training. (1913 with tornadoes.)
+# 2651 for validation.
+# 2581 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+#
+
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
