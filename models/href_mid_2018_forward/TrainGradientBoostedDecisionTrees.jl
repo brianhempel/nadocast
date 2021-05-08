@@ -200,7 +200,16 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Middle config:
 # New best! Loss: 0.0010637761
 # Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
-
+#
+# Best random:
+# New best! Loss: 0.0010577805
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320000.0)
+#
+# After coordinate descent:
+#
+# Best hyperparameters (loss = 0.0010572184):
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180000.0)
+# 71:34:30 elapsed
 
 
 # $ FORECAST_HOUR_RANGE=24:35 LOAD_ONLY=true DATA_SUBSET_RATIO=0.012 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
@@ -214,7 +223,8 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Loading validation data
 # done. 2177360 datapoints with 17758 features each.
 # 66:00:22 elapsed
-# $
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.012 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
