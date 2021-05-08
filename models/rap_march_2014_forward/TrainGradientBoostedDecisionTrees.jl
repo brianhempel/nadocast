@@ -160,6 +160,13 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Loading previously computed bin splits from rap_f2_0.001_0.15_samples_for_bin_splits/bin_splits
 # Loading training data
 # NOPE it crashed the training process because this process uses more memory over time, it seems.
+# $ FORECAST_HOUR=2 LOAD_ONLY=true DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
+# 20237 for training. (2963 with tornadoes.)
+# 4070 for validation.
+# 4060 for testing.
+# Loading previously computed bin splits from rap_f2_0.001_0.15_samples_for_bin_splits/bin_splits
+# Loading training data
+#
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
