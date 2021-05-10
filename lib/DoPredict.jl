@@ -80,9 +80,9 @@ sref_forecasts_to_plot = filter(forecast -> Forecasts.run_time_in_seconds_since_
 
 # print("Load SREF model...")
 # sref_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_f1-39_2019-03-26T00.59.57.772/78_trees_loss_0.001402743.model")
-sref_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2020-08-01T06.24.27.615/177_trees_loss_0.0012903158.model")
-sref_predict_f12_to_f23 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2020-07-26T07.54.57.491/173_trees_loss_0.0013711528.model")
-sref_predict_f21_to_f38 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2020-08-16T18.14.40.282/147_trees_loss_0.00141136.model")
+sref_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_Dates.DateTime(\"2021-04-20T04.17.36.114\")/173_trees_loss_0.0011276418.model")
+sref_predict_f12_to_f23 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_Dates.DateTime(\"2021-04-22T01.22.58.76\")/175_trees_loss_0.0012076722.model")
+sref_predict_f21_to_f38 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/sref_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2021-04-25T00.37.19.274/198_trees_loss_0.001240725.model")
 # println("done.")
 
 
@@ -154,9 +154,9 @@ href_run_time_seconds =
 
 # print("Load HREF model...")
 # href_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(href_model_path)
-href_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2020-08-31T01.09.34.597/165_trees_loss_0.0010708775.model")
-href_predict_f13_to_f24 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2020-09-05T14.17.00.494/205_trees_loss_0.0011394698.model")
-href_predict_f24_to_f35 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2020-09-11T02.05.26.327/192_trees_loss_0.0011718384.model")
+href_predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2021-05-03T03.25.52.926/238_trees_loss_0.0009984318.model")
+href_predict_f13_to_f24 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2021-05-05T13.39.29.915/339_trees_loss_0.0010572184.model")
+href_predict_f24_to_f35 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2021-05-08T13.56.21.726/208_trees_loss_0.001098248.model")
 # println("done.")
 
 nadocast_run_time_seconds = max(href_run_time_seconds, sref_run_time_seconds, map(Forecasts.run_time_in_seconds_since_epoch_utc, hrrr_forecast_candidates)...)
