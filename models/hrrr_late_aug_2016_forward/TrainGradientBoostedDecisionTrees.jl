@@ -193,8 +193,16 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # 2651 for validation.
 # 2581 for testing.
 # Preparing bin splits by sampling 200 training tornado hour forecasts
-#
+# filtering to balance 20871 positive and 193067 negative labels...computing bin splits...done.
+# Loading training data
+# done. 11277509 datapoints with 18577 features each.
+# Loading validation data
+# done. 2357315 datapoints with 18577 features each.
+# 130:48:20 elapsed
+# $
 
+
+# f2 are downloaded but not loaded yet
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(

@@ -206,9 +206,9 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320000.0)
 #
 # After coordinate descent:
-#
 # Best hyperparameters (loss = 0.0010572184):
 # Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180000.0)
+#
 # 71:34:30 elapsed
 
 
@@ -225,6 +225,20 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # 66:00:22 elapsed
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.012 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
 #
+# Middle config:
+# New best! Loss: 0.0011056052
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010999102
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 3.2,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3.2e6)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.001098248):
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3.2e6)
+#
+# 50:21:29 elapsed
+
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
