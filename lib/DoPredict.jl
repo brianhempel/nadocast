@@ -7,6 +7,13 @@ import MemoryConstrainedTreeBoosting
 # or
 #
 # $ SREF_RUN_TIME=2021-4-22t21 HREF_RUN_TIME=2021-4-23t0 USE_HRRR=false USE_RAP=false make forecast
+#
+# Using data on remote machine:
+# Make sure ~/.ssh/config doesn't use screen
+# $ mkdir ~/nadocaster2
+# $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ SREF_RUN_TIME=2021-4-22t21 HREF_RUN_TIME=2021-4-23t0 USE_HRRR=false USE_RAP=false make forecast
+
 
 import Dates
 using Printf
@@ -449,7 +456,7 @@ if get(ENV, "TWEET", "false") == "true"
 
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
-    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast (new HREF/SREF models)" $path.png`)
+    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast (new new HREF/SREF models)" $path.png`)
   end
 
   # if !isnothing(animation_glob_path)
