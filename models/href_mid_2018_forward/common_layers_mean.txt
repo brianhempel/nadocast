@@ -4,7 +4,6 @@ CAPE:surface:hour fcst:wt ens mean
 CIN:90-0 mb above ground:hour fcst:wt ens mean
 CIN:180-0 mb above ground:hour fcst:wt ens mean
 CIN:surface:hour fcst:wt ens mean
-PRMSL:mean sea level:hour fcst:wt ens mean
 HLCY:3000-0 m above ground:hour fcst:wt ens mean
 HGT:250 mb:hour fcst:wt ens mean
 HGT:500 mb:hour fcst:wt ens mean
