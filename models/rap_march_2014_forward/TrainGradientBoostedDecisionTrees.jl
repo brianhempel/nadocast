@@ -166,7 +166,10 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # 4060 for testing.
 # Loading previously computed bin splits from rap_f2_0.001_0.15_samples_for_bin_splits/bin_splits
 # Loading training data
-#
+# done. 6310565 datapoints with 27222 features each.
+# Loading validation data
+# done. 1218579 datapoints with 27222 features each.
+# 168:50:20 elapsed
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(

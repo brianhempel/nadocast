@@ -185,7 +185,27 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Loading validation data
 # done. 2344934 datapoints with 18577 features each.
 # 138:43:32 elapsed
-# $
+# $ FORECASTS_ROOT=/home/brian/nadocast_dev/test_grib2s/ FORECAST_HOUR=12 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# Loading previously computed bin splits from hrrr_f12_0.0015_0.2_samples_for_bin_splits/bin_splits
+# Loading training data
+# done. 11296524 datapoints with 18577 features each.
+# Loading validation data
+# done. 2344934 datapoints with 18577 features each.
+#
+# Middle config:
+# New best! Loss: 0.0010055499
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010020017
+# Dict{Symbol,Real}(:max_depth => 4,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0010017317):
+# Dict{Symbol,Real}(:max_depth => 4,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.75,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 560.0)
+#
+# 95:20:30 elapsed
+
 
 
 # $ FORECAST_HOUR=6 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
