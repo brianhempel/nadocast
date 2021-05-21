@@ -240,6 +240,93 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # 50:21:29 elapsed
 
 
+# TAKE ONE MILLION TWO! LOST SOME UPDRAFT HELICITY FIELDS IN HREFv3
+
+# $ FORECAST_HOUR_RANGE=2:13 LOAD_ONLY=true DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 14719 for training. (2191 with tornadoes.)
+# 3110 for validation.
+# 2936 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 7262 positive and 71819 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10769194 datapoints with 17758 features each.
+# Loading validation data
+# done. 2301909 datapoints with 17758 features each.
+# 54:56:12 elapsed
+# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# Middle config:
+# New best! Loss: 0.0010044684
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.000999704
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180000.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.000998218):
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 320000.0)
+#
+# 59:57:59 elapsed
+
+
+# $ FORECAST_HOUR_RANGE=13:24 LOAD_ONLY=true DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 14710 for training. (2187 with tornadoes.)
+# 3096 for validation.
+# 2959 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 7430 positive and 71439 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10759453 datapoints with 17394 features each.
+# Loading validation data
+# done. 2293206 datapoints with 17394 features each.
+# 57:44:57 elapsed
+# $ FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# Middle config:
+# New best! Loss: 0.0010607727
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010535138
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 3.2,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5.6e6)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0010514505):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 3.2,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5.6e6)
+#
+# 46:18:22 elapsed
+
+
+# $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR_RANGE=24:35 LOAD_ONLY=true DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 14712 for training. (2194 with tornadoes.)
+# 3079 for validation.
+# 2936 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 7256 positive and 71445 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10755133 datapoints with 17758 features each.
+# Loading validation data
+# done. 2283442 datapoints with 17758 features each.
+# 66:38:37 elapsed
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# Middle config:
+# New best! Loss: 0.0011056688
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010997955
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 6,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5600.0)
+#
+# After coordinate descent (no improvement):
+# Best hyperparameters (loss = 0.0010997955):
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 6,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5600.0)
+#
+# 33:54:57 elapsed
+
+
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();

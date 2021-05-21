@@ -152,7 +152,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.003 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est size 370gb
 # $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est size 270gb
 # $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.0008 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees # est size 270gb
-# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees # size ~205gb
 # 20237 for training. (2963 with tornadoes.)
 # 4070 for validation.
 # 4060 for testing.
@@ -170,6 +170,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Loading validation data
 # done. 1218579 datapoints with 27222 features each.
 # 168:50:20 elapsed
+# $
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(

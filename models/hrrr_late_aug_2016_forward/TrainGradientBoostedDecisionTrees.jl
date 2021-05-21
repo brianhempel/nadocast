@@ -222,7 +222,19 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # $
 
 
-# f2 are downloaded but not loaded yet
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=2 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 12784 for training. (1911 with tornadoes.)
+# 2649 for validation.
+# 2579 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 19997 positive and 193087 negative labels...computing bin splits...done.
+# Loading training data
+# done. 11291808 datapoints with 18577 features each.
+# Loading validation data
+# done. 2356765 datapoints with 18577 features each.
+# 117:23:52 elapsed
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# ...
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
