@@ -327,6 +327,62 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # 33:54:57 elapsed
 
 
+# OH DEAR i messed up and I guess I restarted the data loading before pushing/pulling. f2-13 and f24-35 still included the missing features
+#
+# TAKE ONE MILLION THREE!!!
+
+
+# $ FORECAST_HOUR_RANGE=2:13 LOAD_ONLY=true DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# ...lost log, but should be like above f2-13...
+# done. 10769194 datapoints with 17394 features each.
+# Loading validation data
+# done. 2301909 datapoints with 17394 features each.
+# 54:19:47 elapsed
+# $ FORECAST_HOUR_RANGE=2:13 LOAD_FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# Middle config:
+# New best! Loss: 0.0010124119
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0010021647
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 0.25,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180000.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0009960941):
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.25,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 56000.0)
+#
+# 49:01:46 elapsed
+
+# $ FORECAST_HOUR_RANGE=24:35 LOAD_ONLY=true DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# 14712 for training. (2194 with tornadoes.)
+# 3079 for validation.
+# 2936 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 7256 positive and 71445 negative labels...computing bin splits...done.
+# Loading training data
+# done. 10755133 datapoints with 17394 features each.
+# Loading validation data
+# done. 2283442 datapoints with 17394 features each.
+# 53:47:40 elapsed
+# $ scp -r href_f24-35_0.013_0.2_* nadocaster:~/nadocast_dev/models/href_mid_2018_forward/
+# $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.013 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+#
+# Middle config:
+# New best! Loss: 0.0011133694
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0011011664
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 6,:l2_regularization => 3.2,:feature_fraction => 0.25,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0010976213):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 6,:l2_regularization => 3.2,:feature_fraction => 0.25,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 100.0)
+#
+# 40:06:02 elapsed
+
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();

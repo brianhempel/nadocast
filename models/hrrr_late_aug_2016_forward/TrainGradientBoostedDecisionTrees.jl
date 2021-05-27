@@ -219,7 +219,9 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Loading validation data
 # done. 2357315 datapoints with 18577 features each.
 # 130:48:20 elapsed
-# $
+# $ FORECAST_HOUR=6 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
+# ...crash... too big. ;( but it might have been the forecaster also trying to run...trying again
+#
 
 
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=2 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
@@ -234,7 +236,20 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # done. 2356765 datapoints with 18577 features each.
 # 117:23:52 elapsed
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
-# ...
+#
+# Middle config:
+# New best! Loss: 0.000864562
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0008568874
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0008549077):
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 20,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 180.0)
+#
+# 109:27:01 elapsed
 
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
