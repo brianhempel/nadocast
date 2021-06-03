@@ -220,8 +220,18 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # done. 2357315 datapoints with 18577 features each.
 # 130:48:20 elapsed
 # $ FORECAST_HOUR=6 DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees
-# ...crash... too big. ;( but it might have been the forecaster also trying to run...trying again
 #
+# Middle config:
+# New best! Loss: 0.0009408674
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.0009336871
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 6,:l2_regularization => 3.2,:feature_fraction => 1.0,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 3200.0)
+#
+# Best hyperparameters (loss = 0.00092996453):
+# Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 8,:l2_regularization => 3.2,:feature_fraction => 0.75,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 1800.0)
+# 157:43:18 elapsed
 
 
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=2 LOAD_ONLY=true DATA_SUBSET_RATIO=0.0015 NEAR_STORM_RATIO=0.2 make train_gradient_boosted_decision_trees

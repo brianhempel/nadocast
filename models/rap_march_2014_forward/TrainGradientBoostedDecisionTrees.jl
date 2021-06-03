@@ -173,6 +173,15 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # $
 
 
+# $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=6 LOAD_ONLY=true DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
+# ...
+
+# $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=12 LOAD_ONLY=true DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
+# ...
+
+
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     RAP.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
