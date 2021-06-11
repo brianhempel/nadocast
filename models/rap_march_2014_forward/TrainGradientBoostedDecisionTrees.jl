@@ -170,7 +170,8 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # Loading validation data
 # done. 1218579 datapoints with 27222 features each.
 # 168:50:20 elapsed
-# $
+# $ FORECAST_HOUR=2 DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
+# ...
 
 
 # $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
@@ -215,13 +216,47 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_f$(forecast_hour)_$(repla
 # done. 1224642 datapoints with 27222 features each.
 # 167:21:57 elapsed
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_HOUR=12 DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
-# ...
+#
+# Middle config:
+# New best! Loss: 0.0009764952
+# Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+#
+# Best random:
+# New best! Loss: 0.00097313547
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 3.2,:learning_rate => 0.063,:max_leaves => 15,:l2_regularization => 3.2,:feature_fraction => 0.25,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+#
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0009632701):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+#
+# 88:23:18 elapsed
+
 
 
 # $ FORECAST_HOUR=17 DATA_SUBSET_RATIO=0.001 NEAR_STORM_RATIO=0.15 make train_gradient_boosted_decision_trees
 # 20267 for training. (2971 with tornadoes.)
 # 4049 for validation.
 # 4049 for testing.
+# Preparing bin splits by sampling 200 training tornado hour forecasts
+# filtering to balance 9333 positive and 90680 negative labels...computing bin splits...done.
+# Loading training data
+# done. 6339025 datapoints with 27222 features each.
+# Loading validation data
+# done. 1220205 datapoints with 27222 features each.
+
+# Middle config:
+# Trying Dict{Symbol,Real}(:max_depth => 5,:max_delta_score => 1.8,:learning_rate => 0.063,:max_leaves => 10,:l2_regularization => 3.2,:feature_fraction => 0.5,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 32000.0)
+# Best validation loss: 0.0010109525    14.614248764 sec/tree
+
+# Best random:
+# New best! Loss: 0.0010013491
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 100.0)
+
+# After coordinate descent:
+# Best hyperparameters (loss = 0.0009980382):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 1.0,:learning_rate => 0.063,:max_leaves => 25,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 100.0)
+
+# 177:17:24 elapsed
 
 
 
