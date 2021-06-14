@@ -408,35 +408,35 @@ if !isnothing(period_inverse_prediction)
 end
 
 
-last_href_valid_time_seconds = isempty(href_forecasts_to_plot) ? nadocast_run_time_seconds : maximum(map(Forecasts.valid_time_in_seconds_since_epoch_utc, href_forecasts_to_plot))
-longer_range_sref_forecasts = filter(sref_forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) > last_href_valid_time_seconds, sref_forecasts_to_plot)
+# last_href_valid_time_seconds = isempty(href_forecasts_to_plot) ? nadocast_run_time_seconds : maximum(map(Forecasts.valid_time_in_seconds_since_epoch_utc, href_forecasts_to_plot))
+# longer_range_sref_forecasts = filter(sref_forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) > last_href_valid_time_seconds, sref_forecasts_to_plot)
 
-for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(longer_range_sref_forecasts)
-  path = out_dir * "sref_" * Forecasts.yyyymmdd_thhz_fhh(sref_forecast) * ""
-  println(path)
+# for (sref_forecast, sref_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(longer_range_sref_forecasts)
+#   path = out_dir * "sref_" * Forecasts.yyyymmdd_thhz_fhh(sref_forecast) * ""
+#   println(path)
 
-  # sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
+#   # sref_data = SREF.get_feature_engineered_data(sref_forecast, sref_data)
 
-  # sref_predictions = MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees)
-  sref_predictions = sref_predict(sref_data)
+#   # sref_predictions = MemoryConstrainedTreeBoosting.predict(sref_data, sref_bin_splits, sref_trees)
+#   sref_predictions = sref_predict(sref_data)
 
-  push!(paths, path)
+#   push!(paths, path)
 
-  nadocast_forecast_hour = fld(Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) - nadocast_run_time_seconds, HOUR)
+#   nadocast_forecast_hour = fld(Forecasts.valid_time_in_seconds_since_epoch_utc(sref_forecast) - nadocast_run_time_seconds, HOUR)
 
-  write(path * ".float16.bin", Float16.(sref_predictions))
-  PlotMap.plot_map(
-    path,
-    sref_forecast.grid,
-    sref_predictions;
-    run_time_utc = nadocast_run_time_utc,
-    forecast_hour_range = nadocast_forecast_hour:nadocast_forecast_hour,
-    hrrr_run_hours = [],
-    rap_run_hours  = [],
-    href_run_hours = [],
-    sref_run_hours = [sref_forecast.run_hour]
-  )
-end
+#   write(path * ".float16.bin", Float16.(sref_predictions))
+#   PlotMap.plot_map(
+#     path,
+#     sref_forecast.grid,
+#     sref_predictions;
+#     run_time_utc = nadocast_run_time_utc,
+#     forecast_hour_range = nadocast_forecast_hour:nadocast_forecast_hour,
+#     hrrr_run_hours = [],
+#     rap_run_hours  = [],
+#     href_run_hours = [],
+#     sref_run_hours = [sref_forecast.run_hour]
+#   )
+# end
 
 # @sync doesn't seem to work; poll until subprocesses are done.
 for path in paths
