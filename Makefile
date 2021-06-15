@@ -13,6 +13,9 @@ default:
 julia:
 	julia --project
 
+bench_loading:
+	JULIA_NUM_THREADS=${CORE_COUNT} FORECASTS_ROOT=test_grib2s julia --project BenchLoading.jl
+
 notebook:
 	jupyter lab
 
