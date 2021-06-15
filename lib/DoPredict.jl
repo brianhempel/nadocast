@@ -109,15 +109,12 @@ sref_predict_f21_to_f38 = MemoryConstrainedTreeBoosting.load_unbinned_predictor(
 
 
 
-rap_model_path  = (@__DIR__) * "/../models/rap_march_2014_forward/gbdt_f12_2019-04-17T19.27.16.893/568_trees_loss_0.0012037802.model"
-hrrr_model_path = (@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model"
-
 # print("Load RAP forecasts...")
-all_rap_forecasts = haskey(ENV, "USE_RAP") && !parse(Bool, ENV["USE_RAP"]) ? [] : RAP.feature_engineered_forecasts()
+all_rap_forecasts = haskey(ENV, "USE_RAP") && !parse(Bool, ENV["USE_RAP"]) ? [] : RAP.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 # println("done.")
 
 # print("Load HRRR forecasts...")
-all_hrrr_forecasts = haskey(ENV, "USE_HRRR") && !parse(Bool, ENV["USE_HRRR"]) ? [] : HRRR.feature_engineered_forecasts()
+all_hrrr_forecasts = haskey(ENV, "USE_HRRR") && !parse(Bool, ENV["USE_HRRR"]) ? [] : HRRR.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 # println("done.")
 
 rap_forecast_candidates  = filter(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) >= sref_run_time_seconds, all_rap_forecasts)
@@ -133,11 +130,19 @@ if haskey(ENV, "FORECAST_DATE")
 end
 
 # print("Load RAP model...")
-rap_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(rap_model_path)
+# rap_predict   = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/rap_march_2014_forward/gbdt_f12_2019-04-17T19.27.16.893/568_trees_loss_0.0012037802.model")
+rap_predict_f2  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/rap_march_2014_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2_2021-06-11T14.38.30.5/445_trees_loss_0.00081564416.model")
+rap_predict_f6  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/rap_march_2014_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f6_2021-06-04T14.25.56.451/297_trees_loss_0.0009202203.model")
+rap_predict_f12 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/rap_march_2014_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f12_2021-06-07T05.23.57.904/477_trees_loss_0.0009632701.model")
+rap_predict_f17 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/rap_march_2014_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f17_2021-06-03T15.44.45.541/243_trees_loss_0.0009980382.model")
 # println("done.")
 
 # print("Load HRRR model...")
-hrrr_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor(hrrr_model_path)
+# hrrr_predict = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_f12_2019-05-04T13.05.05.929/157_trees_loss_0.0011697214.model")
+hrrr_predict_f2  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2_2021-05-21T22.37.26.544/463_trees_loss_0.0008549077.model")
+hrrr_predict_f6  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f6_2021-05-27T17.12.43.406/465_trees_loss_0.00092996453.model")
+hrrr_predict_f12 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f12_2021-05-10T20.00.43.881/471_trees_loss_0.0010017317.model")
+hrrr_predict_f17 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../models/hrrr_late_aug_2016_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f17_2021-04-30T10.49.47.495/341_trees_loss_0.0010138382.model")
 # println("done.")
 
 
@@ -210,6 +215,11 @@ hrrr_to_href_layer_resampler = !isempty(hrrr_forecast_candidates) ? Grids.get_up
 #   href_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - href_delay_hours*HOUR
 #   sref_run_time_in_seconds_since_epoch_utc = run_time_in_seconds_since_epoch_utc - sref_delay_hours*HOUR
 
+function weighted_prediction_between_models_at_different_forecast_hours(forecast, data, low_hour, high_hour, low_hour_predict, high_hour_predict)
+  high_weight = ((forecast.forecast_hour-low_hour) / Float32(high_hour - low_hour)) :: Float32
+  (1 - high_weight) .* low_hour_predict(data) .+ high_weight .* high_hour_predict(data)
+end
+
 # println("Start forecasts")
 for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(href_forecasts_to_plot)
 
@@ -272,7 +282,23 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     for (rap_forecast, rap_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(rap_forecasts)
       # print("Predicting RAP...")
-      rap_predictions = rap_predict(rap_data)
+      rap_predictions =
+        if rap_forecast.forecast_hour <= 2
+          rap_predict_f2(rap_data)
+        elseif rap_forecast.forecast_hour in 3:5
+          weighted_prediction_between_models_at_different_forecast_hours(rap_forecast, rap_data, 2, 6, rap_predict_f2, rap_predict_f6)
+        elseif rap_forecast.forecast_hour == 6
+          rap_predict_f6(rap_data)
+        elseif rap_forecast.forecast_hour in 7:11
+          weighted_prediction_between_models_at_different_forecast_hours(rap_forecast, rap_data, 6, 12, rap_predict_f6, rap_predict_f12)
+        elseif rap_forecast.forecast_hour == 12
+          rap_predict_f12(rap_data)
+        elseif rap_forecast.forecast_hour in 13:16
+          weighted_prediction_between_models_at_different_forecast_hours(rap_forecast, rap_data, 12, 17, rap_predict_f12, rap_predict_f17)
+        elseif rap_forecast.forecast_hour >= 17
+          rap_predict_f17(rap_data)
+        end
+
       # println("done.")
       if isnothing(mean_rap_predictions)
         mean_rap_predictions = rap_to_href_layer_upsampler(rap_predictions)
@@ -291,8 +317,24 @@ for (href_forecast, href_data) in Forecasts.iterate_data_of_uncorrupted_forecast
 
     for (hrrr_forecast, hrrr_data) in Forecasts.iterate_data_of_uncorrupted_forecasts(hrrr_forecasts)
       # print("Predicting with HRRR...")
-      hrrr_predictions = hrrr_predict(hrrr_data)
-      # println("done.")
+      hrrr_predictions =
+        if hrrr_forecast.forecast_hour <= 2
+          hrrr_predict_f2(hrrr_data)
+        elseif hrrr_forecast.forecast_hour in 3:5
+          weighted_prediction_between_models_at_different_forecast_hours(hrrr_forecast, hrrr_data, 2, 6, hrrr_predict_f2, hrrr_predict_f6)
+        elseif hrrr_forecast.forecast_hour == 6
+          hrrr_predict_f6(hrrr_data)
+        elseif hrrr_forecast.forecast_hour in 7:11
+          weighted_prediction_between_models_at_different_forecast_hours(hrrr_forecast, hrrr_data, 6, 12, hrrr_predict_f6, hrrr_predict_f12)
+        elseif hrrr_forecast.forecast_hour == 12
+          hrrr_predict_f12(hrrr_data)
+        elseif hrrr_forecast.forecast_hour in 13:16
+          weighted_prediction_between_models_at_different_forecast_hours(hrrr_forecast, hrrr_data, 12, 17, hrrr_predict_f12, hrrr_predict_f17)
+        elseif hrrr_forecast.forecast_hour >= 17
+          hrrr_predict_f17(hrrr_data)
+        end
+
+        # println("done.")
       if isnothing(mean_hrrr_predictions)
         mean_hrrr_predictions = hrrr_to_href_layer_resampler(hrrr_predictions)
       else
@@ -456,7 +498,7 @@ if get(ENV, "TWEET", "false") == "true"
 
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
-    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast (new new HREF/SREF models)" $path.png`)
+    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast (new new models, uncalibrated)" $path.png`)
   end
 
   # if !isnothing(animation_glob_path)
