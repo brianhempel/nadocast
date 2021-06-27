@@ -157,7 +157,7 @@ function blurred_and_forecast_hour(prediction_forecasts)
     one_minus_forecast_ratio = 1f0 - forecast_ratio
 
     Threads.@threads for i in 1:point_count
-      out[i, 1] = blur_lo_data * one_minus_forecast_ratio + no_blur_data * forecast_ratio
+      out[i, 1] = blur_lo_data[i] * one_minus_forecast_ratio + no_blur_data[i] * forecast_ratio
       out[i, 2] = forecast_hour
     end
 
