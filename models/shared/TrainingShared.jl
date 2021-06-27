@@ -198,17 +198,17 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     data_in_conus = mask_rows_threaded(data, conus_grid_bitmask; final_row_count=conus_point_count)
 
-    forecast_labels     = compute_forecast_labels(forecast)[conus_grid_bitmask]     :: Array{Float32,1}
-    is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
+    forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask]     :: Array{Float32,1}
 
     # PlotMap.plot_debug_map("tornadoes_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_forecast_labels(forecast))
     # PlotMap.plot_debug_map("near_events_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_is_near_storm_event(forecast))
 
     if !isnothing(X_and_labels_to_inclusion_probabilities)
-      probabilities = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels, is_near_storm_event))
-      probabilities = clamp.(probabilities, 0f0, 1f0)
-      mask          = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
-      probabilities = probabilities[mask]
+      is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
+      probabilities       = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels, is_near_storm_event))
+      probabilities       = clamp.(probabilities, 0f0, 1f0)
+      mask                = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
+      probabilities       = probabilities[mask]
 
       forecast_weights = conus_grid_weights[mask] ./ probabilities
       forecast_labels  = forecast_labels[mask]
