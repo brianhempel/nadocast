@@ -366,6 +366,7 @@ import SREFPrediction
 
 (_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_blurred_and_forecast_hour(); just_hours_near_storm_events = false);
 
+# Make sure a forecast loads
 import Forecasts
 Forecasts.data(validation_forecasts_blurred[100])
 

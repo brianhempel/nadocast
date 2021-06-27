@@ -149,6 +149,68 @@ function simple_prediction_forecasts(base_forecasts, model_predict; inventory_mi
   ForecastCombinators.map_forecasts(base_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
 
+# Prediction forecast modified with no blur, each of the blur radii, and the forecast hour
+# So 1+length(blur_radii)+1 features.
+function with_blurs_and_forecast_hour(prediction_forecasts, blur_radii)
+  grid = prediction_forecasts[1].grid
+
+  blur_radii_grid_is = map(miles -> Grids.radius_grid_is(grid, miles), Float64.(blur_radii))
+
+  inventory_transformer(base_forecast, base_inventory) = begin
+    no_blur_line = base_inventory[1]
+
+    new_inventory = [
+      no_blur_line
+    ]
+
+    for miles in blur_radii
+      push!(new_inventory, Inventories.revise_with_feature_engineering(no_blur_line, "$(miles)mi mean"))
+    end
+
+    push!(new_inventory, Inventories.InventoryLine("", "", no_blur_line.date_str, "forecast_hour", "calculated", "hour fcst", "", ""))
+    # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_tornado_probability_feature(grid)[1],                         "calculated", "hour fcst", "", ""))
+    # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_severe_probability_feature(grid)[1],                          "calculated", "hour fcst", "", ""))
+    # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[1],            "calculated", "hour fcst", "", ""))
+    # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[1], "calculated", "hour fcst", "", ""))
+
+    new_inventory
+  end
+
+  data_transformer(base_forecast, base_data) = begin
+    point_count = size(base_data, 1)
+
+    out = Array{Float32}(undef, (point_count, 1 + length(blur_radii) + 1))
+
+    no_blur_data = @view base_data[:, 1]
+
+    feature_i = 1
+    out[:, feature_i] = no_blur_data
+
+    for blur_i in 1:length(blur_radii)
+      feature_i += 1
+      out[:, feature_i] = FeatureEngineeringShared.meanify_threaded(no_blur_data, blur_radii_grid_is[blur_i])
+    end
+
+    feature_i += 1
+    out[:, feature_i] .= Float32(base_forecast.forecast_hour)
+    # feature_i += 1
+    # out[:, feature_i] = Climatology.forecast_hour_tornado_probability_feature(grid)[2](base_forecast)
+    # feature_i += 1
+    # out[:, feature_i] = Climatology.forecast_hour_severe_probability_feature(grid)[2](base_forecast)
+    # feature_i += 1
+    # out[:, feature_i] = Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[2](base_forecast)
+    # feature_i += 1
+    # out[:, feature_i] = Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[2](base_forecast)
+
+    out
+  end
+
+  ForecastCombinators.map_forecasts(prediction_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
+end
+
+
+
+
 # Forecasts with the 25,50,100mi means and gradients of the predictions
 #
 # If base_forecasts are feature engineered, you can provide the base forecasts without feature engineering
