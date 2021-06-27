@@ -11,10 +11,15 @@ import TrainingShared
 push!(LOAD_PATH, @__DIR__)
 import SREFPrediction
 
-# forecasts_0z = filter(forecast -> forecast.run_hour == 0, SREFPrediction.forecasts());
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
 
-# (train_forecasts_0z, validation_forecasts_0z, _) = TrainingShared.forecasts_train_validation_test(forecasts_0z);
+
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
+
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2020, 11, 1, 0)
+validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
