@@ -1,3 +1,7 @@
+# Run this file in a Julia REPL bit by bit.
+#
+# Poor man's notebook.
+
 import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
@@ -18,6 +22,11 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_with_blurs_and_forecast_hour");
 
+length(validation_forecasts) # 15875
+size(X) # (80470375, 6)
+length(y) # 80470375
+
+println("Dividing into bins of equal positive weight...")
 
 ŷ = X[:, 1]
 
@@ -35,9 +44,9 @@ bin_count = 10 # 40 equal logloss bins
 per_bin_pos_weight = total_positive_weight / bin_count
 
 # bins = map(_ -> Int64[], 1:bin_count)
-bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
-bins_Σy      = map(_ -> 0.0, 1:bin_count)
-bins_Σweight = map(_ -> 0.0, 1:bin_count)
+bins_Σŷ      = map(_ -> 0.0f0, 1:bin_count)
+bins_Σy      = map(_ -> 0.0f0, 1:bin_count)
+bins_Σweight = map(_ -> 0.0f0, 1:bin_count)
 bins_max     = map(_ -> 1.0f0, 1:bin_count)
 
 bin_i = 1
@@ -60,11 +69,12 @@ for i in 1:length(y)
   # if bin_logloss >= per_bin_logloss
   #   bins_max[bin_i] = ŷ[i]
   # end
-  if bins_Σy >= per_bin_pos_weight
+  if bins_Σy[bin_i] >= per_bin_pos_weight
     bins_max[bin_i] = ŷ[i]
   end
 end
 
+println("mean_y\tmean_ŷ\tΣweight\tbin_max")
 for bin_i in 1:length(bins_Σy)
   Σŷ      = bins_Σŷ[bin_i]
   Σy      = bins_Σy[bin_i]
@@ -76,15 +86,24 @@ for bin_i in 1:length(bins_Σy)
   println("$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
 end
 
-function roc_auc(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort))
+# mean_y          mean_ŷ          Σweight         bin_max
+# 3.9562587e-5    3.3228574e-5    1.6777216e7     0.0001958018
+# 0.00047198735   0.00042157227   1.4067835e6     0.00084828574
+# 0.0011202784    0.0013275922    592172.8        0.0020452014
+# 0.0023947938    0.0027208917    277223.47       0.0036305543
+# 0.0039827214    0.004584006     166666.11       0.0058195237
+# 0.00671674      0.0070120334    98848.47        0.008520603
+# 0.0091016535    0.010341813     72967.37        0.0127252815
+# 0.01119221      0.01634163      59275.87        0.021725489
+# 0.020960677     0.028538326     31676.754       0.039647073
+# 0.05004957      0.059830762     13140.799       1.0
+
+function roc_auc(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort), total_weight = sum(Float64.(weights)), positive_weight = sum(y .* Float64.(weights)))
   y       = y[sort_perm]
   ŷ       = ŷ[sort_perm]
   weights = Float64.(weights[sort_perm])
 
-  total_weight    = sum(weights)
-  positive_weight = sum(y .* weights)
-  negative_weight = total_weight - positive_weight
-
+  negative_weight  = total_weight - positive_weight
   true_pos_weight  = positive_weight
   false_pos_weight = negative_weight
 
@@ -112,7 +131,7 @@ function roc_auc(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeS
   auc
 end
 
-roc_auc(X[:,1], y, weights)
+roc_auc(X[:,1], y, weights) # 0.9790299112148487
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
@@ -123,14 +142,11 @@ logit(p) = log(p / (one(p) - p))
 #     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)
 #     = 1 / (1/POD + 1/(1-FAR) - 1)
 
-function csi(ŷ, y, weights)
-  sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort)
+function csi(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort), total_weight = sum(Float64.(weights)), positive_weight = sum(y .* Float64.(weights)))
   y       = y[sort_perm]
   ŷ       = ŷ[sort_perm]
   weights = Float64.(weights[sort_perm])
 
-  total_weight    = sum(weights)
-  positive_weight = sum(y .* weights)
   negative_weight = total_weight - positive_weight
 
   true_pos_weight  = positive_weight
@@ -172,12 +188,12 @@ end
 
 
 # Plan:
-# 0. x Use all SREF/HREF forecasts, not just 0Z
-# 1. blur HREF to maximize AUC (hour-based)
-# 2. blue SREF to maximize AUC (hour-based)
+# 0. x Use all SREF forecasts, not just 0Z
+# 1. blur SREF to maximize AUC (hour-based)
+# 2. blur HREF to maximize AUC (hour-based)
 # 3. bin HREF predictions into 10 bins of equal weight of positive labels
 # 4. combine bin-pairs (overlapping, 9 bins total)
-# 5. train a logistic regression for each bin, σ(a1*logit(HREF) + a2*logit(SREF) + a3*logit(HREF)*logit(SREF) + b)
+# 5. train a logistic regression for each bin, σ(a1*logit(HREF) + a2*logit(SREF) + a3*logit(HREF)*logit(SREF) + a4*max(logit(HREF),logit(SREF)) + a5*min(logit(HREF),logit(SREF)) + b)
 # (5.5. add a4*hour/36*logit(HREF) + a5*hour/36*logit(SREF) + a6*hour/36*logit(HREF)*logit(SREF) + a7*hour/36 terms + a8*logit(hour in day tor prob) + a9*logit(hour in day tor prob given severe) + a10*logit(geomean previous two)? check via cross-validation)
 # 6. prediction is weighted mean of the two overlapping logistic models
 # 7. predictions should thereby be calibrated (check)
@@ -218,14 +234,13 @@ import Forecasts
 import Inventories
 inventory = Forecasts.inventory(validation_forecasts[1])
 
-for j in 1:(length(inventory) - 5)
-  println("$j $(Inventories.inventory_line_description(inventory[j]))")
-  println("AUC: $(roc_auc((@view X[:,j]), y, weights))")
-end
-
-forecast_hour_j = 17
+# for j in 1:(length(inventory) - 5)
+#   println("$j $(Inventories.inventory_line_description(inventory[j]))")
+#   println("AUC: $(roc_auc((@view X[:,j]), y, weights))")
+# end
 
 blur_radii = [0; SREFPrediction.blur_radii]
+forecast_hour_j = length(inventory)
 
 window_size = 6
 println("$window_size hour windows")
@@ -239,8 +254,13 @@ for forecast_hour in (2 + window_size):38
   best_blur_j = nothing
   best_auc    = 0.0
 
+  total_weight    = sum(Float64.(masked_weights))
+  positive_weight = sum(masked_y .* Float64.(masked_weights))
+
   for blur_j in 1:length(blur_radii)
-    auc = roc_auc(X[mask, blur_j], masked_y, masked_weights)
+    auc = roc_auc(X[mask, blur_j], masked_y, masked_weights; total_weight = total_weight, positive_weight = positive_weight)
+    # println("forecast_hour\tblur_radius\tAUC")
+    # println("$forecast_hour\t$(blur_radii[blur_j])\t$(Float32(auc))")
 
     if auc > best_auc
       best_blur_j = blur_j
@@ -251,34 +271,106 @@ for forecast_hour in (2 + window_size):38
   println("$forecast_hour\t$(blur_radii[best_blur_j])\t$(Float32(best_auc))")
 end
 
+# forecast_hour   best_blur_radius        AUC
+# 8       50      0.9840884
+# 9       50      0.98192626
+# 10      50      0.9821393
+# 11      50      0.98269135
+# 12      50      0.98163134
+# 13      35      0.9806408
+# 14      35      0.9809502
+# 15      35      0.9794986
+# 16      35      0.9802946
+# 17      35      0.9817287
+# 18      35      0.9813568
+# 19      35      0.98077774
+# 20      50      0.9811311
+# 21      50      0.97893345
+# 22      50      0.97944224
+# 23      50      0.97997797
+# 24      50      0.97893757
+# 25      50      0.9780842
+# 26      50      0.97864836
+# 27      50      0.9767388
+# 28      50      0.9779653
+# 29      35      0.97851366
+# 30      0       0.9782968
+# 31      35      0.9779255
+# 32      35      0.97850204
+# 33      35      0.9765157
+# 34      50      0.97799015
+# 35      50      0.9783938
+# 36      0       0.97839373
+# 37      35      0.9774142
+# 38      50      0.97761345
 
 
-# # Baselines, 0mi and 25mi
-# for j in [1,2,7,8]
-#   println("$j $(Inventories.inventory_line_description(inventory[j]))")
-#   println("AUC: $(roc_auc((@view X[:,j]), y, weights))")
-# end
+println("blur_radius_f2\tblur_radius_f38\tAUC")
 
-# function forecast_ratio(hour)
-#   (hour - 2f0) * (1f0/(35f0-2f0))
-# end
+total_weight    = sum(Float64.(weights))
+positive_weight = sum(y .* Float64.(weights))
 
-# href_25mi = @view X[:,7];
-# href_35mi = @view X[:,9];
-# println("HREF f2 25mi to f35 35mi blur")
-# href_ŷ = href_25mi .* (1f0 .- forecast_ratio.(X[:,forecast_hour_j])) .+ href_35mi .* forecast_ratio.(X[:,forecast_hour_j]);
-# println("AUC: $(roc_auc(href_ŷ, y, weights))")
-# # AUC: 0.986558029390843
+for blur_i_lo in 1:length(blur_radii)
+  for blur_i_hi in 1:length(blur_radii)
+    X_blurred = zeros(Float32, length(y))
 
-# sref_0mi = @view X[:,2];
-# sref_35mi = @view X[:,10];
-# println("SREF f2 0mi to f35 35mi blur")
-# sref_ŷ = sref_0mi .* (1f0 .- forecast_ratio.(X[:,forecast_hour_j])) .+ sref_35mi .* forecast_ratio.(X[:,forecast_hour_j]);
-# println("AUC: $(roc_auc(sref_ŷ, y, weights))")
-# # AUC: 0.980728253567435
+    Threads.@threads for i in 1:length(y)
+      forecast_ratio = (X[i,forecast_hour_j] - 2f0) * (1f0/(38f0-2f0))
+      X_blurred[i] = X[i,blur_i_lo] * (1f0 - forecast_ratio) + X[i,blur_i_hi] * forecast_ratio
+    end
 
-# # % better than 25mi only	HREF: 0.145%	SREF: 0.172%
-# # % better than 0mi	 only HREF: 2.422%	SREF: 0.427%
+    auc = roc_auc(X_blurred, y, weights; total_weight = total_weight, positive_weight = positive_weight)
+
+    println("$(blur_radii[blur_i_lo])\t$(blur_radii[blur_i_hi])\t$(Float32(auc))")
+  end
+end
+
+# blur_radius_f2  blur_radius_f38 AUC
+# 0       0       0.9790299
+# 0       35      0.9791589
+# 0       50      0.9791998
+# 0       70      0.97904915
+# 0       100     0.9787174
+# 35      0       0.97923124
+# 35      35      0.97923374
+# 35      50      0.979251
+# 35      70      0.97907346
+# 35      100     0.97872967
+# 50      0       0.97925293 # BEST
+# 50      35      0.9792338
+# 50      50      0.9792248
+# 50      70      0.9790339
+# 50      100     0.9786728
+# 70      0       0.9790625
+# 70      35      0.97901773
+# 70      50      0.97899395
+# 70      70      0.9787766
+# 70      100     0.97839916
+# 100     0       0.97856325
+# 100     35      0.978501
+# 100     50      0.97845465
+# 100     70      0.97821444
+# 100     100     0.9777933
+
+
+# Sanity check. Should be 0.97925293
+
+import Dates
+
+push!(LOAD_PATH, (@__DIR__) * "/../shared")
+# import TrainGBDTShared
+import TrainingShared
+
+push!(LOAD_PATH, @__DIR__)
+import SREFPrediction
+
+(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_blurred_and_forecast_hour(); just_hours_near_storm_events = false);
+
+X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
+
+roc_auc((@view X2[:,1]), y, weights)
+
+
 
 # # Checking:
 
