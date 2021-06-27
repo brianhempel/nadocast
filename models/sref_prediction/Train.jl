@@ -368,7 +368,7 @@ import SREFPrediction
 
 X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
 
-roc_auc((@view X2[:,1]), y, weights)
+roc_auc((@view X2[:,1]), y, weights) # Expected: 0.97925293
 
 
 

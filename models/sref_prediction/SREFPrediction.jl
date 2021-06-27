@@ -213,7 +213,7 @@ function reload_forecasts()
 
   _forecasts_with_blurs_and_forecast_hour = with_blurs_and_forecast_hour(_forecasts)
 
-  _forecasts_blurred_and_forecast_hour = blurred_and_forecast_hour(prediction_forecasts)
+  _forecasts_blurred_and_forecast_hour = blurred_and_forecast_hour(_forecasts)
 
   ()
 end
