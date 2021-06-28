@@ -104,7 +104,7 @@ function reload_forecasts()
 
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
 
-  grid = prediction_forecasts[1].grid
+  grid = _forecasts[1].grid
 
   blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
   blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f38))
