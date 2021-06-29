@@ -7,6 +7,7 @@ import Dates
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 # import TrainGBDTShared
 import TrainingShared
+using Metrics
 
 push!(LOAD_PATH, @__DIR__)
 import HREFPrediction
@@ -93,93 +94,11 @@ end
 
 # mean_y          mean_ŷ          Σweight         bin_max
 
-function roc_auc(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort), total_weight = sum(Float64.(weights)), positive_weight = sum(y .* Float64.(weights)))
-  y       = y[sort_perm]
-  ŷ       = ŷ[sort_perm]
-  weights = Float64.(weights[sort_perm])
-
-  negative_weight  = total_weight - positive_weight
-  true_pos_weight  = positive_weight
-  false_pos_weight = negative_weight
-
-  # tpr = true_pos/total_pos
-  # fpr = false_pos/total_neg
-  # ROC is tpr vs fpr
-
-  auc = 0.0
-
-  last_fpr = false_pos_weight / negative_weight # = 1.0
-  for i in 1:length(y)
-    if y[i] > 0.5f0
-      true_pos_weight -= weights[i]
-    else
-      false_pos_weight -= weights[i]
-    end
-    fpr = false_pos_weight / negative_weight
-    tpr = true_pos_weight  / positive_weight
-    if fpr != last_fpr
-      auc += (last_fpr - fpr) * tpr
-    end
-    last_fpr = fpr
-  end
-
-  auc
-end
-
 roc_auc(X[:,1], y, weights) #
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
 logit(p) = log(p / (one(p) - p))
-
-
-# CSI = hits / (hits + false alarms + misses)
-#     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)
-#     = 1 / (1/POD + 1/(1-FAR) - 1)
-
-function csi(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort), total_weight = sum(Float64.(weights)), positive_weight = sum(y .* Float64.(weights)))
-  y       = y[sort_perm]
-  ŷ       = ŷ[sort_perm]
-  weights = Float64.(weights[sort_perm])
-
-  negative_weight = total_weight - positive_weight
-
-  true_pos_weight  = positive_weight
-  false_pos_weight = negative_weight
-  false_neg_weight = 0.0
-
-  # CSI = hits / (hits + false alarms + misses)
-  #     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)
-
-  pods = Float64[true_pos_weight / positive_weight]
-  csis = Float64[true_pos_weight / (true_pos_weight + false_pos_weight + false_neg_weight)]
-
-  for i in 1:length(y)
-    if y[i] > 0.5f0
-      true_pos_weight  -= weights[i]
-      false_neg_weight += weights[i]
-    else
-      false_pos_weight -= weights[i]
-    end
-
-    pod = true_pos_weight / positive_weight
-    csi = true_pos_weight / (true_pos_weight + false_pos_weight + false_neg_weight)
-
-    push!(pods, pod)
-    push!(csis, csi)
-  end
-
-  # CSIs for PODs 0.9, 0.8, ..., 0.1
-  map(collect(0.9:-0.1:0.1)) do pod_threshold
-    i = findfirst(pod -> pod < pod_threshold, pods)
-    csis[i]
-  end
-end
-
-function mean_csi(ŷ, y, weights)
-  csis = csi(ŷ, y, weights)
-  Float32(sum(csis) / length(csis))
-end
 
 
 # Plan:
@@ -299,6 +218,7 @@ import Dates
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 # import TrainGBDTShared
 import TrainingShared
+using Metrics
 
 push!(LOAD_PATH, @__DIR__)
 import HREFPrediction
@@ -311,7 +231,7 @@ Forecasts.data(validation_forecasts_blurred[100])
 
 X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
 
-roc_auc((@view X2[:,1]), y, weights) # Expected: ...
+Float32(roc_auc((@view X2[:,1]), y2, weights2)) # Expected: ...
 
 
 
