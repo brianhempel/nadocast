@@ -28,8 +28,8 @@ _forecasts_with_blurs_and_forecast_hour = [] # For Train.jl
 blur_radii = [15, 25, 35, 50, 70, 100]
 
 # # Determined in Train.jl
-# blur_radius_f2  = 50
-# blur_radius_f35 = 0
+blur_radius_f2  = 35
+blur_radius_f35 = 35
 
 function forecasts()
   if isempty(_forecasts)
@@ -127,7 +127,7 @@ function reload_forecasts()
 
   _forecasts = []
   _forecasts_with_blurs_and_forecast_hour = []
-  # _forecasts_blurred_and_forecast_hour =[]
+  _forecasts_blurred_and_forecast_hour =[]
 
   href_forecasts = HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 
@@ -155,7 +155,12 @@ function reload_forecasts()
 
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
 
-  # _forecasts_blurred_and_forecast_hour = blurred_and_forecast_hour(_forecasts)
+  grid = _forecasts[1].grid
+
+  blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
+  blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f35))
+
+  _forecasts_blurred_and_forecast_hour = PredictionForecasts.blurred_and_forecast_hour(_forecasts, 2:35, blur_lo_grid_is, blur_hi_grid_is)
 
   ()
 end

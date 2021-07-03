@@ -28,9 +28,9 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_with_blurs_and_forecast_hour");
 
-length(validation_forecasts) #
-size(X) #
-length(y) #
+length(validation_forecasts) # 15924
+size(X) # (575015640, 8)
+length(y) # 575015640
 
 println("Dividing into bins of equal positive weight...")
 
@@ -93,8 +93,18 @@ for bin_i in 1:length(bins_Σy)
 end
 
 # mean_y          mean_ŷ          Σweight         bin_max
+# 0.00029822212   0.00021212027   1.6777216e7     0.00025319064
+# 0.0005505848    0.0005239283    9.087304e6      0.0011813934
+# 0.0016873586    0.0018542336    2.9650488e6     0.0030127245
+# 0.0037105107    0.0042123725    1.3484265e6     0.005960032
+# 0.0073042684    0.0076225004    684956.94       0.009835724
+# 0.011409284     0.012317095     438526.94       0.015586434
+# 0.019706173     0.018983768     253911.55       0.023582445
+# 0.035698306     0.028288368     140149.39       0.03472968
+# 0.06264483      0.0419867       79871.71        0.05259205
+# 0.10415944      0.075461656     47987.773       1.0
 
-roc_auc(X[:,1], y, weights) #
+roc_auc(X[:,1], y, weights) # 0.9824637718541064
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
@@ -186,6 +196,37 @@ for forecast_hour in (2 + window_size):38
 end
 
 # forecast_hour   best_blur_radius        AUC
+# 8       35      0.98847777
+# 9       35      0.9872585
+# 10      35      0.98691994
+# 11      50      0.986249
+# 12      50      0.9862381
+# 13      50      0.9858408
+# 14      50      0.9859561
+# 15      50      0.9849729
+# 16      50      0.9846198
+# 17      50      0.9834237
+# 18      50      0.9826874
+# 19      25      0.98277545
+# 20      25      0.98366416
+# 21      35      0.98289794
+# 22      25      0.98251647
+# 23      25      0.98126525
+# 24      25      0.9812667
+# 25      15      0.9820104
+# 26      25      0.98236084
+# 27      25      0.9807141
+# 28      15      0.98014396
+# 29      35      0.979377
+# 30      35      0.97951865
+# 31      35      0.98017615
+# 32      50      0.98083496
+# 33      50      0.98005074
+# 34      50      0.98017824
+# 35      50      0.9798054
+# 36      35      0.9800674
+# 37      35      0.9818402
+# 38      35      0.9825734
 
 
 println("blur_radius_f2\tblur_radius_f38\tAUC")
@@ -209,9 +250,57 @@ for blur_i_lo in 1:length(blur_radii)
 end
 
 # blur_radius_f2  blur_radius_f38 AUC
+# 0       0       0.9824638
+# 0       15      0.9825604
+# 0       25      0.9826144
+# 0       35      0.9826693
+# 0       50      0.98269045
+# 0       70      0.9826002
+# 0       100     0.9823038
+# 15      0       0.9826336
+# 15      15      0.98269147
+# 15      25      0.9827336
+# 15      35      0.9827775
+# 15      50      0.9827891
+# 15      70      0.98269325
+# 15      100     0.9823973
+# 25      0       0.98272085
+# 25      15      0.98276865
+# 25      25      0.9827986
+# 25      35      0.98283094
+# 25      50      0.98283285
+# 25      70      0.98273104
+# 25      100     0.98243374
+# 35      0       0.98278975
+# 35      15      0.98282987
+# 35      25      0.98284996
+# 35      35      0.98286575 # BEST
+# 35      50      0.9828521
+# 35      70      0.9827392
+# 35      100     0.9824361
+# 50      0       0.9827867
+# 50      15      0.9828207
+# 50      25      0.9828331
+# 50      35      0.98283505
+# 50      50      0.98280007
+# 50      70      0.98266804
+# 50      100     0.98234874
+# 70      0       0.9825939
+# 70      15      0.9826243
+# 70      25      0.9826313
+# 70      35      0.9826228
+# 70      50      0.98256916
+# 70      70      0.9824122
+# 70      100     0.9820632
+# 100     0       0.98205787
+# 100     15      0.9820875
+# 100     25      0.9820908
+# 100     35      0.9820723
+# 100     50      0.9819967
+# 100     70      0.981803
+# 100     100     0.98138386
 
-
-# Sanity check. Should be ...
+# Sanity check. Should be 0.98286575
 
 import Dates
 
@@ -225,13 +314,17 @@ import HREFPrediction
 
 (_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_blurred_and_forecast_hour(); just_hours_near_storm_events = false);
 
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2020, 11, 1, 0)
+validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_blurred);
+
 # Make sure a forecast loads
 import Forecasts
 Forecasts.data(validation_forecasts_blurred[100])
 
 X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
 
-Float32(roc_auc((@view X2[:,1]), y2, weights2)) # Expected: ...
+Float32(roc_auc((@view X2[:,1]), y2, weights2)) # Expected: 0.98286575
 
 
 
