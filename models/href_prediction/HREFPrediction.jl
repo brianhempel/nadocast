@@ -23,7 +23,7 @@ import HREF
 
 _forecasts = [] # Raw, unblurred predictions
 _forecasts_with_blurs_and_forecast_hour = [] # For Train.jl
-# _forecasts_blurred_and_forecast_hour = [] # For downstream combination with other forecasts
+_forecasts_blurred_and_forecast_hour = [] # For downstream combination with other forecasts
 
 blur_radii = [15, 25, 35, 50, 70, 100]
 
