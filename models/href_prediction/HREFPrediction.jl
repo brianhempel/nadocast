@@ -123,7 +123,7 @@ function reload_forecasts()
 
   global _forecasts
   global _forecasts_with_blurs_and_forecast_hour
-  # global _forecasts_blurred_and_forecast_hour
+  global _forecasts_blurred_and_forecast_hour
 
   _forecasts = []
   _forecasts_with_blurs_and_forecast_hour = []
