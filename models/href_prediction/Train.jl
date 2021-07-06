@@ -307,10 +307,13 @@ import Dates
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 # import TrainGBDTShared
 import TrainingShared
-using Metrics
+import Metrics
 
 push!(LOAD_PATH, @__DIR__)
 import HREFPrediction
+
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
 
 (_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_blurred_and_forecast_hour(); just_hours_near_storm_events = false);
 
@@ -319,35 +322,12 @@ cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_blurred);
 
 # Make sure a forecast loads
-import Forecasts
 Forecasts.data(validation_forecasts_blurred[100])
 
 X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
 
-Float32(roc_auc((@view X2[:,1]), y2, weights2)) # Expected: 0.98286575
-
-
-
-# # Checking:
-
-# (_, validation_forecasts2, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_blurred_and_hour_climatology(); just_hours_near_storm_events = false);
-
-# import ForecastCombinators
-# push!(LOAD_PATH, (@__DIR__) * "/../../lib")
-# import Forecasts
-# import Inventories
-# inventory = Forecasts.inventory(validation_forecasts2[1])
-
-# # For the purposes of AUC checking, we only need the first two features (the predictions)
-# # Trying to save some memory
-# validation_forecasts2_trimmed =
-#   ForecastCombinators.filter_features_forecasts(validation_forecasts2, line -> line.abbrev == "tornado probability");
-
-# X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts2_trimmed; save_dir = "validation_forecasts_blurred_and_hour_climatology_predictions_only");
-
-# println("HREF AUC: $(roc_auc(X[:,1], y, weights))")
-# println("SREF AUC: $(roc_auc(X[:,2], y, weights))")
-
+Float32(Metrics.roc_auc((@view X2[:,1]), y2, weights2)) # Expected: 0.98286575
+# 0.98286575f0
 
 
 

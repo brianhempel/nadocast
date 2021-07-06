@@ -66,58 +66,6 @@ function forecasts_blurred_and_forecast_hour()
   end
 end
 
-# function blurred_and_forecast_hour(prediction_forecasts)
-#   grid = prediction_forecasts[1].grid
-
-#   blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
-#   # Blur hi is no blur. That's what Train.jl says!
-
-#   inventory_transformer(base_forecast, base_inventory) = begin
-#     no_blur_line = base_inventory[1]
-
-#     # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_tornado_probability_feature(grid)[1],                         "calculated", "hour fcst", "", ""))
-#     # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_severe_probability_feature(grid)[1],                          "calculated", "hour fcst", "", ""))
-#     # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[1],            "calculated", "hour fcst", "", ""))
-#     # push!(new_inventory, Inventories.InventoryLine("", "", href_line.date_str, Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[1], "calculated", "hour fcst", "", ""))
-
-#     [
-#       Inventories.revise_with_feature_engineering(no_blur_line, "blurred"),
-#       Inventories.InventoryLine("", "", no_blur_line.date_str, "forecast_hour", "calculated", "hour fcst", "", "")
-#     ]
-#   end
-
-#   data_transformer(base_forecast, base_data) = begin
-#     point_count = size(base_data, 1)
-
-#     out = Array{Float32}(undef, (point_count, 2))
-
-#     no_blur_data = @view base_data[:, 1]
-#     blur_lo_data = FeatureEngineeringShared.meanify_threaded(no_blur_data, blur_lo_grid_is)
-
-#     forecast_hour = Float32(base_forecast.forecast_hour)
-#     forecast_ratio = (forecast_hour - 2f0) * (1f0/(35f0-2f0))
-#     one_minus_forecast_ratio = 1f0 - forecast_ratio
-
-#     Threads.@threads for i in 1:point_count
-#       out[i, 1] = blur_lo_data[i] * one_minus_forecast_ratio + no_blur_data[i] * forecast_ratio
-#       out[i, 2] = forecast_hour
-#     end
-
-#     # feature_i += 1
-#     # out[:, feature_i] = Climatology.forecast_hour_tornado_probability_feature(grid)[2](base_forecast)
-#     # feature_i += 1
-#     # out[:, feature_i] = Climatology.forecast_hour_severe_probability_feature(grid)[2](base_forecast)
-#     # feature_i += 1
-#     # out[:, feature_i] = Climatology.forecast_hour_tornado_given_severe_probability_feature(grid)[2](base_forecast)
-#     # feature_i += 1
-#     # out[:, feature_i] = Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid)[2](base_forecast)
-
-#     out
-#   end
-
-#   ForecastCombinators.map_forecasts(prediction_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
-# end
-
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
 
