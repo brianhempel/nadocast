@@ -13,13 +13,14 @@ DELETE_UNNEEDED = false
 
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap.rb
 # FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_rap.rb --from-archive
-# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 VALIDATION_RUN_HOURS=8,9,10,12,13,14 ruby get_rap.rb --from-archive
+# FORECAST_HOURS="" VALIDATION_RUN_HOURS=8,9,10,12,13,14 ruby get_rap.rb --from-archive
 
-RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
-FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
-MIN_FILE_BYTES = 10_000_000
-THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
-FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes")
+RUN_HOURS            = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
+FORECAST_HOURS       = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
+VALIDATION_RUN_HOURS = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
+MIN_FILE_BYTES       = 10_000_000
+THREAD_COUNT         = Integer(ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
+FORECASTS_ROOT       = (ENV["FORECASTS_ROOT"] || "/Volumes")
 
 
 loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_1/"); puts "Waiting for RAP_1 to mount..."; sleep 4 }
