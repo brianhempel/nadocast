@@ -79,7 +79,7 @@ if FROM_ARCHIVE
 
   validation_forecasts_to_get =
     SATURDAYS.product(VALIDATION_RUN_HOURS, (1..18).to_a).map do |date, run_hour, forecast_hour|
-      HRRRForecast.new(date, run_hour, forecast_hour)
+      RAPForecast.new(date, run_hour, forecast_hour)
     end
 
   forecasts_to_get = (forecasts_to_get + validation_forecasts_to_get).uniq
