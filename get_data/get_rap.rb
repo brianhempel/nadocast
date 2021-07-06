@@ -7,19 +7,18 @@ def ymd_to_date(ymd_str)
   Date.new(Integer(ymd_str[0...4]), ymd_str[4...6].to_i, ymd_str[6...8].to_i)
 end
 
-# NOMADS has 1 week to 1 year ago of data.
-
-FROM_NOMADS     = ARGV.include?("--from-nomads") # (ARGV[0] == "--from-archive")
+FROM_ARCHIVE    = ARGV.include?("--from-archive")
 DRY_RUN         = ARGV.include?("--dry-run")
 DELETE_UNNEEDED = false
 
 # RUN_HOURS=8,9,10 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ruby get_rap.rb
-# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_rap.rb --from-nomads
+# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 ruby get_rap.rb --from-archive
+# FORECAST_HOURS=1,2,3,5,6,7,11,12,13,16,17,18 VALIDATION_RUN_HOURS=8,9,10,12,13,14 ruby get_rap.rb --from-archive
 
 RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
 MIN_FILE_BYTES = 10_000_000
-THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_NOMADS ? "2" : "4"))
+THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "4"))
 FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes")
 
 
@@ -32,9 +31,8 @@ class RAPForecast < Forecast
   end
 
   def archive_url
-    if FROM_NOMADS
-      # I think this is busted now.
-      "https://www.ncei.noaa.gov/data/rapid-refresh/access/rap-130-13km/forecast/#{year_month}/#{year_month_day}/#{file_name}"
+    if FROM_ARCHIVE
+      "https://storage.googleapis.com/rapid-refresh/rap.#{year_month_day}/rap.t#{run_hour_str}z.awp130pgrbf#{forecast_hour_str}.grib2"
     else
       raise "see get_rap_archived.rb for pulling from NCDC's long term storage request system"
     end
@@ -62,8 +60,11 @@ class RAPForecast < Forecast
 end
 
 
-if FROM_NOMADS
-  DATES = (Date.today - 365..Date.today).to_a
+if FROM_ARCHIVE
+  start_date_parts = ENV["START_DATE"]&.split("-")&.map(&:to_i) || [2014,2,25] # Okay to grab more. RAP.jl will filter out the forecast dates that have missing fields
+
+  DATES     = (Date.new(*start_date_parts)..Date.today).to_a
+  SATURDAYS = DATES.select(&:saturday?)
 
   forecasts_in_range =
     DATES.product(RUN_HOURS, (0..21).to_a).map do |date, run_hour, forecast_hour|
@@ -74,6 +75,13 @@ if FROM_NOMADS
     forecasts_in_range.select do |forecast|
       FORECAST_HOURS.include?(forecast.forecast_hour)
     end
+
+  validation_forecasts_to_get =
+    SATURDAYS.product(VALIDATION_RUN_HOURS, (1..18).to_a).map do |date, run_hour, forecast_hour|
+      HRRRForecast.new(date, run_hour, forecast_hour)
+    end
+
+  forecasts_to_get = (forecasts_to_get + validation_forecasts_to_get).uniq
 
   forecasts_to_remove = DELETE_UNNEEDED ? (forecasts_in_range - forecasts_to_get) : []
 
@@ -90,7 +98,7 @@ end
 threads = THREAD_COUNT.times.map do
   Thread.new do
     while forecast_to_get = forecasts_to_get.shift
-      forecast_to_get.ensure_downloaded!(from_archive: FROM_NOMADS)
+      forecast_to_get.ensure_downloaded!(from_archive: FROM_ARCHIVE)
     end
   end
 end

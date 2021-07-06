@@ -24,10 +24,10 @@ DELETE_UNNEEDED = ARGV.include?("--delete-unneeded") # Delete files in time rang
 # FORECAST_HOURS=1,2,3,6,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # THREAD_COUNT=2 FORECAST_HOURS=2,5,6,7,12,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # FORECAST_HOURS=2,6,12,16,17,18 ruby get_hrrr.rb --from-archive --delete-unneeded
-# THREAD_COUNT=3 FORECAST_HOURS=11,12,13,16,17,18 VALIDATION_RUN_HOURS=8,9,10,12,13,14 ruby get_hrrr.rb --from-archive --delete-unneeded
 # THREAD_COUNT=3 FORECAST_HOURS=11,12,13,16,17,18 ruby get_hrrr.rb --from-archive --delete-unneeded
 # THREAD_COUNT=3 FORECAST_HOURS=5,6,7,11,12,13 ruby get_hrrr.rb --from-archive --delete-unneeded
 # THREAD_COUNT=3 FORECAST_HOURS=1,2,3,5,6,7 ruby get_hrrr.rb --from-archive --delete-unneeded
+# THREAD_COUNT=3 FORECAST_HOURS="" VALIDATION_RUN_HOURS=8,9,10,12,13,14 ruby get_hrrr.rb --from-archive --delete-unneeded
 
 # Forecaster runs these:
 # RUN_HOURS=8,9,10   FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby get_hrrr.rb
@@ -179,7 +179,7 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
     end
 
   validation_forecasts_to_get =
-    SATURDAYS.product(VALIDATION_RUN_HOURS, (1..30).to_a).map do |date, run_hour, forecast_hour|
+    SATURDAYS.product(VALIDATION_RUN_HOURS, (1..18).to_a).map do |date, run_hour, forecast_hour|
       HRRRForecast.new(date, run_hour, forecast_hour)
     end
 
