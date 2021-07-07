@@ -19,6 +19,10 @@ import ForecastCombinators
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import FeatureEngineeringShared
 
+function weighted_prediction_between_models_at_different_forecast_hours(forecast, data, low_hour, high_hour, low_hour_predict, high_hour_predict)
+  high_weight = ((forecast.forecast_hour-low_hour) / Float32(high_hour - low_hour)) :: Float32
+  (1 - high_weight) .* low_hour_predict(data) .+ high_weight .* high_hour_predict(data)
+end
 
 # layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
