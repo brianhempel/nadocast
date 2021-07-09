@@ -23,7 +23,7 @@ import HREF
 
 _forecasts = [] # Raw, unblurred predictions
 _forecasts_with_blurs_and_forecast_hour = [] # For Train.jl
-_forecasts_blurred_and_forecast_hour = [] # For downstream combination with other forecasts
+_forecasts_blurred = [] # For downstream combination with other forecasts
 
 blur_radii = [15, 25, 35, 50, 70, 100]
 
@@ -57,12 +57,12 @@ function forecasts_with_blurs_and_forecast_hour()
   end
 end
 
-function forecasts_blurred_and_forecast_hour()
-  if isempty(_forecasts_blurred_and_forecast_hour)
+function forecasts_blurred()
+  if isempty(_forecasts_blurred)
     reload_forecasts()
-    _forecasts_blurred_and_forecast_hour
+    _forecasts_blurred
   else
-    _forecasts_blurred_and_forecast_hour
+    _forecasts_blurred
   end
 end
 
@@ -71,11 +71,11 @@ function reload_forecasts()
 
   global _forecasts
   global _forecasts_with_blurs_and_forecast_hour
-  global _forecasts_blurred_and_forecast_hour
+  global _forecasts_blurred
 
   _forecasts = []
   _forecasts_with_blurs_and_forecast_hour = []
-  _forecasts_blurred_and_forecast_hour =[]
+  _forecasts_blurred =[]
 
   href_forecasts = HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 
@@ -108,7 +108,7 @@ function reload_forecasts()
   blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
   blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f35))
 
-  _forecasts_blurred_and_forecast_hour = PredictionForecasts.blurred_and_forecast_hour(_forecasts, 2:35, blur_lo_grid_is, blur_hi_grid_is)
+  _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:35, blur_lo_grid_is, blur_hi_grid_is)
 
   ()
 end

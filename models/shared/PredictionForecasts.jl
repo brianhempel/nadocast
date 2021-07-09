@@ -215,8 +215,8 @@ end
 # Prediction forecast blurred based on forecast hour.
 # Linear combination of the two blur results s.t. at the near (lo) forecast hour only the first blur is used and
 # at the far (hi) forecast hour, only the second blur is used.
-# 2 resulting features: blurred result and forecast hour
-function blurred_and_forecast_hour(prediction_forecasts, forecast_hour_range, blur_lo_grid_is, blur_hi_grid_is)
+# 1 resulting features: blurred result
+function blurred(prediction_forecasts, forecast_hour_range, blur_lo_grid_is, blur_hi_grid_is)
 
   inventory_transformer(base_forecast, base_inventory) = begin
     no_blur_line = base_inventory[1]
@@ -228,14 +228,14 @@ function blurred_and_forecast_hour(prediction_forecasts, forecast_hour_range, bl
 
     [
       Inventories.revise_with_feature_engineering(no_blur_line, "blurred"),
-      Inventories.InventoryLine("", "", no_blur_line.date_str, "forecast_hour", "calculated", "hour fcst", "", "")
+      # Inventories.InventoryLine("", "", no_blur_line.date_str, "forecast_hour", "calculated", "hour fcst", "", "")
     ]
   end
 
   data_transformer(base_forecast, base_data) = begin
     point_count = size(base_data, 1)
 
-    out = Array{Float32}(undef, (point_count, 2))
+    out = Array{Float32}(undef, (point_count, 1))
 
     no_blur_data = @view base_data[:, 1]
     blur_lo_data = FeatureEngineeringShared.meanify_threaded(no_blur_data, blur_lo_grid_is)
@@ -249,7 +249,7 @@ function blurred_and_forecast_hour(prediction_forecasts, forecast_hour_range, bl
 
     Threads.@threads for i in 1:point_count
       out[i, 1] = blur_lo_data[i] * one_minus_forecast_ratio + blur_hi_data[i] * forecast_ratio
-      out[i, 2] = forecast_hour
+      # out[i, 2] = forecast_hour
     end
 
     # feature_i += 1
