@@ -17,6 +17,9 @@ import PredictionForecasts
 import Climatology
 import FeatureEngineeringShared
 
+push!(LOAD_PATH, (@__DIR__) * "/../href_mid_2018_forward")
+import HREF
+
 push!(LOAD_PATH, (@__DIR__) * "/../href_prediction")
 import HREFPrediction
 

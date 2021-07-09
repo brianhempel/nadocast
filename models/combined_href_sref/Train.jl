@@ -4,9 +4,13 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 # import TrainGBDTShared
 import TrainingShared
 import LogisticRegression
+using Metrics
 
 push!(LOAD_PATH, @__DIR__)
 import CombinedHREFSREF
+
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
 
 # forecasts_0z = filter(forecast -> forecast.run_hour == 0, CombinedHREFSREF.forecasts_href_newer());
 
@@ -14,9 +18,13 @@ import CombinedHREFSREF
 # (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer());
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer(); just_hours_near_storm_events = false);
 
+length(validation_forecasts)
+
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
+
+length(validation_forecasts)
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -28,7 +36,7 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 logit(p) = log(p / (one(p) - p))
 
 
-X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_href_newer_with_blurs_and_forecast_hour");
+X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_href_newer");
 
 function try_combine(combiner)
   ŷ = map(i -> combiner(X[i, :]), 1:length(y))
