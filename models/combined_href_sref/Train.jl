@@ -294,13 +294,14 @@ import Forecasts
 
 (_, combined_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_combined(); just_hours_near_storm_events = false);
 
-length(combined_validation_forecasts) # Expected: 14640
+length(combined_validation_forecasts)
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 combined_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, combined_validation_forecasts);
 
 length(combined_validation_forecasts) # Expected: 12464
+# 12464
 
 X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "combined_validation_forecasts_href_newer");
 

@@ -174,11 +174,11 @@ function reload_forecasts()
     href_ŷs = @view data[:,1]
     sref_ŷs = @view data[:,2]
 
-    out = Array{Float32}(undef, length(href_prediction))
+    out = Array{Float32}(undef, length(href_ŷs))
 
     bin_maxes = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0]
 
-    Threads.@threads for i in 1:length(href_prediction)
+    Threads.@threads for i in 1:length(href_ŷs)
       href_ŷ = href_ŷs[i]
       sref_ŷ = sref_ŷs[i]
       if href_ŷ <= bin_maxes[1]
