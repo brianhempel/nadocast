@@ -303,6 +303,10 @@ combined_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(
 length(combined_validation_forecasts) # Expected: 12464
 # 12464
 
+# Make sure a forecast loads
+Forecasts.data(combined_validation_forecasts[100])
+
+
 X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "combined_validation_forecasts_href_newer");
 
 

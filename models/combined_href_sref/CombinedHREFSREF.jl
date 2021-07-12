@@ -75,26 +75,31 @@ function grid()
   HREF.grid()
 end
 
+
+σ(x) = 1.0f0 / (1.0f0 + exp(-x))
+
+logit(p) = log(p / (one(p) - p))
+
 # Bin 1-2 --------
 # -1.0 < HREF_ŷ <= 0.0040673064
 # Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
-bin_1_2_predict(href_ŷ, sref_ŷ) = 0.77540565*logit(href_ŷ) + 0.19299681*logit(sref_ŷ)* + -0.21271989f0
+bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565*logit(href_ŷ) + 0.19299681*logit(sref_ŷ)* + -0.21271989f0)
 # Bin 2-3 --------
 # 0.000962529 < HREF_ŷ <= 0.009957244
 # Fit logistic coefficients: Float32[0.84564245, 0.14841641, -0.06817224]
-bin_2_3_predict(href_ŷ, sref_ŷ) = 0.84564245*logit(href_ŷ) + 0.14841641*logit(sref_ŷ)* + -0.06817224
+bin_2_3_predict(href_ŷ, sref_ŷ) = σ(0.84564245*logit(href_ŷ) + 0.14841641*logit(sref_ŷ)* + -0.06817224)
 # Bin 3-4 --------
 # 0.0040673064 < HREF_ŷ <= 0.020302918
 # Fit logistic coefficients: Float32[0.9977281, 0.14388186, 0.64254296]
-bin_3_4_predict(href_ŷ, sref_ŷ) = 0.9977281*logit(href_ŷ) + 0.14388186*logit(sref_ŷ)* + 0.64254296
+bin_3_4_predict(href_ŷ, sref_ŷ) = σ(0.9977281*logit(href_ŷ) + 0.14388186*logit(sref_ŷ)* + 0.64254296)
 # Bin 4-5 --------
 # 0.009957244 < HREF_ŷ <= 0.037081156
 # Fit logistic coefficients: Float32[1.3795987, 0.091625534, 1.9759048]
-bin_4_5_predict(href_ŷ, sref_ŷ) = 1.3795987*logit(href_ŷ) + 0.091625534*logit(sref_ŷ)* + 1.9759048
+bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.3795987*logit(href_ŷ) + 0.091625534*logit(sref_ŷ)* + 1.9759048)
 # Bin 5-6 --------
 # 0.020302918 < HREF_ŷ <= 1.0
 # Fit logistic coefficients: Float32[0.9358031, 0.1812378, 0.836498]
-bin_5_6_predict(href_ŷ, sref_ŷ) = 0.9358031*logit(href_ŷ) + 0.1812378*logit(sref_ŷ)* + 0.836498
+bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.9358031*logit(href_ŷ) + 0.1812378*logit(sref_ŷ)* + 0.836498)
 
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
@@ -163,10 +168,6 @@ function reload_forecasts()
 
   _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer)
   _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer)
-
-  σ(x) = 1.0f0 / (1.0f0 + exp(-x))
-
-  logit(p) = log(p / (one(p) - p))
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
