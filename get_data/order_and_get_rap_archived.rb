@@ -13,7 +13,7 @@
 # Relys on get_rap_archived.rb to download once the order is processed.
 
 # ruby order_and_get_rap_archived.rb 2020-8-1 2020-10-31
-# VALIDATION_RUN_HOURS=8,9,10,12,13,14 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby order_and_get_rap_archived.rb 2020-8-1 2020-10-31
+# DAYS_PER_ORDER=100 VALIDATION_RUN_HOURS=8,9,10,12,13,14 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby order_and_get_rap_archived.rb 2014-2-1 2020-10-31
 
 # If VALIDATION_RUN_HOURS is provided, only Saturdays are fetched.
 
@@ -106,6 +106,12 @@ if dates_to_order.count == 0 && ARGV.size == 2
     dates.each do |date|
       dates_to_order[date.to_s] = ""
     end
+  end
+else
+  if validation_run_hours != []
+    RUN_HOURS = validation_run_hours
+  else
+    RUN_HOURS = (0..23).to_a
   end
 end
 
