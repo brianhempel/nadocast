@@ -13,6 +13,9 @@
 # Relys on get_rap_archived.rb to download once the order is processed.
 
 # ruby order_and_get_rap_archived.rb 2020-8-1 2020-10-31
+# VALIDATION_RUN_HOURS=8,9,10,12,13,14 FORECAST_HOURS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 ruby order_and_get_rap_archived.rb 2020-8-1 2020-10-31
+
+# If VALIDATION_RUN_HOURS is provided, only Saturdays are fetched.
 
 
 require 'net/http'
@@ -22,7 +25,7 @@ require 'fileutils'
 
 # I think there's a REST API now, but the old form still works.
 
-RUN_HOURS      = (0..23).to_a
+
 
 MAX_SIMULTANEOUS_ORDERS = ENV["MAX_SIMULTANEOUS_ORDERS"]&.to_i || 2
 DAYS_PER_ORDER          = ENV["DAYS_PER_ORDER"]&.to_i          || 15
@@ -84,12 +87,25 @@ dates_to_order     = PersistentHash.new("rap_archive_dates_to_order")
 outstanding_orders = PersistentHash.new("rap_archive_outstanding_orders")
 orders_downloading = PersistentHash.new("rap_archive_orders_downloading")
 
+
 if dates_to_order.count == 0 && ARGV.size == 2
   start_date = str_to_date(ARGV[0])
   end_date   = str_to_date(ARGV[1])
 
-  (start_date..end_date).each do |date|
-    dates_to_order[date.to_s] = ""
+  dates     = (start_date..end_date).to_a
+  saturdays = dates.select(&:saturday?)
+  validation_run_hours = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
+
+  if validation_run_hours != []
+    RUN_HOURS = validation_run_hours
+    saturdays.each do |date|
+      dates_to_order[date.to_s] = ""
+    end
+  else
+    RUN_HOURS = (0..23).to_a
+    dates.each do |date|
+      dates_to_order[date.to_s] = ""
+    end
   end
 end
 
