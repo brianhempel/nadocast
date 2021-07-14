@@ -87,6 +87,7 @@ dates_to_order     = PersistentHash.new("rap_archive_dates_to_order")
 outstanding_orders = PersistentHash.new("rap_archive_outstanding_orders")
 orders_downloading = PersistentHash.new("rap_archive_orders_downloading")
 
+validation_run_hours = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 
 if dates_to_order.count == 0 && ARGV.size == 2
   start_date = str_to_date(ARGV[0])
@@ -94,7 +95,6 @@ if dates_to_order.count == 0 && ARGV.size == 2
 
   dates     = (start_date..end_date).to_a
   saturdays = dates.select(&:saturday?)
-  validation_run_hours = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 
   if validation_run_hours != []
     RUN_HOURS = validation_run_hours
