@@ -104,7 +104,7 @@ end
 # 0.06264483      0.0419867       79871.71        0.05259205
 # 0.10415944      0.075461656     47987.773       1.0
 
-roc_auc(X[:,1], y, weights) # 0.9824637718541064
+Metrics.roc_auc(X[:,1], y, weights) # 0.9824637718541064
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
@@ -229,75 +229,83 @@ end
 # 38      35      0.9825734
 
 
-println("blur_radius_f2\tblur_radius_f38\tAUC")
+println("blur_radius_f2\tblur_radius_f35\tAUC")
 
 total_weight    = sum(Float64.(weights))
 positive_weight = sum(y .* Float64.(weights))
 
+X_blurred = Array{Float32}(undef, length(y))
+
+# Mutates X_blurred
+function does_this_need_to_be_a_function_to_be_fast(X_blurred, X, blur_i_lo, blur_i_hi, forecast_hour_j)
+  Threads.@threads for i in 1:length(y)
+    forecast_ratio = (X[i,forecast_hour_j] - 2f0) * (1f0/(35f0-2f0))
+    X_blurred[i] = X[i,blur_i_lo] * (1f0 - forecast_ratio) + X[i,blur_i_hi] * forecast_ratio
+  end
+end
+
 for blur_i_lo in 1:length(blur_radii)
   for blur_i_hi in 1:length(blur_radii)
-    X_blurred = zeros(Float32, length(y))
 
-    Threads.@threads for i in 1:length(y)
-      forecast_ratio = (X[i,forecast_hour_j] - 2f0) * (1f0/(38f0-2f0))
-      X_blurred[i] = X[i,blur_i_lo] * (1f0 - forecast_ratio) + X[i,blur_i_hi] * forecast_ratio
-    end
+    does_this_need_to_be_a_function_to_be_fast(X_blurred, X, blur_i_lo, blur_i_hi, forecast_hour_j)
 
-    auc = roc_auc(X_blurred, y, weights; total_weight = total_weight, positive_weight = positive_weight)
+    auc = Metrics.roc_auc(X_blurred, y, weights; total_weight = total_weight, positive_weight = positive_weight)
 
     println("$(blur_radii[blur_i_lo])\t$(blur_radii[blur_i_hi])\t$(Float32(auc))")
   end
 end
 
-# blur_radius_f2  blur_radius_f38 AUC
+X_blurred = nothing
+
+# blur_radius_f2  blur_radius_f35 AUC
 # 0       0       0.9824638
-# 0       15      0.9825604
-# 0       25      0.9826144
-# 0       35      0.9826693
-# 0       50      0.98269045
-# 0       70      0.9826002
-# 0       100     0.9823038
-# 15      0       0.9826336
+# 0       15      0.9825668
+# 0       25      0.98262346
+# 0       35      0.98267883
+# 0       50      0.9826946
+# 0       70      0.98258674
+# 0       100     0.98224807
+# 15      0       0.9826261
 # 15      15      0.98269147
-# 15      25      0.9827336
-# 15      35      0.9827775
-# 15      50      0.9827891
-# 15      70      0.98269325
-# 15      100     0.9823973
-# 25      0       0.98272085
-# 25      15      0.98276865
+# 15      25      0.98273665
+# 15      35      0.98278165
+# 15      50      0.9827885
+# 15      70      0.98267573
+# 15      100     0.9823381
+# 25      0       0.98270947
+# 25      15      0.9827652
 # 25      25      0.9827986
-# 25      35      0.98283094
-# 25      50      0.98283285
-# 25      70      0.98273104
-# 25      100     0.98243374
-# 35      0       0.98278975
-# 35      15      0.98282987
-# 35      25      0.98284996
+# 25      35      0.9828326
+# 25      50      0.98283046
+# 25      70      0.9827123
+# 25      100     0.9823738
+# 35      0       0.98277473
+# 35      15      0.98282325
+# 35      25      0.98284733
 # 35      35      0.98286575 # BEST
-# 35      50      0.9828521
-# 35      70      0.9827392
-# 35      100     0.9824361
-# 50      0       0.9827867
-# 50      15      0.9828207
-# 50      25      0.9828331
-# 50      35      0.98283505
+# 35      50      0.9828491
+# 35      70      0.9827209
+# 35      100     0.98237747
+# 50      0       0.9827708
+# 50      15      0.9828137
+# 50      25      0.9828308
+# 50      35      0.98283654
 # 50      50      0.98280007
-# 50      70      0.98266804
-# 50      100     0.98234874
-# 70      0       0.9825939
-# 70      15      0.9826243
-# 70      25      0.9826313
-# 70      35      0.9826228
-# 70      50      0.98256916
+# 50      70      0.9826541
+# 50      100     0.982296
+# 70      0       0.982586
+# 70      15      0.98262596
+# 70      25      0.98263836
+# 70      35      0.98263484
+# 70      50      0.9825814
 # 70      70      0.9824122
-# 70      100     0.9820632
-# 100     0       0.98205787
-# 100     15      0.9820875
-# 100     25      0.9820908
-# 100     35      0.9820723
-# 100     50      0.9819967
-# 100     70      0.981803
+# 70      100     0.98202634
+# 100     0       0.9820725
+# 100     15      0.98211277
+# 100     25      0.98212266
+# 100     35      0.98211116
+# 100     50      0.98203826
+# 100     70      0.9818353
 # 100     100     0.98138386
 
 # Sanity check. Should be 0.98286575

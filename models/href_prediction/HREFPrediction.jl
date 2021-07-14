@@ -74,8 +74,6 @@ function reload_forecasts()
   global _forecasts_blurred
 
   _forecasts = []
-  _forecasts_with_blurs_and_forecast_hour = []
-  _forecasts_blurred =[]
 
   href_forecasts = HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 
