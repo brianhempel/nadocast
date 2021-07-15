@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby
 
-# $ VALIDATION_RUN_HOURS=8,9,10,12,13,14 BASE_PATH=/Volumes/RAP_1/rap ruby check_rap_presence.rb 2014-2-1 2017-12-31
+# $ VALIDATION_RUN_HOURS=8,9,10,12,13,14 BASE_PATH=/Volumes/RAP_1/rap ruby check_rap_presence.rb 2014-2-1 2017-12-31 | less
+# $ VALIDATION_RUN_HOURS=8,9,10,12,13,14 BASE_PATH=/Volumes/RAP_3/rap ruby check_rap_presence.rb 2018-1-1 2020-10-31 | less
+
+
+# These days are missing one or all hours: 20140913, 20150214, 20150221, 20150801
+# Confirmed that indeed that data is not in AIRS
+
 
 require 'date'
 
