@@ -11,7 +11,7 @@ def str_to_date(str)
 end
 
 validation_run_hours = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
-validation_run_hours = ENV["BASE_PATH"]
+base_path            = ENV["BASE_PATH"]
 
 start_date = str_to_date(ARGV[0])
 end_date   = str_to_date(ARGV[1])
