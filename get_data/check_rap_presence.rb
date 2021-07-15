@@ -26,7 +26,7 @@ saturdays.each do |date|
     run_hour_str = "%02d" % [run_hour]
     (1..18).each do |forecast_hour|
       forecast_hour_str = "%02d" % [forecast_hour]
-      path = "#{base_path}/#{year_month}/rap_130_#{year_month_day}_#{run_hour_str}00_0#{forecast_hour_str}.grb2"
+      path = "#{base_path}/#{year_month}/#{year_month_day}/rap_130_#{year_month_day}_#{run_hour_str}00_0#{forecast_hour_str}.grb2"
       unless (File.size(path) rescue 0) >= 10_000_000
         puts "MISSING: #{path}"
       end
