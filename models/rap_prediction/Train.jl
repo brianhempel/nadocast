@@ -20,11 +20,14 @@ import Forecasts
 
 
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(RAPPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
+# 66884
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
-validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts); #
-validation_forecasts = filter(forecast -> forecast.forecast_hour in 2:17, validation_forecasts); #
+validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts); # 66375
+validation_forecasts = filter(forecast -> forecast.forecast_hour in 2:17, validation_forecasts); # 63671
+validation_forecasts = filter(forecast -> forecast.run_hour in [8,9,10,12,13,14], validation_forecasts); # 32786
+
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
