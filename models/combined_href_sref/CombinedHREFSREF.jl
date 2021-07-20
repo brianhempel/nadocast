@@ -243,6 +243,9 @@ function reload_forecasts()
       out[i] = ŷ
     end
 
+    out
+  end
+
   sref_newer_predict(forecasts, data) = begin
     href_ŷs = @view data[:,1]
     sref_ŷs = @view data[:,2]
