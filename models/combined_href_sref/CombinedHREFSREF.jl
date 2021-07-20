@@ -35,6 +35,7 @@ HOUR   = 60*MINUTE
 _forecasts_href_newer = []
 _forecasts_sref_newer = []
 _forecasts_href_newer_combined = []
+_forecasts_sref_newer_combined = []
 
 # SREF 3 hours behind HREF
 function forecasts_href_newer()
@@ -66,6 +67,16 @@ function forecasts_href_newer_combined()
   end
 end
 
+# HREF 3 hours behind SREF
+function forecasts_sref_newer_combined()
+  if isempty(_forecasts_sref_newer_combined)
+    reload_forecasts()
+    _forecasts_sref_newer_combined
+  else
+    _forecasts_sref_newer_combined
+  end
+end
+
 
 function example_forecast()
   forecasts()[1]
@@ -83,23 +94,46 @@ logit(p) = log(p / (one(p) - p))
 # Bin 1-2 --------
 # -1.0 < HREF_ŷ <= 0.0040673064
 # Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
-bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565*logit(href_ŷ) + 0.19299681*logit(sref_ŷ) + -0.21271989f0)
+href_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565f0*logit(href_ŷ) + 0.19299681f0*logit(sref_ŷ) + -0.21271989f0)
 # Bin 2-3 --------
 # 0.000962529 < HREF_ŷ <= 0.009957244
 # Fit logistic coefficients: Float32[0.84564245, 0.14841641, -0.06817224]
-bin_2_3_predict(href_ŷ, sref_ŷ) = σ(0.84564245*logit(href_ŷ) + 0.14841641*logit(sref_ŷ) + -0.06817224)
+href_newer_bin_2_3_predict(href_ŷ, sref_ŷ) = σ(0.84564245f0*logit(href_ŷ) + 0.14841641f0*logit(sref_ŷ) + -0.06817224f0)
 # Bin 3-4 --------
 # 0.0040673064 < HREF_ŷ <= 0.020302918
 # Fit logistic coefficients: Float32[0.9977281, 0.14388186, 0.64254296]
-bin_3_4_predict(href_ŷ, sref_ŷ) = σ(0.9977281*logit(href_ŷ) + 0.14388186*logit(sref_ŷ) + 0.64254296)
+href_newer_bin_3_4_predict(href_ŷ, sref_ŷ) = σ(0.9977281f0*logit(href_ŷ) + 0.14388186f0*logit(sref_ŷ) + 0.64254296f0)
 # Bin 4-5 --------
 # 0.009957244 < HREF_ŷ <= 0.037081156
 # Fit logistic coefficients: Float32[1.3795987, 0.091625534, 1.9759048]
-bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.3795987*logit(href_ŷ) + 0.091625534*logit(sref_ŷ) + 1.9759048)
+href_newer_bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.3795987f0*logit(href_ŷ) + 0.091625534f0*logit(sref_ŷ) + 1.9759048f0)
 # Bin 5-6 --------
 # 0.020302918 < HREF_ŷ <= 1.0
 # Fit logistic coefficients: Float32[0.9358031, 0.1812378, 0.836498]
-bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.9358031*logit(href_ŷ) + 0.1812378*logit(sref_ŷ) + 0.836498)
+href_newer_bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.9358031f0*logit(href_ŷ) + 0.1812378f0*logit(sref_ŷ) + 0.836498f0)
+
+
+# Bin 1-2 --------
+# -1.0 < HREF_ŷ <= 0.0038515618
+# Fit logistic coefficients: Float32[0.68609446, 0.29776412, -0.06935765]
+sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.68609446f0*logit(href_ŷ) + 0.29776412f0*logit(sref_ŷ) + -0.06935765f0)
+# Bin 2-3 --------
+# 0.0009233353 < HREF_ŷ <= 0.00954726
+# Fit logistic coefficients: Float32[0.73588675, 0.26439694, 0.021931686]
+sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ) = σ(0.73588675f0*logit(href_ŷ) + 0.26439694f0*logit(sref_ŷ) + 0.021931686f0)
+# Bin 3-4 --------
+# 0.0038515618 < HREF_ŷ <= 0.01923272
+# Fit logistic coefficients: Float32[0.8676892, 0.3169111, 0.9392679]
+sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ) = σ(0.8676892f0*logit(href_ŷ) + 0.3169111f0*logit(sref_ŷ) + 0.9392679f0)
+# Bin 4-5 --------
+# 0.00954726 < HREF_ŷ <= 0.035036117
+# Fit logistic coefficients: Float32[1.2143207, 0.26236853, 2.1367016]
+sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.2143207f0*logit(href_ŷ) + 0.26236853f0*logit(sref_ŷ) + 2.1367016f0)
+# Bin 5-6 --------
+# 0.01923272 < HREF_ŷ <= 1.0
+# Fit logistic coefficients: Float32[0.851503, 0.31797588, 1.0932944]
+sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.851503f0*logit(href_ŷ) + 0.31797588f0*logit(sref_ŷ) + 1.0932944f0)
+
 
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
@@ -107,6 +141,7 @@ function reload_forecasts()
   global _forecasts_href_newer
   global _forecasts_sref_newer
   global _forecasts_href_newer_combined
+  global _forecasts_sref_newer_combined
 
   _forecasts_href_newer = []
   _forecasts_sref_newer = []
@@ -171,7 +206,7 @@ function reload_forecasts()
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  predict(forecasts, data) = begin
+  href_newer_predict(forecasts, data) = begin
     href_ŷs = @view data[:,1]
     sref_ŷs = @view data[:,2]
 
@@ -184,26 +219,63 @@ function reload_forecasts()
       sref_ŷ = sref_ŷs[i]
       if href_ŷ <= bin_maxes[1]
         # Bin 1-2 predictor only
-        ŷ = bin_1_2_predict(href_ŷ, sref_ŷ)
+        ŷ = href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
       elseif href_ŷ <= bin_maxes[2]
         # Bin 1-2 and 2-3 predictors
         ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
-        ŷ = ratio*bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*bin_1_2_predict(href_ŷ, sref_ŷ)
+        ŷ = ratio*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
       elseif href_ŷ <= bin_maxes[3]
         # Bin 2-3 and 3-4 predictors
         ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
-        ŷ = ratio*bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*bin_2_3_predict(href_ŷ, sref_ŷ)
+        ŷ = ratio*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
       elseif href_ŷ <= bin_maxes[4]
         # Bin 3-4 and 4-5 predictors
         ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
-        ŷ = ratio*bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*bin_3_4_predict(href_ŷ, sref_ŷ)
+        ŷ = ratio*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
       elseif href_ŷ <= bin_maxes[5]
         # Bin 4-5 and 5-6 predictors
         ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
-        ŷ = ratio*bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*bin_4_5_predict(href_ŷ, sref_ŷ)
+        ŷ = ratio*href_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
       else
         # Bin 5-6 predictor only
-        ŷ = bin_5_6_predict(href_ŷ, sref_ŷ)
+        ŷ = href_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
+      end
+      out[i] = ŷ
+    end
+
+  sref_newer_predict(forecasts, data) = begin
+    href_ŷs = @view data[:,1]
+    sref_ŷs = @view data[:,2]
+
+    out = Array{Float32}(undef, length(href_ŷs))
+
+    bin_maxes = Float32[0.0009233353, 0.0038515618, 0.00954726, 0.01923272, 0.035036117, 1.0]
+
+    Threads.@threads for i in 1:length(href_ŷs)
+      href_ŷ = href_ŷs[i]
+      sref_ŷ = sref_ŷs[i]
+      if href_ŷ <= bin_maxes[1]
+        # Bin 1-2 predictor only
+        ŷ = sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
+      elseif href_ŷ <= bin_maxes[2]
+        # Bin 1-2 and 2-3 predictors
+        ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
+        ŷ = ratio*sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
+      elseif href_ŷ <= bin_maxes[3]
+        # Bin 2-3 and 3-4 predictors
+        ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
+        ŷ = ratio*sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
+      elseif href_ŷ <= bin_maxes[4]
+        # Bin 3-4 and 4-5 predictors
+        ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
+        ŷ = ratio*sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
+      elseif href_ŷ <= bin_maxes[5]
+        # Bin 4-5 and 5-6 predictors
+        ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
+        ŷ = ratio*sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
+      else
+        # Bin 5-6 predictor only
+        ŷ = sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
       end
       out[i] = ŷ
     end
@@ -211,7 +283,8 @@ function reload_forecasts()
     out
   end
 
-  _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, predict)
+  _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_predict)
+  _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_predict)
 
   ()
 end
