@@ -356,7 +356,7 @@ function reload_forecasts()
   choose_canonical_forecast(day_hourlies) = begin
     canonical = day_hourlies[1]
     for forecast in day_hourlies
-      if (Forecast.run_time_in_seconds_since_epoch_utc(forecast), Forecast.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecast.run_time_in_seconds_since_epoch_utc(canonical), Forecast.valid_time_in_seconds_since_epoch_utc(canonical))
+      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
         canonical = forecast
       end
     end
