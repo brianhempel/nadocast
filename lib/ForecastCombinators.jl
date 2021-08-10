@@ -140,6 +140,8 @@ function turn_forecast_caching_off()
 end
 
 function clear_cached_forecasts()
+  global _cached_inventories
+  global _cached_data
   _cached_inventories = []
   _cached_data        = []
   GC.gc(true)
