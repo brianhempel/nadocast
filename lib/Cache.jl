@@ -8,7 +8,7 @@ using TranscodingStreams, CodecZstd
 
 function cached(f, item_key_parts, function_name, more_keying...)
   cached = Cache.get_cached(item_key_parts, function_name, more_keying...)
-  if cached != nothing
+  if !isnothing(cached)
     return cached
   end
 
@@ -21,6 +21,12 @@ function cache_path(item_key_parts, function_name, more_keying...)
   item_key_str    = replace(replace(join(item_key_parts, "/"), r"\.gri?b2$" => ""), ":" => "|")
   more_keying_str = isempty(more_keying) ? "" : string(hash(more_keying))
   (@__DIR__) * "/computation_cache/" * item_key_str * "/" * function_name * "_" * more_keying_str
+end
+
+function clear_all(item_key_parts)
+  item_key_str = replace(replace(join(item_key_parts, "/"), r"\.gri?b2$" => ""), ":" => "|")
+  dir_path = (@__DIR__) * "/computation_cache/" * item_key_str
+  rm(dir_path; recursive = true)
 end
 
 function get_cached(item_key_parts, function_name, more_keying...)

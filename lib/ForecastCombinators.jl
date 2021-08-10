@@ -124,14 +124,31 @@ function resample_forecasts(old_forecasts, get_layer_resampler, new_grid)
   map_forecasts(old_forecasts; new_grid = new_grid, data_transformer = data_transformer)
 end
 
+_caching_on = false
+
+function turn_forecast_caching_on()
+  global _caching_on
+  _caching_on = true
+end
+
+function turn_forecast_caching_off()
+  global _caching_on
+  _caching_on = false
+end
+
+function clear_cached_forecasts()
+  clear_all(["cached_forecasts"])
+end
 
 # Wrapper that caches the underlying inventory and data on disk.
 #
 # Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
 function cache_forecasts(old_forecasts)
 
+  # This keying scheme is...inadequate but works because we only use forecast caching for single hour featured engineered results (so three hour windows don't have to redo so much computation)
   item_key_parts(forecast) =
-    [ forecast.model_name
+    [ "cached_forecasts"
+    , forecast.model_name
     , string(forecast.run_year) * string(forecast.run_month)
     , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day)
     , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
@@ -139,14 +156,22 @@ function cache_forecasts(old_forecasts)
 
   map(old_forecasts) do old_forecast
     get_inventory() = begin
-      Cache.cached(item_key_parts(old_forecast), "inventory") do
+      if _caching_on
+        Cache.cached(item_key_parts(old_forecast), "inventory") do
+          Forecasts.inventory(old_forecast)
+        end
+      else
         Forecasts.inventory(old_forecast)
       end
     end
 
     get_data() = begin
-      Cache.cached(item_key_parts(old_forecast), "data") do
-        Forecasts.data(old_forecast)
+      if _caching_on
+        Cache.cached(item_key_parts(old_forecast), "data") do
+          Forecasts.data(old_forecast)
+        end
+      else
+        Forecasts.inventory(old_forecast)
       end
     end
 

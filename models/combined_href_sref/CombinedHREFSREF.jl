@@ -353,38 +353,55 @@ function reload_forecasts()
 
   day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts)
 
-  day_inventory_transformer(base_forecast, base_inventory) = begin
-    [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    ]
-  end
+  day_inventory_transformer(base_forecast, base_inventory) =
 
   day_data_transformer(base_forecast, base_data) = begin
-    point_count, hours_count = size(base_data)
-    out = Array{Float32}(undef, (point_count, 7))
-    Threads.@threads for i in 1:point_count
-      sorted_probs = sort((@view base_data[i,:]); rev = true)
-      prob_no_tor = 1.0
-      for hour_i in 1:hours_count
-        prob_no_tor *= 1.0 - Float64(sorted_probs[hour_i])
-      end
-      out[i,1] = Float32(1.0 - prob_no_tor)
-      out[i,2] = sorted_probs[1]
-      out[i,3] = sorted_probs[2]
-      out[i,4] = sorted_probs[3]
-      out[i,5] = sorted_probs[4]
-      out[i,6] = sorted_probs[5]
-      out[i,7] = sorted_probs[6]
-    end
-    out
   end
 
-  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
+  # Manual map so we can turn caching on before triggering the base_forecast data loading
+  _forecasts_day_accumulators =
+    map(day_hourly_predictions) do hourly_predictions
+      get_inventory() = begin
+        ForecastCombinators.turn_forecast_caching_on()
+        base_inventory = Forecasts.inventory(hourly_predictions)
+        ForecastCombinators.turn_forecast_caching_off()
+        [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
+        , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
+        , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
+        , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
+        , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
+        , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
+        , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
+        ]
+      end
+
+      get_data() = begin
+        ForecastCombinators.turn_forecast_caching_on()
+        base_data = Forecasts.data(hourly_predictions)
+        point_count, hours_count = size(base_data)
+        out = Array{Float32}(undef, (point_count, 7))
+        Threads.@threads for i in 1:point_count
+          sorted_probs = sort((@view base_data[i,:]); rev = true)
+          prob_no_tor = 1.0
+          for hour_i in 1:hours_count
+            prob_no_tor *= 1.0 - Float64(sorted_probs[hour_i])
+          end
+          out[i,1] = Float32(1.0 - prob_no_tor)
+          out[i,2] = sorted_probs[1]
+          out[i,3] = sorted_probs[2]
+          out[i,4] = sorted_probs[3]
+          out[i,5] = sorted_probs[4]
+          out[i,6] = sorted_probs[5]
+          out[i,7] = sorted_probs[6]
+        end
+        ForecastCombinators.turn_forecast_caching_off()
+        ForecastCombinators.clear_cached_forecasts()
+        out
+      end
+
+      ForecastCombinators.revised_forecast(hourly_predictions, hourly_predictions.grid, get_inventory, get_data)
+    end
+
 
   # START HERE see if these forecasts actually load
   # Also see if we can do some caching to speed up load times
