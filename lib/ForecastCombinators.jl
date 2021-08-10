@@ -176,13 +176,13 @@ function cache_forecasts(old_forecasts)
 
   map(old_forecasts) do old_forecast
     get_inventory() = begin
-      cache_lookup(old_forecast, _cached_inventories) do
+      cache_lookup(_cached_inventories, old_forecast) do
         Forecasts.inventory(old_forecast)
       end
     end
 
     get_data() = begin
-      cache_lookup(old_forecast, _cached_data) do
+      cache_lookup(_cached_data, old_forecast) do
         Forecasts.data(old_forecast)
       end
     end
