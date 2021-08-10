@@ -18,13 +18,13 @@ import Forecasts
 # (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer());
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
-length(validation_forecasts) #
+length(validation_forecasts) # 903
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
-length(validation_forecasts) #
+length(validation_forecasts) # 735
 
 
 @time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads

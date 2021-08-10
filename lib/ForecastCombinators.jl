@@ -157,6 +157,7 @@ function cache_lookup(f, cache, forecast)
       push!(cache, (forecast, out))
       out
     else
+      println("cache hit")
       cache[i][2]
     end
   end
