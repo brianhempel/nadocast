@@ -5,6 +5,7 @@ push!(LOAD_PATH, (@__DIR__))
 import Forecasts
 import Grids
 import Inventories
+import Cache
 
 
 # Copy time info, but set based_on and grid/inventory/data
