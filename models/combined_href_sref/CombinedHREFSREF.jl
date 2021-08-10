@@ -384,7 +384,19 @@ function reload_forecasts()
     out
   end
 
-  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
+  # Which run time and forecast hour to use for the set.
+  # Namely: latest run time, then longest forecast hour
+  choose_canonical_forecast(day_hourlies) = begin
+    canonical = day_hourlies[1]
+    for forecast in day_hourlies
+      if (Forecast.run_time_in_seconds_since_epoch_utc(forecast), Forecast.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecast.run_time_in_seconds_since_epoch_utc(canonical), Forecast.valid_time_in_seconds_since_epoch_utc(canonical))
+        canonical = forecast
+      end
+    end
+    canonical
+  end
+
+  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
   # START HERE see if these forecasts actually load
   # Also see if we can do some caching to speed up load times

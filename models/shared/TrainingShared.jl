@@ -127,19 +127,19 @@ function finished_loading(save_dir)
   isdir(save_dir) && isfile(joinpath(save_dir, "labels.serialized")) && isfile(joinpath(save_dir, "weights.serialized"))
 end
 
-function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
   if !finished_loading(save_dir)
-    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
+    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
   end
   read_data_labels_weights_from_disk(save_dir)
 end
 
 # Loads the data to disk but does not read it back.
 # Returns (data_count, feature_count) if the data wasn't already saved to disk.
-function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
+function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
@@ -147,7 +147,7 @@ function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transforme
     println("$save_dir appears to have finished loading. Skipping.")
     return (nothing, nothing)
   end
-  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor)
+  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
 end
 
 
@@ -162,7 +162,7 @@ function mask_rows_threaded(data, mask; final_row_count=count(mask))
 end
 
 # We can keep weights and labels in memory at least. It's the features that really kill us.
-function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing)
+function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
   mkpath(save_dir)
 
   save_path(path) = joinpath(save_dir, path)

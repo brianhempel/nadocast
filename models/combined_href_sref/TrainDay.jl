@@ -11,6 +11,10 @@ import CombinedHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import StormEvents
+
+MINUTE = 60 # seconds
+HOUR   = 60*MINUTE
 
 # forecasts_0z = filter(forecast -> forecast.run_hour == 0, CombinedHREFSREF.forecasts_href_newer());
 
@@ -26,8 +30,10 @@ validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast)
 
 length(validation_forecasts) # 735
 
-
 @time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
+
+validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, validation_forecasts);
+length(validation_forecasts_0z) # 735
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -38,8 +44,19 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
+compute_forecast_labels(forecast) = begin
+  start_seconds    = Forecasts.run_time_in_seconds_since_epoch_utc(forecast) - 30*MINUTE + 2*HOUR
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  window_half_size = div(end_seconds - start_seconds, 2)
+  window_mid_time  = div(end_seconds + start_seconds, 2)
+  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.TORNADO_SPACIAL_RADIUS_MILES, window_mid_time, window_half_size)
+end
 
-X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_href_newer");
+X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts_0z; save_dir = "day_accumulators_validation_forecasts_0z", compute_forecast_labels = compute_forecast_labels);
+
+
+# should do some checks here.
 
 
 Metrics.roc_auc((@view X[:,1]), y, weights) #
@@ -211,7 +228,7 @@ length(combined_validation_forecasts) # Expected:
 Forecasts.data(combined_validation_forecasts[100])
 
 
-X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "combined_validation_forecasts_href_newer");
+X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "day_validation_forecasts");
 
 
 ŷ = X[:,1];
