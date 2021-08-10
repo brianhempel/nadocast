@@ -125,7 +125,9 @@ function resample_forecasts(old_forecasts, get_layer_resampler, new_grid)
   map_forecasts(old_forecasts; new_grid = new_grid, data_transformer = data_transformer)
 end
 
-_caching_on = false
+_caching_on         = false
+_cached_inventories = Tuple{Forecasts.Forecast,Vector{Inventories.InventoryLine}}[]
+_cached_data        = Tuple{Forecasts.Forecast,Array{Float32,2}}[]
 
 function turn_forecast_caching_on()
   global _caching_on
@@ -138,7 +140,24 @@ function turn_forecast_caching_off()
 end
 
 function clear_cached_forecasts()
-  clear_all(["cached_forecasts"])
+  _cached_inventories = []
+  _cached_data        = []
+  GC.gc(true)
+end
+
+function cache_lookup(f, cache, forecast)
+  if !_caching_on
+    f()
+  else
+    i = findfirst(entry -> entry[1] === forecast, cache)
+    if isnothing(i)
+      out = f()
+      push!(cache, (forecast, out))
+      out
+    else
+      cache[i][2]
+    end
+  end
 end
 
 # Wrapper that caches the underlying inventory and data on disk.
@@ -157,22 +176,14 @@ function cache_forecasts(old_forecasts)
 
   map(old_forecasts) do old_forecast
     get_inventory() = begin
-      if _caching_on
-        Cache.cached(item_key_parts(old_forecast), "inventory") do
-          Forecasts.inventory(old_forecast)
-        end
-      else
+      cache_lookup(old_forecast, _cached_inventories) do
         Forecasts.inventory(old_forecast)
       end
     end
 
     get_data() = begin
-      if _caching_on
-        Cache.cached(item_key_parts(old_forecast), "data") do
-          Forecasts.data(old_forecast)
-        end
-      else
-        Forecasts.inventory(old_forecast)
+      cache_lookup(old_forecast, _cached_data) do
+        Forecasts.data(old_forecast)
       end
     end
 
