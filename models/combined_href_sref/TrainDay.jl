@@ -56,8 +56,8 @@ compute_forecast_labels(forecast) = begin
   utc_datetime = Dates.unix2datetime(start_seconds)
   Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime)
   println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = div(end_seconds - start_seconds, 2)
-  window_mid_time  = div(end_seconds + start_seconds, 2)
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
   StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.TORNADO_SPACIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
