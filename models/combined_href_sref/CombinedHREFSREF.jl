@@ -320,7 +320,9 @@ function reload_forecasts()
 
       forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
 
-      push!(associated_forecasts, forecasts_for_convective_day)
+      if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
+        push!(associated_forecasts, forecasts_for_convective_day)
+      end
 
       # 1. Try both independent events total prob and max hourly prob as the main descriminator
       # 2. bin predictions into 10 bins of equal weight of positive labels
