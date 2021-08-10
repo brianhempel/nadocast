@@ -27,7 +27,7 @@ validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast)
 length(validation_forecasts) # 12464
 
 
-Forecasts.get_data(validation_forecasts[10]) # Check if a forecast loads
+@time Forecasts.get_data(validation_forecasts[10]) # Check if a forecast loads
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0

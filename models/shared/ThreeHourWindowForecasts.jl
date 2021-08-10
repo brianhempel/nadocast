@@ -20,7 +20,7 @@ function add_misc_suffix_to_inventory_lines(inventory, suffix)
 end
 
 function three_hour_window_forecasts(base_forecasts)
-  base_forecasts = ForecastCombinators.cached_forecasts(base_forecasts)
+  base_forecasts = ForecastCombinators.cache_forecasts(base_forecasts)
   base_forecasts_by_run_time = Forecasts.run_time_seconds_to_forecasts(base_forecasts)
 
   tag_inventory_lines(forecast, suffix) = begin
