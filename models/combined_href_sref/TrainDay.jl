@@ -54,7 +54,7 @@ compute_forecast_labels(forecast) = begin
   start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
   println(Forecasts.yyyymmdd_thhz_fhh(forecast))
   utc_datetime = Dates.unix2datetime(start_seconds)
-  Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime)
+  println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
   println(Forecasts.valid_yyyymmdd_hhz(forecast))
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
