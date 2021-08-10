@@ -33,7 +33,7 @@ length(validation_forecasts) # 735
 @time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
 
 validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, validation_forecasts);
-length(validation_forecasts_0z) # 735
+length(validation_forecasts_0z) #
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -48,6 +48,7 @@ compute_forecast_labels(forecast) = begin
   start_seconds    = Forecasts.run_time_in_seconds_since_epoch_utc(forecast) - 30*MINUTE + 2*HOUR
   end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
   println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  println(Forecasts.valid_yyyymmdd_hhz(forecast))
   window_half_size = div(end_seconds - start_seconds, 2)
   window_mid_time  = div(end_seconds + start_seconds, 2)
   StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.TORNADO_SPACIAL_RADIUS_MILES, window_mid_time, window_half_size)
