@@ -336,13 +336,3 @@ X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_b
 
 Float32(Metrics.roc_auc((@view X2[:,1]), y2, weights2)) # Expected: 0.98286575
 # 0.98286575f0
-
-
-
-# n_folds = 3 # Choose something not divisible by 7, they're already partitioned by that
-# folds = map(1:n_folds) do n
-#   fold_forecasts = filter(forecast -> Forecasts.valid_time_in_convective_days_since_epoch_utc(forecast) % n_folds == n-1, validation_forecasts2)
-#   fold_X, fold_y, fold_weights = TrainingShared.get_data_labels_weights(fold_forecasts; save_dir = "validation_forecasts_blurred_and_hour_climatology_fold_$(n)");
-#   (X = fold_X, y = fold_y, weights = fold_weights)
-# end
-

@@ -22,6 +22,8 @@ import Forecasts
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts); # 20440
 validation_forecasts = filter(forecast -> forecast.forecast_hour in 2:17, validation_forecasts); # 19726
+validation_forecasts = filter(forecast -> forecast.run_hour in [8,9,10,12,13,14], validation_forecasts); # 19726
+
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
@@ -261,12 +263,14 @@ import Forecasts
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_blurred);
-validation_forecasts = filter(forecast -> forecast.forecast_hour in 2:17, validation_forecasts);
+validation_forecasts_blurred = filter(forecast -> forecast.forecast_hour in 2:17, validation_forecasts_blurred);
+validation_forecasts_blurred = filter(forecast -> forecast.run_hour in [8,9,10,12,13,14], validation_forecasts_blurred);
 
 # Make sure a forecast loads
 Forecasts.data(validation_forecasts_blurred[100])
 
 X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred");
 
-Float32(Metrics.roc_auc((@view X2[:,1]), y2, weights2)) # Expected: ...
-# ...
+Float32(Metrics.roc_auc((@view X2[:,1]), y2, weights2)) # Expected: 0.9874394
+# 0.9874394f0
+
