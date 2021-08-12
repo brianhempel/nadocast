@@ -39,6 +39,7 @@ _forecasts_sref_newer_combined = []
 
 # For day, allow 0Z to 21Z runs
 _forecasts_day_accumulators = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day              = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 
 # SREF 3 hours behind HREF
 function forecasts_href_newer()
@@ -86,6 +87,15 @@ function forecasts_day_accumulators()
     _forecasts_day_accumulators
   else
     _forecasts_day_accumulators
+  end
+end
+
+function forecasts_day()
+  if isempty(_forecasts_day)
+    reload_forecasts()
+    _forecasts_day
+  else
+    _forecasts_day
   end
 end
 
@@ -145,6 +155,15 @@ sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.2143207f0*logit(href_ŷ) + 0
 # 0.01923272 < HREF_ŷ <= 1.0
 # Fit logistic coefficients: Float32[0.851503, 0.31797588, 1.0932944]
 sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.851503f0*logit(href_ŷ) + 0.31797588f0*logit(sref_ŷ) + 1.0932944f0)
+
+
+day_bins_logistic_coeffs = Any[Float32[0.8790791, 0.17466258, 0.42071092], Float32[0.5856237, 0.17571865, -0.84646785], Float32[1.4197825, 0.00979548, 0.91951996], Float32[1.5459903, -0.15001805, 0.5937435], Float32[1.1762913, -0.5233394, -1.4415414]]
+
+day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[1][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[1][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[1][3])
+day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[2][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[2][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[2][3])
+day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[3][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[3][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[3][3])
+day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[4][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[4][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[4][3])
+day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[5][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[5][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[5][3])
 
 
 function reload_forecasts()
@@ -259,7 +278,7 @@ function reload_forecasts()
     out
   end
 
-  sref_newer_predict(forecasts, data) = begin
+  sref_newer_predict(forecast, data) = begin
     href_ŷs = @view data[:,1]
     sref_ŷs = @view data[:,2]
 
@@ -368,39 +387,80 @@ function reload_forecasts()
   day_inventory_transformer(base_forecast, base_inventory) = begin
     [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
     , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
     ]
   end
 
   day_data_transformer(base_forecast, base_data) = begin
     point_count, hours_count = size(base_data)
-    out = Array{Float32}(undef, (point_count, 7))
+    out = Array{Float32}(undef, (point_count, 2))
     Threads.@threads for i in 1:point_count
-      sorted_probs = sort((@view base_data[i,:]); rev = true)
+      # sorted_probs = sort((@view base_data[i,:]); rev = true)
       prob_no_tor = 1.0
       for hour_i in 1:hours_count
-        prob_no_tor *= 1.0 - Float64(sorted_probs[hour_i])
+        prob_no_tor *= 1.0 - Float64(base_data[i,hour_i])
       end
       out[i,1] = Float32(1.0 - prob_no_tor)
-      out[i,2] = sorted_probs[1]
-      out[i,3] = sorted_probs[2]
-      out[i,4] = sorted_probs[3]
-      out[i,5] = sorted_probs[4]
-      out[i,6] = sorted_probs[5]
-      out[i,7] = sorted_probs[6]
+      out[i,2] = maximum(@view base_data[i,:])
+      # out[i,2] = sorted_probs[1]
+      # out[i,3] = sorted_probs[2]
+      # out[i,4] = sorted_probs[3]
+      # out[i,5] = sorted_probs[4]
+      # out[i,6] = sorted_probs[5]
+      # out[i,7] = sorted_probs[6]
     end
     out
   end
 
+  # Caching barely helps load times, so we don't do it
 
   _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
 
-  # START HERE see if these forecasts actually load
-  # Also see if we can do some caching to speed up load times
+  day_predict(forecast, data) = begin
+    indep_events_ŷs  = @view data[:,1]
+    max_hourly_probs = @view data[:,2]
+
+    out = Array{Float32}(undef, length(indep_events_ŷs))
+
+    bin_maxes = Float32[0.008833055, 0.025307992, 0.06799701, 0.11479675, 0.18474162, 1.0]
+
+    Threads.@threads for i in 1:length(indep_events_ŷs)
+      indep_events_ŷ   = indep_events_ŷs[i]
+      max_hourly_prob  = max_hourly_probs[i]
+      if indep_events_ŷ <= bin_maxes[1]
+        # Bin 1-2 predictor only
+        ŷ = day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
+      elseif indep_events_ŷ <= bin_maxes[2]
+        # Bin 1-2 and 2-3 predictors
+        ratio = ratio_between(indep_events_ŷ, bin_maxes[1], bin_maxes[2])
+        ŷ = ratio*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
+      elseif indep_events_ŷ <= bin_maxes[3]
+        # Bin 2-3 and 3-4 predictors
+        ratio = ratio_between(indep_events_ŷ, bin_maxes[2], bin_maxes[3])
+        ŷ = ratio*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob)
+      elseif indep_events_ŷ <= bin_maxes[4]
+        # Bin 3-4 and 4-5 predictors
+        ratio = ratio_between(indep_events_ŷ, bin_maxes[3], bin_maxes[4])
+        ŷ = ratio*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob)
+      elseif indep_events_ŷ <= bin_maxes[5]
+        # Bin 4-5 and 5-6 predictors
+        ratio = ratio_between(indep_events_ŷ, bin_maxes[4], bin_maxes[5])
+        ŷ = ratio*day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob)
+      else
+        # Bin 5-6 predictor only
+        ŷ = day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob)
+      end
+      out[i] = ŷ
+    end
+
+    out
+  end
+
+  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict)
 
   ()
 end
