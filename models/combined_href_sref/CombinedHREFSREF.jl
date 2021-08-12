@@ -174,6 +174,7 @@ function reload_forecasts()
   global _forecasts_href_newer_combined
   global _forecasts_sref_newer_combined
   global _forecasts_day_accumulators
+  global _forecasts_day
 
   _forecasts_href_newer = []
   _forecasts_sref_newer = []
