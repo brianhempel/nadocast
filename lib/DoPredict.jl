@@ -29,6 +29,11 @@ import CombinedHREFSREF
 
 newest_forecast = last(CombinedHREFSREF.forecasts_day_spc_calibrated())
 
+if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
+  println("Newest forecast is in the past $(Forecasts.time_title(newest_forecast))")
+  exit(1)
+end
+
 prediction = Forecasts.data(newest_forecast)
 
 period_stop_forecast_hour  = newest_forecast.forecast_hour
