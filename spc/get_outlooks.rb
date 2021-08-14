@@ -3,9 +3,9 @@ require 'date'
 
 # https://www.spc.noaa.gov/products/outlook/archive/2019/day1otlk_20190812_1300-shp.zip
 
-# 2019-01-12 through 2020-10-31
+# 2019-01-7 through 2020-10-31
 
-DATES = (Date.new(2019,1,12)..Date.new(2020,10,31)).to_a.select { |date| date.saturday? || date.sunday?}
+DATES = (Date.new(2019,1,7)..Date.new(2020,10,31)).to_a
 HOURS_TO_GET = %w[1200 1300 1630] # 0600Z 1300Z and 1630Z SPC outlooks, corresponding to 0Z 10Z and 14Z Nadocast forecasts. I'm sure there's some weird legacy reason why the 0600 is call 1200
 
 class Date
