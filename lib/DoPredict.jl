@@ -91,7 +91,7 @@ if get(ENV, "TWEET", "false") == "true"
 
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
-    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast (new new models, calibrated)" $path.png`)
+    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast" $path.png`)
   end
 
   # if !isnothing(animation_glob_path)

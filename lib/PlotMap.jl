@@ -189,7 +189,7 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
         end
         println(f, "L 4pt,Helvetica C $sources_str")
       end
-      println(f, "L 5pt,Helvetica C Same as SPC Probabilities")
+      println(f, "L 5pt,Helvetica C 2020 Models")
       println(f, "L 4pt,Helvetica,gray C @_nadocast.com@_")
       println(f, "EOF")
     end
