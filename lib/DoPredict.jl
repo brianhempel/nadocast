@@ -39,7 +39,7 @@ prediction = Forecasts.data(newest_forecast)
 period_stop_forecast_hour  = newest_forecast.forecast_hour
 period_start_forecast_hour = max(2, period_stop_forecast_hour - 23)
 nadocast_run_time_utc      = Forecasts.run_utc_datetime(newest_forecast)
-nadocast_run_hour          = newest_forecast.forecast_hour
+nadocast_run_hour          = newest_forecast.run_hour
 
 # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 href_run_hours, sref_run_hours =
