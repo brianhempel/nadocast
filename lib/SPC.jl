@@ -34,9 +34,15 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
         for feature_i in 0:(feature_count-1)
           ArchGDAL.getfeature(layer, feature_i) do feature
             # println(feature)
-            # println("DN: $(ArchGDAL.getfield(feature, "DN"))")
             # DN field contains the probability level (in percent: 2, 5, 10 etc)
-            if ArchGDAL.getfield(feature, "DN") / 100 >= threshold_prob - 10*eps(threshold_prob)
+            dn =
+              if isa(ArchGDAL.getfield(feature, "DN"), String)
+                # println("DN: $(ArchGDAL.getfield(feature, "DN"))")
+                parse(Int64, ArchGDAL.getfield(feature, "DN"))
+              else
+                ArchGDAL.getfield(feature, "DN")
+              end
+            if dn / 100 >= threshold_prob * 0.999
               geom = ArchGDAL.getgeom(feature)
               # println(geom)
               spatialref = ArchGDAL.getspatialref(geom)
