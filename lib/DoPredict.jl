@@ -27,7 +27,7 @@ import PlotMap
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
 import CombinedHREFSREF
 
-newest_forecast = last(CombinedHREFSREF.day_forecasts_spc_calibrated())
+newest_forecast = last(CombinedHREFSREF.forecasts_day_spc_calibrated())
 
 prediction = Forecasts.data(newest_forecast)
 
