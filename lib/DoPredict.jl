@@ -54,6 +54,9 @@ href_run_hours, sref_run_hours =
 paths = []
 daily_paths_to_perhaps_tweet = []
 
+out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+mkpath(out_dir)
+out_path_prefix = out_dir * "nadocast_conus_tor_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
 period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
 write(period_path * ".float16.bin", Float16.(prediction))
 PlotMap.plot_map(
