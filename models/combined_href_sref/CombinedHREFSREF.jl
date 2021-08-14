@@ -38,8 +38,9 @@ _forecasts_href_newer_combined = []
 _forecasts_sref_newer_combined = []
 
 # For day, allow 0Z to 21Z runs
-_forecasts_day_accumulators = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
-_forecasts_day              = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_accumulators   = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day                = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_spc_calibrated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 
 # SREF 3 hours behind HREF
 function forecasts_href_newer()
@@ -99,6 +100,14 @@ function forecasts_day()
   end
 end
 
+function forecasts_day_spc_calibrated()
+  if isempty(_forecasts_day_spc_calibrated)
+    reload_forecasts()
+    _forecasts_day_spc_calibrated
+  else
+    _forecasts_day_spc_calibrated
+  end
+end
 
 function example_forecast()
   forecasts()[1]
@@ -175,6 +184,7 @@ function reload_forecasts()
   global _forecasts_sref_newer_combined
   global _forecasts_day_accumulators
   global _forecasts_day
+  global _forecasts_day_spc_calibrated
 
   _forecasts_href_newer = []
   _forecasts_sref_newer = []
@@ -462,6 +472,16 @@ function reload_forecasts()
   end
 
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict)
+
+  spc_calibration = [
+    (0.02, 0.016253397),
+    (0.05, 0.0649308),
+    (0.1,  0.18771306),
+    (0.15, 0.28330332),
+    (0.3,  0.32384455),
+  ]
+
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration)
 
   ()
 end
