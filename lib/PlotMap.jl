@@ -194,8 +194,8 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
       println(f, "EOF")
     end
 
-    println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.04+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
-    println(f, "echo '-95.256 27.376 Chance of a tornado within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.05+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
+    println(f, "echo '-95.606 27.376 Chance of a tornado within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
     println(f, "gmt end")
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
