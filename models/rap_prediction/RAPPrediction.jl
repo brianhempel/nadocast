@@ -28,8 +28,8 @@ _forecasts_blurred = [] # For downstream combination with other forecasts
 blur_radii = [10, 15, 25, 35, 50, 70]
 
 # # Determined in Train.jl
-# blur_radius_f2  =
-# blur_radius_f17 =
+blur_radius_f2  = 15
+blur_radius_f17 = 50
 
 function forecasts()
   if isempty(_forecasts)
@@ -102,12 +102,12 @@ function reload_forecasts()
 
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
 
-  # grid = _forecasts[1].grid
+  grid = _forecasts[1].grid
 
-  # blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
-  # blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f17))
+  blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
+  blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f17))
 
-  # _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:17, blur_lo_grid_is, blur_hi_grid_is)
+  _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:17, blur_lo_grid_is, blur_hi_grid_is)
 
   ()
 end
