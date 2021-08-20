@@ -2,6 +2,8 @@
 #
 # Poor man's notebook.
 
+# Any number that is 1.6777216e7 has had addition round-off error
+
 import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
@@ -94,8 +96,8 @@ for bin_i in 1:length(bins_Σy)
 end
 
 # mean_y          mean_ŷ          Σweight         bin_max
-# 0.0019516714    0.0011239782    1.6777216e7     0.0010939918
-# 0.0019686848    0.002285054     1.6631918e7     0.005531816
+# 0.0019516714    0.0011239782    1.6777216e7     0.0010939918 # This line is wrong, addition underflow, but we aren't using this downstream so it's okay
+# 0.0019686848    0.002285054     1.6631918e7     0.005531816 # This line is likely wrong, addition underflow, but we aren't using this downstream so it's okay
 # 0.007366764     0.008583214     4.4447365e6     0.014440106
 # 0.018769274     0.020027727     1.744537e6      0.029168867
 # 0.039853472     0.038245406     821593.94       0.052170333

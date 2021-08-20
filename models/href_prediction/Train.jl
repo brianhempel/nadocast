@@ -2,6 +2,8 @@
 #
 # Poor man's notebook.
 
+# Any number that is 1.6777216e7 has had addition round-off error
+
 import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
@@ -46,10 +48,8 @@ weights = weights[sort_perm]
 total_positive_weight = sum(y .* weights)
 
 bin_count = 10 # 40 equal logloss bins
-# per_bin_logloss = total_logloss / bin_count
 per_bin_pos_weight = total_positive_weight / bin_count
 
-# bins = map(_ -> Int64[], 1:bin_count)
 bins_Σŷ      = map(_ -> 0.0f0, 1:bin_count)
 bins_Σy      = map(_ -> 0.0f0, 1:bin_count)
 bins_Σweight = map(_ -> 0.0f0, 1:bin_count)
@@ -93,7 +93,7 @@ for bin_i in 1:length(bins_Σy)
 end
 
 # mean_y          mean_ŷ          Σweight         bin_max
-# 0.00029822212   0.00021212027   1.6777216e7     0.00025319064
+# 0.00029822212   0.00021212027   1.6777216e7     0.00025319064 # This line is wrong, addition underflow, but we aren't using this downstream so it's okay
 # 0.0005505848    0.0005239283    9.087304e6      0.0011813934
 # 0.0016873586    0.0018542336    2.9650488e6     0.0030127245
 # 0.0037105107    0.0042123725    1.3484265e6     0.005960032
