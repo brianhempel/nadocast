@@ -194,7 +194,7 @@ function cache_forecasts(old_forecasts)
     end
 
     get_data() = begin
-      cache_lookup(_cached_data, 10_000_000_000, old_forecast) do
+      cache_lookup(_cached_data, 150_000_000_000, old_forecast) do
         Forecasts.data(old_forecast)
       end :: Array{Float32,2}
     end

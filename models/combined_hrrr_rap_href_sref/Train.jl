@@ -36,10 +36,13 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
-ForecastCombinators.turn_forecast_caching_on()
 @time Forecasts.data(validation_forecasts[100]); # make sure a forecast loads
-@time Forecasts.data(validation_forecasts[101]); # make sure caching helps
-@time Forecasts.data(validation_forecasts[102]); # make sure caching helps
+@time Forecasts.data(validation_forecasts[101]); # baseline load time
+ForecastCombinators.turn_forecast_caching_on()
+@time Forecasts.data(validation_forecasts[102]);
+@time Forecasts.data(validation_forecasts[103]); # make sure caching helps
+@time Forecasts.data(validation_forecasts[104]); # make sure caching helps
+@time Forecasts.data(validation_forecasts[105]); # make sure caching helps
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_separate");
 ForecastCombinators.clear_cached_forecasts()
