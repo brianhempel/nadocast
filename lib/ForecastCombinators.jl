@@ -147,7 +147,7 @@ function clear_cached_forecasts()
   GC.gc(true)
 end
 
-function cache_lookup(f, cache, forecast)
+function cache_lookup(f, cache, max_cache_size_bytes, forecast)
   if !_caching_on
     f()
   else
@@ -155,6 +155,14 @@ function cache_lookup(f, cache, forecast)
     if isnothing(i)
       out = f()
       push!(cache, (forecast, out))
+      cache_eviction_happened = false
+      while sum(sizeof.(last.(cache))) > max_cache_size_bytes
+        popfirst!(cache)
+        cache_eviction_happened = true
+      end
+      if cache_eviction_happened
+        println("$(length(cache)) cache entries after eviction")
+      end
       out
     else
       println("cache hit")
@@ -169,25 +177,26 @@ end
 function cache_forecasts(old_forecasts)
 
   # This keying scheme is...inadequate but works because we only use forecast caching for single hour featured engineered results (so three hour windows don't have to redo so much computation)
-  item_key_parts(forecast) =
-    [ "cached_forecasts"
-    , forecast.model_name
-    , string(forecast.run_year) * string(forecast.run_month)
-    , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day)
-    , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
-    ]
+  # item_key_parts(forecast) =
+  #   [ "cached_forecasts"
+  #   , base_key
+  #   , forecast.model_name
+  #   , string(forecast.run_year) * string(forecast.run_month)
+  #   , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day)
+  #   , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
+  #   ]
 
   map(old_forecasts) do old_forecast
     get_inventory() = begin
-      cache_lookup(_cached_inventories, old_forecast) do
+      cache_lookup(_cached_inventories, 10_000_000, old_forecast) do
         Forecasts.inventory(old_forecast)
-      end
+      end :: Vector{Inventories.InventoryLine}
     end
 
     get_data() = begin
-      cache_lookup(_cached_data, old_forecast) do
+      cache_lookup(_cached_data, 10_000_000_000, old_forecast) do
         Forecasts.data(old_forecast)
-      end
+      end :: Array{Float32,2}
     end
 
     revised_forecast(old_forecast, old_forecast.grid, get_inventory, get_data)

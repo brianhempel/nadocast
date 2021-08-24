@@ -24,8 +24,8 @@ length(validation_forecasts) #
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
-length(validation_forecasts) #
-
+# Only 10Z and 14Z HRRRs were downloaded, 2019-01-12 through 2020-10-17
+length(validation_forecasts) # 2636
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
@@ -35,6 +35,7 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
+@time Forecasts.data(validation_forecasts[100]); # make sure a forecast loads
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_separate");
 
