@@ -1,4 +1,3 @@
-# Output is a 2-feature forecast: layer 1 is the HREF-based prediction, layer 2 is the SREF-based prediction
 module CombinedHREFSREF
 
 import Dates
@@ -32,8 +31,8 @@ HOUR   = 60*MINUTE
 
 # Forecast run time is always the newer forecast.
 
-_forecasts_href_newer = []
-_forecasts_sref_newer = []
+_forecasts_href_newer = [] # Output is a 2-feature forecast: layer 1 is the HREF-based prediction, layer 2 is the SREF-based prediction
+_forecasts_sref_newer = [] # Output is a 2-feature forecast: layer 1 is the HREF-based prediction, layer 2 is the SREF-based prediction
 _forecasts_href_newer_combined = []
 _forecasts_sref_newer_combined = []
 
@@ -166,7 +165,7 @@ sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.2143207f0*logit(href_ŷ) + 0
 sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.851503f0*logit(href_ŷ) + 0.31797588f0*logit(sref_ŷ) + 1.0932944f0)
 
 
-day_bins_logistic_coeffs = Any[Float32[0.8790791, 0.17466258, 0.42071092], Float32[0.5856237, 0.17571865, -0.84646785], Float32[1.4197825, 0.00979548, 0.91951996], Float32[1.5459903, -0.15001805, 0.5937435], Float32[1.1762913, -0.5233394, -1.4415414]]
+day_bins_logistic_coeffs = Vector{Float32}[Float32[0.8790791, 0.17466258, 0.42071092], Float32[0.5856237, 0.17571865, -0.84646785], Float32[1.4197825, 0.00979548, 0.91951996], Float32[1.5459903, -0.15001805, 0.5937435], Float32[1.1762913, -0.5233394, -1.4415414]]
 
 day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[1][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[1][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[1][3])
 day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[2][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[2][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[2][3])

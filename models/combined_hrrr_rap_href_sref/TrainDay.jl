@@ -8,7 +8,7 @@ import LogisticRegression
 using Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import CombinedHREFSREF
+import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
@@ -17,11 +17,11 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-# forecasts_0z = filter(forecast -> forecast.run_hour == 0, CombinedHREFSREF.forecasts_href_newer());
+# forecasts_0z = filter(forecast -> forecast.run_hour == 0, CombinedHRRRRAPHREFSREF.forecasts_href_newer());
 
 # (train_forecasts_0z, validation_forecasts_0z, _) = TrainingShared.forecasts_train_validation_test(forecasts_0z);
-# (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer());
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
+# (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_href_newer());
+(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
 length(validation_forecasts) # 903
 
@@ -90,7 +90,7 @@ PlotMap.plot_debug_map("july11_0z_day_accs_2", july11.grid, july11_data[:,2]);
 # scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_accs_1.pdf ./
 # scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_accs_2.pdf ./
 
-(_, all_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
+(_, all_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
 length(all_validation_forecasts) # 903
 
@@ -359,7 +359,7 @@ import LogisticRegression
 using Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import CombinedHREFSREF
+import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
@@ -368,7 +368,7 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day(); just_hours_near_storm_events = false);
+(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day(); just_hours_near_storm_events = false);
 
 length(day_validation_forecasts)
 # 903

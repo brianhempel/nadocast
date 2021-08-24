@@ -272,6 +272,7 @@ import Forecasts
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_blurred);
 validation_forecasts_blurred = filter(forecast -> forecast.forecast_hour in 2:17, validation_forecasts_blurred);
+validation_forecasts_blurred = filter(forecast -> forecast.run_hour in [8,9,10,12,13,14], validation_forecasts_blurred);
 
 # Make sure a forecast loads
 Forecasts.data(validation_forecasts_blurred[100])
