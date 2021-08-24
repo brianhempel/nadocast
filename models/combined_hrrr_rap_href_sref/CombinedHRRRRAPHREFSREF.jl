@@ -19,6 +19,12 @@ import FeatureEngineeringShared
 push!(LOAD_PATH, (@__DIR__) * "/../href_mid_2018_forward")
 import HREF
 
+push!(LOAD_PATH, (@__DIR__) * "/../hrrr_prediction")
+import HRRRPrediction
+
+push!(LOAD_PATH, (@__DIR__) * "/../rap_prediction")
+import RAPPrediction
+
 push!(LOAD_PATH, (@__DIR__) * "/../href_prediction")
 import HREFPrediction
 
