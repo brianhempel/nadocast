@@ -131,7 +131,7 @@ _cached_data        = Tuple{Forecasts.Forecast,Array{Float32,2}}[]
 
 function turn_forecast_caching_on()
   global _caching_on
-  _caching_on = false
+  _caching_on = true
 end
 
 function turn_forecast_caching_off()

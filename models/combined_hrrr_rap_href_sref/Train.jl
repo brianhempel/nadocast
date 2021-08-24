@@ -11,6 +11,7 @@ import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import ForecastCombinators
 
 # forecasts_0z = filter(forecast -> forecast.run_hour == 0, CombinedHRRRRAPHREFSREF.forecasts_href_newer());
 
@@ -18,7 +19,7 @@ import Forecasts
 # (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_href_newer());
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_separate(); just_hours_near_storm_events = false);
 
-length(validation_forecasts) #
+length(validation_forecasts) # 2933
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
@@ -35,10 +36,13 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
+ForecastCombinators.turn_forecast_caching_on()
 @time Forecasts.data(validation_forecasts[100]); # make sure a forecast loads
+@time Forecasts.data(validation_forecasts[101]); # make sure caching helps
+@time Forecasts.data(validation_forecasts[102]); # make sure caching helps
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_separate");
-
+ForecastCombinators.clear_cached_forecasts()
 
 Metrics.roc_auc((@view X[:,1]), y, weights) # HRRR-0
 Metrics.roc_auc((@view X[:,2]), y, weights) # HRRR-1
