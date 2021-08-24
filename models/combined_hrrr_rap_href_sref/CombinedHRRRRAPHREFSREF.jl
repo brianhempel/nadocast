@@ -203,7 +203,7 @@ function reload_forecasts()
       # HREF -1:35
 
       # START HERE
-      function latest_in_last_6_hours(run_time_seconds_to_forecasts, run_time_seconds)
+      function latest_within_6_hours(run_time_seconds_to_forecasts, run_time_seconds)
         for hour in 0:5
           latest_forecasts = get(run_time_seconds_to_forecasts, run_time_seconds - hour*HOUR, Forecasts.Forecast[])
           if length(latest_forecasts) > 0
@@ -219,8 +219,8 @@ function reload_forecasts()
       raps_for_run_time_minus0  = get(run_time_seconds_to_rap_forecasts,  run_time_seconds - 0*HOUR, Forecasts.Forecast[])
       raps_for_run_time_minus1  = get(run_time_seconds_to_rap_forecasts,  run_time_seconds - 1*HOUR, Forecasts.Forecast[])
       raps_for_run_time_minus2  = get(run_time_seconds_to_rap_forecasts,  run_time_seconds - 2*HOUR, Forecasts.Forecast[])
-      hrefs_for_run_time = latest_in_last_6_hours(run_time_seconds_to_href_forecasts, run_time_seconds - 2*HOUR)
-      srefs_for_run_time = latest_in_last_6_hours(run_time_seconds_to_sref_forecasts, run_time_seconds - 3*HOUR)
+      hrefs_for_run_time = latest_within_6_hours(run_time_seconds_to_href_forecasts, run_time_seconds - 2*HOUR)
+      srefs_for_run_time = latest_within_6_hours(run_time_seconds_to_sref_forecasts, run_time_seconds - 3*HOUR)
 
 
       for forecast_hour in 0:18 # 2:15 in practice
@@ -247,7 +247,7 @@ function reload_forecasts()
 
         # If all perhapses are length 1
         if all(length.(tuple) .== 1)
-          push!(associated_forecasts, tuple)
+          push!(associated_forecasts, first.(tuple))
         end
       end
     end
