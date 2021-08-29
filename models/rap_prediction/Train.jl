@@ -280,4 +280,5 @@ Forecasts.data(validation_forecasts_blurred[100])
 X2, y2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred");
 
 Float32(Metrics.roc_auc((@view X2[:,1]), y2, weights2)) # Expected: 0.98625195
-# ...
+# 0.98625195f0
+
