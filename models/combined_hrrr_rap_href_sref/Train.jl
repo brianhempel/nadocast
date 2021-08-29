@@ -36,25 +36,34 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
-@time Forecasts.data(validation_forecasts[100]); # make sure a forecast loads
-@time Forecasts.data(validation_forecasts[101]); # baseline load time
+# @time Forecasts.data(validation_forecasts[100]); # make sure a forecast loads
+# @time Forecasts.data(validation_forecasts[101]); # baseline load time
 ForecastCombinators.turn_forecast_caching_on()
-@time Forecasts.data(validation_forecasts[102]);
-@time Forecasts.data(validation_forecasts[103]); # make sure caching helps
-@time Forecasts.data(validation_forecasts[104]); # make sure caching helps
-@time Forecasts.data(validation_forecasts[105]); # make sure caching helps
+@time Forecasts.data(validation_forecasts[1]); # 87462×8 Array{Float32,2}
+# @time Forecasts.data(validation_forecasts[102]);
+# @time Forecasts.data(validation_forecasts[103]); # make sure caching helps
+# @time Forecasts.data(validation_forecasts[104]); # make sure caching helps
+# @time Forecasts.data(validation_forecasts[105]); # make sure caching helps
 
+ForecastCombinators.turn_forecast_caching_on()
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_separate");
 ForecastCombinators.clear_cached_forecasts()
 
-Metrics.roc_auc((@view X[:,1]), y, weights) # HRRR-0
-Metrics.roc_auc((@view X[:,2]), y, weights) # HRRR-1
-Metrics.roc_auc((@view X[:,3]), y, weights) # HRRR-2
-Metrics.roc_auc((@view X[:,4]), y, weights) # RAP-0
-Metrics.roc_auc((@view X[:,5]), y, weights) # RAP-1
-Metrics.roc_auc((@view X[:,6]), y, weights) # RAP-2
-Metrics.roc_auc((@view X[:,7]), y, weights) # HREF
-Metrics.roc_auc((@view X[:,8]), y, weights) # SREF
+Metrics.roc_auc((@view X[:,1]), y, weights) # HRRR-0 # 0.9814505780075439
+Metrics.roc_auc((@view X[:,2]), y, weights) # HRRR-1 # 0.9806793021079172
+Metrics.roc_auc((@view X[:,3]), y, weights) # HRRR-2 # 0.9798568458863672
+Metrics.roc_auc((@view X[:,4]), y, weights) # RAP-0  # 0.9803516889213414
+Metrics.roc_auc((@view X[:,5]), y, weights) # RAP-1  # 0.9793563661736295
+Metrics.roc_auc((@view X[:,6]), y, weights) # RAP-2  # 0.9784186738340481
+Metrics.roc_auc((@view X[:,7]), y, weights) # HREF   # 0.9796398968079756
+Metrics.roc_auc((@view X[:,8]), y, weights) # SREF   # 0.97422052207036
+
+Metrics.roc_auc((@view X[:,1]) .+ (@view X[:,2]) .+ (@view X[:,3]) .+ (@view X[:,4]) .+ (@view X[:,5]) .+ (@view X[:,6]) .+ (@view X[:,7]) .+ (@view X[:,8]), y, weights)
+# 0.9809890672836681
+
+Metrics.roc_auc((@view X[:,1]) .* (@view X[:,2]) .* (@view X[:,3]) .* (@view X[:,4]) .* (@view X[:,5]) .* (@view X[:,6]) .* (@view X[:,7]) .* (@view X[:,8]), y, weights)
+# 0.9814265002781438
+
 
 
 # 3. bin predictions into 6 bins of equal weight of positive labels
@@ -67,10 +76,10 @@ y       = y[sort_perm];
 ŷ       = ŷ[sort_perm];
 weights = weights[sort_perm];
 
-total_positive_weight = sum(y .* weights) #
+total_positive_weight = sum(y .* weights) # 11478.343f0
 
 bin_count = 6
-per_bin_pos_weight = total_positive_weight / bin_count #
+per_bin_pos_weight = total_positive_weight / bin_count # 1913.0571f0
 
 bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
 bins_Σy      = map(_ -> 0.0, 1:bin_count)
@@ -96,6 +105,7 @@ end
 
 println("bins_max = ")
 println(bins_max)
+# Float32[0.0010772932, 0.0056677116, 0.016188348, 0.03184764, 0.05504267, 1.0]
 
 println("mean_y\tmean_ŷ\tΣweight\tbin_max")
 for bin_i in 1:bin_count
@@ -110,6 +120,12 @@ for bin_i in 1:bin_count
 end
 
 # mean_y  mean_ŷ  Σweight bin_max
+# 2.23751317246056e-5     2.0173983911533358e-5   8.552338460757327e7     0.0010772932
+# 0.0018904718660167287   0.0024668729488375937   1.0120553528988361e6    0.0056677116
+# 0.006664794986525737    0.009440528929746525    287185.4086174965       0.016188348
+# 0.0195033080276471      0.022474489491229273    98094.33709013462       0.03184764
+# 0.04006907385241231     0.04123673880165891     47751.739669561386      0.05504267
+# 0.06591080555584303     0.0883819969908915      28992.478892087936      1.0
 
 
 # 4. combine bin-pairs (overlapping, 9 bins total)
@@ -131,34 +147,43 @@ for bin_i in 1:(bin_count - 1)
   bin_weight  = Float32(bins_Σweight[bin_i] + bins_Σweight[bin_i+1])
 
   println("Bin $bin_i-$(bin_i+1) --------")
-  println("$(bin_min) < HREF_ŷ <= $(bin_max)")
+  println("$(bin_min) < HRRRminus0_ŷ <= $(bin_max)")
   println("Data count: $(length(bin_y))")
   println("Positive count: $(sum(bin_y))")
   println("Weight: $(bin_weight)")
-  println("Mean HREF_ŷ: $(sum((@view bin_X[:,1]) .* bin_weights) / bin_weight)")
-  println("Mean SREF_ŷ: $(sum((@view bin_X[:,2]) .* bin_weights) / bin_weight)")
-  println("Mean y:      $(sum(bin_y .* bin_weights) / bin_weight)")
-  println("HREF logloss: $(sum(logloss.(bin_y, (@view bin_X[:,1])) .* bin_weights) / bin_weight)")
-  println("SREF logloss: $(sum(logloss.(bin_y, (@view bin_X[:,2])) .* bin_weights) / bin_weight)")
-  println("HREF AUC: $(Metrics.roc_auc((@view bin_X[:,1]), bin_y, bin_weights))")
-  println("SREF AUC: $(Metrics.roc_auc((@view bin_X[:,2]), bin_y, bin_weights))")
-  println("0.98*HREF+0.02*SREF AUC: $(Metrics.roc_auc(0.98f0 .* bin_X[:,1] .+ 0.02f0 .* bin_X[:,2], bin_y, bin_weights))")
+  println("Mean HRRRminus0_ŷ: $(sum((@view bin_X[:,1]) .* bin_weights) / bin_weight)")
+  println("Mean HRRRminus1_ŷ: $(sum((@view bin_X[:,2]) .* bin_weights) / bin_weight)")
+  println("Mean HRRRminus2_ŷ: $(sum((@view bin_X[:,3]) .* bin_weights) / bin_weight)")
+  println("Mean RAPminus0_ŷ:  $(sum((@view bin_X[:,4]) .* bin_weights) / bin_weight)")
+  println("Mean RAPminus1_ŷ:  $(sum((@view bin_X[:,5]) .* bin_weights) / bin_weight)")
+  println("Mean RAPminus2_ŷ:  $(sum((@view bin_X[:,6]) .* bin_weights) / bin_weight)")
+  println("Mean HREF_ŷ:       $(sum((@view bin_X[:,7]) .* bin_weights) / bin_weight)")
+  println("Mean SREF_ŷ:       $(sum((@view bin_X[:,8]) .* bin_weights) / bin_weight)")
+  println("Mean y:            $(sum(bin_y .* bin_weights) / bin_weight)")
+  println("HRRRminus0 logloss: $(sum(logloss.(bin_y, (@view bin_X[:,1])) .* bin_weights) / bin_weight)")
+  println("HRRRminus1 logloss: $(sum(logloss.(bin_y, (@view bin_X[:,2])) .* bin_weights) / bin_weight)")
+  println("HRRRminus2 logloss: $(sum(logloss.(bin_y, (@view bin_X[:,3])) .* bin_weights) / bin_weight)")
+  println("RAPminus0 logloss:  $(sum(logloss.(bin_y, (@view bin_X[:,4])) .* bin_weights) / bin_weight)")
+  println("RAPminus1 logloss:  $(sum(logloss.(bin_y, (@view bin_X[:,5])) .* bin_weights) / bin_weight)")
+  println("RAPminus2 logloss:  $(sum(logloss.(bin_y, (@view bin_X[:,6])) .* bin_weights) / bin_weight)")
+  println("HREF logloss:       $(sum(logloss.(bin_y, (@view bin_X[:,7])) .* bin_weights) / bin_weight)")
+  println("SREF logloss:       $(sum(logloss.(bin_y, (@view bin_X[:,8])) .* bin_weights) / bin_weight)")
+  println("HRRRminus0 AUC: $(Metrics.roc_auc((@view bin_X[:,1]), bin_y, bin_weights))")
+  println("HRRRminus1 AUC: $(Metrics.roc_auc((@view bin_X[:,2]), bin_y, bin_weights))")
+  println("HRRRminus2 AUC: $(Metrics.roc_auc((@view bin_X[:,3]), bin_y, bin_weights))")
+  println("RAPminus0 AUC:  $(Metrics.roc_auc((@view bin_X[:,4]), bin_y, bin_weights))")
+  println("RAPminus1 AUC:  $(Metrics.roc_auc((@view bin_X[:,5]), bin_y, bin_weights))")
+  println("RAPminus2 AUC:  $(Metrics.roc_auc((@view bin_X[:,6]), bin_y, bin_weights))")
+  println("HREF AUC:       $(Metrics.roc_auc((@view bin_X[:,7]), bin_y, bin_weights))")
+  println("SREF AUC:       $(Metrics.roc_auc((@view bin_X[:,8]), bin_y, bin_weights))")
 
-  # logit(HREF), logit(SREF), HREF*SREF, logit(HREF*SREF), max(logit(HREF),logit(SREF)), min(logit(HREF),logit(SREF))
-  bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
+  # bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
+  bin_X_features = bin_X
 
-  Threads.@threads for i in 1:length(bin_y)
-    logit_href = logit(bin_X[i,1])
-    logit_sref = logit(bin_X[i,2])
-
-    bin_X_features[i,1] = logit_href
-    bin_X_features[i,2] = logit_sref
-    # bin_X_features[i,3] = bin_X[i,1]*bin_X[i,2]
-    # bin_X_features[i,3] = logit(bin_X[i,1]*bin_X[i,2])
-    # bin_X_features[i,4] = logit(bin_X[i,1]*bin_X[i,2])
-    # bin_X_features[i,5] = max(logit_href, logit_sref)
-    # bin_X_features[i,6] = min(logit_href, logit_sref)
-  end
+  # Threads.@threads for i in 1:length(bin_y)
+  #   bin_X_features[i,1] = logit(bin_X[i,1])
+  #   bin_X_features[i,2] = logit(bin_X[i,2])
+  # end
 
   coeffs = LogisticRegression.fit(bin_X_features, bin_y, bin_weights; iteration_count = 300)
 
@@ -173,91 +198,11 @@ for bin_i in 1:(bin_count - 1)
   push!(bins_logistic_coeffs, coeffs)
 end
 
-# Bin 1-2 --------
-# -1.0 < HREF_ŷ <= 0.0040673064
-# Data count: 447858428
-# Positive count: 14999.0
-# Weight: 4.0973098e8
-# Mean HREF_ŷ: 3.4845303e-5
-# Mean SREF_ŷ: 5.346712e-5
-# Mean y:      3.3859917e-5
-# HREF logloss: 0.00029107
-# SREF logloss: 0.00031317156
-# HREF AUC: 0.957299691712132
-# SREF AUC: 0.9474509456092955
-# 0.98*HREF+0.02*SREF AUC: 0.9574794268903781
-# Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
-# Mean logistic_ŷ: 3.3859917e-5
-# Logistic logloss: 0.00028985497
-# Logistic AUC: 0.9576177024448136
-# Bin 2-3 --------
-# 0.000962529 < HREF_ŷ <= 0.009957244
-# Data count: 5529664
-# Positive count: 14787.0
-# Weight: 5.165166e6
-# Mean HREF_ŷ: 0.003022293
-# Mean SREF_ŷ: 0.0028288637
-# Mean y:      0.002685964
-# HREF logloss: 0.01803897
-# SREF logloss: 0.019109778
-# HREF AUC: 0.6781641448257744
-# SREF AUC: 0.6270299202849181
-# 0.98*HREF+0.02*SREF AUC: 0.6790409071908659
-# Fit logistic coefficients: Float32[0.84564245, 0.14841641, -0.06817224]
-# Mean logistic_ŷ: 0.0026859634
-# Logistic logloss: 0.017981809
-# Logistic AUC: 0.683341801973895
-# Bin 3-4 --------
-# 0.0040673064 < HREF_ŷ <= 0.020302918
-# Data count: 1906594
-# Positive count: 14632.0
-# Weight: 1.7973519e6
-# Mean HREF_ŷ: 0.0086446665
-# Mean SREF_ŷ: 0.006166528
-# Mean y:      0.0077191084
-# HREF logloss: 0.044290453
-# SREF logloss: 0.046770364
-# HREF AUC: 0.6450960668830347
-# SREF AUC: 0.5935822709669953
-# 0.98*HREF+0.02*SREF AUC: 0.6460015914750974
-# Fit logistic coefficients: Float32[0.9977281, 0.14388186, 0.64254296]
-# Mean logistic_ŷ: 0.0077191065
-# Logistic logloss: 0.044153214
-# Logistic AUC: 0.6511050423058052
-# Bin 4-5 --------
-# 0.009957244 < HREF_ŷ <= 0.037081156
-# Data count: 798447
-# Positive count: 14562.0
-# Weight: 758995.8
-# Mean HREF_ŷ: 0.017450947
-# Mean SREF_ŷ: 0.010616818
-# Mean y:      0.018280266
-# HREF logloss: 0.08886718
-# SREF logloss: 0.096353196
-# HREF AUC: 0.6535971012169608
-# SREF AUC: 0.5730014427563903
-# 0.98*HREF+0.02*SREF AUC: 0.653592212160162
-# Fit logistic coefficients: Float32[1.3795987, 0.091625534, 1.9759048]
-# Mean logistic_ŷ: 0.018280266
-# Logistic logloss: 0.0885154
-# Logistic AUC: 0.6553196275557029
-# Bin 5-6 --------
-# 0.020302918 < HREF_ŷ <= 1.0
-# Data count: 310018
-# Positive count: 14462.0
-# Weight: 297127.22
-# Mean HREF_ŷ: 0.03484623
-# Mean SREF_ŷ: 0.019427333
-# Mean y:      0.046684507
-# HREF logloss: 0.1849636
-# SREF logloss: 0.20539832
-# HREF AUC: 0.6429831812856853
-# SREF AUC: 0.602931863588318
-# 0.98*HREF+0.02*SREF AUC: 0.6433563836083285
-# Fit logistic coefficients: Float32[0.9358031, 0.1812378, 0.836498]
-# Mean logistic_ŷ: 0.046684515
-# Logistic logloss: 0.1825411
-# Logistic AUC: 0.6446689518090329
+coeffs = LogisticRegression.fit(X, y, weights; iteration_count = 300)
+println("Fit logistic coefficients: $(coeffs)")
+
+
+
 
 
 # 6. prediction is weighted mean of the two overlapping logistic models

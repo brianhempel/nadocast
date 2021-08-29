@@ -67,7 +67,7 @@ function Σdloss_bs_Σloss_hessian(X, y, weights, bs, iis)
   (Σdloss_bs, Σloss_hessian)
 end
 
-function fit(X, y, weights; iteration_count = 30)
+function fit(X, y, weights; iteration_count = 30, l2_regularization = 0.0)
   total_weight = sum(Float64.(weights))
 
   feature_count = size(X, 2) + 1
@@ -75,6 +75,8 @@ function fit(X, y, weights; iteration_count = 30)
   diagonalizer = LinearAlgebra.diagm(ones(Float64, feature_count))
 
   converged = false
+
+  l2_reg_hessian = LinearAlgebra.diagm(ones(Float64, feature_count) .* l2_regularization)
 
   # println(bs)
   # println(total_logloss(X, bs, y, weights))
@@ -92,6 +94,10 @@ function fit(X, y, weights; iteration_count = 30)
     for j in 1:feature_count
       loss_hessian[j,j] += ε
     end
+
+    # https://stats.stackexchange.com/a/156719
+    dloss_vec    .+= l2_regularization .* bs
+    loss_hessian .+= l2_reg_hessian
 
     step =
       try
@@ -115,7 +121,8 @@ function fit(X, y, weights; iteration_count = 30)
 
     # bs -= dloss_vec * 0.2
     bs -= Float32.(step)
-    # println(bs)
+    print("$bs\r")
+    flush(stdout)
     # println(total_logloss(X, bs, y, weights))
 
     if (sum(abs.(step)) / length(step) < 1e-5 && sum(abs.(dloss_vec)) / length(dloss_vec) < 1e-5)
@@ -123,6 +130,7 @@ function fit(X, y, weights; iteration_count = 30)
       break
     end
   end
+  println("")
 
   if !converged
     println("No convergence.")
