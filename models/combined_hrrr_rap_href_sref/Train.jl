@@ -442,7 +442,7 @@ length(combined_validation_forecasts) # Expected:
 Forecasts.data(combined_validation_forecasts[100])
 
 
-X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "combined_validation_forecasts_href_newer");
+X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "combined_validation_forecasts");
 
 
 ŷ = X[:,1];
