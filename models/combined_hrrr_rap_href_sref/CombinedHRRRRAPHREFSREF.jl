@@ -273,7 +273,7 @@ function reload_forecasts()
       coeffs = bins_logistic_coeffs[low_bin_i]
       logit_out = last(coeffs) # Constant term
       for coeff_i in 1:length(ŷs_i)
-        logit_out += coeffs[b_i] * logit(ŷs_i[coeff_i])
+        logit_out += coeffs[coeff_i] * logit(ŷs_i[coeff_i])
       end
       σ(logit_out)
     end
