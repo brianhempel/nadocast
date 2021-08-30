@@ -16,8 +16,11 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 import Conus
 import Forecasts
+import Grids
 import PlotMap
 import StormEvents
+import ForecastCombinators
+
 
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
