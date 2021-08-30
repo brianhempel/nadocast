@@ -43,7 +43,7 @@ length(spc_test_forecasts) #
 
 (_, _, test_forecasts) =
   TrainingShared.forecasts_train_validation_test(
-    ForecastCombinators.resample_forecasts(CombinedHREFSREF.forecasts_day_spc_calibrated(), Grids.get_interpolating_upsampler, GRID);
+    ForecastCombinators.resample_forecasts(CombinedHREFSREF.forecasts_day_spc_calibrated(), Grids.get_upsampler, GRID);
     just_hours_near_storm_events = false
   );
 
