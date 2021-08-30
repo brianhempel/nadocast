@@ -270,10 +270,36 @@ function conus_lines_href_5k_native_proj()
   Float32.(Gray.(PNGFiles.load("lib/conus_lines_href_5k_native_proj.png")))
 end
 
+# Hashed
+function shade_forecast_labels(labels, img)
+  orig_h, orig_w = size(img)
+  labels = permutedims(reshape(labels, (orig_w, orig_h)))
+  # Now flip vertically
+  for j in 1:(grid.height ÷ 2)
+    row = labels[j,:]
+    labels[j,:] = labels[grid.height - j + 1,:]
+    labels[grid.height - j + 1,:] = row
+  end
+
+  out = deepcopy(img)
+
+  for i in 1:size(img,1)
+    for j in 1:size(img,2)
+      if mod(i + j, 2) == 0 && labels[i,j] > 0.5
+        out[i,j] .* 0f0
+      end
+    end
+  end
+
+  out
+end
+
 function add_conus_lines_href_5k_native_proj_80_pct(img)
   lines = 0.2f0 .+ 0.8f0 .* conus_lines_href_5k_native_proj()
   img .* lines
 end
+
+# PlotMap.plot_fast(base_path, grid, vals; val_to_color=PlotMap.prob_to_spc_color, post_process=PlotMap.add_conus_lines_href_5k_native_proj_80_pct)
 
 function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=identity)
   # Awww yeah rotation.
