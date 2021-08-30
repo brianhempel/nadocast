@@ -275,10 +275,10 @@ function shade_forecast_labels(labels, img)
   orig_h, orig_w = size(img)
   labels = permutedims(reshape(labels, (orig_w, orig_h)))
   # Now flip vertically
-  for j in 1:(grid.height ÷ 2)
+  for j in 1:(orig_h ÷ 2)
     row = labels[j,:]
-    labels[j,:] = labels[grid.height - j + 1,:]
-    labels[grid.height - j + 1,:] = row
+    labels[j,:] = labels[orig_h - j + 1,:]
+    labels[orig_h - j + 1,:] = row
   end
 
   out = deepcopy(img)
