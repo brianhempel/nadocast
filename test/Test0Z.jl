@@ -90,7 +90,7 @@ end
 using ColorVectorSpace # for color math
 
 
-open("test_0z.csv", "w") do csv
+open((@__DIR__) * "/test_0z.csv", "w") do csv
 
   headers = ["yymmdd", "spc", "nadocast"]
 
