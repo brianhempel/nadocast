@@ -267,7 +267,7 @@ function prob_to_spc_color(p)
 end
 
 function conus_lines_href_5k_native_proj()
-  Float32.(Gray.(PNGFiles.load((@__DIR__) * "/conus_lines_href_5k_native_proj.png")))
+  Float32.(Gray.(PNGFiles.load((@__DIR__) * "/conus_lines_href_5k_native_cropped_proj.png")))
 end
 
 # Hashed
