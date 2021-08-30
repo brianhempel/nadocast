@@ -25,8 +25,8 @@ import ForecastCombinators
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-GRID       = Conus.href_cropped_5km_grid
-CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid
+GRID       = Conus.href_cropped_5km_grid;
+CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
