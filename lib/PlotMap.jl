@@ -4,6 +4,9 @@ import Dates
 import TimeZones
 import DelimitedFiles
 
+import PNGFiles
+import PNGFiles.ImageCore.ColorTypes
+
 push!(LOAD_PATH, @__DIR__)
 import Grids
 
@@ -235,6 +238,53 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
   # catch
   # end
   ()
+end
+
+using PNGFiles.ImageCore.ColorTypes
+using PNGFiles.ImageCore.ColorTypes.FixedPointNumbers
+using ColorVectorSpace
+
+spc_colors =
+  [ (0.0,  RGB{N0f8}(1,1,1))
+  , (0.02, RGB{N0f8}(0.067,0.541,0.078))
+  , (0.05, RGB{N0f8}(0.541,0.278,0.165))
+  , (0.1,  RGB{N0f8}(0.996,0.780,0.180))
+  , (0.15, RGB{N0f8}(0.988,0.051,0.106))
+  , (0.30, RGB{N0f8}(0.988,0.157,0.988))
+  , (0.45, RGB{N0f8}(0.565,0.224,0.918))
+  , (0.60, RGB{N0f8}(0.082,0.310,0.537))
+  ]
+
+function prob_to_spc_color(p)
+  _, color = spc_colors[1]
+  for (threshold, next_color) in spc_colors
+    if p < threshold
+      return color
+    end
+    color = next_color
+  end
+  return color
+end
+
+function conus_lines_href_5k_native_proj()
+  Float32.(Gray.(PNGFiles.load("lib/conus_lines_href_5k_native_proj.png")))
+end
+
+function add_conus_lines_href_5k_native_proj_80_pct(img)
+  lines = 0.2f0 .+ 0.8f0 .* conus_lines_href_5k_native_proj()
+  img .* lines
+end
+
+function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=identity)
+  # Awww yeah rotation.
+  vals = permutedims(reshape(vals, (grid.width, grid.height)))
+  # Now flip vertically
+  for j in 1:(grid.height ÷ 2)
+    row = vals[j,:]
+    vals[j,:] = vals[grid.height - j + 1,:]
+    vals[grid.height - j + 1,:] = row
+  end
+  PNGFiles.save("$base_path.png", post_process(val_to_color.(vals)))
 end
 
 end # module PlotMap
