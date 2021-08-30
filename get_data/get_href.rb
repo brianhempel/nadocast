@@ -946,7 +946,7 @@ require "date"
 TYPES          = ["mean", "prob"]
 YMDS           = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [00, 06, 12, 18]
-FORECAST_HOURS = (01..36).to_a
+FORECAST_HOURS = (01..48).to_a
 BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/href"
 BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/href"
 MIN_FILE_BYTES = 20_000_000
