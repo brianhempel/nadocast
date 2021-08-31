@@ -77,12 +77,12 @@ compute_forecast_labels(spc_forecast) = begin
 end
 
 
-function forecast_stats(data, threshold)
+function forecast_stats(data, labels, threshold)
   painted   = ((@view data[:,1]) .>= threshold*0.9999) .* CONUS_MASK
   unpainted = ((@view data[:,1]) .<  threshold*0.9999) .* CONUS_MASK
   painted_area        = sum(GRID.point_areas_sq_miles[painted])
-  true_positive_area  = sum(GRID.point_areas_sq_miles[painted   .* forecast_labels])
-  false_negative_area = sum(GRID.point_areas_sq_miles[unpainted .* forecast_labels])
+  true_positive_area  = sum(GRID.point_areas_sq_miles[painted   .* labels])
+  false_negative_area = sum(GRID.point_areas_sq_miles[unpainted .* labels])
   (painted_area, true_positive_area, false_negative_area)
 end
 
@@ -124,8 +124,8 @@ open((@__DIR__) * "/test_0z.csv", "w") do csv
     row = [Forecasts.yyyymmdd(spc_forecast), Forecasts.time_title(spc_forecast), Forecasts.time_title(test_forecast)]
 
     for threshold in SPCOutlooks.thresholds
-      (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area)  = forecast_stats(spc_data, threshold)
-      (test_painted_area, test_true_positive_area, test_false_negative_area) = forecast_stats(test_data, threshold)
+      (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area)  = forecast_stats(spc_data,  forecast_labels, threshold)
+      (test_painted_area, test_true_positive_area, test_false_negative_area) = forecast_stats(test_data, forecast_labels, threshold)
 
       row = vcat(row, [spc_painted_area,  spc_true_positive_area,  spc_false_negative_area])
       row = vcat(row, [test_painted_area, test_true_positive_area, test_false_negative_area])
