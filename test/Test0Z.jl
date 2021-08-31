@@ -32,13 +32,13 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 
 (_, _, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
 
-length(spc_test_forecasts) # 94
+length(spc_test_forecasts) #
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2020, 11, 1, 0)
+cutoff = Dates.DateTime(2021, 6, 1, 0)
 spc_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, spc_test_forecasts);
 
-length(spc_test_forecasts) # 94
+length(spc_test_forecasts) #
 
 
 (_, _, test_forecasts) =
@@ -50,10 +50,8 @@ length(spc_test_forecasts) # 94
 length(test_forecasts) # 928
 test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
 length(test_forecasts) # 116
-# We don't have storm events past this time.
-cutoff = Dates.DateTime(2020, 11, 1, 0)
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-length(test_forecasts) # 92
+length(test_forecasts) #
 
 
 compute_forecast_labels(spc_forecast) = begin
