@@ -19,6 +19,8 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
+# Run below uses outlooks from 2019-01-7 through 2020-10-31
+
 forecasts_day = vcat(SPCOutlooks.forecasts_day_0600(), SPCOutlooks.forecasts_day_1300(), SPCOutlooks.forecasts_day_1630());
 
 (training_forecasts, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(forecasts_day; just_hours_near_storm_events = false);
