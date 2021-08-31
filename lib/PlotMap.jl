@@ -310,7 +310,7 @@ function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=identi
     vals[j,:] = vals[grid.height - j + 1,:]
     vals[grid.height - j + 1,:] = row
   end
-  PNGFiles.save("$base_path.png", post_process(val_to_color.(vals)))
+  PNGFiles.save("$base_path.png", post_process(val_to_color.(vals)); compression_level = 9)
 end
 
 end # module PlotMap
