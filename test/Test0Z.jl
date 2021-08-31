@@ -118,8 +118,8 @@ open((@__DIR__) * "/test_0z.csv", "w") do csv
 
     post_process(img) = PlotMap.shade_forecast_labels(forecast_labels, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img))
 
-    PlotMap.plot_fast(map_root * "/spc_day_1_$(Forecasts.yyyymmdd_thhz(spc_forecast))", GRID, spc_data;  val_to_color=PlotMap.prob_to_spc_color, post_process=post_process)
-    PlotMap.plot_fast(map_root * "/nadocast_$(Forecasts.yyyymmdd_thhz(test_forecast))", GRID, test_data; val_to_color=PlotMap.prob_to_spc_color, post_process=post_process)
+    PlotMap.plot_fast(map_root * "/spc_day_1_$(Forecasts.yyyymmdd_thhz(spc_forecast))", GRID, spc_data  .* CONUS_MASK; val_to_color=PlotMap.prob_to_spc_color, post_process=post_process)
+    PlotMap.plot_fast(map_root * "/nadocast_$(Forecasts.yyyymmdd_thhz(test_forecast))", GRID, test_data .* CONUS_MASK; val_to_color=PlotMap.prob_to_spc_color, post_process=post_process)
 
     row = [Forecasts.yyyymmdd(spc_forecast), Forecasts.time_title(spc_forecast), Forecasts.time_title(test_forecast)]
 
@@ -136,3 +136,5 @@ open((@__DIR__) * "/test_0z.csv", "w") do csv
   end
 
 end
+
+# scp -r nadocaster2:/home/brian/nadocast_dev/test/ ./
