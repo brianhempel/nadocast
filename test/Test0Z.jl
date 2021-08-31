@@ -78,8 +78,8 @@ end
 
 
 function forecast_stats(data, threshold)
-  painted   = ((@view data[:,1]) .>= threshold*0.999) .* CONUS_MASK
-  unpainted = ((@view data[:,1]) .<  threshold*0.999) .* CONUS_MASK
+  painted   = ((@view data[:,1]) .>= threshold*0.9999) .* CONUS_MASK
+  unpainted = ((@view data[:,1]) .<  threshold*0.9999) .* CONUS_MASK
   painted_area        = sum(GRID.point_areas_sq_miles[painted])
   true_positive_area  = sum(GRID.point_areas_sq_miles[painted   .* forecast_labels])
   false_negative_area = sum(GRID.point_areas_sq_miles[unpainted .* forecast_labels])

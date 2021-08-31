@@ -258,7 +258,7 @@ spc_colors =
 function prob_to_spc_color(p)
   _, color = spc_colors[1]
   for (threshold, next_color) in spc_colors
-    if p < threshold
+    if p < threshold*0.9999
       return color
     end
     color = next_color
@@ -286,7 +286,7 @@ function shade_forecast_labels(labels, img)
   for i in 1:size(img,1)
     for j in 1:size(img,2)
       if mod(i + j, 2) == 0 && labels[i,j] > 0.5
-        out[i,j] .* 0f0
+        out[i,j] *= 0f0
       end
     end
   end
