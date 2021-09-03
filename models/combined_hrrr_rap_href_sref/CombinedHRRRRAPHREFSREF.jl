@@ -38,15 +38,15 @@ import CombinedHREFSREF
 MINUTE = 60
 HOUR   = 60*MINUTE
 
-# Forecast run time is always the newest forecast (RAP/HRR).
+# Forecast run time is always the newest forecast (HRRR/RAP).
 
 _forecasts_separate = [] # Output is a 8-feature forecast: 3 HRRRs, 3 RAPs, HREF, SREF
-_forecasts = [] # Combined
+_forecasts = [] # Combined to single prediction
 
-# For day, allow 0Z to 21Z runs
-# _forecasts_day_accumulators   = []
-# _forecasts_day                = []
-# _forecasts_day_spc_calibrated = []
+# For day, allow 0Z to 23Z runs
+_forecasts_day_accumulators   = []
+_forecasts_day                = []
+_forecasts_day_spc_calibrated = []
 
 function forecasts_separate()
   if isempty(_forecasts_separate)
