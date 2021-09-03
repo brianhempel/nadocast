@@ -31,6 +31,9 @@ import HREFPrediction
 push!(LOAD_PATH, (@__DIR__) * "/../sref_prediction")
 import SREFPrediction
 
+push!(LOAD_PATH, (@__DIR__) * "/../combined_href_sref")
+import CombinedHREFSREF
+
 
 MINUTE = 60
 HOUR   = 60*MINUTE
@@ -156,6 +159,15 @@ logit(p) = log(p / (one(p) - p))
 # day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[4][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[4][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[4][3])
 # day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[5][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[5][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[5][3])
 
+function latest_within_6_hours(run_time_seconds_to_forecasts, run_time_seconds)
+  for hour in 0:5
+    latest_forecasts = get(run_time_seconds_to_forecasts, run_time_seconds - hour*HOUR, Forecasts.Forecast[])
+    if length(latest_forecasts) > 0
+      return latest_forecasts
+    end
+  end
+  Forecasts.Forecast[]
+end
 
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
@@ -201,17 +213,6 @@ function reload_forecasts()
       # RAP -0
       # SREF -2:05
       # HREF -1:35
-
-      # START HERE
-      function latest_within_6_hours(run_time_seconds_to_forecasts, run_time_seconds)
-        for hour in 0:5
-          latest_forecasts = get(run_time_seconds_to_forecasts, run_time_seconds - hour*HOUR, Forecasts.Forecast[])
-          if length(latest_forecasts) > 0
-            return latest_forecasts
-          end
-        end
-        Forecasts.Forecast[]
-      end
 
       hrrrs_for_run_time_minus0 = get(run_time_seconds_to_hrrr_forecasts, run_time_seconds - 0*HOUR, Forecasts.Forecast[])
       hrrrs_for_run_time_minus1 = get(run_time_seconds_to_hrrr_forecasts, run_time_seconds - 1*HOUR, Forecasts.Forecast[])
@@ -312,104 +313,128 @@ function reload_forecasts()
 
   _forecasts = PredictionForecasts.simple_prediction_forecasts(_forecasts_separate, predict)
 
-  # run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(_forecasts)
+  run_time_seconds_to_hourly_prediction_forecasts =
+    Forecasts.run_time_seconds_to_forecasts(_forecasts)
 
-  # run_date = Dates.Date(2019, 1, 9)
-  # associated_forecasts = []
-  # while run_date <= Dates.Date(Dates.now(Dates.UTC))
-  #   run_year  = Dates.year(run_date)
-  #   run_month = Dates.month(run_date)
-  #   run_day   = Dates.day(run_date)
+  run_time_seconds_to_hourly_href_sref_only_prediction_forecasts_href_newer =
+    Forecasts.run_time_seconds_to_forecasts(CombinedHREFSREF.forecasts_href_newer_combined())
 
-  #   for run_hour in 0:3:21
-  #     run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+  run_time_seconds_to_hourly_href_sref_only_prediction_forecasts_sref_newer =
+    Forecasts.run_time_seconds_to_forecasts(CombinedHREFSREF.forecasts_sref_newer_combined())
 
-  #     forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
+  run_date = Dates.Date(2019, 1, 9)
+  associated_forecasts = []
+  while run_date <= Dates.Date(Dates.now(Dates.UTC))
+    run_year  = Dates.year(run_date)
+    run_month = Dates.month(run_date)
+    run_day   = Dates.day(run_date)
 
-  #     forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
+    for run_hour in 0:23
+      run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
 
-  #     forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
+      # Finish times:
+      # https://www.nco.ncep.noaa.gov/pmb/nwprod/prodstat_new/
+      # HRRR is up to 1:45min after run time (b/c 0,6,12,18Z are longer)
+      # RAP  up to 1:45
+      # SREF up to 3:50
+      # HREF up to 3:20
+      # So the delta relative to HRRR is:
+      # RAP -0
+      # SREF -2:05
+      # HREF -1:35
 
-  #     if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
-  #       push!(associated_forecasts, forecasts_for_convective_day)
-  #     end
+      forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
 
-  #     # 1. Try both independent events total prob and max hourly prob as the main descriminator
-  #     # 2. bin predictions into 10 bins of equal weight of positive labels
-  #     # 3. combine bin-pairs (overlapping, 9 bins total)
-  #     # 4. train a logistic regression for each bin,
-  #     #   σ(a1*logit(independent events total prob) +
-  #     #     a2*logit(max hourly prob) +
-  #     #     a3*logit(2nd highest hourly prob) +
-  #     #     a4*logit(3rd highest hourly prob) +
-  #     #     a5*logit(4th highest hourly prob) +
-  #     #     a6*logit(5th highest hourly prob) +
-  #     #     a7*logit(6th highest hourly prob) +
-  #     #     a8*logit(tornado day climatological prob) +
-  #     #     a9*logit(tornado day given severe day climatological prob) +
-  #     #     a10*logit(geomean(above two)) +
-  #     #     a11*logit(tornado prob for given month) +
-  #     #     a12*logit(tornado prob given severe day for given month) +
-  #     #     a13*logit(geomean(above two)) +
-  #     #     b)
-  #     #   Check & eliminate terms via 3-fold cross-validation.
-  #     # 5. prediction is weighted mean of the two overlapping logistic models
-  #     # 6. should thereby be absolutely calibrated (check)
-  #     # 7. calibrate to SPC thresholds (linear interpolation)
-  #   end
+      combined_href_sref_href_newer_for_run_time =
+        latest_within_6_hours(run_time_seconds_to_hourly_href_sref_only_prediction_forecasts_href_newer, run_time_seconds - 2*HOUR)
+      combined_href_sref_sref_newer_for_run_time =
+        latest_within_6_hours(run_time_seconds_to_hourly_href_sref_only_prediction_forecasts_sref_newer, run_time_seconds - 3*HOUR)
 
-  #   run_date += Dates.Day(1)
-  # end
+      forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
+
+      forecasts_for_convective_day = Forecasts.Forecast[]
+
+      for forecast_hour in forecast_hours_in_convective_day
+        if forecast_hour <= 15
+          forecast_i = findfirst(forecast -> forecast.forecast_hour == forecast_hour, forecasts_for_run_time)
+          if isnothing(forecast_i)
+            break # abort
+          else
+            push!(forecasts_for_convective_day, forecasts_for_run_time[forecast_i])
+          end
+        else
+          valid_time_seconds = run_time_seconds + forecast_hour*HOUR
+          href_newer_forecast_i = findfirst(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc() == valid_time_seconds, combined_href_sref_href_newer_for_run_time)
+          sref_newer_forecast_i = findfirst(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc() == valid_time_seconds, combined_href_sref_sref_newer_for_run_time)
+          if isnothing(href_newer_forecast_i) && isnothing(sref_newer_forecast_i)
+            break # abort
+          else if isnothing(sref_newer_forecast_i)
+            push!(forecasts_for_convective_day, combined_href_sref_href_newer_for_run_time[href_newer_forecast_i])
+          else if isnothing(href_newer_forecast_i)
+            push!(forecasts_for_convective_day, combined_href_sref_sref_newer_for_run_time[sref_newer_forecast_i])
+          else if Forecasts.run_time_in_seconds_since_epoch_utc(combined_href_sref_href_newer_for_run_time[href_newer_forecast_i]) > Forecasts.run_time_in_seconds_since_epoch_utc(combined_href_sref_sref_newer_for_run_time[sref_newer_forecast_i])
+            push!(forecasts_for_convective_day, combined_href_sref_href_newer_for_run_time[href_newer_forecast_i])
+          else
+            push!(forecasts_for_convective_day, combined_href_sref_sref_newer_for_run_time[sref_newer_forecast_i])
+          end
+        end
+      end
+
+      if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
+        push!(associated_forecasts, forecasts_for_convective_day)
+      end
+    end
+
+    run_date += Dates.Day(1)
+  end
 
   # # Which run time and forecast hour to use for the set.
   # # Namely: latest run time, then longest forecast hour
-  # choose_canonical_forecast(day_hourlies) = begin
-  #   canonical = day_hourlies[1]
-  #   for forecast in day_hourlies
-  #     if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
-  #       canonical = forecast
-  #     end
-  #   end
-  #   canonical
-  # end
+  choose_canonical_forecast(day_hourlies) = begin
+    canonical = day_hourlies[1]
+    for forecast in day_hourlies
+      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
+        canonical = forecast
+      end
+    end
+    canonical
+  end
 
-  # day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
-  # day_inventory_transformer(base_forecast, base_inventory) = begin
-  #   [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
-  #   , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   ]
-  # end
+  day_inventory_transformer(base_forecast, base_inventory) = begin
+    [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
+    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
+    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
+    ]
+  end
 
-  # day_data_transformer(base_forecast, base_data) = begin
-  #   point_count, hours_count = size(base_data)
-  #   out = Array{Float32}(undef, (point_count, 2))
-  #   Threads.@threads for i in 1:point_count
-  #     # sorted_probs = sort((@view base_data[i,:]); rev = true)
-  #     prob_no_tor = 1.0
-  #     for hour_i in 1:hours_count
-  #       prob_no_tor *= 1.0 - Float64(base_data[i,hour_i])
-  #     end
-  #     out[i,1] = Float32(1.0 - prob_no_tor)
-  #     out[i,2] = maximum(@view base_data[i,:])
-  #     # out[i,2] = sorted_probs[1]
-  #     # out[i,3] = sorted_probs[2]
-  #     # out[i,4] = sorted_probs[3]
-  #     # out[i,5] = sorted_probs[4]
-  #     # out[i,6] = sorted_probs[5]
-  #     # out[i,7] = sorted_probs[6]
-  #   end
-  #   out
-  # end
+  day_data_transformer(base_forecast, base_data) = begin
+    point_count, hours_count = size(base_data)
+    out = Array{Float32}(undef, (point_count, 2))
+    Threads.@threads for i in 1:point_count
+      # sorted_probs = sort((@view base_data[i,:]); rev = true)
+      prob_no_tor = 1.0
+      for hour_i in 1:hours_count
+        prob_no_tor *= 1.0 - Float64(base_data[i,hour_i])
+      end
+      out[i,1] = Float32(1.0 - prob_no_tor)
+      out[i,2] = maximum(@view base_data[i,:])
+      # out[i,2] = sorted_probs[1]
+      # out[i,3] = sorted_probs[2]
+      # out[i,4] = sorted_probs[3]
+      # out[i,5] = sorted_probs[4]
+      # out[i,6] = sorted_probs[5]
+      # out[i,7] = sorted_probs[6]
+    end
+    out
+  end
 
-  # # Caching barely helps load times, so we don't do it
-
-  # _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
+  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
 
   # day_predict(forecast, data) = begin
   #   indep_events_ŷs  = @view data[:,1]
