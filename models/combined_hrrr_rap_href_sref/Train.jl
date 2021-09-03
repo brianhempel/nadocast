@@ -425,24 +425,27 @@ import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import ForecastCombinators
 
 
 (_, combined_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts(); just_hours_near_storm_events = false);
 
-length(combined_validation_forecasts) #
+length(combined_validation_forecasts) # 2961
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 combined_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, combined_validation_forecasts);
 
-length(combined_validation_forecasts) # Expected:
-#
+length(combined_validation_forecasts) # Expected: 2636
+# 2636
 
 # Make sure a forecast loads
 Forecasts.data(combined_validation_forecasts[100])
 
 
+ForecastCombinators.turn_forecast_caching_on()
 X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; save_dir = "combined_validation_forecasts");
+ForecastCombinators.clear_cached_forecasts()
 
 
 ŷ = X[:,1];
@@ -454,11 +457,11 @@ y       = y[sort_perm];
 weights = weights[sort_perm];
 
 # total_logloss = sum(logloss.(y, ŷ) .* weights)
-total_positive_weight = sum(y .* weights) #
+total_positive_weight = sum(y .* weights) # 11478.342f0
 
 bin_count = 20
 # per_bin_logloss = total_logloss / bin_count
-per_bin_pos_weight = total_positive_weight / bin_count #
+per_bin_pos_weight = total_positive_weight / bin_count # 573.9171f0
 
 # bins = map(_ -> Int64[], 1:bin_count)
 bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
@@ -493,6 +496,7 @@ end
 
 println("bins_max = ")
 println(bins_max)
+# Float32[9.96191f-5, 0.00040074784, 0.00074802537, 0.0013861385, 0.0023897155, 0.00345245, 0.0050529176, 0.007601612, 0.010993889, 0.016017333, 0.022238974, 0.02969854, 0.038574178, 0.047355093, 0.05609508, 0.06658636, 0.07913155, 0.09622029, 0.124933906, 1.0]
 
 println("mean_y\tmean_ŷ\tΣweight\tbin_max")
 for bin_i in 1:bin_count
@@ -507,8 +511,27 @@ for bin_i in 1:bin_count
 end
 
 # mean_y  mean_ŷ  Σweight bin_max
+# 7.046450725111844e-6    7.276030260643027e-6    8.149382910901582e7     9.96191e-5
+# 0.00018569760664097521  0.0001992050167294557   3.0917846637243032e6    0.00040074784
+# 0.0007083221273481578   0.000547043320881087    811604.7255518436       0.00074802537
+# 0.001004968604574856    0.0010154845111336255   571666.5000259876       0.0013861385
+# 0.001615284805189093    0.0018141624219989128   355754.3150098324       0.0023897155
+# 0.003243819902635385    0.002864499934662217    177011.33592289686      0.00345245
+# 0.00417040778502528     0.004160083251711094    137680.79975754023      0.0050529176
+# 0.005494325888930752    0.006165368414754303    104514.26054441929      0.007601612
+# 0.008520016266732528    0.009110663996769706    67447.08611220121       0.010993889
+# 0.011208618890038251    0.013233758175118635    51217.874188542366      0.016017333
+# 0.01617714764916813     0.018841202709561244    35490.04291969538       0.022238974
+# 0.022507225720713116    0.02567859833427495     25499.464930951595      0.02969854
+# 0.02938825999561008     0.03379664949075832     19539.090526640415      0.038574178
+# 0.04242381279651925     0.04275958996910579     13547.885240018368      0.047355093
+# 0.05654047274437263     0.0515019379424905      10162.466443002224      0.05609508
+# 0.06651922052078427     0.06104852031037582     8634.96290642023        0.06658636
+# 0.07956938515208833     0.0724341302610855      7214.635666847229       0.07913155
+# 0.09561960571668754     0.08699347351125025     6008.735875487328       0.09622029
+# 0.11719265615162906     0.1084831716212397      4897.901657998562       0.124933906
+# 0.14299085635775274     0.16909156607273287     3958.068720936775       1.0
 
-
-Metrics.roc_auc((@view X[:,1]), y, weights) #
+Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9830358055177714
 
 
