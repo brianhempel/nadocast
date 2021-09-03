@@ -364,8 +364,8 @@ function reload_forecasts()
           end
         else
           valid_time_seconds = run_time_seconds + forecast_hour*HOUR
-          href_newer_forecast_i = findfirst(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc() == valid_time_seconds, combined_href_sref_href_newer_for_run_time)
-          sref_newer_forecast_i = findfirst(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc() == valid_time_seconds, combined_href_sref_sref_newer_for_run_time)
+          href_newer_forecast_i = findfirst(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) == valid_time_seconds, combined_href_sref_href_newer_for_run_time)
+          sref_newer_forecast_i = findfirst(forecast -> Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) == valid_time_seconds, combined_href_sref_sref_newer_for_run_time)
           if isnothing(href_newer_forecast_i) && isnothing(sref_newer_forecast_i)
             break # abort
           elseif isnothing(sref_newer_forecast_i)

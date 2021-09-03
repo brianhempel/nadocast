@@ -17,10 +17,7 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-# forecasts_0z = filter(forecast -> forecast.run_hour == 0, CombinedHRRRRAPHREFSREF.forecasts_href_newer());
 
-# (train_forecasts_0z, validation_forecasts_0z, _) = TrainingShared.forecasts_train_validation_test(forecasts_0z);
-# (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_href_newer());
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
 length(validation_forecasts) #
