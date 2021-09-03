@@ -28,17 +28,19 @@ HOUR   = 60*MINUTE
 GRID       = Conus.href_cropped_5km_grid;
 CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 
+# Run below is 2019-1-7 through 2021-5-31, but we are missing lots of HREFs between Nov 2020 and mid-March 2021
+
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
 (_, _, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
 
-length(spc_test_forecasts) #
+length(spc_test_forecasts) # 125
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2021, 6, 1, 0)
 spc_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, spc_test_forecasts);
 
-length(spc_test_forecasts) #
+length(spc_test_forecasts) # 125
 
 
 (_, _, test_forecasts) =
@@ -51,7 +53,7 @@ length(test_forecasts) # 928
 test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
 length(test_forecasts) # 116
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-length(test_forecasts) #
+length(test_forecasts) # 103
 
 
 compute_forecast_labels(spc_forecast) = begin
