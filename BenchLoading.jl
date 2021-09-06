@@ -18,7 +18,7 @@ isdir("bench") && rm("bench"; recursive = true)
 TrainingShared.load_data_labels_weights_to_disk(
   "bench",
   forecasts[1:1];
-  X_and_labels_to_inclusion_probabilities = ((X, labels, is_near_storm_event) -> max.(labels, 0.001f0, 0.15f0 .* is_near_storm_event))
+  X_and_labels_to_inclusion_probabilities = ((X, labels, is_near_storm_event) -> max.(labels, 0.1f0, 0.5f0 .* is_near_storm_event))
 )
 
 rm("bench"; recursive = true)
@@ -26,7 +26,12 @@ rm("bench"; recursive = true)
 @time TrainingShared.load_data_labels_weights_to_disk(
   "bench",
   forecasts[2:end];
-  X_and_labels_to_inclusion_probabilities = ((X, labels, is_near_storm_event) -> max.(labels, 0.001f0, 0.15f0 .* is_near_storm_event))
+  X_and_labels_to_inclusion_probabilities = ((X, labels, is_near_storm_event) -> max.(labels, 0.1f0, 0.5f0 .* is_near_storm_event))
 )
 
 rm("bench"; recursive = true)
+
+data, labels, weights = read_data_labels_weights_from_disk(save_dir)
+
+# Ensure not change!
+println(hash.((data, labels, weights)))
