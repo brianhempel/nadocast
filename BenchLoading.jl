@@ -31,7 +31,7 @@ rm("bench"; recursive = true)
 
 rm("bench"; recursive = true)
 
-data, labels, weights = TrainingShared.read_data_labels_weights_from_disk(save_dir)
+data, labels, weights = TrainingShared.read_data_labels_weights_from_disk("bench")
 
 # Ensure not change!
 println(hash.((data, labels, weights)))
