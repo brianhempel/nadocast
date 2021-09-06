@@ -35,3 +35,8 @@ data, labels, weights = TrainingShared.read_data_labels_weights_from_disk("bench
 println(hash.((data, labels, weights)))
 
 rm("bench"; recursive = true)
+
+if hash.((data, labels, weights)) != (0xe476246de6fc1e1b, 0x7ad97045e5aa04f0, 0xb73b4d168334c7ee)
+  error("something changed!!")
+end
+
