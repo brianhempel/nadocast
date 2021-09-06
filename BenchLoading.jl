@@ -29,9 +29,9 @@ rm("bench"; recursive = true)
   X_and_labels_to_inclusion_probabilities = ((X, labels, is_near_storm_event) -> max.(labels, 0.1f0, 0.5f0 .* is_near_storm_event))
 )
 
-rm("bench"; recursive = true)
-
 data, labels, weights = TrainingShared.read_data_labels_weights_from_disk("bench")
 
 # Ensure not change!
 println(hash.((data, labels, weights)))
+
+rm("bench"; recursive = true)
