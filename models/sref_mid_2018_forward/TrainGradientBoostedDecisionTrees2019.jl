@@ -52,8 +52,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels) -> max.(0.5f0, labels),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels) -> max.(0.5f0, labels),
+    training_calc_inclusion_probabilities   = (labels, is_near_storm_event) -> max.(0.5f0, labels),
+    validation_calc_inclusion_probabilities = (labels, is_near_storm_event) -> max.(0.5f0, labels),
 
     prior_predictor = prior_predictor, # To compare validation loss
 

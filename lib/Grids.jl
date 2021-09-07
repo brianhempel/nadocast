@@ -373,6 +373,59 @@ function radius_grid_is_less_other_is(grid, miles, grid_is_to_subtract) :: Vecto
   radius_is
 end
 
+# For each grid point, return a list of ranges along each row
+function radius_grid_is2(grid, miles) :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}}
+  radius_is2 = map(_ -> Tuple{Int64,UnitRange{Int64}}[], 1:grid.height*grid.width)
+
+  # I believe row and col on globe are reverse what they would be as a Julia array
+  # Below is as on globe
+  row_col_of_i(i) = begin
+    row, col = fldmod(i-1, grid.width)
+    row += 1
+    col += 1
+    @assert i == grid.width*(row-1) + col
+    (row, col)
+  end
+
+  for j in 1:grid.height
+    for i in 1:grid.width
+      flat_i = grid.width*(j-1) + i
+
+      latlon = grid.latlons[flat_i]
+
+      radius_is =
+        diamond_search(grid, i, j) do candidate_latlon
+          GeoUtils.instantish_distance(candidate_latlon, latlon) <= miles * GeoUtils.METERS_PER_MILE
+        end
+
+      coords = sort(row_col_of_i.(radius_is))
+
+      ranges = radius_is2[flat_i]
+
+      current_row, col_start = coords[1]
+      col_end                = col_start
+      for (row, col) in (@view coords[2:length(coords)])
+        if row != current_row || col_end + 1 != col
+          push!(ranges, (current_row, col_start:col_end))
+
+          current_row = row
+          col_start   = col
+        end
+        col_end = col
+      end
+      push!(ranges, (current_row, col_start:col_end))
+    end
+  end
+
+  # Re-allocate to ensure cache locality.
+  # Not sure this makes any difference though.
+  for flat_i in 1:length(radius_is2)
+    radius_is2[flat_i] = radius_is2[flat_i][1:length(radius_is2[flat_i])]
+  end
+
+  radius_is2
+end
+
 # Returns a function that takes a single layer and upsamples it to the higher resolution grid.
 #
 # Nearest neighbor. It's blocky.

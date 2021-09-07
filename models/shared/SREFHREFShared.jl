@@ -33,9 +33,12 @@ function mean_prob_grib2s_to_forecast(
     mean_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(mean_grib2_path))
     prob_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(prob_grib2_path))
 
+    mean_inventory_line_keys = Inventories.inventory_line_key.(mean_inventory) # avoid n^2 nasty allocs by precomputing this
+    prob_inventory_line_keys = Inventories.inventory_line_key.(prob_inventory) # avoid n^2 nasty allocs by precomputing this
+
     mean_layer_key_to_inventory_line(key) = begin
-      i = findfirst(line -> Inventories.inventory_line_key(line) == key, mean_inventory)
-      if i != nothing
+      i = findfirst(isequal(key), mean_inventory_line_keys)
+      if !isnothing(i)
         mean_inventory[i]
       else
         throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in mean layers: $mean_inventory")
@@ -43,8 +46,8 @@ function mean_prob_grib2s_to_forecast(
     end
 
     prob_layer_key_to_inventory_line(key) = begin
-      i = findfirst(line -> Inventories.inventory_line_key(line) == key, prob_inventory)
-      if i != nothing
+      i = findfirst(isequal(key), prob_inventory_line_keys)
+      if !isnothing(i)
         prob_inventory[i]
       else
         throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in prob layers: $prob_inventory")

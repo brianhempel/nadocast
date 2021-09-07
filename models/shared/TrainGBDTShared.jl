@@ -28,8 +28,8 @@ import Forecasts
 # # basal_inclusion_probability for inclusion probability of negatively labeled points.)
 # function train_multiple_annealing_rounds_with_coordinate_descent_hyperparameter_search(forecasts; annealing_rounds = 3, basal_inclusion_probability :: Float32, prediction_inclusion_multiplier :: Float32, validation_inclusion_probability :: Float32, config...)
 #
-#   X_and_labels_to_validation_inclusion_probabilities(X, labels) =
-#     map(1:size(X,1)) do i
+#   X_and_labels_to_validation_inclusion_probabilities(labels, is_near_storm_event) =
+#     map(1:length(labels)) do i
 #       max(validation_inclusion_probability, labels[i])
 #     end
 #
@@ -39,32 +39,32 @@ import Forecasts
 #     println("\nAnnealing round $annealing_round_i of $annealing_rounds...\n")
 #
 #     if isnothing(last_model_path)
-#       X_and_labels_to_basal_inclusion_probabilities(X, labels) =
-#         map(1:size(X,1)) do i
+#       X_and_labels_to_basal_inclusion_probabilities(labels, is_near_storm_event) =
+#         map(1:length(labels)) do i
 #           max(basal_inclusion_probability, labels[i])
 #         end
 #
 #       last_model_path = train_with_coordinate_descent_hyperparameter_search(
 #           forecasts;
-#           training_X_and_labels_to_inclusion_probabilities   = X_and_labels_to_basal_inclusion_probabilities,
-#           validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_validation_inclusion_probabilities,
+#           training_calc_inclusion_probabilities   = X_and_labels_to_basal_inclusion_probabilities,
+#           validation_calc_inclusion_probabilities = X_and_labels_to_validation_inclusion_probabilities,
 #           config...
 #         )
 #     else
 #       last_model_bin_splits, last_model_trees = MemoryConstrainedTreeBoosting.load(last_model_path)
 #
-#       X_and_labels_to_refined_inclusion_probabilities(X, labels) = begin
+#       X_and_labels_to_refined_inclusion_probabilities(labels, is_near_storm_event) = begin
 #         predictions = MemoryConstrainedTreeBoosting.predict(X, last_model_bin_splits, last_model_trees)
 #
-#         map(1:size(X,1)) do i
+#         map(1:length(labels)) do i
 #           max(basal_inclusion_probability, predictions[i]*prediction_inclusion_multiplier, labels[i])
 #         end
 #       end
 #
 #       last_model_path = train_with_coordinate_descent_hyperparameter_search(
 #           forecasts;
-#           training_X_and_labels_to_inclusion_probabilities   = X_and_labels_to_refined_inclusion_probabilities,
-#           validation_X_and_labels_to_inclusion_probabilities = X_and_labels_to_validation_inclusion_probabilities,
+#           training_calc_inclusion_probabilities   = X_and_labels_to_refined_inclusion_probabilities,
+#           validation_calc_inclusion_probabilities = X_and_labels_to_validation_inclusion_probabilities,
 #           config...
 #         )
 #     end
@@ -77,8 +77,8 @@ import Forecasts
 function train_with_coordinate_descent_hyperparameter_search(
     forecasts;
     forecast_hour_range = 1:10000,
-    training_X_and_labels_to_inclusion_probabilities   = nothing,
-    validation_X_and_labels_to_inclusion_probabilities = nothing,
+    training_calc_inclusion_probabilities   = nothing,
+    validation_calc_inclusion_probabilities = nothing,
     load_only = false,
     model_prefix = "",
     prior_predictor = nothing,
@@ -106,14 +106,14 @@ function train_with_coordinate_descent_hyperparameter_search(
 
 
   # Returns (X_binned, labels, weights)
-  get_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
+  get_data_labels_weights_binned(forecasts, bin_splits, calc_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
   end
 
-  prepare_data_labels_weights_binned(forecasts, bin_splits, X_and_labels_to_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
+  prepare_data_labels_weights_binned(forecasts, bin_splits, calc_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.prepare_data_labels_weights(forecasts, X_transformer = transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
+    TrainingShared.prepare_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
   end
 
   # Returns path
@@ -138,7 +138,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       (bin_sample_X, bin_sample_y, _) =
         TrainingShared.get_data_labels_weights(
           Iterators.take(Random.shuffle(rng, train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
-          X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
+          calc_inclusion_probabilities = (labels, is_near_storm_event) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
           save_dir = specific_save_dir("samples_for_bin_splits")
         )
       if balance_labels_when_computing_bin_splits
@@ -172,19 +172,19 @@ function train_with_coordinate_descent_hyperparameter_search(
 
   if !load_only
     println("Loading training data")
-    X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities, "training"; prior_predictor = prior_predictor)
+    X_binned, y, weights = get_data_labels_weights_binned(train_forecasts, bin_splits, training_calc_inclusion_probabilities, "training"; prior_predictor = prior_predictor)
     println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
 
     println("Loading validation data")
-    validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities, "validation"; prior_predictor = prior_predictor)
+    validation_X_binned, validation_y, validation_weights = get_data_labels_weights_binned(validation_forecasts, bin_splits, validation_calc_inclusion_probabilities, "validation"; prior_predictor = prior_predictor)
     println("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.")
   else
     println("Loading training data")
-    data_count, feature_count = prepare_data_labels_weights_binned(train_forecasts, bin_splits, training_X_and_labels_to_inclusion_probabilities, "training"; prior_predictor = prior_predictor)
+    data_count, feature_count = prepare_data_labels_weights_binned(train_forecasts, bin_splits, training_calc_inclusion_probabilities, "training"; prior_predictor = prior_predictor)
     println("done. $(data_count) datapoints with $(feature_count) features each.")
 
     println("Loading validation data")
-    validation_data_count, validation_feature_count = prepare_data_labels_weights_binned(validation_forecasts, bin_splits, validation_X_and_labels_to_inclusion_probabilities, "validation"; prior_predictor = prior_predictor)
+    validation_data_count, validation_feature_count = prepare_data_labels_weights_binned(validation_forecasts, bin_splits, validation_calc_inclusion_probabilities, "validation"; prior_predictor = prior_predictor)
     println("done. $(validation_data_count) datapoints with $(validation_feature_count) features each.")
 
     exit(0)

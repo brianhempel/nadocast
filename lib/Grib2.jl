@@ -191,6 +191,26 @@ function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
   out
 end
 
+# Set undefineds to 0 instead of 9.999f20
+function zero_undefs!(arr)
+  for i in eachindex(arr)
+    v = arr[i]
+    arr[i] = v == 9.999f20 ? 0.0f0 : v
+  end
+  ()
+end
+
+function apply_mask!(in, out, mask)
+  j = 1
+  for i in eachindex(in)
+    if mask[i]
+      out[j] = in[i]
+      j += 1
+    end
+  end
+  ()
+end
+
 # Read out the given layers into a binary Float32 array.
 #
 # `inventory` is a filtered set of lines from read_inventory above.
@@ -200,9 +220,11 @@ end
 # It's faster to have wgrib2 dump to a file and then read in the file, so that's what the code below does.
 #
 # Returns grid_length by layer_count Float32 array of values.
+#
+# 1.6s of 15s loading time, and 2.5M allocations
 function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = nothing) :: Array{Float32, 2}
   # print("Reading data $grib2_path...")
-  if crop_downsample_grid == nothing
+  if isnothing(crop_downsample_grid)
     raw_height  = -1
     raw_width   = -1
     crop_mask   = (:)
@@ -255,7 +277,8 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     error("$grib2_path has $expected_layer_raw_value_count values per layer but the crop_downsample_grid expects $(raw_width*raw_height) original values per layer.")
   end
 
-  out = zeros(Float32, (crop_downsampled_value_count,layer_count))
+  # out = zeros(Float32, )
+  out = Array{Float32}(undef, (crop_downsampled_value_count,layer_count))
 
   # As of Julia 1.3, I/O is thread-safe.
   # And the preloader should have put the file into the disk cache.
@@ -299,9 +322,14 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # print("waiting...")
   map(wait, wgrib2s)
 
+  count_after_crop_before_downsample = count(crop_mask)
+
   Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
 
     out_path = thread_wgrib2_out_path(Threads.threadid())
+
+    read_scratch = Array{Float32}(undef, expected_layer_raw_value_count)
+    crop_scratch = Array{Float32}(undef, count_after_crop_before_downsample)
 
     # print("reading layers")
     wgrib2_out = open(out_path)
@@ -317,18 +345,16 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
         error("value count mismatch, expected $expected_layer_raw_value_count for each layer but $layer_to_fetch has $this_layer_value_count values")
       end
 
-      # print("read and crop...")
-      layer_values = reinterpret(Float32, read(wgrib2_out, expected_layer_raw_value_count*4))[crop_mask]
-
-      # print("undefs to 0...")
-      # Set undefineds to 0 instead of 9.999f20
-      layer_values = map!(v -> v == 9.999f20 ? 0.0f0 : v, layer_values, layer_values)
+      read!(wgrib2_out, read_scratch)
 
       if downsample == 1
-        out[:,layer_i] = layer_values
+        apply_mask!(read_scratch, (@view out[:,layer_i]), crop_mask)
+        zero_undefs!(@view out[:,layer_i])
       else
         # print("downsampling...")
-        layer_values_2d = reshape(layer_values, (crop_width, crop_height))
+        apply_mask!(read_scratch, crop_scratch, crop_mask)
+        zero_undefs!(crop_scratch)
+        layer_values_2d = reshape(crop_scratch, (crop_width, crop_height))
 
         _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, layer_i, out)
       end

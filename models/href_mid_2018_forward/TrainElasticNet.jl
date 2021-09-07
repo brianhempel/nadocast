@@ -59,10 +59,10 @@ gbdt_model_path = (@__DIR__) * "/gbdt_2019-02-01T00-23-46.807_rotation_invariant
 
 bin_splits, trees = MemoryConstrainedTreeBoosting.load(gbdt_model_path)
 
-X_and_labels_to_inclusion_probabilities(X, labels) = begin
+calc_inclusion_probabilities(labels, is_near_storm_event) = begin
   ŷ = MemoryConstrainedTreeBoosting.predict(X, bin_splits, trees)
   losses = MemoryConstrainedTreeBoosting.logloss.(labels, ŷ)
-  map(1:size(X,1)) do i
+  map(1:length(labels)) do i
     max(0.01, losses[i]*100, labels[i])
   end
 end
@@ -71,7 +71,7 @@ println("done.")
 
 
 print("Loading")
-X, y, weights = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, HREF.get_feature_engineered_data, train_forecasts, X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities)
+X, y, weights = TrainingShared.get_data_labels_weights(grid, conus_grid_bitmask, HREF.get_feature_engineered_data, train_forecasts, X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities)
 
 y = [(1.0 .- y) y]
 println("done.")

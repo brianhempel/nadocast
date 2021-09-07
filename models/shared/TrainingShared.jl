@@ -127,19 +127,19 @@ function finished_loading(save_dir)
   isdir(save_dir) && isfile(joinpath(save_dir, "labels.serialized")) && isfile(joinpath(save_dir, "weights.serialized"))
 end
 
-function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
   if !finished_loading(save_dir)
-    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
+    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
   end
   read_data_labels_weights_from_disk(save_dir)
 end
 
 # Loads the data to disk but does not read it back.
 # Returns (data_count, feature_count) if the data wasn't already saved to disk.
-function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
+function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
@@ -147,7 +147,7 @@ function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transforme
     println("$save_dir appears to have finished loading. Skipping.")
     return (nothing, nothing)
   end
-  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, X_and_labels_to_inclusion_probabilities = X_and_labels_to_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
+  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
 end
 
 
@@ -162,7 +162,7 @@ function mask_rows_threaded(data, mask; final_row_count=count(mask))
 end
 
 # We can keep weights and labels in memory at least. It's the features that really kill us.
-function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, X_and_labels_to_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
+function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
   mkpath(save_dir)
 
   save_path(path) = joinpath(save_dir, path)
@@ -185,7 +185,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   conus_point_count  = count(conus_grid_bitmask)
 
-  # Deterministic randomness for X_and_labels_to_inclusion_probabilities, presuming forecasts are given in the same order.
+  # Deterministic randomness for calc_inclusion_probabilities, presuming forecasts are given in the same order.
   rng = Random.MersenneTwister(12345)
 
   forecast_i = 1
@@ -196,31 +196,31 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   feature_count = 0
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-    data_in_conus = mask_rows_threaded(data, conus_grid_bitmask; final_row_count=conus_point_count)
-
     forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask]     :: Array{Float32,1}
 
     # PlotMap.plot_debug_map("tornadoes_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_forecast_labels(forecast))
     # PlotMap.plot_debug_map("near_events_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_is_near_storm_event(forecast))
 
-    if !isnothing(X_and_labels_to_inclusion_probabilities)
+    if !isnothing(calc_inclusion_probabilities)
       is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
-      probabilities       = Float32.(X_and_labels_to_inclusion_probabilities(data_in_conus, forecast_labels, is_near_storm_event))
+      probabilities       = Float32.(calc_inclusion_probabilities(forecast_labels, is_near_storm_event))
       probabilities       = clamp.(probabilities, 0f0, 1f0)
       mask                = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
       probabilities       = probabilities[mask]
 
       forecast_weights = conus_grid_weights[mask] ./ probabilities
       forecast_labels  = forecast_labels[mask]
-      data_masked      = mask_rows_threaded(data_in_conus, mask) # Was taking 2.3s unthreaded for 15000 feature HRRR forecasts. No data locality at all.
-      X_transformed    = X_transformer(data_masked)
+      # Combine conus mask and mask
+      data_mask = conus_grid_bitmask[:]
+      data_mask[conus_grid_bitmask] = mask
+      data_masked = mask_rows_threaded(data, data_mask)
 
       # print("$(count(mask) / length(mask))")
     else
       forecast_weights = conus_grid_weights
-      data_masked      = data_in_conus
-      X_transformed    = X_transformer(data_in_conus)
+      data_masked      = mask_rows_threaded(data, conus_grid_bitmask; final_row_count=conus_point_count)
     end
+    X_transformed = X_transformer(data_masked)
 
     if forecast_i == 1
       inventory_lines      = Forecasts.inventory(forecast)

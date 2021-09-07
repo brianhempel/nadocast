@@ -299,10 +299,12 @@ function reload_forecasts()
       # Somewhat inefficient that each hour must trigger wgrib2 on the same file...prefer using Forecasts.inventory(example_forecast()) if you don't need the particular file's exact byte locations of the layers
       inventory = Grib2.read_inventory(hrrr_path)
 
+      inventory_line_keys = Inventories.inventory_line_key.(inventory) # avoid n^2 nasty allocs by precomputing this
+
       layer_key_to_inventory_line(key) = begin
-        i = findfirst(line -> Inventories.inventory_line_key(line) == key, inventory)
-        if i != nothing
-          inventory[i]
+        i = findfirst(isequal(key), inventory_line_keys)
+        if !isnothing(i)
+        inventory[i]
         else
           exception = Inventories.FieldMissing("HRRR forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour))", key, inventory)
 

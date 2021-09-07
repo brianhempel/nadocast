@@ -59,17 +59,21 @@ function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_for
       aggregate_sizes = cumsum(map(last, sizes))
       feature_count   = last(aggregate_sizes)
 
-      out = Array{Float32}(undef, (point_count, feature_count))
+      # print("Concating... ")
+      # 0.6s out of 15s loading time. trivial allocation count
+      begin
+        out = Array{Float32}(undef, (point_count, feature_count))
 
-      Threads.@threads for feature_i in 1:feature_count
-        out_data_i         = findfirst(n -> feature_i <= n, aggregate_sizes)
-        out_data           = out_datas[out_data_i]
-        out_data_feature_i = out_data_i == 1 ? feature_i : feature_i - aggregate_sizes[out_data_i - 1]
+        Threads.@threads for feature_i in 1:feature_count
+          out_data_i         = findfirst(n -> feature_i <= n, aggregate_sizes)
+          out_data           = out_datas[out_data_i]
+          out_data_feature_i = out_data_i == 1 ? feature_i : feature_i - aggregate_sizes[out_data_i - 1]
 
-        out[:, feature_i] = @view out_data[:, out_data_feature_i]
+          out[:, feature_i] = @view out_data[:, out_data_feature_i]
+        end
+
+        out
       end
-
-      out
     end
 
     canonical_forecast =

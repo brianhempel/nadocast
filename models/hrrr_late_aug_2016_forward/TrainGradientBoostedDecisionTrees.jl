@@ -268,8 +268,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     model_prefix = model_prefix,
     save_dir     = "hrrr_f$(forecast_hour)_$(data_subset_ratio)_$(near_storm_ratio)",
 
-    training_X_and_labels_to_inclusion_probabilities   = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
-    validation_X_and_labels_to_inclusion_probabilities = (X, labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    training_calc_inclusion_probabilities   = (labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
+    validation_calc_inclusion_probabilities = (labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
     load_only                                          = load_only,
 
     bin_split_forecast_sample_count    = 200,
