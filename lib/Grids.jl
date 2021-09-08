@@ -375,6 +375,9 @@ end
 
 # For each grid point, return a list of ranges along each row
 function radius_grid_is2(grid, miles) :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}}
+
+  # println(radius_grid_is(grid, miles)[1])
+
   radius_is2 = map(_ -> Tuple{Int64,UnitRange{Int64}}[], 1:grid.height*grid.width)
 
   # I believe row and col on globe are reverse what they would be as a Julia array
@@ -422,6 +425,8 @@ function radius_grid_is2(grid, miles) :: Vector{Vector{Tuple{Int64,UnitRange{Int
   for flat_i in 1:length(radius_is2)
     radius_is2[flat_i] = radius_is2[flat_i][1:length(radius_is2[flat_i])]
   end
+
+  # println(radius_is2[1])
 
   radius_is2
 end

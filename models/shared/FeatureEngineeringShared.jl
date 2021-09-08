@@ -81,7 +81,13 @@ function compute_mean_is(grid)
   cache_folder              = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
   twenty_five_mi_mean_is    = Cache.cached(() -> Grids.radius_grid_is(grid, 25.0),                                                                       [cache_folder], "twenty_five_mi_mean_is")
   unique_fifty_mi_mean_is   = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 50.0, twenty_five_mi_mean_is),                                 [cache_folder], "unique_fifty_mi_mean_is")
+  # THIS IS WRONG, THE vcat SHOULD BE PER ELEMENT. UNFORTUNATELY, IT'S HOW WE DID OUR 2020 MODELS
   unique_hundred_mi_mean_is = Cache.cached(() -> Grids.radius_grid_is_less_other_is(grid, 100.0, vcat(twenty_five_mi_mean_is, unique_fifty_mi_mean_is)), [cache_folder], "unique_hundred_mi_mean_is")
+  # THIS IS CORRECT:
+  # unique_hundred_mi_mean_is = Cache.cached([cache_folder], "unique_hundred_mi_mean_is") do ()
+  #   fifty_mi_mean_is = map(i -> sort(vcat(twenty_five_mi_mean_is[i], unique_fifty_mi_mean_is[i])), 1:length(unique_fifty_mi_mean_is))
+  #   Grids.radius_grid_is_less_other_is(grid, 100.0, fifty_mi_mean_is)
+  # end
   println("done")
 
   return (twenty_five_mi_mean_is, unique_fifty_mi_mean_is, unique_hundred_mi_mean_is)
@@ -92,19 +98,19 @@ function compute_mean_is2(grid)
   print("computing radius ranges...")
   point_size_km           = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
   cache_folder            = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
-  # twenty_five_mi_mean_is2 = Cache.cached(() -> Grids.radius_grid_is2(grid, 25.0),  [cache_folder], "twenty_five_mi_mean_is2")
-  # fifty_mi_mean_is2       = Cache.cached(() -> Grids.radius_grid_is2(grid, 50.0),  [cache_folder], "fifty_mi_mean_is2")
-  # hundred_mi_mean_is2     = Cache.cached(() -> Grids.radius_grid_is2(grid, 100.0), [cache_folder], "hundred_mi_mean_is2")
-  twenty_five_mi_mean_is2 = Grids.radius_grid_is2(grid, 25.0)
-  fifty_mi_mean_is2       = Grids.radius_grid_is2(grid, 50.0)
-  hundred_mi_mean_is2     = Grids.radius_grid_is2(grid, 100.0)
+  twenty_five_mi_mean_is2 = Cache.cached(() -> Grids.radius_grid_is2(grid, 25.0),  [cache_folder], "twenty_five_mi_mean_is2")
+  fifty_mi_mean_is2       = Cache.cached(() -> Grids.radius_grid_is2(grid, 50.0),  [cache_folder], "fifty_mi_mean_is2")
+  hundred_mi_mean_is2     = Cache.cached(() -> Grids.radius_grid_is2(grid, 100.0), [cache_folder], "hundred_mi_mean_is2")
+  # twenty_five_mi_mean_is2 = Grids.radius_grid_is2(grid, 25.0)
+  # fifty_mi_mean_is2       = Grids.radius_grid_is2(grid, 50.0)
+  # hundred_mi_mean_is2     = Grids.radius_grid_is2(grid, 100.0)
   println("done")
 
   return (twenty_five_mi_mean_is2, fifty_mi_mean_is2, hundred_mi_mean_is2)
 end
 
 # new_features_pre should be a list of pairs of (feature_name, compute_feature_function(grid, inventory, data))
-function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_blocks_to_make, new_features_pre = [])
+function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_blocks_to_make, new_features_pre = [], use_2020_models_buggy_100mi_calc)
 
   if isempty(base_forecasts)
     return base_forecasts
@@ -114,7 +120,20 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
 
   grid = base_forecasts[1].grid
 
-  twenty_five_mi_mean_is, unique_fifty_mi_mean_is, unique_hundred_mi_mean_is = compute_mean_is(grid)
+  # twenty_five_mi_mean_is0, unique_fifty_mi_mean_is0, unique_hundred_mi_mean_is0 = compute_mean_is(grid)
+  twenty_five_mi_mean_is2, fifty_mi_mean_is2, hundred_mi_mean_is2 = compute_mean_is2(grid)
+  # twenty_five_mi_mean_is = Grids.radius_grid_is(grid, 25.0)
+  # fifty_mi_mean_is       = Grids.radius_grid_is(grid, 50.0)
+  # hundred_mi_mean_is     = Grids.radius_grid_is(grid, 100.0)
+
+  # @assert twenty_five_mi_mean_is0 == twenty_five_mi_mean_is
+
+  # fifty_mi_mean_is0 = map(i -> sort(vcat(twenty_five_mi_mean_is0[i], unique_fifty_mi_mean_is0[i])), 1:length(unique_fifty_mi_mean_is0))
+  # hundred_mi_mean_is0 = map(i -> sort(vcat(fifty_mi_mean_is0[i], unique_hundred_mi_mean_is0[i])), 1:length(unique_hundred_mi_mean_is0))
+
+  # @assert twenty_five_mi_mean_is0 == twenty_five_mi_mean_is
+  # @assert fifty_mi_mean_is0 == fifty_mi_mean_is
+  # @assert hundred_mi_mean_is0 == hundred_mi_mean_is
 
   inventory_transformer(base_forecast, base_inventory) = begin
 
@@ -194,10 +213,11 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
       base_data,
       vector_wind_layers,
       layer_blocks_to_make,
-      twenty_five_mi_mean_is,
-      unique_fifty_mi_mean_is,
-      unique_hundred_mi_mean_is;
-      new_features_pre = new_features_pre
+      twenty_five_mi_mean_is2,
+      fifty_mi_mean_is2,
+      hundred_mi_mean_is2;
+      new_features_pre = new_features_pre,
+      use_2020_models_buggy_100mi_calc = use_2020_models_buggy_100mi_calc
     )
 
     # println("done.")
@@ -262,6 +282,38 @@ function make_mean_part(out, mean_is, total1, total2, total3, total4, pre_layer_
 
   (total1, total2, total3, total4)
 end
+
+# function make_mean_layers2_debug!(
+#     out, pre_feature_count, grid,
+#     twenty_five_mi_mean_features_range, twenty_five_mi_mean_is,
+#     fifty_mi_mean_features_range,       fifty_mi_mean_is,
+#     hundred_mi_mean_features_range,     hundred_mi_mean_is
+#   )
+
+#   Threads.@threads for pre_layer_feature1_i in 1:pre_feature_count
+#     twenty_five_mi_mean_feature_i = pre_layer_feature1_i + twenty_five_mi_mean_features_range.start - 1
+#     fifty_mi_mean_feature_i       = pre_layer_feature1_i + fifty_mi_mean_features_range.start - 1
+#     hundred_mi_mean_feature1_i    = pre_layer_feature1_i + hundred_mi_mean_features_range.start - 1
+
+#     for grid_i in 1:size(out, 1)
+#       total = 0.0f0
+#       for near_i in twenty_five_mi_mean_is[grid_i]
+#         total += out[near_i, pre_layer_feature1_i]
+#       end
+#       out[grid_i, twenty_five_mi_mean_feature_i] = total / length(twenty_five_mi_mean_is[grid_i])
+#       total = 0.0f0
+#       for near_i in fifty_mi_mean_is[grid_i]
+#         total += out[near_i, pre_layer_feature1_i]
+#       end
+#       out[grid_i, fifty_mi_mean_feature_i] = total / length(fifty_mi_mean_is[grid_i])
+#       total = 0.0f0
+#       for near_i in hundred_mi_mean_is[grid_i]
+#         total += out[near_i, pre_layer_feature1_i]
+#       end
+#       out[grid_i, hundred_mi_mean_feature1_i] = total / length(hundred_mi_mean_is[grid_i])
+#     end
+#   end
+# end
 
 # Make 25mi, 50mi, and 100mi mean layers
 #
@@ -429,6 +481,122 @@ function make_mean_layers(
         # out[flat_i, hundred_mi_mean_feature8_i] = total8 / n
       end
     end
+  end
+
+  ()
+end
+
+function point_mean(point_mean_is2, row_cumsums)
+  val = 0.0
+  len = 0.0
+
+  # @inbounds
+  for (row, range) in point_mean_is2
+    val += row_cumsums[range.stop+1, row] - row_cumsums[range.start, row]
+    len += length(range)
+  end
+
+  Float32(val / len)
+end
+
+# Double-count the ring between 25 and 50mi
+function point_mean_buggy(twenty_five_mi_is2, twenty_five_mi_mean, fifty_mi_is2, fifty_mi_mean, hundred_mi_is2, row_cumsums)
+  val = 0.0
+  len = 0
+
+  # @inbounds
+  for (row, range) in hundred_mi_is2
+    val += row_cumsums[range.stop+1, row] - row_cumsums[range.start, row]
+    len += length(range)
+  end
+
+  # Could cache this
+  twenty_five_mi_len = 0
+  for (_, range) in twenty_five_mi_is2
+    twenty_five_mi_len += length(range)
+  end
+  fifty_five_mi_len = 0
+  for (_, range) in fifty_mi_is2
+    fifty_five_mi_len += length(range)
+  end
+  val += Float64(fifty_mi_mean)*fifty_five_mi_len - Float64(twenty_five_mi_mean)*twenty_five_mi_len
+
+  Float32(val / (len + fifty_five_mi_len - twenty_five_mi_len))
+end
+
+# function point_mean_old(point_mean_is2, grid, feature_data)
+#   val = 0.0
+#   len = 0.0
+
+#   # @inbounds
+#   for (row, range) in point_mean_is2
+#     flat_i = grid.width*(row-1) + range.start
+#     val += feature_data[flat_i]
+#     len += length(range)
+#   end
+
+#   Float32(val / len)
+# end
+
+function make_3mean_layers!(grid, feature_data, mean_is2_1, mean_is2_2, mean_is2_3, out1, out2, out3, row_cumsums; use_2020_models_buggy_100mi_calc = false)
+  # out         = zeros(Float32, size(feature_data))
+  # row_cumsums = Array{Float64}(undef, (grid.width+1, grid.height))
+
+  width = grid.width
+
+  for j in 1:grid.height
+    row_offset = width*(j-1)
+
+    row_sum = 0.0
+    row_cumsums[1,j] = row_sum
+
+    # @inbounds
+    for i in 1:width
+      flat_i = row_offset + i
+      row_sum += Float64(feature_data[flat_i])
+      row_cumsums[i+1,j] = row_sum
+    end
+  end
+
+  for grid_i in 1:length(feature_data)
+    out1[grid_i] = point_mean(mean_is2_1[grid_i], row_cumsums)
+    out2[grid_i] = point_mean(mean_is2_2[grid_i], row_cumsums)
+    if use_2020_models_buggy_100mi_calc # Don't ask how this happened. The ring between 25mi and 50mi was double-counted
+      out3[grid_i] = point_mean_buggy(mean_is2_1[grid_i], out1[grid_i], mean_is2_2[grid_i], out2[grid_i], mean_is2_3[grid_i], row_cumsums)
+    else
+      out3[grid_i] = point_mean(mean_is2_3[grid_i], row_cumsums)
+    end
+  end
+
+  ()
+end
+
+
+function make_mean_layers2!(
+    out, pre_feature_count, grid,
+    twenty_five_mi_mean_features_range, twenty_five_mi_mean_is2,
+    fifty_mi_mean_features_range,       fifty_mi_mean_is2,
+    hundred_mi_mean_features_range,     hundred_mi_mean_is2;
+    use_2020_models_buggy_100mi_calc = false
+  )
+
+  thread_row_cumsums = map(_ -> Array{Float64}(undef, (grid.width+1, grid.height)), 1:Threads.nthreads())
+
+  Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
+
+    twenty_five_mi_mean_feature_i = pre_layer_feature_i - 1 + twenty_five_mi_mean_features_range.start
+    fifty_mi_mean_feature_i       = pre_layer_feature_i - 1 + fifty_mi_mean_features_range.start
+    hundred_mi_mean_feature_i     = pre_layer_feature_i - 1 + hundred_mi_mean_features_range.start
+
+    make_3mean_layers!(
+      grid, (@view out[:, pre_layer_feature_i]),
+      twenty_five_mi_mean_is2, fifty_mi_mean_is2, hundred_mi_mean_is2,
+      (@view out[:, twenty_five_mi_mean_feature_i]),
+      (@view out[:, fifty_mi_mean_feature_i]),
+      (@view out[:, hundred_mi_mean_feature_i]),
+      thread_row_cumsums[Threads.threadid()];
+      use_2020_models_buggy_100mi_calc = use_2020_models_buggy_100mi_calc
+    )
   end
 
   ()
@@ -763,16 +931,6 @@ function meanify_threaded2(grid, feature_data, mean_is2)
     out[grid_i] = val / len
   end
 
-  # Threads.@threads for grid_i in 1:length(feature_data)
-  #   val = 0f0
-
-  #   @inbounds for near_i in mean_is[grid_i]
-  #     val += feature_data[near_i]
-  #   end
-
-  #   out[grid_i] = val / Float32(length(mean_is[grid_i]))
-  # end
-
   out
 end
 
@@ -784,10 +942,14 @@ function make_data(
       data                      :: Array{Float32,2},
       vector_wind_layers        :: Vector{String},
       layer_blocks_to_make      :: Vector{Int64}, # List of indices. See top of this file.
-      twenty_five_mi_mean_is    :: Vector{Vector{Int64}}, # If not using, pass an empty vector.
-      unique_fifty_mi_mean_is   :: Vector{Vector{Int64}}, # If not using, pass an empty vector.
-      unique_hundred_mi_mean_is :: Vector{Vector{Int64}};  # If not using, pass an empty vector.
-      new_features_pre = [] # list of pairs of (feature_name, compute_feature_function(grid, get_layer_function))
+      twenty_five_mi_mean_is2   :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}}, # If not using, pass an empty vector.
+      fifty_mi_mean_is2         :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}}, # If not using, pass an empty vector.
+      hundred_mi_mean_is2       :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}};  # If not using, pass an empty vector.
+      # twenty_five_mi_mean_is,
+      # fifty_mi_mean_is,
+      # hundred_mi_mean_is;
+      new_features_pre = [], # list of pairs of (feature_name, compute_feature_function(grid, get_layer_function))
+      use_2020_models_buggy_100mi_calc = false # kind of ashamed of this lol
     ) :: Array{Float32,2}
 
 
@@ -919,11 +1081,17 @@ function make_data(
   should_make_hundred_mi_mean_block     = hundred_mi_mean_block     in layer_blocks_to_make
 
   @time if should_make_twenty_five_mi_mean_block || should_make_fifty_mi_mean_block || should_make_hundred_mi_mean_block
-    make_mean_layers(
-        out, pre_feature_count, grid_point_count,
-        should_make_twenty_five_mi_mean_block, twenty_five_mi_mean_features_range, twenty_five_mi_mean_is,
-        should_make_fifty_mi_mean_block,       fifty_mi_mean_features_range,       unique_fifty_mi_mean_is,
-        should_make_hundred_mi_mean_block,     hundred_mi_mean_features_range,     unique_hundred_mi_mean_is
+    # Don't want to deal with this
+    @assert should_make_twenty_five_mi_mean_block
+    @assert should_make_fifty_mi_mean_block
+    @assert should_make_hundred_mi_mean_block
+
+    make_mean_layers2!(
+        out, pre_feature_count, grid,
+        twenty_five_mi_mean_features_range, twenty_five_mi_mean_is2,
+        fifty_mi_mean_features_range,       fifty_mi_mean_is2,
+        hundred_mi_mean_features_range,     hundred_mi_mean_is2;
+        use_2020_models_buggy_100mi_calc = use_2020_models_buggy_100mi_calc
       )
   end
 
