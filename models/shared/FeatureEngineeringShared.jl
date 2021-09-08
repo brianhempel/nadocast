@@ -486,42 +486,27 @@ function make_mean_layers(
   ()
 end
 
-function point_mean(point_mean_is2, row_cumsums)
+function point_mean(point_mean_is2, len, row_cumsums)
   val = 0.0
-  len = 0.0
 
-  # @inbounds
-  for (row, range) in point_mean_is2
+  @inbounds for (row, range) in point_mean_is2
     val += row_cumsums[range.stop+1, row] - row_cumsums[range.start, row]
-    len += length(range)
   end
 
   Float32(val / len)
 end
 
 # Double-count the ring between 25 and 50mi
-function point_mean_buggy(twenty_five_mi_is2, twenty_five_mi_mean, fifty_mi_is2, fifty_mi_mean, hundred_mi_is2, row_cumsums)
+function point_mean_buggy(twenty_five_mi_mean, twenty_five_mi_len, fifty_mi_mean, fifty_mi_len, hundred_mi_is2, len, row_cumsums)
   val = 0.0
-  len = 0
 
-  # @inbounds
-  for (row, range) in hundred_mi_is2
+  @inbounds for (row, range) in hundred_mi_is2
     val += row_cumsums[range.stop+1, row] - row_cumsums[range.start, row]
-    len += length(range)
   end
 
-  # Could cache this
-  twenty_five_mi_len = 0
-  for (_, range) in twenty_five_mi_is2
-    twenty_five_mi_len += length(range)
-  end
-  fifty_five_mi_len = 0
-  for (_, range) in fifty_mi_is2
-    fifty_five_mi_len += length(range)
-  end
-  val += Float64(fifty_mi_mean)*fifty_five_mi_len - Float64(twenty_five_mi_mean)*twenty_five_mi_len
+  val += Float64(fifty_mi_mean)*fifty_mi_len - Float64(twenty_five_mi_mean)*twenty_five_mi_len
 
-  Float32(val / (len + fifty_five_mi_len - twenty_five_mi_len))
+  Float32(val / (len + fifty_mi_len - twenty_five_mi_len))
 end
 
 # function point_mean_old(point_mean_is2, grid, feature_data)
@@ -538,10 +523,8 @@ end
 #   Float32(val / len)
 # end
 
-function make_3mean_layers!(grid, feature_data, mean_is2_1, mean_is2_2, mean_is2_3, out1, out2, out3, row_cumsums; use_2020_models_buggy_100mi_calc = false)
-  # out         = zeros(Float32, size(feature_data))
-  # row_cumsums = Array{Float64}(undef, (grid.width+1, grid.height))
-
+# Mutates row_cumsums
+function calc_row_cumsums!(grid, feature_data, row_cumsums)
   width = grid.width
 
   for j in 1:grid.height
@@ -550,26 +533,112 @@ function make_3mean_layers!(grid, feature_data, mean_is2_1, mean_is2_2, mean_is2
     row_sum = 0.0
     row_cumsums[1,j] = row_sum
 
-    # @inbounds
-    for i in 1:width
+    @inbounds for i in 1:width
       flat_i = row_offset + i
       row_sum += Float64(feature_data[flat_i])
       row_cumsums[i+1,j] = row_sum
     end
   end
 
-  for grid_i in 1:length(feature_data)
-    out1[grid_i] = point_mean(mean_is2_1[grid_i], row_cumsums)
-    out2[grid_i] = point_mean(mean_is2_2[grid_i], row_cumsums)
+  ()
+end
+
+function make_3mean_layers!(grid, feature_data, mean_is2_1, mean_is2_2, mean_is2_3, mean_is2_lens_1, mean_is2_lens_2, mean_is2_lens_3, out1, out2, out3, row_cumsums; use_2020_models_buggy_100mi_calc = false)
+  # out         = zeros(Float32, size(feature_data))
+  # row_cumsums = Array{Float64}(undef, (grid.width+1, grid.height))
+
+  calc_row_cumsums!(grid, feature_data, row_cumsums)
+
+  @inbounds for grid_i in 1:length(grid.latlons)
+    out1[grid_i] = point_mean(mean_is2_1[grid_i], mean_is2_lens_1[grid_i], row_cumsums)
+    out2[grid_i] = point_mean(mean_is2_2[grid_i], mean_is2_lens_2[grid_i], row_cumsums)
     if use_2020_models_buggy_100mi_calc # Don't ask how this happened. The ring between 25mi and 50mi was double-counted
-      out3[grid_i] = point_mean_buggy(mean_is2_1[grid_i], out1[grid_i], mean_is2_2[grid_i], out2[grid_i], mean_is2_3[grid_i], row_cumsums)
+      out3[grid_i] = point_mean_buggy(out1[grid_i], mean_is2_lens_1[grid_i], out2[grid_i], mean_is2_lens_2[grid_i], mean_is2_3[grid_i], mean_is2_lens_3[grid_i], row_cumsums)
     else
-      out3[grid_i] = point_mean(mean_is2_3[grid_i], row_cumsums)
+      out3[grid_i] = point_mean(mean_is2_3[grid_i], mean_is2_lens_3[grid_i], row_cumsums)
     end
   end
 
   ()
 end
+
+# function calc_2_row_cumsums!(grid, out, feature_i, row_cumsums1, row_cumsums2)
+#   width = grid.width
+
+#   for j in 1:grid.height
+#     row_offset = width*(j-1)
+
+#     row_sum1 = 0.0
+#     row_sum2 = 0.0
+#     row_cumsums1[1,j] = row_sum1
+#     row_cumsums2[1,j] = row_sum2
+
+#     @inbounds for i in 1:width
+#       flat_i = row_offset + i
+#       row_sum1 += Float64(out[flat_i, feature_i])
+#       row_sum2 += Float64(out[flat_i, feature_i+1])
+#       row_cumsums1[i+1,j] = row_sum1
+#       row_cumsums2[i+1,j] = row_sum2
+#     end
+#   end
+
+#   ()
+# end
+
+# function point_mean_2_features!(out, grid_i, out_feature_i1, point_mean_is2, len, row_cumsums1, row_cumsums2)
+#   val1 = 0.0
+#   val2 = 0.0
+
+#   @inbounds for (row, range) in point_mean_is2
+#     val1 += row_cumsums1[range.stop+1, row] - row_cumsums1[range.start, row]
+#     val2 += row_cumsums2[range.stop+1, row] - row_cumsums2[range.start, row]
+#   end
+
+#   out[grid_i, out_feature_i1]   = Float32(val1 / len)
+#   out[grid_i, out_feature_i1+1] = Float32(val2 / len)
+# end
+
+# # Double-count the ring between 25 and 50mi
+# function point_mean_2_features_buggy!(out, grid_i, pre_layer_feature_i, pre_feature_count, twenty_five_mi_len, fifty_mi_len, hundred_mi_is2, len, row_cumsums1, row_cumsums2)
+#   val1 = 0.0
+#   val2 = 0.0
+
+#   @inbounds for (row, range) in hundred_mi_is2
+#     val1 += row_cumsums1[range.stop+1, row] - row_cumsums1[range.start, row]
+#     val2 += row_cumsums2[range.stop+1, row] - row_cumsums2[range.start, row]
+#   end
+
+#   val1 += fifty_mi_len*Float64(out[grid_i, pre_layer_feature_i + 2*pre_feature_count])     - twenty_five_mi_len*Float64(out[grid_i, pre_layer_feature_i + 1*pre_feature_count])
+#   val2 += fifty_mi_len*Float64(out[grid_i, pre_layer_feature_i + 2*pre_feature_count + 1]) - twenty_five_mi_len*Float64(out[grid_i, pre_layer_feature_i + 1*pre_feature_count + 1])
+
+#   out[grid_i, pre_layer_feature_i + 3*pre_feature_count]     = Float32(val1 / (len + fifty_mi_len - twenty_five_mi_len))
+#   out[grid_i, pre_layer_feature_i + 3*pre_feature_count + 1] = Float32(val2 / (len + fifty_mi_len - twenty_five_mi_len))
+# end
+
+# # calcs mean features for pre_layer_feature_i and pre_layer_feature_i+1
+# function make_6mean_layers!(
+#     grid, out, pre_layer_feature_i, pre_feature_count,
+#     twenty_five_mi_mean_is2, fifty_mi_mean_is2, hundred_mi_mean_is2,
+#     twenty_five_mi_mean_is2_lens, fifty_mi_mean_is2_lens, hundred_mi_mean_is2_lens,
+#     row_cumsums1,
+#     row_cumsums2;
+#     use_2020_models_buggy_100mi_calc = false
+#   )
+
+#   calc_2_row_cumsums!(grid, out, pre_layer_feature_i, row_cumsums1, row_cumsums2)
+
+#   @inbounds for grid_i in 1:length(grid.latlons)
+#     point_mean_2_features!(out, grid_i, pre_layer_feature_i + 1*pre_feature_count, twenty_five_mi_mean_is2[grid_i], twenty_five_mi_mean_is2_lens[grid_i], row_cumsums1, row_cumsums2)
+#     point_mean_2_features!(out, grid_i, pre_layer_feature_i + 2*pre_feature_count, fifty_mi_mean_is2[grid_i], fifty_mi_mean_is2_lens[grid_i], row_cumsums1, row_cumsums2)
+#     if use_2020_models_buggy_100mi_calc # Don't ask how this happened. The ring between 25mi and 50mi was double-counted
+#       point_mean_2_features_buggy!(out, grid_i, pre_layer_feature_i, pre_feature_count, twenty_five_mi_mean_is2_lens[grid_i], fifty_mi_mean_is2_lens[grid_i], hundred_mi_mean_is2[grid_i], hundred_mi_mean_is2_lens[grid_i], row_cumsums1, row_cumsums2)
+#     else
+#       point_mean_2_features!(out, grid_i, pre_layer_feature_i + 3*pre_feature_count, hundred_mi_mean_is2[grid_i], hundred_mi_mean_is2_lens[grid_i], row_cumsums1, row_cumsums2)
+#     end
+#   end
+
+# end
+
 
 
 function make_mean_layers2!(
@@ -580,7 +649,24 @@ function make_mean_layers2!(
     use_2020_models_buggy_100mi_calc = false
   )
 
-  thread_row_cumsums = map(_ -> Array{Float64}(undef, (grid.width+1, grid.height)), 1:Threads.nthreads())
+  calc_lens(grid_is2) = begin
+    lens = Array{Int64}(undef, length(grid_is2))
+    Threads.@threads for grid_i in 1:length(grid_is2)
+      len = 0
+      for (_, range) in grid_is2[grid_i]
+        len += length(range)
+      end
+      lens[grid_i] = len
+    end
+    lens
+  end
+
+  twenty_five_mi_mean_is2_lens  = calc_lens(twenty_five_mi_mean_is2)
+  fifty_mi_mean_is2_lens        = calc_lens(fifty_mi_mean_is2)
+  hundred_mi_mean_is2_lens      = calc_lens(hundred_mi_mean_is2)
+
+  thread_row_cumsums1 = map(_ -> Array{Float64}(undef, (grid.width+1, grid.height)), 1:Threads.nthreads())
+  # thread_row_cumsums2 = map(_ -> Array{Float64}(undef, (grid.width+1, grid.height)), 1:Threads.nthreads())
 
   Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
 
@@ -591,12 +677,24 @@ function make_mean_layers2!(
     make_3mean_layers!(
       grid, (@view out[:, pre_layer_feature_i]),
       twenty_five_mi_mean_is2, fifty_mi_mean_is2, hundred_mi_mean_is2,
+      twenty_five_mi_mean_is2_lens, fifty_mi_mean_is2_lens, hundred_mi_mean_is2_lens,
       (@view out[:, twenty_five_mi_mean_feature_i]),
       (@view out[:, fifty_mi_mean_feature_i]),
       (@view out[:, hundred_mi_mean_feature_i]),
-      thread_row_cumsums[Threads.threadid()];
+      thread_row_cumsums1[Threads.threadid()];
       use_2020_models_buggy_100mi_calc = use_2020_models_buggy_100mi_calc
     )
+    # if pre_layer_feature_i == pre_feature_count
+    # else
+    #   make_6mean_layers!(
+    #     grid, out, pre_layer_feature_i, pre_feature_count,
+    #     twenty_five_mi_mean_is2, fifty_mi_mean_is2, hundred_mi_mean_is2,
+    #     twenty_five_mi_mean_is2_lens, fifty_mi_mean_is2_lens, hundred_mi_mean_is2_lens,
+    #     thread_row_cumsums1[Threads.threadid()],
+    #     thread_row_cumsums2[Threads.threadid()];
+    #     use_2020_models_buggy_100mi_calc = use_2020_models_buggy_100mi_calc
+    #   )
+    # end
   end
 
   ()
