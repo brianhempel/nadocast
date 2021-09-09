@@ -109,7 +109,7 @@ function reload_forecasts()
   blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
   blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f38))
 
-  _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:38, blur_lo_grid_is, blur_hi_grid_is)
+  _forecasts_blurred = ForecastCombinators.circumvent_gc_forecasts(PredictionForecasts.blurred(_forecasts, 2:38, blur_lo_grid_is, blur_hi_grid_is))
 
   ()
 end

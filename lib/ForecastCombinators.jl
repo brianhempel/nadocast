@@ -207,4 +207,36 @@ function cache_forecasts(old_forecasts)
   end
 end
 
+
+_gc_circumvention_on = false
+
+function turn_forecast_gc_circumvention_on()
+  global _gc_circumvention_on
+  _gc_circumvention_on = true
+end
+
+function turn_forecast_gc_circumvention_off()
+  global _gc_circumvention_on
+  _gc_circumvention_on = false
+end
+
+function circumvent_gc_forecasts(forecasts)
+  map(forecasts) do forecast
+    get_data() = begin
+      if _gc_circumvention_on
+        prior_gc_state = GC.enable(false)
+      end
+      out = Forecasts.data(forecast)
+      if _gc_circumvention_on
+        GC.enable(prior_gc_state)
+      end
+      out
+    end
+
+    revised_forecast(forecast, forecast.grid, forecast._get_inventory, get_data)
+  end
+end
+
 end # module ForecastCombinators
+
+
