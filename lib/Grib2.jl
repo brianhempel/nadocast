@@ -327,7 +327,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # print("waiting...")
   map(wait, wgrib2s)
 
-  count_after_crop_before_downsample = count(crop_mask)
+  count_after_crop_before_downsample = isa(crop_mask, Colon) ? expected_layer_raw_value_count : count(crop_mask)
 
   Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
 
