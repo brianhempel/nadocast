@@ -389,18 +389,24 @@ function reload_forecasts()
   end
 
   # # Which run time and forecast hour to use for the set.
-  # # Namely: latest run time, then longest forecast hour
-  choose_canonical_forecast(day_hourlies) = begin
-    canonical = day_hourlies[1]
+  # # Namely: latest run time (from HRRR), then forecast hour corresponding to longest HREF/SREF
+  make_canonical_forecast(day_hourlies) = begin
+    latest_run_time_forecast   = day_hourlies[1]
+    latest_valid_time_forecast = day_hourlies[1]
     for forecast in day_hourlies
-      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
-        canonical = forecast
+      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(latest_run_time_forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(latest_run_time_forecast))
+        latest_run_time_forecast = forecast
+      end
+      if (Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), Forecasts.run_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.valid_time_in_seconds_since_epoch_utc(latest_valid_time_forecast), Forecasts.run_time_in_seconds_since_epoch_utc(latest_valid_time_forecast))
+        latest_valid_time_forecast = forecast
       end
     end
-    canonical
+    forecast_hour = (Forecasts.valid_time_in_seconds_since_epoch_utc(latest_valid_time_forecast) - Forecasts.run_time_in_seconds_since_epoch_utc(latest_run_time_forecast)) ÷ HOUR
+
+    Forecasts.Forecast("", latest_run_time_forecast.run_year, latest_run_time_forecast.run_month, latest_run_time_forecast.run_day, latest_run_time_forecast.run_hour, forecast_hour, [], latest_run_time_forecast.grid, () -> [], () -> [], [])
   end
 
-  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = make_canonical_forecast)
 
   day_inventory_transformer(base_forecast, base_inventory) = begin
     [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
