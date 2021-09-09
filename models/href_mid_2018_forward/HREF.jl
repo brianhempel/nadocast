@@ -79,14 +79,14 @@ function forecasts()
   end
 end
 
-_twenty_five_mi_mean_is = nothing
+_twenty_five_mi_mean_is2 = nothing
 
-function get_twenty_five_mi_mean_is()
-  global _twenty_five_mi_mean_is
-  if isnothing(_twenty_five_mi_mean_is)
-    _twenty_five_mi_mean_is, _, _ = FeatureEngineeringShared.compute_mean_is(grid())
+function get_twenty_five_mi_mean_is2()
+  global _twenty_five_mi_mean_is2
+  if isnothing(_twenty_five_mi_mean_is2)
+    _twenty_five_mi_mean_is2, _, _ = FeatureEngineeringShared.compute_mean_is2(grid())
   end
-  _twenty_five_mi_mean_is
+  _twenty_five_mi_mean_is2
 end
 
 
@@ -105,83 +105,88 @@ low_level_v_key = "VGRD:925 mb:hour fcst:wt ens mean"
 dpt_key  = "DPT:2 m above ground:hour fcst:wt ens mean"
 rain_key = "CRAIN:surface:hour fcst:wt ens mean"
 
-function meanify_25mi(feature_data)
-  FeatureEngineeringShared.meanify_threaded(feature_data, get_twenty_five_mi_mean_is())
+function meanify_25mi(grid, feature_data)
+  FeatureEngineeringShared.meanify_threaded2(grid, feature_data, get_twenty_five_mi_mean_is2())
 end
 
 # Upstream feature gated by SCP > 0.1
 # Computed output gated by SCP > 1
-function storm_upstream_feature_gated_by_SCP(grid, get_layer, key; hours)
-  FeatureEngineeringShared.compute_upstream_mean_threaded(
-    grid         = grid,
-    u_data       = get_layer("UGRD:700 mb:hour fcst:wt ens mean"),
-    v_data       = get_layer("VGRD:700 mb:hour fcst:wt ens mean"),
-    feature_data = meanify_25mi(get_layer(key) .* Float32.(get_layer("SCPish(RM)") .> 0.1f0)),
-    hours        = hours
-  ) .* get_layer("SCPish(RM)>1")
+# also returns out
+function storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, key; hours)
+  out .=
+    FeatureEngineeringShared.compute_upstream_mean_threaded(
+      grid         = grid,
+      u_data       = get_layer("UGRD:700 mb:hour fcst:wt ens mean"),
+      v_data       = get_layer("VGRD:700 mb:hour fcst:wt ens mean"),
+      feature_data = meanify_25mi(grid, get_layer(key) .* Float32.(get_layer("SCPish(RM)") .> 0.1f0)),
+      hours        = hours,
+      out          = out
+    ) .* get_layer("SCPish(RM)>1")
 end
 
-function upstream_feature(grid, get_layer, u_key, v_key, feature_key; hours)
+function upstream_feature!(grid, get_layer, out, u_key, v_key, feature_key; hours)
   FeatureEngineeringShared.compute_upstream_mean_threaded(
     grid         = grid,
     u_data       = get_layer(u_key),
     v_data       = get_layer(v_key),
     feature_data = get_layer(feature_key),
-    hours        = hours
+    hours        = hours,
+    out          = out
   )
 end
 
 
+
 interaction_terms = [
   # 0-3km EHI, roughly
-  (    "SBCAPE*HLCY3000-0m", (_, get_layer) ->       get_layer(sbcape_key)  .* get_layer(helicity3km_key)),
-  (    "MLCAPE*HLCY3000-0m", (_, get_layer) ->       get_layer(mlcape_key)  .* get_layer(helicity3km_key)),
-  ("sqrtSBCAPE*HLCY3000-0m", (_, get_layer) -> sqrt.(get_layer(sbcape_key)) .* get_layer(helicity3km_key)),
-  ("sqrtMLCAPE*HLCY3000-0m", (_, get_layer) -> sqrt.(get_layer(mlcape_key)) .* get_layer(helicity3km_key)),
+  (    "SBCAPE*HLCY3000-0m", (_, get_layer, out) -> out .=       get_layer(sbcape_key)  .* get_layer(helicity3km_key)),
+  (    "MLCAPE*HLCY3000-0m", (_, get_layer, out) -> out .=       get_layer(mlcape_key)  .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*HLCY3000-0m", (_, get_layer, out) -> out .= sqrt.(get_layer(sbcape_key)) .* get_layer(helicity3km_key)),
+  ("sqrtMLCAPE*HLCY3000-0m", (_, get_layer, out) -> out .= sqrt.(get_layer(mlcape_key)) .* get_layer(helicity3km_key)),
 
   # Terms following Togstad et al 2011 "Conditional Probability Estimation for Significant Tornadoes Based on Rapid Update Cycle (RUC) Profiles"
-  (    "SBCAPE*BWD0-6km", (_, get_layer) ->       get_layer(sbcape_key)  .* get_layer(bwd_0_6km_key)),
-  (    "MLCAPE*BWD0-6km", (_, get_layer) ->       get_layer(mlcape_key)  .* get_layer(bwd_0_6km_key)),
-  ("sqrtSBCAPE*BWD0-6km", (_, get_layer) -> sqrt.(get_layer(sbcape_key)) .* get_layer(bwd_0_6km_key)),
-  ("sqrtMLCAPE*BWD0-6km", (_, get_layer) -> sqrt.(get_layer(mlcape_key)) .* get_layer(bwd_0_6km_key)),
+  (    "SBCAPE*BWD0-6km", (_, get_layer, out) -> out .=       get_layer(sbcape_key)  .* get_layer(bwd_0_6km_key)),
+  (    "MLCAPE*BWD0-6km", (_, get_layer, out) -> out .=       get_layer(mlcape_key)  .* get_layer(bwd_0_6km_key)),
+  ("sqrtSBCAPE*BWD0-6km", (_, get_layer, out) -> out .= sqrt.(get_layer(sbcape_key)) .* get_layer(bwd_0_6km_key)),
+  ("sqrtMLCAPE*BWD0-6km", (_, get_layer, out) -> out .= sqrt.(get_layer(mlcape_key)) .* get_layer(bwd_0_6km_key)),
 
   # Pseudo-STP terms
-  (    "SBCAPE*(200+SBCIN)", (_, get_layer) ->       get_layer(sbcape_key)  .* (200f0 .+ get_layer(sbcin_key))),
-  (    "MLCAPE*(200+MLCIN)", (_, get_layer) ->       get_layer(mlcape_key)  .* (200f0 .+ get_layer(mlcin_key))),
-  ("sqrtSBCAPE*(200+SBCIN)", (_, get_layer) -> sqrt.(get_layer(sbcape_key)) .* (200f0 .+ get_layer(sbcin_key))),
-  ("sqrtMLCAPE*(200+MLCIN)", (_, get_layer) -> sqrt.(get_layer(mlcape_key)) .* (200f0 .+ get_layer(mlcin_key))),
+  (    "SBCAPE*(200+SBCIN)", (_, get_layer, out) -> out .=       get_layer(sbcape_key)  .* (200f0 .+ get_layer(sbcin_key))),
+  (    "MLCAPE*(200+MLCIN)", (_, get_layer, out) -> out .=       get_layer(mlcape_key)  .* (200f0 .+ get_layer(mlcin_key))),
+  ("sqrtSBCAPE*(200+SBCIN)", (_, get_layer, out) -> out .= sqrt.(get_layer(sbcape_key)) .* (200f0 .+ get_layer(sbcin_key))),
+  ("sqrtMLCAPE*(200+MLCIN)", (_, get_layer, out) -> out .= sqrt.(get_layer(mlcape_key)) .* (200f0 .+ get_layer(mlcin_key))),
 
-  (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
-  (    "MLCAPE*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*(200+MLCIN)") .* get_layer(helicity3km_key)),
-  ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
-  ("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*(200+MLCIN)") .* get_layer(helicity3km_key)),
+  (    "SBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer, out) -> out .= get_layer(    "SBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
+  (    "MLCAPE*HLCY3000-0m*(200+MLCIN)", (_, get_layer, out) -> out .= get_layer(    "MLCAPE*(200+MLCIN)") .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)", (_, get_layer, out) -> out .= get_layer("sqrtSBCAPE*(200+SBCIN)") .* get_layer(helicity3km_key)),
+  ("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)", (_, get_layer, out) -> out .= get_layer("sqrtMLCAPE*(200+MLCIN)") .* get_layer(helicity3km_key)),
 
-  (    "SBCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer) -> get_layer(    "SBCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
-  (    "MLCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer) -> get_layer(    "MLCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
-  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer) -> get_layer("sqrtSBCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
-  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer) -> get_layer("sqrtMLCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
+  (    "SBCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer, out) -> out .= get_layer(    "SBCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
+  (    "MLCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer, out) -> out .= get_layer(    "MLCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
+  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer, out) -> out .= get_layer("sqrtSBCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
+  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m", (_, get_layer, out) -> out .= get_layer("sqrtMLCAPE*BWD0-6km") .* get_layer(helicity3km_key)),
 
-  (    "SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer(bwd_0_6km_key)),
-  (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer(    "MLCAPE*HLCY3000-0m*(200+MLCIN)") .* get_layer(bwd_0_6km_key)),
-  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer) -> get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer(bwd_0_6km_key)),
-  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer) -> get_layer("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)") .* get_layer(bwd_0_6km_key)),
+  (    "SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer, out) -> out .= get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer(bwd_0_6km_key)),
+  (    "MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer, out) -> out .= get_layer(    "MLCAPE*HLCY3000-0m*(200+MLCIN)") .* get_layer(bwd_0_6km_key)),
+  ("sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN)", (_, get_layer, out) -> out .= get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer(bwd_0_6km_key)),
+  ("sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN)", (_, get_layer, out) -> out .= get_layer("sqrtMLCAPE*HLCY3000-0m*(200+MLCIN)") .* get_layer(bwd_0_6km_key)),
 
-  ("SCPish(RM)", (_, get_layer) -> get_layer(mulayercape_key) .* get_layer(helicity3km_key) .* get_layer(bwd_0_6km_key) .* (1f0 / (1000f0 * 50f0 * 20f0))),
+  ("SCPish(RM)", (_, get_layer, out) -> out .= get_layer(mulayercape_key) .* get_layer(helicity3km_key) .* get_layer(bwd_0_6km_key) .* (1f0 / (1000f0 * 50f0 * 20f0))),
 
-  ("Divergence925mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
+  ("Divergence925mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_divergence_threaded!(grid, out, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
 
   # Following SPC Mesoscale analysis page
-  ("Divergence850mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
-  ("Divergence250mb*10^5"                , (grid, get_layer) -> FeatureEngineeringShared.compute_divergence_threaded(grid, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
-  ("DifferentialDivergence250-850mb*10^5", (grid, get_layer) -> get_layer("Divergence250mb*10^5") - get_layer("Divergence850mb*10^5")),
+  ("Divergence850mb*10^5"                , (grid, get_layer, out) -> FeatureEngineeringShared.compute_divergence_threaded!(grid, out, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
+  ("Divergence250mb*10^5"                , (grid, get_layer, out) -> FeatureEngineeringShared.compute_divergence_threaded!(grid, out, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
+  ("DifferentialDivergence250-850mb*10^5", (grid, get_layer, out) -> out .= get_layer("Divergence250mb*10^5") - get_layer("Divergence850mb*10^5")),
 
-  ("ConvergenceOnly925mb*10^5", (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence925mb*10^5"))),
-  ("ConvergenceOnly850mb*10^5", (grid, get_layer) -> max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5"))),
+  ("ConvergenceOnly925mb*10^5", (grid, get_layer, out) -> out .= max.(0f0, 0f0 .- get_layer("Divergence925mb*10^5"))),
+  ("ConvergenceOnly850mb*10^5", (grid, get_layer, out) -> out .= max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5"))),
 
-  ("AbsVorticity925mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
-  ("AbsVorticity850mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
-  ("AbsVorticity500mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:500 mb:hour fcst:wt ens mean"), get_layer("VGRD:500 mb:hour fcst:wt ens mean"))),
-  ("AbsVorticity250mb*10^5", (grid, get_layer) -> FeatureEngineeringShared.compute_vorticity_threaded(grid, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity925mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:925 mb:hour fcst:wt ens mean"), get_layer("VGRD:925 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity850mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:850 mb:hour fcst:wt ens mean"), get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity500mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:500 mb:hour fcst:wt ens mean"), get_layer("VGRD:500 mb:hour fcst:wt ens mean"))),
+  ("AbsVorticity250mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:250 mb:hour fcst:wt ens mean"), get_layer("VGRD:250 mb:hour fcst:wt ens mean"))),
 
   # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
   #
@@ -189,33 +194,33 @@ interaction_terms = [
   #
   # Should follow goldilocks principle: too much and too little are both bad.
 
-  ("SCPish(RM)>1", (grid, get_layer) -> Float32.(meanify_25mi(get_layer("SCPish(RM)")) .> 1f0)),
+  ("SCPish(RM)>1", (grid, get_layer, out) -> out .= Float32.(meanify_25mi(grid, get_layer("SCPish(RM)")) .> 1f0)),
 
-  ("StormUpstream925mbConvergence3hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly925mb*10^5"           , hours = 3)),
-  ("StormUpstream925mbConvergence6hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly925mb*10^5"           , hours = 6)),
-  ("StormUpstream925mbConvergence9hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly925mb*10^5"           , hours = 9)),
+  ("StormUpstream925mbConvergence3hrGatedBySCP"               , (grid, get_layer, out) ->                  storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "ConvergenceOnly925mb*10^5"           , hours = 3)),
+  ("StormUpstream925mbConvergence6hrGatedBySCP"               , (grid, get_layer, out) ->                  storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "ConvergenceOnly925mb*10^5"           , hours = 6)),
+  ("StormUpstream925mbConvergence9hrGatedBySCP"               , (grid, get_layer, out) ->                  storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "ConvergenceOnly925mb*10^5"           , hours = 9)),
 
-  ("StormUpstream850mbConvergence3hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly850mb*10^5"           , hours = 3)),
-  ("StormUpstream850mbConvergence6hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly850mb*10^5"           , hours = 6)),
-  ("StormUpstream850mbConvergence9hrGatedBySCP"               , (grid, get_layer) ->           storm_upstream_feature_gated_by_SCP(grid, get_layer, "ConvergenceOnly850mb*10^5"           , hours = 9)),
+  ("StormUpstream850mbConvergence3hrGatedBySCP"               , (grid, get_layer, out) ->                  storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "ConvergenceOnly850mb*10^5"           , hours = 3)),
+  ("StormUpstream850mbConvergence6hrGatedBySCP"               , (grid, get_layer, out) ->                  storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "ConvergenceOnly850mb*10^5"           , hours = 6)),
+  ("StormUpstream850mbConvergence9hrGatedBySCP"               , (grid, get_layer, out) ->                  storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "ConvergenceOnly850mb*10^5"           , hours = 9)),
 
-  ("StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP", (grid, get_layer) -> max.(0f0, storm_upstream_feature_gated_by_SCP(grid, get_layer, "DifferentialDivergence250-850mb*10^5", hours = 3))),
-  ("StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP", (grid, get_layer) -> max.(0f0, storm_upstream_feature_gated_by_SCP(grid, get_layer, "DifferentialDivergence250-850mb*10^5", hours = 6))),
-  ("StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP", (grid, get_layer) -> max.(0f0, storm_upstream_feature_gated_by_SCP(grid, get_layer, "DifferentialDivergence250-850mb*10^5", hours = 9))),
+  ("StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP", (grid, get_layer, out) -> out .= max.(0f0, storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "DifferentialDivergence250-850mb*10^5", hours = 3))),
+  ("StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP", (grid, get_layer, out) -> out .= max.(0f0, storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "DifferentialDivergence250-850mb*10^5", hours = 6))),
+  ("StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP", (grid, get_layer, out) -> out .= max.(0f0, storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "DifferentialDivergence250-850mb*10^5", hours = 9))),
 
   # Low level upstream features. What kind of air is the storm ingesting?
 
-  ("UpstreamSBCAPE1hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, sbcape_key, hours = 1)),
-  ("UpstreamSBCAPE2hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, sbcape_key, hours = 2)),
+  ("UpstreamSBCAPE1hr", (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, sbcape_key, hours = 1)),
+  ("UpstreamSBCAPE2hr", (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, sbcape_key, hours = 2)),
 
-  ("UpstreamMLCAPE1hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, mlcape_key, hours = 1)),
-  ("UpstreamMLCAPE2hr", (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, mlcape_key, hours = 2)),
+  ("UpstreamMLCAPE1hr", (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, mlcape_key, hours = 1)),
+  ("UpstreamMLCAPE2hr", (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, mlcape_key, hours = 2)),
 
-  ("Upstream2mDPT1hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, dpt_key   , hours = 1)),
-  ("Upstream2mDPT2hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, dpt_key   , hours = 2)),
+  ("Upstream2mDPT1hr" , (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, dpt_key   , hours = 1)),
+  ("Upstream2mDPT2hr" , (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, dpt_key   , hours = 2)),
 
-  ("UpstreamCRAIN1hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, rain_key  , hours = 1)),
-  ("UpstreamCRAIN2hr" , (grid, get_layer) -> upstream_feature(grid, get_layer, low_level_u_key, low_level_v_key, rain_key  , hours = 2)),
+  ("UpstreamCRAIN1hr" , (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, rain_key  , hours = 1)),
+  ("UpstreamCRAIN2hr" , (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, low_level_u_key, low_level_v_key, rain_key  , hours = 2)),
 ]
 
 function feature_engineered_forecasts()

@@ -105,16 +105,7 @@ function forecasts()
   end
 end
 
-_twenty_five_mi_mean_is = nothing
 _twenty_five_mi_mean_is2 = nothing
-
-function get_twenty_five_mi_mean_is()
-  global _twenty_five_mi_mean_is
-  if isnothing(_twenty_five_mi_mean_is)
-    _twenty_five_mi_mean_is, _, _ = FeatureEngineeringShared.compute_mean_is(grid())
-  end
-  _twenty_five_mi_mean_is
-end
 
 function get_twenty_five_mi_mean_is2()
   global _twenty_five_mi_mean_is2
