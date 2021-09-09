@@ -20,6 +20,7 @@ using Printf
 
 push!(LOAD_PATH, @__DIR__)
 import Forecasts
+import ForecastCombinators
 import Grids
 import PlotMap
 
@@ -34,7 +35,10 @@ if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
   exit(1)
 end
 
+ForecastCombinators.turn_forecast_caching_on()
 prediction = Forecasts.data(newest_forecast)
+ForecastCombinators.clear_cached_forecasts()
+
 
 period_stop_forecast_hour  = newest_forecast.forecast_hour
 period_start_forecast_hour = max(2, period_stop_forecast_hour - 23)

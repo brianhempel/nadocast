@@ -200,7 +200,7 @@ function zero_undefs!(arr)
   ()
 end
 
-function apply_mask!(in, out, mask)
+function apply_mask!(in, out, mask :: BitArray{1})
   j = 1
   for i in eachindex(in)
     if mask[i]
@@ -208,6 +208,11 @@ function apply_mask!(in, out, mask)
       j += 1
     end
   end
+  ()
+end
+
+function apply_mask!(in, out, mask :: Colon)
+  out[:] = in
   ()
 end
 
