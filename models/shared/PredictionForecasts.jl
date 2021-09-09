@@ -312,48 +312,48 @@ end
 #
 # If base_forecasts are feature engineered, you can provide the base forecasts without feature engineering
 # to avoid recomputing the feature engineering just to get the winds.
-function feature_engineered_prediction_forecasts(base_forecasts, model_predict; base_forecasts_no_feature_engineering = base_forecasts, vector_wind_layers, layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks)
+# function feature_engineered_prediction_forecasts(base_forecasts, model_predict; base_forecasts_no_feature_engineering = base_forecasts, vector_wind_layers, layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks)
 
-  base_forecast_vector_wind_layer_keys =
-    vcat(
-      map(vector_wind_layers) do simple_wind_layer_key
-        if simple_wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
-          [ "VUCSH:6000-0 m above ground:hour fcst:"
-          , "VVCSH:6000-0 m above ground:hour fcst:" ]
-        elseif simple_wind_layer_key == "VCSH:1000-0 m above ground:hour fcst:"
-          [ "VUCSH:1000-0 m above ground:hour fcst:"
-          , "VVCSH:1000-0 m above ground:hour fcst:" ]
-        else
-          [ "U" * simple_wind_layer_key
-          , "V" * simple_wind_layer_key ]
-        end
-      end...
-    )
+#   base_forecast_vector_wind_layer_keys =
+#     vcat(
+#       map(vector_wind_layers) do simple_wind_layer_key
+#         if simple_wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
+#           [ "VUCSH:6000-0 m above ground:hour fcst:"
+#           , "VVCSH:6000-0 m above ground:hour fcst:" ]
+#         elseif simple_wind_layer_key == "VCSH:1000-0 m above ground:hour fcst:"
+#           [ "VUCSH:1000-0 m above ground:hour fcst:"
+#           , "VVCSH:1000-0 m above ground:hour fcst:" ]
+#         else
+#           [ "U" * simple_wind_layer_key
+#           , "V" * simple_wind_layer_key ]
+#         end
+#       end...
+#     )
 
-  is_prediction_layer(inventory_line) = begin
-    inventory_line.abbrev == "tornado probability"
-  end
+#   is_prediction_layer(inventory_line) = begin
+#     inventory_line.abbrev == "tornado probability"
+#   end
 
-  is_wind_or_prediction_layer(inventory_line) = begin
-    is_prediction_layer(inventory_line) ||
-    (
-      inventory_line.feature_engineering == "" &&
-      Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
-    )
-  end
+#   is_wind_or_prediction_layer(inventory_line) = begin
+#     is_prediction_layer(inventory_line) ||
+#     (
+#       inventory_line.feature_engineering == "" &&
+#       Inventories.inventory_line_key(inventory_line) in base_forecast_vector_wind_layer_keys
+#     )
+#   end
 
-  basic_prediction_forecasts                = simple_prediction_forecasts(base_forecasts, (_, data) -> model_predict(data))
-  forecasts_with_predictions                = ForecastCombinators.concat_forecasts(Iterators.zip(basic_prediction_forecasts, base_forecasts_no_feature_engineering))
-  forecasts_with_predictions_and_winds_only = ForecastCombinators.filter_features_forecasts(forecasts_with_predictions, is_wind_or_prediction_layer)
-  forecasts_feature_engineered_predictions_and_winds  =
-    FeatureEngineeringShared.feature_engineered_forecasts(
-      forecasts_with_predictions_and_winds_only;
-      vector_wind_layers   = vector_wind_layers,
-      layer_blocks_to_make = layer_blocks_to_make
-    )
-  forecasts_feature_engineered_predictions_only = ForecastCombinators.filter_features_forecasts(forecasts_feature_engineered_predictions_and_winds, is_prediction_layer)
+#   basic_prediction_forecasts                = simple_prediction_forecasts(base_forecasts, (_, data) -> model_predict(data))
+#   forecasts_with_predictions                = ForecastCombinators.concat_forecasts(Iterators.zip(basic_prediction_forecasts, base_forecasts_no_feature_engineering))
+#   forecasts_with_predictions_and_winds_only = ForecastCombinators.filter_features_forecasts(forecasts_with_predictions, is_wind_or_prediction_layer)
+#   forecasts_feature_engineered_predictions_and_winds  =
+#     FeatureEngineeringShared.feature_engineered_forecasts(
+#       forecasts_with_predictions_and_winds_only;
+#       vector_wind_layers   = vector_wind_layers,
+#       layer_blocks_to_make = layer_blocks_to_make
+#     )
+#   forecasts_feature_engineered_predictions_only = ForecastCombinators.filter_features_forecasts(forecasts_feature_engineered_predictions_and_winds, is_prediction_layer)
 
-  forecasts_feature_engineered_predictions_only
-end
+#   forecasts_feature_engineered_predictions_only
+# end
 
-end # module PredictionForecasts
+# end # module PredictionForecasts
