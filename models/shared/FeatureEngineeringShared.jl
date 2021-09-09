@@ -206,8 +206,7 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
   data_transformer(base_forecast, base_data) = begin
     # println("Feature engineering $(base_forecast.model_name) $(Forecasts.time_title(base_forecast))...")
 
-    # 7 out of 9.5s loading time is here. 3M allocations (1M each time)
-    out = @time make_data(
+    out = make_data(
       grid,
       Forecasts.inventory(base_forecast), # 100k allocs each time
       base_data,
@@ -1075,7 +1074,7 @@ function make_data(
   # out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count + 1 + feature_interaction_terms_count))
   out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count))
 
-  @time Threads.@threads for j in 1:raw_feature_count
+  Threads.@threads for j in 1:raw_feature_count
     out[:,j] = @view data[:,j]
   end
 
@@ -1099,7 +1098,7 @@ function make_data(
   get_layer(key) = @view out[:, feature_key_to_i[key]]
 
   # Can't thread here. Terms may depend on prior computed terms.
-  @time for new_pre_feature_i in 1:length(new_features_pre)
+  for new_pre_feature_i in 1:length(new_features_pre)
     new_feature_name, compute_new_feature_pre = new_features_pre[new_pre_feature_i]
     # out[:, raw_feature_count + new_pre_feature_i] = compute_new_feature_pre(grid, get_layer)
     compute_new_feature_pre(grid, get_layer, @view out[:, raw_feature_count + new_pre_feature_i])
@@ -1178,7 +1177,7 @@ function make_data(
   should_make_fifty_mi_mean_block       = fifty_mi_mean_block       in layer_blocks_to_make
   should_make_hundred_mi_mean_block     = hundred_mi_mean_block     in layer_blocks_to_make
 
-  @time if should_make_twenty_five_mi_mean_block || should_make_fifty_mi_mean_block || should_make_hundred_mi_mean_block
+  if should_make_twenty_five_mi_mean_block || should_make_fifty_mi_mean_block || should_make_hundred_mi_mean_block
     # Don't want to deal with this
     @assert should_make_twenty_five_mi_mean_block
     @assert should_make_fifty_mi_mean_block
@@ -1204,7 +1203,7 @@ function make_data(
 
   # Not density weighted. Not even reasonably weighted lol.
 
-  @time if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
+  if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
     # SREF
     mean_wind_lower_half_atmosphere_us .= get_layer("UGRD:10 m above ground:hour fcst:wt ens mean")
     mean_wind_lower_half_atmosphere_vs .= get_layer("VGRD:10 m above ground:hour fcst:wt ens mean")
@@ -1220,7 +1219,7 @@ function make_data(
     fill!(mean_wind_lower_half_atmosphere_vs, 0.0f0)
   end
 
-  @time for mb in 950:-25:500
+  for mb in 950:-25:500
     if "GRD:$mb mb:hour fcst:wt ens mean" in vector_wind_layers
       # HREF/SREF
       mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:wt ens mean")
@@ -1304,7 +1303,7 @@ function make_data(
   hundred_mi_leftward_is      = Array{Int64}(undef, grid_point_count)
   hundred_mi_rightward_is     = Array{Int64}(undef, grid_point_count)
 
-  @time compute_directional_is!(
+  compute_directional_is!(
       height, width,
       grid.point_heights_miles, grid.point_widths_miles,
       mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
@@ -1313,7 +1312,7 @@ function make_data(
       hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
     )
 
-  @time if should_make_twenty_five_mi_mean_block
+  if should_make_twenty_five_mi_mean_block
     Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
     # for pre_layer_feature_i in 1:pre_feature_count
       twenty_five_mi_mean_feature_i = pre_layer_feature_i + twenty_five_mi_mean_features_range.start - 1
@@ -1343,7 +1342,7 @@ function make_data(
     end
   end
 
-  @time if should_make_fifty_mi_mean_block
+  if should_make_fifty_mi_mean_block
     Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
     # for pre_layer_feature_i in 1:pre_feature_count
       fifty_mi_mean_feature_i = pre_layer_feature_i + fifty_mi_mean_features_range.start - 1
@@ -1373,7 +1372,7 @@ function make_data(
     end
   end
 
-  @time if should_make_hundred_mi_mean_block
+  if should_make_hundred_mi_mean_block
     Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
     # for pre_layer_feature_i in 1:pre_feature_count
       hundred_mi_mean_feature_i = pre_layer_feature_i + hundred_mi_mean_features_range.start - 1
@@ -1426,7 +1425,7 @@ function make_data(
   # Make ~500m - ~5000m shear vector relative to which we will rotate the winds
 
 
-  @time if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
+  if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
     # SREF
     mean_wind_lower_atmosphere_us  = 0.5f0 .* (get_layer("UGRD:10 m above ground:hour fcst:wt ens mean") .+ get_layer("UGRD:850 mb:hour fcst:wt ens mean"))
     mean_wind_lower_atmosphere_vs  = 0.5f0 .* (get_layer("VGRD:10 m above ground:hour fcst:wt ens mean") .+ get_layer("VGRD:850 mb:hour fcst:wt ens mean"))
@@ -1452,7 +1451,7 @@ function make_data(
     mean_wind_middle_atmosphere_vs = 0.25f0 .* get_layer("VGRD:700 mb:hour fcst:")  .+  0.75f0 .* get_layer("VGRD:500 mb:hour fcst:")
   end
 
-  @time mean_wind_angles = atan.(mean_wind_middle_atmosphere_vs .- mean_wind_lower_atmosphere_vs, mean_wind_middle_atmosphere_us .- mean_wind_lower_atmosphere_us)
+  mean_wind_angles = atan.(mean_wind_middle_atmosphere_vs .- mean_wind_lower_atmosphere_vs, mean_wind_middle_atmosphere_us .- mean_wind_lower_atmosphere_us)
 
   if any(isnan, mean_wind_angles)
     error("nan wind angle")
@@ -1479,7 +1478,7 @@ function make_data(
   #   out[:, v_i] .= (scratch_us .* rot_sines) .+ (scratch_vs .* rot_coses)
   # end
 
-  @time Threads.@threads for wind_layer_key in vector_wind_layers
+  Threads.@threads for wind_layer_key in vector_wind_layers
   # for wind_layer_key in vector_wind_layers
     if wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
       layer_key_u = "VUCSH:6000-0 m above ground:hour fcst:"
