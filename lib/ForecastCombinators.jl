@@ -229,6 +229,9 @@ function circumvent_gc_forecasts(forecasts)
       out = Forecasts.data(forecast)
       if _gc_circumvention_on
         GC.enable(prior_gc_state)
+        if prior_gc_state
+          GC.gc(true)
+        end
       end
       out
     end
