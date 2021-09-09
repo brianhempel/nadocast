@@ -169,6 +169,8 @@ function latest_within_6_hours(run_time_seconds_to_forecasts, run_time_seconds)
   Forecasts.Forecast[]
 end
 
+ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+
 function predict_one(ŷs_i, coeffs)
   # coeffs = bins_logistic_coeffs[low_bin_i]
   logit_out = last(coeffs) # Constant term
@@ -309,8 +311,6 @@ function reload_forecasts()
   end
 
   _forecasts_separate = ForecastCombinators.concat_forecasts(associated_forecasts)
-
-  ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
   # See Train.jl for where all these numbers come from
   predict(forecasts, data) = begin
