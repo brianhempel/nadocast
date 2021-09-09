@@ -169,6 +169,58 @@ function latest_within_6_hours(run_time_seconds_to_forecasts, run_time_seconds)
   Forecasts.Forecast[]
 end
 
+function predict_one(ŷs_i, coeffs)
+  # coeffs = bins_logistic_coeffs[low_bin_i]
+  logit_out = last(coeffs) # Constant term
+  for coeff_i in 1:length(ŷs_i)
+    logit_out += coeffs[coeff_i] * logit(ŷs_i[coeff_i])
+  end
+  σ(logit_out)
+end
+
+function make_combined_prediction(data; first_guess_feature_i, bin_maxes, bins_logistic_coeffs)
+  first_guess_ŷs = @view data[:, first_guess_feature_i]
+
+  out = Array{Float32}(undef, length(first_guess_ŷs))
+
+  # bin_maxes = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0]
+
+  # bins_logistic_coeffs = Vector{Float32}[[0.2958114, 0.093472, 0.014974893, 0.25723657, -0.08649167, -0.03651152, 0.51546174, -0.17759001, -0.9377826], [0.55761576, -0.08032898, 0.029375209, -0.043275304, 0.2413465, -0.029677542, 0.5895104, -0.27158892, -0.28064802], [0.5240835, -0.15477853, 0.30952054, -0.16907471, 0.26656932, 0.04274331, 0.7430586, -0.30433056, 0.9741227], [0.4446033, -0.31768143, 0.402504, 0.055888213, 0.10179166, 0.26728168, 0.8905479, -0.28445807, 2.323705], [0.16820262, -0.698822, 0.5922206, 0.16202259, 0.031716842, 0.39105946, 0.7149798, -0.2696285, 0.8772054]]
+
+  bcs = bins_logistic_coeffs
+
+  Threads.@threads for i in 1:length(first_guess_ŷs)
+    first_guess_ŷ = first_guess_ŷs[i]
+    ŷs_i = @view data[i,:]
+    if first_guess_ŷ <= bin_maxes[1]
+      # Bin 1-2 predictor only
+      ŷ = predict_one(ŷs_i, bcs[1])
+    elseif first_guess_ŷ <= bin_maxes[2]
+      # Bin 1-2 and 2-3 predictors
+      ratio = ratio_between(first_guess_ŷ, bin_maxes[1], bin_maxes[2])
+      ŷ = ratio*predict_one(ŷs_i, bcs[2]) + (1f0 - ratio)*predict_one(ŷs_i, bcs[1])
+    elseif first_guess_ŷ <= bin_maxes[3]
+      # Bin 2-3 and 3-4 predictors
+      ratio = ratio_between(first_guess_ŷ, bin_maxes[2], bin_maxes[3])
+      ŷ = ratio*predict_one(ŷs_i, bcs[3]) + (1f0 - ratio)*predict_one(ŷs_i, bcs[2])
+    elseif first_guess_ŷ <= bin_maxes[4]
+      # Bin 3-4 and 4-5 predictors
+      ratio = ratio_between(first_guess_ŷ, bin_maxes[3], bin_maxes[4])
+      ŷ = ratio*predict_one(ŷs_i, bcs[4]) + (1f0 - ratio)*predict_one(ŷs_i, bcs[3])
+    elseif first_guess_ŷ <= bin_maxes[5]
+      # Bin 4-5 and 5-6 predictors
+      ratio = ratio_between(first_guess_ŷ, bin_maxes[4], bin_maxes[5])
+      ŷ = ratio*predict_one(ŷs_i, bcs[5]) + (1f0 - ratio)*predict_one(ŷs_i, bcs[4])
+    else
+      # Bin 5-6 predictor only
+      ŷ = predict_one(ŷs_i, bcs[5])
+    end
+    out[i] = ŷ
+  end
+
+  out
+end
+
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
 
@@ -262,53 +314,12 @@ function reload_forecasts()
 
   # See Train.jl for where all these numbers come from
   predict(forecasts, data) = begin
-    hrrr_minus0_ŷs = @view data[:,1]
-
-    out = Array{Float32}(undef, length(hrrr_minus0_ŷs))
-
-    bin_maxes = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0]
-
-    bins_logistic_coeffs = Vector{Float32}[[0.2958114, 0.093472, 0.014974893, 0.25723657, -0.08649167, -0.03651152, 0.51546174, -0.17759001, -0.9377826], [0.55761576, -0.08032898, 0.029375209, -0.043275304, 0.2413465, -0.029677542, 0.5895104, -0.27158892, -0.28064802], [0.5240835, -0.15477853, 0.30952054, -0.16907471, 0.26656932, 0.04274331, 0.7430586, -0.30433056, 0.9741227], [0.4446033, -0.31768143, 0.402504, 0.055888213, 0.10179166, 0.26728168, 0.8905479, -0.28445807, 2.323705], [0.16820262, -0.698822, 0.5922206, 0.16202259, 0.031716842, 0.39105946, 0.7149798, -0.2696285, 0.8772054]]
-
-    bin_predict(low_bin_i, ŷs_i) = begin
-      coeffs = bins_logistic_coeffs[low_bin_i]
-      logit_out = last(coeffs) # Constant term
-      for coeff_i in 1:length(ŷs_i)
-        logit_out += coeffs[coeff_i] * logit(ŷs_i[coeff_i])
-      end
-      σ(logit_out)
-    end
-
-    Threads.@threads for i in 1:length(hrrr_minus0_ŷs)
-      hrrr_minus0_ŷ = hrrr_minus0_ŷs[i]
-      ŷs_i = @view data[i,:]
-      if hrrr_minus0_ŷ <= bin_maxes[1]
-        # Bin 1-2 predictor only
-        ŷ = bin_predict(1, ŷs_i)
-      elseif hrrr_minus0_ŷ <= bin_maxes[2]
-        # Bin 1-2 and 2-3 predictors
-        ratio = ratio_between(hrrr_minus0_ŷ, bin_maxes[1], bin_maxes[2])
-        ŷ = ratio*bin_predict(2, ŷs_i) + (1f0 - ratio)*bin_predict(1, ŷs_i)
-      elseif hrrr_minus0_ŷ <= bin_maxes[3]
-        # Bin 2-3 and 3-4 predictors
-        ratio = ratio_between(hrrr_minus0_ŷ, bin_maxes[2], bin_maxes[3])
-        ŷ = ratio*bin_predict(3, ŷs_i) + (1f0 - ratio)*bin_predict(2, ŷs_i)
-      elseif hrrr_minus0_ŷ <= bin_maxes[4]
-        # Bin 3-4 and 4-5 predictors
-        ratio = ratio_between(hrrr_minus0_ŷ, bin_maxes[3], bin_maxes[4])
-        ŷ = ratio*bin_predict(4, ŷs_i) + (1f0 - ratio)*bin_predict(3, ŷs_i)
-      elseif hrrr_minus0_ŷ <= bin_maxes[5]
-        # Bin 4-5 and 5-6 predictors
-        ratio = ratio_between(hrrr_minus0_ŷ, bin_maxes[4], bin_maxes[5])
-        ŷ = ratio*bin_predict(5, ŷs_i) + (1f0 - ratio)*bin_predict(4, ŷs_i)
-      else
-        # Bin 5-6 predictor only
-        ŷ = bin_predict(5, ŷs_i)
-      end
-      out[i] = ŷ
-    end
-
-    out
+    make_combined_prediction(
+      data;
+      first_guess_feature_i = 1,
+      bin_maxes             = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0],
+      bins_logistic_coeffs  = Vector{Float32}[[0.2958114, 0.093472, 0.014974893, 0.25723657, -0.08649167, -0.03651152, 0.51546174, -0.17759001, -0.9377826], [0.55761576, -0.08032898, 0.029375209, -0.043275304, 0.2413465, -0.029677542, 0.5895104, -0.27158892, -0.28064802], [0.5240835, -0.15477853, 0.30952054, -0.16907471, 0.26656932, 0.04274331, 0.7430586, -0.30433056, 0.9741227], [0.4446033, -0.31768143, 0.402504, 0.055888213, 0.10179166, 0.26728168, 0.8905479, -0.28445807, 2.323705], [0.16820262, -0.698822, 0.5922206, 0.16202259, 0.031716842, 0.39105946, 0.7149798, -0.2696285, 0.8772054]]
+    )
   end
 
   _forecasts = PredictionForecasts.simple_prediction_forecasts(_forecasts_separate, predict)
@@ -442,47 +453,17 @@ function reload_forecasts()
 
   _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
 
-  # day_predict(forecast, data) = begin
-  #   indep_events_ŷs  = @view data[:,1]
-  #   max_hourly_probs = @view data[:,2]
+  # See TrainDay.jl for where all these numbers come from
+  day_predict(forecasts, data) = begin
+    make_combined_prediction(
+      data;
+      first_guess_feature_i = 1,
+      bin_maxes             = Float32[0.008764716, 0.028725764, 0.097140715, 0.18266037, 0.2817919, 1.0],
+      bins_logistic_coeffs  = Vector{Float32}[[0.9605998, 0.06898633, -0.13992947], [0.29916266, 0.38762733, -1.1065903], [0.91976273, 0.3145933, 0.35971346], [1.017148, 0.17090763, 0.1382908], [0.6610863, 0.0075369733, -0.6788495]]
+    )
+  end
 
-  #   out = Array{Float32}(undef, length(indep_events_ŷs))
-
-  #   bin_maxes = Float32[0.008833055, 0.025307992, 0.06799701, 0.11479675, 0.18474162, 1.0]
-
-  #   Threads.@threads for i in 1:length(indep_events_ŷs)
-  #     indep_events_ŷ   = indep_events_ŷs[i]
-  #     max_hourly_prob  = max_hourly_probs[i]
-  #     if indep_events_ŷ <= bin_maxes[1]
-  #       # Bin 1-2 predictor only
-  #       ŷ = day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[2]
-  #       # Bin 1-2 and 2-3 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[1], bin_maxes[2])
-  #       ŷ = ratio*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[3]
-  #       # Bin 2-3 and 3-4 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[2], bin_maxes[3])
-  #       ŷ = ratio*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[4]
-  #       # Bin 3-4 and 4-5 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[3], bin_maxes[4])
-  #       ŷ = ratio*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[5]
-  #       # Bin 4-5 and 5-6 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[4], bin_maxes[5])
-  #       ŷ = ratio*day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob)
-  #     else
-  #       # Bin 5-6 predictor only
-  #       ŷ = day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob)
-  #     end
-  #     out[i] = ŷ
-  #   end
-
-  #   out
-  # end
-
-  # _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict)
+  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict)
 
   # spc_calibration = [
   #   (0.02, 0.016253397),

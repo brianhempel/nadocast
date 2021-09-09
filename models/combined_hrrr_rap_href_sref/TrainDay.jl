@@ -12,6 +12,8 @@ import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import ForecastCombinators
+import PlotMap
 import StormEvents
 
 MINUTE = 60 # seconds
@@ -20,18 +22,21 @@ HOUR   = 60*MINUTE
 
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
-length(validation_forecasts) #
+length(validation_forecasts) #207
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
-length(validation_forecasts) #
-
-@time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
+length(validation_forecasts) # 184
 
 validation_forecasts_10z_14z = filter(forecast -> forecast.run_hour == 10 || forecast.run_hour == 14, validation_forecasts);
-length(validation_forecasts_10z_14z) #
+length(validation_forecasts_10z_14z) # 184 # same as above because rn we only have the appropriate HRRRs for 10z 14z
+
+ForecastCombinators.turn_forecast_caching_on()
+@time Forecasts.data(validation_forecasts_10z_14z[10]) # Check if a forecast loads
+# 2575.803548 seconds (297.71 M allocations: 2.254 TiB, 54.83% gc time)
+# 87462×2 Array{Float32,2}
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -64,37 +69,34 @@ ForecastCombinators.clear_cached_forecasts()
 
 # should do some checks here.
 
-# aug29 = validation_forecasts_10z_14z[85]; Forecasts.time_title(aug29) # "2020-08-29 00Z +35"
-# aug29_data = Forecasts.data(aug29);
-# PlotMap.plot_debug_map("aug29_0z_day_accs_1", aug29.grid, aug29_data[:,1]);
-# PlotMap.plot_debug_map("aug29_0z_day_accs_2", aug29.grid, aug29_data[:,2]);
-# PlotMap.plot_debug_map("aug29_0z_day_accs_3", aug29.grid, aug29_data[:,3]);
-# PlotMap.plot_debug_map("aug29_0z_day_accs_7", aug29.grid, aug29_data[:,7]);
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_accs_1.pdf ./
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_accs_2.pdf ./
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_accs_3.pdf ./
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_accs_7.pdf ./
+Forecasts.time_title(validation_forecasts_10z_14z[169]) # "2020-08-29 10Z +15"
+aug29 = validation_forecasts_10z_14z[169];
+aug29_data = Forecasts.data(aug29);
+PlotMap.plot_debug_map("aug29_10z_day_accs_1", aug29.grid, aug29_data[:,1]);
+PlotMap.plot_debug_map("aug29_10z_day_accs_2", aug29.grid, aug29_data[:,2]);
+# scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/aug29_10z_day_accs_1.pdf ./
+# scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/aug29_10z_day_accs_2.pdf ./
 
-# aug29_labels = compute_forecast_labels(aug29);
-# PlotMap.plot_debug_map("aug29_0z_day_tornadoes", aug29.grid, aug29_labels);
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_tornadoes.pdf ./
+aug29_labels = compute_forecast_labels(aug29);
+PlotMap.plot_debug_map("aug29_10z_day_tornadoes", aug29.grid, aug29_labels);
+# scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/aug29_10z_day_tornadoes.pdf ./
 
 # july11 = validation_forecasts_10z_14z[78]; Forecasts.time_title(july11) # "2020-07-11 00Z +35"
 # PlotMap.plot_debug_map("july11_0z_day_tornadoes", july11.grid, compute_forecast_labels(july11));
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_tornadoes.pdf ./
+# scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/july11_0z_day_tornadoes.pdf ./
 # july11_data = Forecasts.data(july11);
 # PlotMap.plot_debug_map("july11_0z_day_accs_1", july11.grid, july11_data[:,1]);
 # PlotMap.plot_debug_map("july11_0z_day_accs_2", july11.grid, july11_data[:,2]);
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_accs_1.pdf ./
-# scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_accs_2.pdf ./
+# scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/july11_0z_day_accs_1.pdf ./
+# scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/july11_0z_day_accs_2.pdf ./
 
 
-Metrics.roc_auc((@view X[:,1]), y, weights) #
-Metrics.roc_auc((@view X[:,2]), y, weights) #
+Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9724226810165861
+Metrics.roc_auc((@view X[:,2]), y, weights) # 0.9718140867349399
 
-Metrics.roc_auc((@view X[:,1]) .+ (@view X[:,2]), y, weights) #
-Metrics.roc_auc((@view X[:,1]) .* (@view X[:,2]), y, weights) #
-Metrics.roc_auc((@view X[:,1]).^2 .* (@view X[:,2]), y, weights) #
+Metrics.roc_auc((@view X[:,1]) .+ (@view X[:,2]), y, weights) # 0.9723853892714189
+Metrics.roc_auc((@view X[:,1]) .* (@view X[:,2]), y, weights) # 0.9722737936265297
+Metrics.roc_auc((@view X[:,1]).^2 .* (@view X[:,2]), y, weights) # 0.9723633208908401
 
 
 # 3. bin predictions into 6 bins of equal weight of positive labels
@@ -110,8 +112,8 @@ weights = weights[sort_perm];
 # total_logloss = sum(logloss.(y, ŷ) .* weights)
 total_positive_weight = sum(y .* weights) # 5821.808f0
 
-total_max_hour = sum(X[:,2] .* weights) # 1653.1519f0
-max_hour_multipler = total_positive_weight / total_max_hour
+# total_max_hour = sum(X[:,2] .* weights) # 1653.1519f0
+# max_hour_multipler = total_positive_weight / total_max_hour
 
 bin_count = 6
 # per_bin_logloss = total_logloss / bin_count
@@ -150,7 +152,7 @@ end
 
 println("bins_max = ")
 println(bins_max)
-#
+# Float32[0.008764716, 0.028725764, 0.097140715, 0.18266037, 0.2817919, 1.0]
 
 println("mean_y\tmean_ŷ\tΣweight\tbin_max")
 for bin_i in 1:bin_count
@@ -165,6 +167,13 @@ for bin_i in 1:bin_count
 end
 
 # mean_y  mean_ŷ  Σweight bin_max
+# 0.00025430734264631383  0.00040217709166660056  5.823664207623363e6     0.008764716
+# 0.011129223852910987    0.015597350920912629    133036.4364796877       0.028725764
+# 0.024912831052344177    0.05135337609329188     59459.520598590374      0.097140715
+# 0.09021445106807742     0.13420668844411046     16410.710981845856      0.18266037
+# 0.17814113239691842     0.2267686298581128      8311.420363485813       0.2817919
+# 0.2613840181635633      0.3639590675857494      5656.214483857155       1.0
+
 
 
 # 4. combine bin-pairs (overlapping, 5 bins total)
@@ -225,10 +234,62 @@ for bin_i in 1:(bin_count - 1)
   push!(bins_logistic_coeffs, coeffs)
 end
 
+# Bin 1-2 --------
+# -1.0 < indep_events_ŷ <= 0.028725764
+# Data count: 6513166
+# Positive count: 3224.0
+# Weight: 5.9567005e6
+# Mean indep_events_ŷ: 0.00074154476
+# Bin 3-4 --------
+# 0.028725764 < indep_events_ŷ <= 0.18266037
+# Data count: 80436
+# Positive count: 3159.0
+# Weight: 75870.234
+# Mean indep_events_ŷ: 0.06927452
+# Mean y:      0.03903755
+# indep_events_ŷ logloss: 0.16399094
+# indep_events_ŷ AUC: 0.6933626969494793
+# max_hour AUC: 0.6859907687751495
+# Float32[0.91976273, 0.3145933, 0.35971346]]]
+# Fit logistic coefficients: Float32[0.91976273, 0.3145933, 0.35971346]
+# Mean logistic_ŷ: 0.03903755
+# Logistic logloss: 0.1548618
+# Logistic AUC: 0.6970204509562347
+# Bin 4-5 --------
+# 0.097140715 < indep_events_ŷ <= 0.2817919
+# Data count: 25838
+# Positive count: 3101.0
+# Weight: 24722.13
+# Mean indep_events_ŷ: 0.16532542
+# Mean y:      0.11977483
+# indep_events_ŷ logloss: 0.365321
+# indep_events_ŷ AUC: 0.6247503749540272
+# max_hour AUC: 0.5968621969198928
+# Float32[1.017148, 0.17090763, 0.1382908]2]]
+# Fit logistic coefficients: Float32[1.017148, 0.17090763, 0.1382908]
+# Mean logistic_ŷ: 0.11977483
+# Logistic logloss: 0.35657918
+# Logistic AUC: 0.6256481659336489
+# Bin 5-6 --------
+# 0.18266037 < indep_events_ŷ <= 1.0
+# Data count: 14528
+# Positive count: 3082.0
+# Weight: 13967.635
+# Mean indep_events_ŷ: 0.2823241
+# Mean y:      0.21185045
+# indep_events_ŷ logloss: 0.52501684
+# indep_events_ŷ AUC: 0.5780819349944889
+# max_hour AUC: 0.5618538569146311
+# Float32[0.6610863, 0.0075369733, -0.6788495]]
+# Fit logistic coefficients: Float32[0.6610863, 0.0075369733, -0.6788495]
+# Mean logistic_ŷ: 0.21185048
+# Logistic logloss: 0.50991786
+# Logistic AUC: 0.5782992601963901
 
 
 println(bins_logistic_coeffs)
-#
+# Array{Float32,1}[[0.9605998, 0.06898633, -0.13992947], [0.29916266, 0.38762733, -1.1065903], [0.91976273, 0.3145933, 0.35971346], [1.017148, 0.17090763, 0.1382908], [0.6610863, 0.0075369733, -0.6788495]]
+
 
 
 # 6. prediction is weighted mean of the two overlapping logistic models
@@ -252,6 +313,7 @@ import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import ForecastCombinators
 import StormEvents
 
 MINUTE = 60 # seconds
