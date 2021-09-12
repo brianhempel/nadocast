@@ -296,7 +296,7 @@ function reload_forecasts()
 
       for forecast_hour in filter(hr -> mod(hr, 3) != 0, 1:39)
 
-        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("sref", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, grid = grid, forecast_hour = forecast_hour)
+        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("SREF", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, grid = grid, forecast_hour = forecast_hour)
 
         push!(_forecasts, forecast)
       end
@@ -309,7 +309,7 @@ function reload_forecasts()
 
       for forecast_hour in filter(hr -> mod(hr, 3) == 0, 1:87)
 
-        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("sref", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, grid = grid, forecast_hour = forecast_hour)
+        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("SREF", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, grid = grid, forecast_hour = forecast_hour)
 
         push!(_forecasts, forecast)
       end

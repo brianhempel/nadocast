@@ -22,7 +22,7 @@ HOUR   = 60*MINUTE
 
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
-length(validation_forecasts) #207
+length(validation_forecasts) # 207
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2020, 11, 1, 0)
@@ -34,9 +34,10 @@ validation_forecasts_10z_14z = filter(forecast -> forecast.run_hour == 10 || for
 length(validation_forecasts_10z_14z) # 184 # same as above because rn we only have the appropriate HRRRs for 10z 14z
 
 ForecastCombinators.turn_forecast_caching_on()
-@time Forecasts.data(validation_forecasts_10z_14z[10]) # Check if a forecast loads
-# 2575.803548 seconds (297.71 M allocations: 2.254 TiB, 54.83% gc time)
-# 87462×2 Array{Float32,2}
+# ForecastCombinators.turn_forecast_gc_circumvention_on()
+@time Forecasts.data(validation_forecasts_10z_14z[10]); # Check if a forecast loads
+# 1545.059279 seconds (247.87 M allocations: 1.442 TiB, 43.71% gc time)
+# With GC circumvention: 1715.983475 seconds (247.65 M allocations: 1.442 TiB, 45.75% gc time)
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -63,13 +64,14 @@ compute_forecast_labels(forecast) = begin
 end
 
 ForecastCombinators.turn_forecast_caching_on()
+# ForecastCombinators.turn_forecast_gc_circumvention_on()
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts_10z_14z; save_dir = "day_accumulators_validation_forecasts_10z_14z", compute_forecast_labels = compute_forecast_labels);
 ForecastCombinators.clear_cached_forecasts()
 
 
 # should do some checks here.
 
-Forecasts.time_title(validation_forecasts_10z_14z[169]) # "2020-08-29 10Z +15"
+Forecasts.time_title(validation_forecasts_10z_14z[169]) # "2020-08-29 10Z +25"
 aug29 = validation_forecasts_10z_14z[169];
 aug29_data = Forecasts.data(aug29);
 PlotMap.plot_debug_map("aug29_10z_day_accs_1", aug29.grid, aug29_data[:,1]);
@@ -91,12 +93,12 @@ PlotMap.plot_debug_map("aug29_10z_day_tornadoes", aug29.grid, aug29_labels);
 # scp nadocaster2:/home/brian/nadocast_dev/models/combined_hrrr_rap_href_sref/july11_0z_day_accs_2.pdf ./
 
 
-Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9724226810165861
-Metrics.roc_auc((@view X[:,2]), y, weights) # 0.9718140867349399
+Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9750816398134108
+Metrics.roc_auc((@view X[:,2]), y, weights) # 0.9743185918044269
 
-Metrics.roc_auc((@view X[:,1]) .+ (@view X[:,2]), y, weights) # 0.9723853892714189
-Metrics.roc_auc((@view X[:,1]) .* (@view X[:,2]), y, weights) # 0.9722737936265297
-Metrics.roc_auc((@view X[:,1]).^2 .* (@view X[:,2]), y, weights) # 0.9723633208908401
+Metrics.roc_auc((@view X[:,1]) .+ (@view X[:,2]), y, weights) # 0.9750095149631679
+Metrics.roc_auc((@view X[:,1]) .* (@view X[:,2]), y, weights) # 0.9748560155404963
+Metrics.roc_auc((@view X[:,1]).^2 .* (@view X[:,2]), y, weights) # 0.974970653133173
 
 
 # 3. bin predictions into 6 bins of equal weight of positive labels
@@ -110,14 +112,11 @@ y       = y[sort_perm];
 weights = weights[sort_perm];
 
 # total_logloss = sum(logloss.(y, ŷ) .* weights)
-total_positive_weight = sum(y .* weights) # 5821.808f0
-
-# total_max_hour = sum(X[:,2] .* weights) # 1653.1519f0
-# max_hour_multipler = total_positive_weight / total_max_hour
+total_positive_weight = sum(y .* weights) # 11190.123f0
 
 bin_count = 6
 # per_bin_logloss = total_logloss / bin_count
-per_bin_pos_weight = total_positive_weight / bin_count # 970.30133f0
+per_bin_pos_weight = total_positive_weight / bin_count # 1865.0205f0
 
 # bins = map(_ -> Int64[], 1:bin_count)
 bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
@@ -152,7 +151,7 @@ end
 
 println("bins_max = ")
 println(bins_max)
-# Float32[0.008764716, 0.028725764, 0.097140715, 0.18266037, 0.2817919, 1.0]
+# Float32[0.01005014, 0.029228631, 0.07709654, 0.16022275, 0.27256465, 1.0]
 
 println("mean_y\tmean_ŷ\tΣweight\tbin_max")
 for bin_i in 1:bin_count
@@ -167,13 +166,12 @@ for bin_i in 1:bin_count
 end
 
 # mean_y  mean_ŷ  Σweight bin_max
-# 0.00025430734264631383  0.00040217709166660056  5.823664207623363e6     0.008764716
-# 0.011129223852910987    0.015597350920912629    133036.4364796877       0.028725764
-# 0.024912831052344177    0.05135337609329188     59459.520598590374      0.097140715
-# 0.09021445106807742     0.13420668844411046     16410.710981845856      0.18266037
-# 0.17814113239691842     0.2267686298581128      8311.420363485813       0.2817919
-# 0.2613840181635633      0.3639590675857494      5656.214483857155       1.0
-
+# 0.0003191580597977087   0.0004332917027417096   5.843902203816056e6     0.01005014
+# 0.016356833477520344    0.01685010109246095     114069.47458165884      0.029228631
+# 0.03673086894963807     0.046837177305630785    50789.80803579092       0.07709654
+# 0.09015270720128846     0.11164417863639488     20695.623482227325      0.16022275
+# 0.1722911548678199      0.20809881728055737     10825.711207389832      0.27256465
+# 0.29775838445694713     0.35620784405517136     6255.689407706261       1.0
 
 
 # 4. combine bin-pairs (overlapping, 5 bins total)
@@ -234,61 +232,11 @@ for bin_i in 1:(bin_count - 1)
   push!(bins_logistic_coeffs, coeffs)
 end
 
-# Bin 1-2 --------
-# -1.0 < indep_events_ŷ <= 0.028725764
-# Data count: 6513166
-# Positive count: 3224.0
-# Weight: 5.9567005e6
-# Mean indep_events_ŷ: 0.00074154476
-# Bin 3-4 --------
-# 0.028725764 < indep_events_ŷ <= 0.18266037
-# Data count: 80436
-# Positive count: 3159.0
-# Weight: 75870.234
-# Mean indep_events_ŷ: 0.06927452
-# Mean y:      0.03903755
-# indep_events_ŷ logloss: 0.16399094
-# indep_events_ŷ AUC: 0.6933626969494793
-# max_hour AUC: 0.6859907687751495
-# Float32[0.91976273, 0.3145933, 0.35971346]]]
-# Fit logistic coefficients: Float32[0.91976273, 0.3145933, 0.35971346]
-# Mean logistic_ŷ: 0.03903755
-# Logistic logloss: 0.1548618
-# Logistic AUC: 0.6970204509562347
-# Bin 4-5 --------
-# 0.097140715 < indep_events_ŷ <= 0.2817919
-# Data count: 25838
-# Positive count: 3101.0
-# Weight: 24722.13
-# Mean indep_events_ŷ: 0.16532542
-# Mean y:      0.11977483
-# indep_events_ŷ logloss: 0.365321
-# indep_events_ŷ AUC: 0.6247503749540272
-# max_hour AUC: 0.5968621969198928
-# Float32[1.017148, 0.17090763, 0.1382908]2]]
-# Fit logistic coefficients: Float32[1.017148, 0.17090763, 0.1382908]
-# Mean logistic_ŷ: 0.11977483
-# Logistic logloss: 0.35657918
-# Logistic AUC: 0.6256481659336489
-# Bin 5-6 --------
-# 0.18266037 < indep_events_ŷ <= 1.0
-# Data count: 14528
-# Positive count: 3082.0
-# Weight: 13967.635
-# Mean indep_events_ŷ: 0.2823241
-# Mean y:      0.21185045
-# indep_events_ŷ logloss: 0.52501684
-# indep_events_ŷ AUC: 0.5780819349944889
-# max_hour AUC: 0.5618538569146311
-# Float32[0.6610863, 0.0075369733, -0.6788495]]
-# Fit logistic coefficients: Float32[0.6610863, 0.0075369733, -0.6788495]
-# Mean logistic_ŷ: 0.21185048
-# Logistic logloss: 0.50991786
-# Logistic AUC: 0.5782992601963901
+
 
 
 println(bins_logistic_coeffs)
-# Array{Float32,1}[[0.9605998, 0.06898633, -0.13992947], [0.29916266, 0.38762733, -1.1065903], [0.91976273, 0.3145933, 0.35971346], [1.017148, 0.17090763, 0.1382908], [0.6610863, 0.0075369733, -0.6788495]]
+# Array{Float32,1}[[1.1575506, -0.050190955, 0.29937217], [0.781756, 5.8343867f-5, -0.90717673], [1.0664908, -0.11734534, -0.5342406], [1.0162495, -0.06751505, -0.4148333], [1.0685753, -0.24417035, -0.76769584]]
 
 
 
@@ -297,69 +245,17 @@ println(bins_logistic_coeffs)
 
 # 7. predictions should thereby be calibrated (check)
 
+ŷ_absolutely_calibrated =
+  CombinedHRRRRAPHREFSREF.make_combined_prediction(
+    X;
+    first_guess_feature_i = 1,
+    bin_maxes             = Float32[0.01005014, 0.029228631, 0.07709654, 0.16022275, 0.27256465, 1.0],
+    bins_logistic_coeffs  = Vector{Float32}[[1.1575506, -0.050190955, 0.29937217], [0.781756, 5.8343867f-5, -0.90717673], [1.0664908, -0.11734534, -0.5342406], [1.0162495, -0.06751505, -0.4148333], [1.0685753, -0.24417035, -0.76769584]]
+  );
 
+Metrics.roc_auc(ŷ_absolutely_calibrated, y, weights) # 0.9750841124257028
 
-import Dates
-import Printf
-
-push!(LOAD_PATH, (@__DIR__) * "/../shared")
-# import TrainGBDTShared
-import TrainingShared
-import LogisticRegression
-using Metrics
-
-push!(LOAD_PATH, @__DIR__)
-import CombinedHRRRRAPHREFSREF
-
-push!(LOAD_PATH, (@__DIR__) * "/../../lib")
-import Forecasts
-import ForecastCombinators
-import StormEvents
-
-MINUTE = 60 # seconds
-HOUR   = 60*MINUTE
-
-(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHRRRRAPHREFSREF.forecasts_day(); just_hours_near_storm_events = false);
-
-length(day_validation_forecasts)
-# 903
-
-# We don't have storm events past this time.
-cutoff = Dates.DateTime(2020, 11, 1, 0)
-day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
-
-length(day_validation_forecasts) # Expected: 735
-# 735
-
-# Make sure a forecast loads
-@time Forecasts.data(day_validation_forecasts[10])
-
-validation_forecasts_10z_14z = filter(forecast -> forecast.run_hour == 10 || forecast.run_hour == 14, validation_forecasts);
-length(day_validation_forecasts_10z_14z) # Expected: 92
-# 92
-
-compute_forecast_labels(forecast) = begin
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  utc_datetime = Dates.unix2datetime(start_seconds)
-  println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.TORNADO_SPACIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-ForecastCombinators.turn_forecast_caching_on()
-X, y, weights = TrainingShared.get_data_labels_weights(day_validation_forecasts_10z_14z; save_dir = "day_validation_forecasts_10z_14z", compute_forecast_labels = compute_forecast_labels);
-ForecastCombinators.clear_cached_forecasts()
-
-
-ŷ = X[:,1];
+ŷ = ŷ_absolutely_calibrated;
 
 sort_perm = sortperm(ŷ);
 X       = X[sort_perm, :]; #
@@ -405,10 +301,6 @@ for i in 1:length(y)
   end
 end
 
-println("bins_max = ")
-println(bins_max)
-# Float32[0.00097577664, 0.0035424125, 0.0068334113, 0.010702337, 0.014457697, 0.018155066, 0.021734202, 0.027651712, 0.03753781, 0.05559306, 0.076415844, 0.0933851, 0.10967304, 0.12784216, 0.14595553, 0.1621963, 0.18518762, 0.2340388, 0.30211022, 1.0]Float32[0.0070357043, 0.01022332, 0.021027338, 0.023034172, 0.025326166, 0.0274165, 0.02900777, 0.030673556, 0.032790024, 0.03441065, 0.037875757, 0.04150515, 0.047454756, 0.058034927, 0.073863976, 0.08908757, 0.12828249, 0.17552827, 1.0, 1.0]
-
 println("mean_y\tmean_ŷ\tΣweight\tbin_max")
 for bin_i in 1:bin_count
   Σŷ      = bins_Σŷ[bin_i]
@@ -422,37 +314,30 @@ for bin_i in 1:bin_count
 end
 
 # mean_y  mean_ŷ  Σweight bin_max
-# 0.0001089659531147851   0.0001039783132379927   2.6742326298045516e6    0.00097577664
-# 0.001760340660025297    0.0019026741997471292   165492.52153635025      0.0035424125
-# 0.0048276268251249395   0.004946116178554242    60406.159088253975      0.0068334113
-# 0.008558151635295863    0.008590979826240427    34042.4254655242        0.010702337
-# 0.0133678045274549      0.012463140159311574    21802.550265967846      0.014457697
-# 0.016984762764517724    0.016286686422954007    17190.005229771137      0.018155066
-# 0.01987269476873383     0.019829021253987382    14691.411134302616      0.021734202
-# 0.023482472772874543    0.024303937577457836    12433.217101633549      0.027651712
-# 0.029936281457548806    0.03196438758504661     9738.050294101238       0.03753781
-# 0.041338372255156755    0.04526684442033121     7049.755621552467       0.05559306
-# 0.05315587254576701     0.06531589970701189     5476.31123059988        0.076415844
-# 0.08852993524984791     0.08458178404722025     3297.176026880741       0.0933851
-# 0.12224831704323326     0.1010973370449811      2385.681490957737       0.10967304
-# 0.14548918026167934     0.11838054484039393     2006.3990591168404      0.12784216
-# 0.15331280352287868     0.13717977935837336     1900.389076769352       0.14595553
-# 0.14773744775283826     0.15395207248511505     1971.3568314313889      0.1621963
-# 0.15843580980211655     0.17308492055260047     1840.2607005238533      0.18518762
-# 0.13703903462860317     0.20657700500765952     2126.0651206970215      0.2340388
-# 0.2538073639221181      0.2602755820478401      1148.4315833449364      0.30211022
-# 0.5049433181045647      0.34571517923806827     559.0556263923645       1.0
+# 0.00010284110043995907  0.00010572652295101056  5.446894796482623e6     0.0011950788
+# 0.0021146208492433486   0.0021478412875673755   264858.8125824332       0.0037842996
+# 0.0051960905486618724   0.005314976502329646    107704.89507895708      0.0074427454
+# 0.009775968877650781    0.009406125490504043    57247.54726266861       0.011904001
+# 0.015339870984524913    0.0141080502349321      36530.28287798166       0.016644988
+# 0.019555650924999186    0.019215043593932984    28615.720175862312      0.022021696
+# 0.02349969266280992     0.024653811937666217    23833.006240546703      0.027710585
+# 0.0342538067213098      0.03082056058679128     16336.551253437996      0.034530364
+# 0.037530363535884285    0.03933639676480956     14917.532215714455      0.04509478
+# 0.04707618171300135     0.0520973040502739      11904.184662997723      0.06116276
+# 0.0744770172774424      0.06891024143057069     7516.384555518627       0.07784144
+# 0.08565805374513213     0.08820425391585056     6532.727254927158       0.09993576
+# 0.1099525586887527      0.1111847945113449      5096.132573068142       0.12306256
+# 0.13595345277366466     0.1342071536702206      4116.949266374111       0.146957
+# 0.16522762178441663     0.15943438713183958     3388.5922436118126      0.17293704
+# 0.1983603214771481      0.1865050419913375      2823.00670927763        0.20116605
+# 0.19985800916747004     0.21802355341168936     2802.3515010476112      0.23558396
+# 0.240871016659729       0.2530661370602951      2325.0548011660576      0.27437007
+# 0.34357171309214357     0.295000083304399       1628.5017993450165      0.323545
+# 0.3765266454417768      0.3839909304383223      1465.480993270874       1.0
 
 
 
-
-# Expected: 0.9704562360340072
-Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9704562387563738
-
-
-
-
-# Calibrate to SPC
+# Calibrate to SPC (see models/spc_outlooks/Stats.jl for SPC stats)
 
 function success_ratio(ŷ, y, weights, threshold)
   painted_weight       = 0.0
@@ -498,11 +383,54 @@ thresholds_to_match_success_ratio =
   end
 
 # nominal_prob    threshold       success_ratio
-# 0.02    0.0127295405    0.04853525616997882
-# 0.05    0.040039346     0.11142667300267296
-# 0.1     0.18400295      0.2237468737640593
-# 0.15    0.23302902      0.33317687621379216
-# 0.3     0.26344         0.42958206936270776
+# 0.02    0.010013118     0.048535860767389596
+# 0.05    0.03852339      0.11142474987211093
+# 0.1     0.13697089      0.22374267282134933
+# 0.15    0.25369757      0.33315036263231873
+# 0.3     0.52313256      0.0
+
+println("threshold\tsuccess_ratio\tweight")
+for threshold in 0.25f0:0.01f0:0.53f0
+  println("$threshold\t$(success_ratio(ŷ, y, weights, threshold))\t$(sum(weights[ŷ .>= threshold]))")
+end
+
+# 0.25    0.3295237608815819      4391.211
+# 0.26    0.3417913234714222      3818.8374
+# 0.27    0.35255703081156536     3279.7898
+# 0.28    0.365525305381746       2826.877
+# 0.29    0.37473195691358885     2389.3037
+# 0.3     0.3802889554730957      2034.7942
+# 0.31    0.376269246592432       1774.4778
+# 0.32    0.3772915246673419      1544.5347
+# 0.33    0.3769892556480005      1353.4761
+# 0.34    0.38253726113299186     1177.3013
+# 0.35    0.3939671014569983      1020.4347
+# 0.36    0.40490059495758024     871.9632
+# 0.37    0.4079316397583762      759.05865
+# 0.38    0.40624745113047406     645.8125
+# 0.39    0.4082167694373917      552.8268   ***** we'll use this number
+# 0.4     0.40156209001509857     475.1206
+# 0.41    0.3980749598107955      399.55606
+# 0.42    0.3957194555008884      338.22946
+# 0.43    0.3619898886228898      268.51706
+# 0.44    0.35169536578763616     210.03757
+# 0.45    0.34624858738829056     174.03833
+# 0.46    0.35180907726809457     140.91675
+# 0.47    0.31320516793092584     111.74357
+# 0.48    0.2974165432103353      71.896194
+# 0.49    0.3002384721685388      48.584827
+# 0.5     0.3799579891035744      28.18682
+# 0.51    0.44580411523020147     8.734745
+# 0.52    0.0     0.96780515
+# 0.53    NaN     0.0
+
+thresholds_to_match_success_ratio[5] = 0.39f0
+thresholds_to_match_success_ratio
+# 0.010013118
+# 0.03852339
+# 0.13697089
+# 0.25369757
+# 0.39
 
 
 function probability_of_detection(ŷ, y, weights, threshold)
@@ -549,13 +477,16 @@ thresholds_to_match_POD =
   end
 
 # nominal_prob    threshold       POD
-# 0.02    0.019777253     0.672573803962084
-# 0.05    0.08982225      0.40978062116159975
-# 0.1     0.19142316      0.14033469816696242
-# 0.15    0.33357763      0.02943007176491364
-# 0.3     0.3842491       0.006698613290046718
+# 0.02    0.024865106     0.6726705661479192
+# 0.05    0.09510009      0.40990829387439714
+# 0.1     0.2420405       0.1403951157826877
+# 0.15    0.36541605      0.02938601630678431
+# 0.3     0.43843162      0.006861865473951445
+
 
 println("nominal_prob\tthreshold_to_match_succes_ratio\tthreshold_to_match_POD\tmean_threshold\tsuccess_ratio\tPOD")
+
+calibration = []
 
 for i in 1:length(target_PODs)
   nominal_prob, _ = target_PODs[i]
@@ -564,20 +495,24 @@ for i in 1:length(target_PODs)
   mean_threshold = (threshold_to_match_succes_ratio + threshold_to_match_POD) * 0.5f0
   sr  = success_ratio(ŷ, y, weights, mean_threshold)
   pod = probability_of_detection(ŷ, y, weights, mean_threshold)
+  push!(calibration, (nominal_prob, mean_threshold))
   println("$nominal_prob\t$threshold_to_match_succes_ratio\t$threshold_to_match_POD\t$mean_threshold\t$sr\t$pod")
 end
 
 # nominal_prob    threshold_to_match_succes_ratio threshold_to_match_POD  mean_threshold  success_ratio   POD
-# 0.02    0.0127295405    0.019777253     0.016253397     0.05632502012753043     0.7290002254123179
-# 0.05    0.040039346     0.08982225      0.0649308       0.1382464577013378      0.47516603256458734
-# 0.1     0.18400295      0.19142316      0.18771306      0.2310717260852238      0.145134634956839
-# 0.15    0.23302902      0.33357763      0.28330332      0.4875050416418053      0.062033164663175995
-# 0.3     0.26344         0.3842491       0.32384455      0.5220695437305608      0.036442226839582884
+# 0.02    0.010013118     0.024865106     0.017439112     0.06472411905857228     0.7434338172141978
+# 0.05    0.03852339      0.09510009      0.06681174      0.15533263366251956     0.48261538793030245
+# 0.1     0.13697089      0.2420405       0.1895057       0.2629948044070861      0.21913907331601418
+# 0.15    0.25369757      0.36541605      0.3095568       0.37767216707603646     0.06044300369330901
+# 0.3     0.39    0.43843162      0.4142158       0.40010543678136457     0.013172743441568865
 
+
+println(calibration)
 calibration = [
-  (0.02, 0.016253397),
-  (0.05, 0.0649308),
-  (0.1,  0.18771306),
-  (0.15, 0.28330332),
-  (0.3,  0.32384455),
+  (0.02, 0.017439112),
+  (0.05, 0.06681174),
+  (0.1,  0.1895057),
+  (0.15, 0.3095568),
+  (0.3,  0.4142158)
 ]
+

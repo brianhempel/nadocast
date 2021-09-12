@@ -24,11 +24,34 @@ import ForecastCombinators
 import Grids
 import PlotMap
 
-# println("Loading SREF module")
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
 import CombinedHREFSREF
 
-newest_forecast = last(CombinedHREFSREF.forecasts_day_spc_calibrated())
+push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
+import CombinedHRRRRAPHREFSREF
+
+newest_href_sref          = last(CombinedHREFSREF.forecasts_day_spc_calibrated())
+newest_hrrr_rap_href_sref = last(filter(forecast -> forecast.run_hour >= 10, CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()))
+
+if Forecasts.run_utc_datetime(newest_hrrr_rap_href_sref) >= Forecasts.run_utc_datetime(newest_href_sref)
+  newest_forecast = newest_hrrr_rap_href_sref
+else
+  newest_forecast = newest_href_sref
+end
+
+# Follows Forecasts.based_on to return a list of forecasts with the given model_name
+function model_parts(forecast, model_name)
+  if forecast.model_name == model_name
+    [forecast]
+  else
+    vcat(map(forecast -> model_parts(forecast, model_name), forecast.based_on)...)
+  end
+end
+
+hrrr_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "HRRR")))
+rap_run_hours  = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "RAP")))
+href_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "HREF")))
+sref_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "SREF")))
 
 if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
   println("Newest forecast is in the past $(Forecasts.time_title(newest_forecast))")
@@ -36,6 +59,7 @@ if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
 end
 
 ForecastCombinators.turn_forecast_caching_on()
+# ForecastCombinators.turn_forecast_gc_circumvention_on()
 prediction = Forecasts.data(newest_forecast)
 ForecastCombinators.clear_cached_forecasts()
 
@@ -45,15 +69,6 @@ period_start_forecast_hour = max(2, period_stop_forecast_hour - 23)
 nadocast_run_time_utc      = Forecasts.run_utc_datetime(newest_forecast)
 nadocast_run_hour          = newest_forecast.run_hour
 
-# HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
-href_run_hours, sref_run_hours =
-  if newest_forecast.run_hour in [0,6,12,18]
-    ([newest_forecast.run_hour],[mod(newest_forecast.run_hour-3,24)])
-  elseif newest_forecast.run_hour in [3,9,15,21]
-    ([mod(newest_forecast.run_hour-3,24)],[newest_forecast.run_hour])
-  else
-    ([-1],[-1])
-  end
 
 paths = []
 daily_paths_to_perhaps_tweet = []
@@ -69,8 +84,8 @@ PlotMap.plot_map(
   prediction;
   run_time_utc = nadocast_run_time_utc,
   forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
-  hrrr_run_hours = [],
-  rap_run_hours  = [],
+  hrrr_run_hours = hrrr_run_hours,
+  rap_run_hours  = rap_run_hours,
   href_run_hours = href_run_hours,
   sref_run_hours = sref_run_hours
 )

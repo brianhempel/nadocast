@@ -289,7 +289,7 @@ function reload_forecasts()
       mean_href_path = href_path
       prob_href_path = replace(mean_href_path, "z_mean_f" => "z_prob_f")
 
-      forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("href", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, grid = grid)
+      forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("HREF", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, grid = grid)
 
       push!(_forecasts, forecast)
     end

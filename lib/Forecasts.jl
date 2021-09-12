@@ -130,6 +130,8 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
     preload_process = run(pipeline(`cat $(forecasts[i].preload_paths)`, devnull))
   end
   if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
+    # Should dedup preload_paths
+    # Also should move wgrib2 reading into preloading...it seems to stall 3s for each HRRR with low CPU usage
     preload_process = run(pipeline(`cat $(forecasts[i+1].preload_paths)`, devnull), wait=false)
   else
     preload_process = nothing

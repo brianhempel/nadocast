@@ -458,22 +458,22 @@ function reload_forecasts()
     make_combined_prediction(
       data;
       first_guess_feature_i = 1,
-      bin_maxes             = Float32[0.008764716, 0.028725764, 0.097140715, 0.18266037, 0.2817919, 1.0],
-      bins_logistic_coeffs  = Vector{Float32}[[0.9605998, 0.06898633, -0.13992947], [0.29916266, 0.38762733, -1.1065903], [0.91976273, 0.3145933, 0.35971346], [1.017148, 0.17090763, 0.1382908], [0.6610863, 0.0075369733, -0.6788495]]
+      bin_maxes             = Float32[0.01005014, 0.029228631, 0.07709654, 0.16022275, 0.27256465, 1.0],
+      bins_logistic_coeffs  = Vector{Float32}[[1.1575506, -0.050190955, 0.29937217], [0.781756, 5.8343867f-5, -0.90717673], [1.0664908, -0.11734534, -0.5342406], [1.0162495, -0.06751505, -0.4148333], [1.0685753, -0.24417035, -0.76769584]]
     )
   end
 
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict)
 
-  # spc_calibration = [
-  #   (0.02, 0.016253397),
-  #   (0.05, 0.0649308),
-  #   (0.1,  0.18771306),
-  #   (0.15, 0.28330332),
-  #   (0.3,  0.32384455),
-  # ]
+  spc_calibration = [
+    (0.02, 0.017439112),
+    (0.05, 0.06681174),
+    (0.1,  0.1895057),
+    (0.15, 0.3095568),
+    (0.3,  0.4142158)
+  ]
 
-  # _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration)
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration)
 
   ()
 end
