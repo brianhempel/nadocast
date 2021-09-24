@@ -32,18 +32,13 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
-(_, _, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
+spc_forecasts = SPCOutlooks.forecasts_day_0600()
+# (spc_train_forecasts, spc_validation_forecasts, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
 
-length(spc_test_forecasts) # 129
-
-# We don't have storm events past this time.
-cutoff = Dates.DateTime(2021, 7, 1, 0)
-spc_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, spc_test_forecasts);
-
-length(spc_test_forecasts) # 129
+length(spc_forecasts) # 129
 
 
-(_, _, test_forecasts) =
+(train_forecasts, validation_forecasts, test_forecasts) =
   TrainingShared.forecasts_train_validation_test(
     ForecastCombinators.resample_forecasts(CombinedHREFSREF.forecasts_day_spc_calibrated(), Grids.get_upsampler, GRID);
     just_hours_near_storm_events = false
@@ -52,9 +47,26 @@ length(spc_test_forecasts) # 129
 length(test_forecasts) #
 test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
 length(test_forecasts) #
+
+
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2021, 7, 1, 0)
+
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
 length(test_forecasts) #
 
+training_data_end = Dates.DateTime(2020, 11, 1, 0)
+other_test_forecasts = vcat(train_forecasts, validation_forecasts);
+length(other_test_forecasts)
+other_test_forecasts = filter(forecast -> forecast.run_hour == 0, other_test_forecasts);
+length(other_test_forecasts)
+other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, other_test_forecasts);
+length(other_test_forecasts)
+other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) > training_data_end, other_test_forecasts);
+length(other_test_forecasts)
+
+test_forecasts = vcat(test_forecasts, other_test_forecasts)
+length(test_forecasts) #
 
 compute_forecast_labels(spc_forecast) = begin
   # Annoying that we have to recalculate this.
@@ -102,7 +114,7 @@ open((@__DIR__) * "/test_0z.csv", "w") do csv
   println(join(headers, ","))
   println(csv, join(headers, ","))
 
-  for spc_forecast in spc_test_forecasts
+  for spc_forecast in spc_forecasts
     test_forecast_i = findfirst(forecast -> (forecast.run_year, forecast.run_month, forecast.run_day) == (spc_forecast.run_year, spc_forecast.run_month, spc_forecast.run_day), test_forecasts)
     if isnothing(test_forecast_i)
       continue
