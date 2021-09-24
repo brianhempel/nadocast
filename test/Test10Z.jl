@@ -10,7 +10,7 @@ using Metrics
 push!(LOAD_PATH, (@__DIR__) * "/../models/spc_outlooks")
 import SPCOutlooks
 
-push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
+push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
@@ -34,13 +34,13 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 
 (_, _, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_1300(); just_hours_near_storm_events = false);
 
-length(spc_test_forecasts) #
+length(spc_test_forecasts) # 129
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2021, 7, 1, 0)
 spc_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, spc_test_forecasts);
 
-length(spc_test_forecasts) #
+length(spc_test_forecasts) # 129
 
 
 (_, _, test_forecasts) =
@@ -49,11 +49,11 @@ length(spc_test_forecasts) #
     just_hours_near_storm_events = false
   );
 
-length(test_forecasts) #
+length(test_forecasts) # 207
 test_forecasts = filter(forecast -> forecast.run_hour == 10, test_forecasts);
-length(test_forecasts) #
+length(test_forecasts) # 103
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-length(test_forecasts) #
+length(test_forecasts) # 91
 
 
 compute_forecast_labels(spc_forecast) = begin
