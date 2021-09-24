@@ -11,7 +11,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../models/spc_outlooks")
 import SPCOutlooks
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
-import CombinedHREFSREF
+import CombinedHRRRRAPHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 import Conus
@@ -32,7 +32,7 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
-(_, _, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
+(_, _, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_1300(); just_hours_near_storm_events = false);
 
 length(spc_test_forecasts) #
 
@@ -45,12 +45,12 @@ length(spc_test_forecasts) #
 
 (_, _, test_forecasts) =
   TrainingShared.forecasts_train_validation_test(
-    ForecastCombinators.resample_forecasts(CombinedHREFSREF.forecasts_day_spc_calibrated(), Grids.get_upsampler, GRID);
+    ForecastCombinators.resample_forecasts(CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated(), Grids.get_upsampler, GRID);
     just_hours_near_storm_events = false
   );
 
 length(test_forecasts) #
-test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
+test_forecasts = filter(forecast -> forecast.run_hour == 10, test_forecasts);
 length(test_forecasts) #
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
 length(test_forecasts) #
@@ -90,7 +90,7 @@ end
 using ColorVectorSpace # for color math
 
 
-open((@__DIR__) * "/test_0z.csv", "w") do csv
+open((@__DIR__) * "/test_10z.csv", "w") do csv
 
   headers = ["yymmdd", "spc", "nadocast"]
 
