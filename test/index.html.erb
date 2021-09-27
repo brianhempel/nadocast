@@ -1,0 +1,48 @@
+<html>
+
+<head>
+  <title>Nadocast compared to SPC</title>
+</head>
+
+<body>
+  <table>
+    <h1>Nadocast compared to SPC, Subjective</h1>
+    <table>
+      <tr><th>Date</th><th>Nadocast / SPC Day 1</th><th>0Z Nadocast / 6Z SPC</th><th>10Z Nadocast / 13Z SPC</th><th>14Z Nadocast / 1630Z SPC</th></tr>
+      <%
+        def predictor(map)
+          map[/(\w+)_(\d{8})_t(\d+)z.png$/, 1]
+        end
+        def yyyymmdd(map)
+          map[/(\w+)_(\d{8})_t(\d+)z.png$/, 2]
+        end
+        def run_hour(map)
+          map[/(\w+)_(\d{8})_t(\d+)z.png$/, 3]
+        end
+        def map_img(map)
+          map && "<img src=\"#{map}\">"
+        end
+        maps = Dir.glob("maps/*/*.png")
+        maps_by_day = {}
+        maps.each do |map|
+          maps_by_day[yyyymmdd(map)] ||= []
+          maps_by_day[yyyymmdd(map)] << map
+        end
+        maps_by_day.keys.sort.each do |day|
+          nadocast_0z  = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "00" }
+          nadocast_10z = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "10" }
+          nadocast_14z = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "14" }
+          spc_6z       = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "06" }
+          spc_13z      = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "13" }
+          spc_1630z    = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "16" }
+      %>
+        <tr><td rowspan="2"><%= day[0...4] %>-<%= day[4...6] %>-<%= day[6...8] %></td><td>Nadocast</td><td><%= map_img(nadocast_0z) %></td><td><%= map_img(nadocast_10z) %></td><td><%= map_img(nadocast_14z) %></td></tr>
+        <tr><td>SPC</td><td><%= map_img(spc_6z) %></td><td><%= map_img(spc_13z) %></td><td><%= map_img(spc_1630z) %></td></tr>
+      <%
+        end
+      %>
+    </table>
+  </table>
+</body>
+
+</html>
