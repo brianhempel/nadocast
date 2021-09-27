@@ -2,6 +2,9 @@
 
 <head>
   <title>Nadocast compared to SPC</title>
+  <style>
+    img { min-height: 100px; } /* lazy load fewer images at once */
+  </style>
 </head>
 
 <body>
@@ -20,7 +23,7 @@
           map[/(\w+)_(\d{8})_t(\d+)z.png$/, 3]
         end
         def map_img(map)
-          map && "<img src=\"#{map}\">"
+          map && "<img loading=\"lazy\" src=\"#{map}\">"
         end
         maps = Dir.glob("maps/*/*.png")
         maps_by_day = {}

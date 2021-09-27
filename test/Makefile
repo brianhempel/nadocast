@@ -9,3 +9,7 @@ confidence_shapes.txt: test_0z.csv BootstrapConfidenceIntervals.jl
 
 index.html: index.html.erb
 	erb index.html.erb > index.html
+
+publish: index.html
+	cp -r maps *.html ../../test.nadocast.com/
+	cd ../../test.nadocast.com && git add .; git commit -m "Update"; git pull --rebase && git push
