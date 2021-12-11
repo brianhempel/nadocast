@@ -30,8 +30,8 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-newest_href_sref          = last(CombinedHREFSREF.forecasts_day_spc_calibrated())
-newest_hrrr_rap_href_sref = last(filter(forecast -> forecast.run_hour >= 10, CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()))
+newest_href_sref          = last(CombinedHREFSREF.forecasts_day_spc_calibrated());
+newest_hrrr_rap_href_sref = last(filter(forecast -> forecast.run_hour >= 10, CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()));
 
 if Forecasts.run_utc_datetime(newest_hrrr_rap_href_sref) >= Forecasts.run_utc_datetime(newest_href_sref)
   newest_forecast = newest_hrrr_rap_href_sref
