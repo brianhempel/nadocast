@@ -952,6 +952,10 @@ BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/href"
 MIN_FILE_BYTES = 20_000_000
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "2")
 
+AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
+  `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/)
+end.to_set
+
 def alt_location(directory)
   directory.sub(/^\/Volumes\/SREF_HREF_1\//, "/Volumes/SREF_HREF_2/").sub(/^\/Volumes\/SREF_HREF_3\//, "/Volumes/SREF_HREF_4/")
 end
@@ -974,7 +978,9 @@ threads = THREAD_COUNT.times.map do
 
       base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
       file_name         = "href_conus_#{year_month_day}_t#{run_hour_str}z_#{type}_f#{forecast_hour_str}.grib2"
-      url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
+      remote_name       = "href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
+      next unless AVAILABLE_FOR_DOWNLOAD.include?(remote_name)
+      url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/#{remote_name}"
       directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
       path              = "#{directory}/#{file_name}"
       alt_directory     = alt_location(directory)
