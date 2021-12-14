@@ -39,7 +39,7 @@ loop do
   FileUtils.cd File.expand_path("..", __FILE__)
 
   # DoPredict.jl will fail if the forecasts are not all downloaded.
-  if system("JULIA_NUM_THREADS=#{ENV["CORE_COUNT"]} RUN_HOUR=#{RUN_HOUR} FORECAST_DATE=#{FORECAST_DATE} time julia --project lib/DoPredict.jl")
+  if system("JULIA_NUM_THREADS=#{ENV["CORE_COUNT"]} RUN_HOUR=#{RUN_HOUR} FORECAST_DATE=#{FORECAST_DATE} time julia --project DoPredict.jl")
     exit 0
   end
 
