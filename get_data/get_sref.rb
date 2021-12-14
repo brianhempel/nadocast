@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "date"
+require "set"
 
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/sref/prod/sref.20180626/09/ensprod/sref.t09z.pgrb212.mean_1hrly.grib2

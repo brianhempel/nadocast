@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "date"
+require "set"
 
 # Service Change Notice 17-106
 #
