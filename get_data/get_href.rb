@@ -953,7 +953,8 @@ MIN_FILE_BYTES = 20_000_000
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "2")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
-  `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/)
+  remote_files = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
+  remote_files.map { |name| "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/#{name}" }
 end.to_set
 
 def alt_location(directory)
@@ -976,24 +977,24 @@ threads = THREAD_COUNT.times.map do
       run_hour_str      = "%02d" % [run_hour]
       forecast_hour_str = "%02d" % [forecast_hour]
 
-      base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
       file_name         = "href_conus_#{year_month_day}_t#{run_hour_str}z_#{type}_f#{forecast_hour_str}.grib2"
-      remote_name       = "href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
-      next unless AVAILABLE_FOR_DOWNLOAD.include?(remote_name)
-      url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/#{remote_name}"
-      directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
-      path              = "#{directory}/#{file_name}"
-      alt_directory     = alt_location(directory)
-      alt_path          = alt_location(path)
+      url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
+      if AVAILABLE_FOR_DOWNLOAD.include?(url_to_get)
+        base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
+        directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
+        path              = "#{directory}/#{file_name}"
+        alt_directory     = alt_location(directory)
+        alt_path          = alt_location(path)
 
-      system("mkdir -p #{directory} 2> /dev/null")
-      system("mkdir -p #{alt_location(alt_directory)} 2> /dev/null")
-      if (File.size(path) rescue 0) < MIN_FILE_BYTES
-        puts "#{url_to_get} -> #{path}"
-        data = `curl -f -s --show-error #{url_to_get}`
-        if $?.success? && data.size >= MIN_FILE_BYTES
-          File.write(path, data)
-          File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
+        system("mkdir -p #{directory} 2> /dev/null")
+        system("mkdir -p #{alt_location(alt_directory)} 2> /dev/null")
+        if (File.size(path) rescue 0) < MIN_FILE_BYTES
+          puts "#{url_to_get} -> #{path}"
+          data = `curl -f -s --show-error #{url_to_get}`
+          if $?.success? && data.size >= MIN_FILE_BYTES
+            File.write(path, data)
+            File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
+          end
         end
       end
     end

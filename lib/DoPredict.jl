@@ -50,11 +50,11 @@ if haskey(ENV, "RUN_HOUR")
 end;
 sort!(forecasts, alg=MergeSort, by=Forecasts.run_utc_datetime);
 
-newest_forecast = last(forecasts);
-
-if isnothing(newest_forecast)
+if forecasts == []
   exit(1)
 end
+
+newest_forecast = last(forecasts);
 
 # Follows Forecasts.based_on to return a list of forecasts with the given model_name
 function model_parts(forecast, model_name)
