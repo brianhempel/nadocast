@@ -70,10 +70,6 @@ rap_run_hours  = unique(map(forecast -> forecast.run_hour, model_parts(newest_fo
 href_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "HREF")))
 sref_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "SREF")))
 
-# if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
-#   println("Newest forecast is in the past $(Forecasts.time_title(newest_forecast))")
-#   exit(1)
-# end
 
 ForecastCombinators.turn_forecast_caching_on()
 # ForecastCombinators.turn_forecast_gc_circumvention_on()
@@ -125,9 +121,16 @@ end
 if get(ENV, "TWEET", "false") == "true"
   tweet_script_path = (@__DIR__) * "/tweet.rb"
 
+  tweet_str =
+    if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
+      "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast"
+    else
+      "$(nadocast_run_hour)Z Day Tornado Forecast"
+    end
+
   for path in daily_paths_to_perhaps_tweet
     println("Tweeting daily $(path)...")
-    run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Day Tornado Forecast" $path.png`)
+    run(`ruby $tweet_script_path "$(tweet_str)" $path.png`)
   end
 
   # if !isnothing(animation_glob_path)
