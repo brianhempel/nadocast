@@ -7,6 +7,8 @@
 # Usage: FORECAST_DATE=2021-12-10 RUN_HOUR=10 HRRR_RAP=true TWEET=true ruby download_and_forecast.rb
 
 require "date"
+require "fileutils"
+
 
 FORECAST_DATE = ENV["FORECAST_DATE"]       ? Date.parse(ENV["FORECAST_DATE"]) : Time.now.utc.to_date
 RUN_HOUR      = ENV["RUN_HOUR"]            ? Integer(ENV["RUN_HOUR"])         : Time.now.utc.hour
