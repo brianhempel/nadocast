@@ -1,18 +1,14 @@
 import MemoryConstrainedTreeBoosting
 
-# To predict the past, set FORECAST_DATE=2019-4-7 in the environment:
+# To predict the past, set FORECAST_DATE and RUN_HOUR in the environment:
 #
-# $ FORECAST_DATE=2019-4-7 TWEET=true FORECASTS_ROOT=$(pwd)/test_grib2s make forecast
-#
-# or
-#
-# $ SREF_RUN_TIME=2021-4-22t21 HREF_RUN_TIME=2021-4-23t0 USE_HRRR=false USE_RAP=false make forecast
+# $ FORECAST_DATE=2019-4-7 RUN_HOUR=10 TWEET=true FORECASTS_ROOT=$(pwd)/test_grib2s make forecast
 #
 # Using data on remote machine:
 # Make sure ~/.ssh/config doesn't use screen
 # $ mkdir ~/nadocaster2
 # $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
-# $ FORECASTS_ROOT=/home/brian/nadocaster2/ SREF_RUN_TIME=2021-4-22t21 HREF_RUN_TIME=2021-4-23t0 USE_HRRR=false USE_RAP=false make forecast
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_DATE=2019-4-7 RUN_HOUR=0 HRRR_RAP=false make forecast
 
 
 import Dates
@@ -30,13 +26,34 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-newest_href_sref          = last(CombinedHREFSREF.forecasts_day_spc_calibrated());
-newest_hrrr_rap_href_sref = last(filter(forecast -> forecast.run_hour >= 10, CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()));
+href_srefs          = CombinedHREFSREF.forecasts_day_spc_calibrated();
+hrrr_rap_href_srefs =
+  if get(ENV, "HRRR_RAP", "true") == "false"
+    []
+  else
+    CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()
+  end;
 
-if Forecasts.run_utc_datetime(newest_hrrr_rap_href_sref) >= Forecasts.run_utc_datetime(newest_href_sref)
-  newest_forecast = newest_hrrr_rap_href_sref
-else
-  newest_forecast = newest_href_sref
+
+forecasts = vcat(href_srefs, hrrr_rap_href_srefs);
+if haskey(ENV, "FORECAST_DATE")
+  year, month, day = map(str -> parse(Int64, str), split(ENV["FORECAST_DATE"], "-"))
+  filter!(forecasts) do forecast
+    forecast.run_year == year && forecast.run_month == month && forecast.run_day == day
+  end
+end;
+if haskey(ENV, "RUN_HOUR")
+  run_hour = parse(Int64, ENV["RUN_HOUR"])
+  filter!(forecasts) do forecast
+    forecast.run_hour == run_hour
+  end
+end;
+sort!(forecasts, alg=MergeSort, by=Forecasts.run_utc_datetime);
+
+newest_forecast = last(forecasts);
+
+if isnothing(newest_forecast)
+  exit(1)
 end
 
 # Follows Forecasts.based_on to return a list of forecasts with the given model_name
@@ -53,14 +70,14 @@ rap_run_hours  = unique(map(forecast -> forecast.run_hour, model_parts(newest_fo
 href_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "HREF")))
 sref_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_forecast, "SREF")))
 
-if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
-  println("Newest forecast is in the past $(Forecasts.time_title(newest_forecast))")
-  exit(1)
-end
+# if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
+#   println("Newest forecast is in the past $(Forecasts.time_title(newest_forecast))")
+#   exit(1)
+# end
 
 ForecastCombinators.turn_forecast_caching_on()
 # ForecastCombinators.turn_forecast_gc_circumvention_on()
-prediction = Forecasts.data(newest_forecast)
+prediction = Forecasts.data(newest_forecast);
 ForecastCombinators.clear_cached_forecasts()
 
 

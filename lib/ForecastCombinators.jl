@@ -169,7 +169,7 @@ function cache_lookup(f, cache, max_cache_size_bytes, forecast)
       end
       out
     else
-      println("cache hit")
+      # println("cache hit")
       cache[i][2]
     end
   end

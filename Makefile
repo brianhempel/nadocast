@@ -38,11 +38,14 @@ storm_events_for_climatology:
 	rm storm_data/tornadoes_1998-2013_downloaded.csv storm_data/wind_events_1998-2013_downloaded.csv storm_data/hail_events_1998-2013_downloaded.csv
 
 
-forecast_and_publish:
-	TWEET=true make forecast
+# download_forecast_and_publish:
+# 	TWEET=true ruby lib/download_and_forecast.rb
 
-forecast:
-	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project lib/DoPredict.jl
+# forecast_and_publish:
+# 	TWEET=true make forecast
+
+# forecast:
+# 	JULIA_NUM_THREADS=${CORE_COUNT} time julia --project lib/DoPredict.jl
 
 crontab:
 	crontab crontab.cron
