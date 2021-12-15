@@ -1,9 +1,9 @@
 # Look for forecasts every hour.
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-# Try to get SREF/HREF twice a day, for our archive (in case the download_and_forecast.rb script borks)
-0 6,18 * * * /home/brian/nadocast_operational/get_data/get_sref.rb >> /home/brian/nadocast_operational/get_data/get_sref.log 2>&1
-0 6,18 * * * /home/brian/nadocast_operational/get_data/get_href.rb >> /home/brian/nadocast_operational/get_data/get_href.log 2>&1
+# Try to get SREF/HREF a few times a day, for our archive (in case the download_and_forecast.rb script borks)
+0 6,18,23 * * * /home/brian/nadocast_operational/get_data/get_sref.rb >> /home/brian/nadocast_operational/get_data/get_sref.log 2>&1
+0 6,18,23 * * * /home/brian/nadocast_operational/get_data/get_href.rb >> /home/brian/nadocast_operational/get_data/get_href.log 2>&1
 # The forecast time will be inferred from the process start time. Will keep trying to download until the forecast succeeds
 0 0    * * * source $HOME/.bash_profile >> /home/brian/nadocast_dev/forecaster.log 2>&1 && TWEET=true HRRR_RAP=false ruby /home/brian/nadocast_dev/lib/download_and_forecast.rb >> /home/brian/nadocast_dev/forecaster.log 2>&1
 0 10   * * * source $HOME/.bash_profile >> /home/brian/nadocast_dev/forecaster.log 2>&1 && TWEET=true                ruby /home/brian/nadocast_dev/lib/download_and_forecast.rb >> /home/brian/nadocast_dev/forecaster.log 2>&1
