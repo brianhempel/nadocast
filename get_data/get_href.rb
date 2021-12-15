@@ -951,7 +951,7 @@ FORECAST_HOURS = (01..36).to_a
 BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/href"
 BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/href"
 MIN_FILE_BYTES = 20_000_000
-THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "2")
+THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
   remote_files = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
