@@ -41,7 +41,7 @@ FORECAST_HOURS       = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 
 VALIDATION_RUN_HOURS = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 TEST_RUN_HOURS       = ENV["TEST_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 MIN_FILE_BYTES       = 80_000_000
-THREAD_COUNT         = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "6"))
+THREAD_COUNT         = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "8"))
 HALF_WINDOW_SIZE     = 90*MINUTE # Grab forecasts valid within this many minutes of a geocoded storm event
 
 
