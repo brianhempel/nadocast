@@ -41,7 +41,7 @@ FORECAST_HOURS       = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [2, 6, 
 VALIDATION_RUN_HOURS = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 TEST_RUN_HOURS       = ENV["TEST_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 MIN_FILE_BYTES       = 80_000_000
-THREAD_COUNT         = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "1" : "4"))
+THREAD_COUNT         = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_ARCHIVE ? "2" : "6"))
 HALF_WINDOW_SIZE     = 90*MINUTE # Grab forecasts valid within this many minutes of a geocoded storm event
 
 
@@ -74,11 +74,11 @@ class HRRRForecast < Forecast
   end
 
   def archive_url
-    "https://pando-rgw01.chpc.utah.edu/hrrr/sfc/#{year_month_day}/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
+    "https://storage.googleapis.com/high-resolution-rapid-refresh/hrrr.#{year_month_day}/conus/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
   end
 
   def alt_archive_url
-    "https://storage.googleapis.com/high-resolution-rapid-refresh/hrrr.#{year_month_day}/conus/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
+    "https://pando-rgw01.chpc.utah.edu/hrrr/sfc/#{year_month_day}/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
   end
 
   def ncep_url
