@@ -21,9 +21,13 @@ forecast_hour_range =
 
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.13"))
 
+sig_given_tor = get(ENV, "SIG_GIVEN_TOR", "false") == "true"
+
+sig_given_tor_str = sig_given_tor ? "_sig_given_tor" : ""
+
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
-model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta$(sig_given_tor_str)_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
 
 # $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.2 make train_gradient_boosted_decision_trees
 #
@@ -320,14 +324,29 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # Dict{Symbol,Real}(:max_depth => 6,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 30,:l2_regularization => 3.2,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 560.0)
 
 
+
+# $ FORECAST_HOUR_RANGE=2:13 SIG_GIVEN_TOR=true make train_gradient_boosted_decision_trees
+
+
+calc_inclusion_probabilities_regular(forecast, _labels)       = max.(data_subset_ratio, TrainingShared.compute_is_near_storm_event(forecast))
+calc_inclusion_probabilities_sig_given_tor(forecast, _labels) = TrainingShared.compute_forecast_labels_ef0(forecast)
+
+forecasts =
+  if sig_given_tor
+    filter(TrainingShared.forecast_is_tornado_hour, SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts())
+  else
+    SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  end
+
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
-    SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
+    forecasts;
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    save_dir     = "sref_$(hour_range_str)_$(data_subset_ratio)",
+    save_dir     = "sref$(sig_given_tor_str)_$(hour_range_str)_$(data_subset_ratio)",
 
-    training_calc_inclusion_probabilities   = (labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
-    validation_calc_inclusion_probabilities = (labels, is_near_storm_event) -> max.(data_subset_ratio, is_near_storm_event),
+    compute_forecast_labels                 = sig_given_tor ? TrainingShared.compute_forecast_labels_ef2 : TrainingShared.compute_forecast_labels_ef0,
+    training_calc_inclusion_probabilities   = sig_given_tor ? calc_inclusion_probabilities_sig_given_tor : calc_inclusion_probabilities_regular,
+    validation_calc_inclusion_probabilities = sig_given_tor ? calc_inclusion_probabilities_sig_given_tor : calc_inclusion_probabilities_regular,
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,
@@ -336,7 +355,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     random_start_count = 20,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
-    min_data_weight_in_leaf     = [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
+    min_data_weight_in_leaf     = (sig_given_tor ? 0.1 : 1.0) .* [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
     l2_regularization           = [3.2],
     max_leaves                  = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
     max_depth                   = [3, 4, 5, 6, 7, 8],

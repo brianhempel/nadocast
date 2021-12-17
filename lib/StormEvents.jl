@@ -16,6 +16,7 @@ struct Event
   end_seconds_from_epoch_utc   :: Int64
   start_latlon                 :: Tuple{Float64, Float64}
   end_latlon                   :: Tuple{Float64, Float64}
+  ef_rating                    :: Union{Nothing, Int64}
 end
 
 function seconds_to_convective_days_since_epoch_utc(seconds_from_epoch_utc :: Int64) :: Int64
@@ -63,6 +64,7 @@ function read_events_csv(path) ::Vector{Event}
   start_lon_col_i     = findfirst(isequal("begin_lon"), event_headers)
   end_lat_col_i       = findfirst(isequal("end_lat"), event_headers)
   end_lon_col_i       = findfirst(isequal("end_lon"), event_headers)
+  ef_col_i            = findfirst(isequal("f_scale"), event_headers)
 
   row_to_event(row) = begin
     start_seconds = row[start_seconds_col_i]
@@ -81,7 +83,9 @@ function read_events_csv(path) ::Vector{Event}
       end_latlon    = (parse(Float64, row[end_lat_col_i]),   parse(Float64, row[end_lon_col_i]))
     end
 
-    Event(start_seconds, end_seconds, start_latlon, end_latlon)
+    ef_rating = isnothing(ef_col_i) ? nothing : parse(Int64, row[ef_col_i])
+
+    Event(start_seconds, end_seconds, start_latlon, end_latlon, ef_rating)
   end
 
   events_raw = mapslices(row_to_event, event_rows, dims = [2])[:,1]
@@ -178,8 +182,9 @@ end
 
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of the tornadoes
-function grid_to_conus_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
-  grid_to_event_neighborhoods(conus_tornadoes(), grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
+function grid_to_conus_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64; rating_range = 0:5) :: Vector{Float32}
+  events = filter(event -> event.ef_rating in rating_range, conus_tornadoes())
+  grid_to_event_neighborhoods(events, grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
 end
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of any storm event

@@ -77,6 +77,7 @@ import Forecasts
 function train_with_coordinate_descent_hyperparameter_search(
     forecasts;
     forecast_hour_range = 1:10000,
+    compute_forecast_labels = TrainingShared.compute_forecast_labels_ef0,
     training_calc_inclusion_probabilities   = nothing,
     validation_calc_inclusion_probabilities = nothing,
     load_only = false,
@@ -108,12 +109,12 @@ function train_with_coordinate_descent_hyperparameter_search(
   # Returns (X_binned, labels, weights)
   get_data_labels_weights_binned(forecasts, bin_splits, calc_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, compute_forecast_labels = compute_forecast_labels, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
   end
 
   prepare_data_labels_weights_binned(forecasts, bin_splits, calc_inclusion_probabilities, save_suffix; prior_predictor = nothing) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.prepare_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
+    TrainingShared.prepare_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, compute_forecast_labels = compute_forecast_labels, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
   end
 
   # Returns path
@@ -138,7 +139,8 @@ function train_with_coordinate_descent_hyperparameter_search(
       (bin_sample_X, bin_sample_y, _) =
         TrainingShared.get_data_labels_weights(
           Iterators.take(Random.shuffle(rng, train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
-          calc_inclusion_probabilities = (labels, is_near_storm_event) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
+          compute_forecast_labels = compute_forecast_labels,
+          calc_inclusion_probabilities = (forecast, labels) -> balance_labels_when_computing_bin_splits ? min.(max.(0.01f0, labels), training_calc_inclusion_probabilities(forecast, labels)) : ones(Float32, size(labels)),
           save_dir = specific_save_dir("samples_for_bin_splits")
         )
       if balance_labels_when_computing_bin_splits

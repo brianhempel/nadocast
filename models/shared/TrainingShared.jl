@@ -105,8 +105,12 @@ function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:
 end
 
 
-function compute_forecast_labels(forecast) :: Array{Float32,1}
+function compute_forecast_labels_ef0(forecast) :: Array{Float32,1}
   StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
+end
+
+function compute_forecast_labels_ef2(forecast) :: Array{Float32,1}
+  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE; rating_range = 2:5)
 end
 
 function compute_is_near_storm_event(forecast) :: Array{Float32,1}
@@ -127,7 +131,7 @@ function finished_loading(save_dir)
   isdir(save_dir) && isfile(joinpath(save_dir, "labels.serialized")) && isfile(joinpath(save_dir, "weights.serialized"))
 end
 
-function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels_ef0)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
@@ -139,7 +143,7 @@ end
 
 # Loads the data to disk but does not read it back.
 # Returns (data_count, feature_count) if the data wasn't already saved to disk.
-function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
+function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels_ef0)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
@@ -162,7 +166,7 @@ function mask_rows_threaded(data, mask; final_row_count=count(mask))
 end
 
 # We can keep weights and labels in memory at least. It's the features that really kill us.
-function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels)
+function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels_ef0)
   mkpath(save_dir)
 
   save_path(path) = joinpath(save_dir, path)
@@ -196,14 +200,15 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   feature_count = 0
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-    forecast_labels = compute_forecast_labels(forecast)[conus_grid_bitmask]     :: Array{Float32,1}
+    forecast_labels_full_grid = compute_forecast_labels(forecast)   :: Array{Float32,1}
+    forecast_labels = forecast_labels_full_grid[conus_grid_bitmask] :: Array{Float32,1}
 
     # PlotMap.plot_debug_map("tornadoes_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_forecast_labels(forecast))
     # PlotMap.plot_debug_map("near_events_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_is_near_storm_event(forecast))
 
     if !isnothing(calc_inclusion_probabilities)
-      is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
-      probabilities       = Float32.(calc_inclusion_probabilities(forecast_labels, is_near_storm_event))
+      # is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
+      probabilities       = Float32.(calc_inclusion_probabilities(forecast, forecast_labels_full_grid)[conus_grid_bitmask])
       probabilities       = clamp.(probabilities, 0f0, 1f0)
       mask                = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
       probabilities       = probabilities[mask]
