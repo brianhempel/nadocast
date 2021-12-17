@@ -1,7 +1,5 @@
 import Dates
 
-import MemoryConstrainedTreeBoosting
-
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import TrainingShared
 import TrainGBDTShared
