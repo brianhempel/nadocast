@@ -25,9 +25,13 @@ data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.012"))
 near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.2"))
 load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 
+sig_given_tor = get(ENV, "SIG_GIVEN_TOR", "false") == "true"
+
+sig_given_tor_str = sig_given_tor ? "_sig_given_tor" : ""
+
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
-model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
+model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta$(sig_given_tor_str)_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
 
 # $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.025 make train_gradient_boosted_decision_trees
 # ulimit -n 8192; JULIA_NUM_THREADS=16 time julia --project=../.. TrainGradientBoostedDecisionTrees.jl
@@ -384,29 +388,41 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(repla
 # 40:06:02 elapsed
 
 
+
+calc_inclusion_probabilities_regular(forecast, _labels)       = max.(data_subset_ratio, TrainingShared.compute_is_near_storm_event(forecast))
+calc_inclusion_probabilities_sig_given_tor(forecast, _labels) = TrainingShared.compute_forecast_labels_ef0(forecast)
+
+forecasts =
+  if sig_given_tor
+    filter(TrainingShared.forecast_is_tornado_hour, HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts())
+  else
+    HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  end
+
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
-    HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
+    forecasts;
     forecast_hour_range = forecast_hour_range,
     model_prefix = model_prefix,
-    save_dir     = "href_$(hour_range_str)_$(data_subset_ratio)_$(near_storm_ratio)",
+    save_dir     = "href$(sig_given_tor_str)_$(hour_range_str)_$(data_subset_ratio)_$(near_storm_ratio)",
 
-    training_calc_inclusion_probabilities   = (labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
-    validation_calc_inclusion_probabilities = (labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
-    load_only                                          = load_only,
+    compute_forecast_labels                 = sig_given_tor ? TrainingShared.compute_forecast_labels_ef2 : TrainingShared.compute_forecast_labels_ef0,
+    training_calc_inclusion_probabilities   = sig_given_tor ? calc_inclusion_probabilities_sig_given_tor : calc_inclusion_probabilities_regular,
+    validation_calc_inclusion_probabilities = sig_given_tor ? calc_inclusion_probabilities_sig_given_tor : calc_inclusion_probabilities_regular,
+    bin_splits_calc_inclusion_probabilities = (forecast, labels) -> sig_given_tor ? TrainingShared.compute_forecast_labels_ef0(forecast) : max.(0.01f0, labels),
 
-    bin_split_forecast_sample_count    = 200,
-    max_iterations_without_improvement = 20,
+    bin_split_forecast_sample_count    = sig_given_tor ? 500 : 200,
+    max_iterations_without_improvement = sig_given_tor ? 40 : 20,
 
     # Start with middle value for each parameter, plus some number of random choices, before beginning coordinate descent.
-    random_start_count = 20,
+    random_start_count = sig_given_tor ? 100 : 20,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
-    min_data_weight_in_leaf     = [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
-    l2_regularization           = [3.2],
+    min_data_weight_in_leaf     = (sig_given_tor ? 0.1 : 1.0) .* [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
+    l2_regularization           = sig_given_tor ? [0.32, 1.0, 3.2, 10.0] : [3.2],
     max_leaves                  = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
     max_depth                   = [3, 4, 5, 6, 7, 8],
     max_delta_score             = [0.56, 1.0, 1.8, 3.2, 5.6],
-    learning_rate               = [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
+    learning_rate               = sig_given_tor ? [0.1, 0.016, 0.025, 0.040, 0.063, 0.1] : [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
     feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
     bagging_temperature         = [0.25]
   )

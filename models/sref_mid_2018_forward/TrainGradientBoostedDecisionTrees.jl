@@ -351,18 +351,18 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     bin_splits_calc_inclusion_probabilities = (forecast, labels) -> sig_given_tor ? TrainingShared.compute_forecast_labels_ef0(forecast) : max.(0.01f0, labels),
 
     bin_split_forecast_sample_count    = sig_given_tor ? 500 : 200,
-    max_iterations_without_improvement = 20,
+    max_iterations_without_improvement = sig_given_tor ? 40 : 20,
 
     # Start with middle value for each parameter, plus some number of random choices, before beginning coordinate descent.
-    random_start_count = 20,
+    random_start_count = sig_given_tor ? 100 : 20,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
     min_data_weight_in_leaf     = (sig_given_tor ? 0.1 : 1.0) .* [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
-    l2_regularization           = [3.2],
+    l2_regularization           = sig_given_tor ? [0.32, 1.0, 3.2, 10.0] : [3.2],
     max_leaves                  = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
     max_depth                   = [3, 4, 5, 6, 7, 8],
     max_delta_score             = [0.56, 1.0, 1.8, 3.2, 5.6],
-    learning_rate               = [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
+    learning_rate               = sig_given_tor ? [0.1, 0.016, 0.025, 0.040, 0.063, 0.1] : [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
     feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
     bagging_temperature         = [0.25]
   )
