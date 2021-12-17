@@ -348,7 +348,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     compute_forecast_labels                 = sig_given_tor ? TrainingShared.compute_forecast_labels_ef2 : TrainingShared.compute_forecast_labels_ef0,
     training_calc_inclusion_probabilities   = sig_given_tor ? calc_inclusion_probabilities_sig_given_tor : calc_inclusion_probabilities_regular,
     validation_calc_inclusion_probabilities = sig_given_tor ? calc_inclusion_probabilities_sig_given_tor : calc_inclusion_probabilities_regular,
-    bin_splits_calc_inclusion_probabilities = (forecast, labels) -> sig_given_tor ? TrainingShared.compute_forecast_labels_ef0(forecast, labels) : max.(0.01f0, labels),
+    bin_splits_calc_inclusion_probabilities = (forecast, labels) -> sig_given_tor ? TrainingShared.compute_forecast_labels_ef0(forecast) : max.(0.01f0, labels),
 
     bin_split_forecast_sample_count    = sig_given_tor ? 500 : 200,
     max_iterations_without_improvement = 20,
