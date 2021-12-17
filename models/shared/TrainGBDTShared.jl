@@ -85,6 +85,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     prior_predictor = nothing,
     bin_split_forecast_sample_count = 100,
     balance_labels_when_computing_bin_splits = true,
+    bin_splits_calc_inclusion_probabilities = (forecast, labels) -> balance_labels_when_computing_bin_splits ? max.(0.01f0, labels) : ones(Float32, size(labels)),
     max_iterations_without_improvement = 20,
     save_dir,
     configs...
@@ -140,7 +141,7 @@ function train_with_coordinate_descent_hyperparameter_search(
         TrainingShared.get_data_labels_weights(
           Iterators.take(Random.shuffle(rng, train_forecasts_with_tornadoes), bin_split_forecast_sample_count),
           compute_forecast_labels = compute_forecast_labels,
-          calc_inclusion_probabilities = (forecast, labels) -> balance_labels_when_computing_bin_splits ? min.(max.(0.01f0, labels), training_calc_inclusion_probabilities(forecast, labels)) : ones(Float32, size(labels)),
+          calc_inclusion_probabilities = bin_splits_calc_inclusion_probabilities,
           save_dir = specific_save_dir("samples_for_bin_splits")
         )
       if balance_labels_when_computing_bin_splits
