@@ -84,7 +84,7 @@ function read_events_csv(path) ::Vector{Event}
     end
 
     println(row[ef_col_i])
-    ef_rating = isnothing(ef_col_i) ? nothing : (row[ef_col_i] :: Int64)
+    ef_rating = isnothing(ef_col_i) ? nothing : (row[ef_col_i] == "" ? 0 : (row[ef_col_i] :: Int64))
 
     Event(start_seconds, end_seconds, start_latlon, end_latlon, ef_rating)
   end
