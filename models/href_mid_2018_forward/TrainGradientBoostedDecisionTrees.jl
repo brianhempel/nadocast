@@ -389,6 +389,30 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta$(sig_given_tor_str)_$(hou
 # 40:06:02 elapsed
 
 
+# $ FORECAST_HOUR_RANGE=2:13 SIG_GIVEN_TOR=true  make train_gradient_boosted_decision_trees
+# 2875 for training. (2875 with tornadoes.)
+# 688 for validation.
+# 571 for testing.
+# Preparing bin splits by sampling 500 training tornado hour forecasts
+# filtering to balance 2293 positive and 15890 negative labels...computing bin splits...done.
+# Loading training data
+# done. 103097 datapoints with 17394 features each.
+# Loading validation data
+# done. 23544 datapoints with 17394 features each.
+# Best hyperparameters (loss = 0.32802954):
+# Dict{Symbol,Real}(:max_depth => 4,:max_delta_score => 0.56,:learning_rate => 0.1,:max_leaves => 35,:l2_regularization => 1.0,:feature_fraction => 0.25,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 18.0)
+# 7:17:01 elapsed
+
+# $ FORECAST_HOUR_RANGE=2:35 SIG_GIVEN_TOR=true  make train_gradient_boosted_decision_trees
+#
+# 8120 for training. (8120 with tornadoes.)
+# 1931 for validation.
+# 1621 for testing.
+# Preparing bin splits by sampling 500 training tornado hour forecasts
+# filtering to balance 2379 positive and 15311 negative labels...computing bin splits...done.
+# Loading training data
+# done. 290828 datapoints with 17394 features each.
+
 
 calc_inclusion_probabilities_regular(forecast, _labels)       = max.(data_subset_ratio, TrainingShared.compute_is_near_storm_event(forecast))
 calc_inclusion_probabilities_sig_given_tor(forecast, _labels) = TrainingShared.compute_forecast_labels_ef0(forecast)
@@ -424,6 +448,6 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     max_depth                   = [3, 4, 5, 6, 7, 8],
     max_delta_score             = [0.56, 1.0, 1.8, 3.2, 5.6],
     learning_rate               = sig_given_tor ? [0.1, 0.016, 0.025, 0.040, 0.063, 0.1] : [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
-    feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
+    feature_fraction            = [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0],
     bagging_temperature         = [0.25]
   )
