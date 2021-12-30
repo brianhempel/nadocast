@@ -412,6 +412,43 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta$(sig_given_tor_str)_$(hou
 # filtering to balance 2379 positive and 15311 negative labels...computing bin splits...done.
 # Loading training data
 # done. 290828 datapoints with 17394 features each.
+# Loading validation data
+# done. 66076 datapoints with 17394 features each.
+#
+# Best hyperparameters (loss = 0.33058938):
+# Dict{Symbol,Real}(:max_depth => 7,:max_delta_score => 0.56,:learning_rate => 0.063,:max_leaves => 12,:l2_regularization => 10.0,:feature_fraction => 0.1,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 1800.0)
+# 18:56:18 elapsed
+
+
+# $ FORECAST_HOUR_RANGE=2:13 SIG_GIVEN_TOR=true  make train_gradient_boosted_decision_trees
+#
+# 2875 for training. (2875 with tornadoes.)
+# 688 for validation.
+# 571 for testing.
+# Loading previously computed bin splits from href_sig_given_tor_f2-13_0.012_0.2_samples_for_bin_splits/bin_splits
+# Loading training data
+# done. 103097 datapoints with 17394 features each.
+# Loading validation data
+# done. 23544 datapoints with 17394 features each.
+#
+# Best hyperparameters (loss = 0.3271541):
+# Dict{Symbol,Real}(:max_depth => 8,:max_delta_score => 0.56,:learning_rate => 0.1,:max_leaves => 35,:l2_regularization => 3.2,:feature_fraction => 0.05,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 5600.0)
+# 1:08:21 elapsed
+
+# $ FORECAST_HOUR_RANGE=2:35 SIG_GIVEN_TOR=true  make train_gradient_boosted_decision_trees
+#
+# 8120 for training. (8120 with tornadoes.)
+# 1931 for validation.
+# 1621 for testing.
+# Loading previously computed bin splits from href_sig_given_tor_f2-35_0.012_0.2_samples_for_bin_splits/bin_splits
+# Loading training data
+# done. 290828 datapoints with 17394 features each.
+# Loading validation data
+# done. 66076 datapoints with 17394 features each.
+#
+# Best hyperparameters (loss = 0.32815945):
+# Dict{Symbol,Real}(:max_depth => 3,:max_delta_score => 0.56,:learning_rate => 0.1,:max_leaves => 5,:l2_regularization => 0.32,:feature_fraction => 0.01,:bagging_temperature => 0.25,:min_data_weight_in_leaf => 10000.0)
+# 1:35:00 elapsed
 
 
 calc_inclusion_probabilities_regular(forecast, _labels)       = max.(data_subset_ratio, TrainingShared.compute_is_near_storm_event(forecast))
