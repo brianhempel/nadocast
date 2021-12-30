@@ -50,7 +50,7 @@ length(test_forecasts) # 119
 
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2021, 7, 1, 0)
+cutoff = Dates.DateTime(2021, 9, 1, 0)
 
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
 length(test_forecasts) # 107
