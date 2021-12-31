@@ -35,7 +35,7 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
 spc_forecasts = SPCOutlooks.forecasts_day_0600()
 # (spc_train_forecasts, spc_validation_forecasts, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
 
-length(spc_forecasts) # 906
+length(spc_forecasts) # 968
 
 
 (train_forecasts, validation_forecasts, test_forecasts) =
@@ -44,29 +44,29 @@ length(spc_forecasts) # 906
     just_hours_near_storm_events = false
   );
 
-length(test_forecasts) # 952
+length(test_forecasts) # 1064
 test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
-length(test_forecasts) # 119
+length(test_forecasts) # 133
 
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2021, 9, 1, 0)
 
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-length(test_forecasts) # 107
+length(test_forecasts) # 116
 
 training_data_end = Dates.DateTime(2020, 11, 1, 0)
 other_test_forecasts = vcat(train_forecasts, validation_forecasts);
-length(other_test_forecasts) # 5726
+length(other_test_forecasts) # 6358
 other_test_forecasts = filter(forecast -> forecast.run_hour == 0, other_test_forecasts);
-length(other_test_forecasts) # 716
+length(other_test_forecasts) # 796
 other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, other_test_forecasts);
-length(other_test_forecasts) # 641
+length(other_test_forecasts) # 694
 other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) > training_data_end, other_test_forecasts);
-length(other_test_forecasts) # 91
+length(other_test_forecasts) # 144
 
 test_forecasts = vcat(test_forecasts, other_test_forecasts);
-length(test_forecasts) # 198
+length(test_forecasts) # 260
 
 compute_forecast_labels(spc_forecast) = begin
   # Annoying that we have to recalculate this.
