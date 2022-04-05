@@ -85,17 +85,17 @@ hail_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind inches] + LAT_LON_HEAD
 # Heavy Rain
 # Heavy Snow
 # High Surf
-# High Wind * (Not geocoded!)
+# High Wind (Not geocoded!)
 # Hurricane
 # Ice Storm
 # Lake-Effect Snow
 # Lakeshore Flood
 # Lightning
-# Marine Hail *
-# Marine High Wind *
+# Marine Hail
+# Marine High Wind
 # Marine Hurricane/Typhoon
 # Marine Strong Wind (weaker than "high wind")
-# Marine Thunderstorm Wind *
+# Marine Thunderstorm Wind
 # Marine Tropical Depression
 # Marine Tropical Storm
 # Rip Current
@@ -209,8 +209,8 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
   # STDERR.puts "Event types: #{rows.map { |row| row["EVENT_TYPE"] }.uniq.sort}"
 
   tornado_rows = rows.select { |row| row["EVENT_TYPE"].strip == "Tornado" }
-  wind_rows    = rows.select { |row| ["High Wind", "Marine High Wind", "Marine Thunderstorm Wind", "Thunderstorm Wind"].include?(row["EVENT_TYPE"].strip) }
-  hail_rows    = rows.select { |row| ["Hail", "Marine Hail"].include?(row["EVENT_TYPE"].strip) }
+  wind_rows    = rows.select { |row| row["EVENT_TYPE"].strip == "Thunderstorm Wind" }
+  hail_rows    = rows.select { |row| row["EVENT_TYPE"].strip == "Hail" }
 
   STDERR.puts "#{tornado_rows.count} tornado path pieces in #{year}"
   STDERR.puts "#{wind_rows.count} high wind events in #{year}"
