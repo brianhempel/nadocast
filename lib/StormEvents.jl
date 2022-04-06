@@ -31,6 +31,15 @@ struct Event
   severity                     :: Union{Nothing, TornadoSeverity, WindSeverity, HailSeverity}
 end
 
+is_severe_tornado(tornado) = true
+is_severe_wind(wind_event) = wind_event.severity.knots  >= 50.0
+is_severe_hail(hail_event) = hail_event.severity.inches >= 1.0
+
+is_sig_tornado(tornado) = tornado.severity.ef_rating >= 2
+is_sig_wind(wind_event) = wind_event.severity.knots  >= 65.0
+is_sig_hail(hail_event) = hail_event.severity.inches >= 2.0
+
+
 function seconds_to_convective_days_since_epoch_utc(seconds_from_epoch_utc :: Int64) :: Int64
   fld(seconds_from_epoch_utc - 12*HOUR, DAY)
 end
@@ -254,8 +263,10 @@ function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_ep
   period_end_seconds   = seconds_from_utc_epoch + seconds_before_and_after
 
   is_relevant_event(event) = begin
-    event.end_seconds_from_epoch_utc   > period_start_seconds &&
-    event.start_seconds_from_epoch_utc < period_end_seconds
+    (event.end_seconds_from_epoch_utc  > period_start_seconds &&
+    event.start_seconds_from_epoch_utc < period_end_seconds) ||
+    # Zero-duration events exactly on the boundary count in the later period
+    (event.start_seconds_from_epoch_utc == period_start_seconds && event.end_seconds_from_epoch_utc == period_start_seconds)
   end
 
   relevant_events = filter(is_relevant_event, events)
