@@ -94,7 +94,9 @@ function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:
         (forecast.forecast_hour in forecast_hour_range) && is_relevant_forecast(forecast)
       end
     else
-      all_forecasts
+      filter(all_forecasts) do forecast
+        forecast.forecast_hour in forecast_hour_range
+      end
     end
 
   train_forecasts      = filter(is_train, forecasts)
