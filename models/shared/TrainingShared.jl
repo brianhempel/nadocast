@@ -275,7 +275,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     end
   end
 
-  println("")
+  println()
 
   (length(labels), feature_count)
 end

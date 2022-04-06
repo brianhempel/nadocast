@@ -88,8 +88,8 @@ for forecast in training_and_validation_forecasts
   end
 end
 
-println("")
-println("")
+println()
+println()
 println("threshold\tpainted_sq_mi\ttrue_positive_sq_mi\tfalse_negative_sq_mi\tsuccess_ratio\tPOD")
 
 for i in 1:length(SPCOutlooks.thresholds)

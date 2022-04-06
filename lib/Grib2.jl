@@ -15,9 +15,9 @@ import Inventories
 function all_grib2_file_paths_in(root_path)
   grib2_paths = []
   if !isdir(root_path)
-    println("")
+    println()
     println("$root_path does not exist! Can't read Grib2s!!")
-    println("")
+    println()
     return grib2_paths
   end
   for (dir_path, _, file_names) in walkdir(root_path)

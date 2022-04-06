@@ -156,7 +156,7 @@ function count_events_by_day(range_in_seconds_from_epoch, grid, convective_day_t
     count_neighborhoods!(event_day_counts_grid,             grid, event_segments,             NEIGHBORHOOD_RADIUS_MILES)
     day_count += 1
   end
-  println("")
+  println()
 
   (day_count, event_of_interest_day_counts_grid, event_day_counts_grid)
 end
@@ -464,7 +464,7 @@ function count_events_by_hour(range_in_seconds_from_epoch, hour_since_epoch_to_e
     count_neighborhoods!(event_hour_counts_grids[hour_in_day_i], grid, event_segments, NEIGHBORHOOD_RADIUS_MILES)
     hour_counts[hour_in_day_i] += 1
   end
-  # println("")
+  # println()
 
   hour_event_probs = zeros(Float64, 24)
 
@@ -736,7 +736,7 @@ function count_events_by_month(range_in_seconds_from_epoch, convective_day_to_ev
     count_neighborhoods!(event_day_counts_grids[month_i], grid, event_segments, NEIGHBORHOOD_RADIUS_MILES)
     day_counts_by_month[month_i] += 1
   end
-  # println("")
+  # println()
 
   event_day_probs_by_month  = zeros(Float64, 12)
 

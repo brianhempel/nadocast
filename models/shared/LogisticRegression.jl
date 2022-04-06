@@ -130,7 +130,7 @@ function fit(X, y, weights; iteration_count = 30, l2_regularization = 0.0)
       break
     end
   end
-  println("")
+  println()
 
   if !converged
     println("No convergence.")
