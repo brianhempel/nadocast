@@ -282,19 +282,39 @@ function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(for
   grid = forecasts[1].grid
 
   new_features_post = [
-    FeatureEngineeringShared.forecast_hour_feature_post(grid),
-    Climatology.tornado_day_spacial_probability_feature(grid),
-    Climatology.severe_day_spacial_probability_feature(grid),
-    Climatology.tornado_day_given_severe_day_spacial_probability_feature(grid),
-    Climatology.geomean_tornado_and_conditional_spacial_probability_feature(grid),
-    Climatology.forecast_hour_tornado_probability_feature(grid),
-    Climatology.forecast_hour_severe_probability_feature(grid),
-    Climatology.forecast_hour_tornado_given_severe_probability_feature(grid),
-    Climatology.forecast_hour_geomean_tornado_and_conditional_probability_feature(grid),
+    Climatology.hail_day_spatial_probability_feature(grid),
+    Climatology.hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.hail_day_given_severe_day_spatial_probability_feature(grid),
+    Climatology.severe_day_spatial_probability_feature(grid),
+    Climatology.severe_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.sig_hail_day_spatial_probability_feature(grid),
+    Climatology.sig_hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.sig_hail_day_given_severe_day_spatial_probability_feature(grid),
+    Climatology.sig_severe_day_spatial_probability_feature(grid),
+    Climatology.sig_severe_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.sig_severe_day_given_severe_day_spatial_probability_feature(grid),
+    Climatology.sig_tornado_day_spatial_probability_feature(grid),
+    Climatology.sig_tornado_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.sig_tornado_day_given_severe_day_spatial_probability_feature(grid),
+    Climatology.sig_wind_day_spatial_probability_feature(grid),
+    Climatology.sig_wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.sig_wind_day_given_severe_day_spatial_probability_feature(grid),
+    Climatology.tornado_day_spatial_probability_feature(grid),
+    Climatology.tornado_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.tornado_day_given_severe_day_spatial_probability_feature(grid),
+    Climatology.wind_day_spatial_probability_feature(grid),
+    Climatology.wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.wind_day_given_severe_day_spatial_probability_feature(grid),
+
+    Climatology.hour_in_day_severe_probability_feature(grid),
+
     Climatology.month_tornado_day_probability_feature(grid),
+    Climatology.month_wind_day_probability_feature(grid),
+    Climatology.month_hail_day_probability_feature(grid),
     Climatology.month_severe_day_probability_feature(grid),
     Climatology.month_tornado_day_given_severe_day_probability_feature(grid),
-    Climatology.month_geomean_tornado_and_conditional_probability_feature(grid)
+    Climatology.month_wind_day_given_severe_day_probability_feature(grid),
+    Climatology.month_hail_day_given_severe_day_probability_feature(grid),
   ]
 
   three_hour_window_and_min_mean_max_delta_forecasts(
