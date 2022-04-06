@@ -16,7 +16,7 @@ If all goes well, the expected possible advantages over Storm Prediction Center'
   - [x] RAP
 - [x] Get some storm events
 - [x] Read the weather data
-- [x] Build background climatology (spacial, diurnal, annual)
+- [x] Build background climatology (spatial, diurnal, annual)
 - [x] Storm mode? (some parameters for that, sans estimates from reflectivity)
 - [x] Add some interaction terms
 - [x] Faster training

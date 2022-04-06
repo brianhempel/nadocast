@@ -17,7 +17,7 @@ MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
 EVENT_TIME_WINDOW_HALF_SIZE  = 30*MINUTE
-TORNADO_SPACIAL_RADIUS_MILES = 25.0
+TORNADO_SPATIAL_RADIUS_MILES = 25.0
 
 NEAR_EVENT_TIME_WINDOW_HALF_SIZE  = 90*MINUTE
 NEAR_EVENT_RADIUS_MILES           = 100.0
@@ -108,11 +108,11 @@ end
 
 
 function compute_forecast_labels_ef0(forecast) :: Array{Float32,1}
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
+  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
 function compute_forecast_labels_ef2(forecast) :: Array{Float32,1}
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPACIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE; rating_range = 2:5)
+  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE; rating_range = 2:5)
 end
 
 function compute_is_near_storm_event(forecast) :: Array{Float32,1}

@@ -5,7 +5,7 @@ module PredictionForecasts
 # to an existing base forecast (e.g. HREF).
 #
 # get_feature_engineered_data will use the underlying winds to
-# generate the spacial means and gradients of the probability.
+# generate the spatial means and gradients of the probability.
 
 import MemoryConstrainedTreeBoosting
 
