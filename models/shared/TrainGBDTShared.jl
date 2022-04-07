@@ -47,16 +47,21 @@ function train_with_coordinate_descent_hyperparameter_search(
   (train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
 
-  println("$(length(train_forecasts)) for training.")
+  forecasts_stats_str(forecasts) = begin
+    sorted = sort(forecasts, alg=MergeSort, by=(fc -> (Forecasts.run_utc_datetime(fc), Forecasts.valid_utc_datetime(fc))))
+    "\tfrom $(Forecasts.time_title(first(sorted)))\tto\t$(Forecasts.time_title(last(sorted)))"
+  end
+
+  println("$(length(train_forecasts)) for training, $(forecasts_stats_str(train_forecasts)).")
   train_forecasts_that_have_each_label = Dict{String, Vector{Forecasts.Forecast}}()
   for (name, forecast_has_event) in TrainingShared.event_name_to_forecast_predicate
     forecasts_with_event = filter(forecast_has_event, train_forecasts)
     train_forecasts_that_have_each_label[name] = forecasts_with_event
-    println("  ($(length(forecasts_with_event)) with $name)")
+    println("  ($(length(forecasts_with_event)) with $name, $(forecasts_stats_str(forecasts_with_event)))")
   end
   label_type_count = length(train_forecasts_that_have_each_label)
-  println("$(length(validation_forecasts)) for validation.")
-  println("$(length(test_forecasts)) for testing.")
+  println("$(length(validation_forecasts)) for validation, $(forecasts_stats_str(validation_forecasts))).")
+  println("$(length(test_forecasts)) for testing, $(forecasts_stats_str(test_forecasts))).")
 
   bin_splits_path = joinpath(specific_save_dir("samples_for_bin_splits"), "bin_splits")
   bin_splits =
