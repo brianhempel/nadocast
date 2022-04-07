@@ -53,13 +53,20 @@ function end_time_in_convective_days_since_epoch_utc(event :: Event) :: Int64
 end
 
 
-_tornadoes            = nothing
-_wind_events          = nothing
-_hail_events          = nothing
-_conus_tornado_events = nothing
-_conus_wind_events    = nothing
-_conus_hail_events    = nothing
-_conus_events         = nothing
+_tornadoes                = nothing
+_wind_events              = nothing
+_hail_events              = nothing
+_conus_tornado_events     = nothing
+_conus_wind_events        = nothing
+_conus_hail_events        = nothing
+_conus_events             = nothing # not-quite severe events are still used for the ±1hr, 100mi radius of near storm negative data
+_conus_severe_wind_events = nothing
+_conus_severe_hail_events = nothing
+_conus_severe_events      = nothing
+_conus_sig_tornado_events = nothing
+_conus_sig_wind_events    = nothing
+_conus_sig_hail_events    = nothing
+_conus_sig_severe_events  = nothing
 
 function event_looks_okay(event :: Event) :: Bool
   duration = event.end_seconds_from_epoch_utc - event.start_seconds_from_epoch_utc
@@ -123,6 +130,7 @@ function read_events_csv(path) ::Vector{Event}
   events_raw = mapslices(row_to_event, event_rows, dims = [2])[:,1]
   filter(event_looks_okay, events_raw)
 end
+
 
 function tornadoes() :: Vector{Event}
   global _tornadoes
@@ -213,21 +221,60 @@ function conus_events() :: Vector{Event}
 end
 
 
-# Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of the tornadoes
-# The grid is still square: "CONUS" here only means Puerto Rico/Alaska/Hawaii etc events have been filtered out
-function grid_to_conus_tornado_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64; rating_range = 0:5) :: Vector{Float32}
-  events = filter(event -> event.severity.ef_rating in rating_range, conus_tornado_events())
-  grid_to_event_neighborhoods(events, grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
+function conus_severe_wind_events() :: Vector{Event}
+  global _conus_severe_wind_events
+  isnothing(_conus_severe_wind_events) && (_conus_severe_wind_events = filter(is_severe_wind, conus_wind_events()))
+  _conus_severe_wind_events
 end
+
+function conus_severe_hail_events() :: Vector{Event}
+  global _conus_severe_hail_events
+  isnothing(_conus_severe_hail_events) && (_conus_severe_hail_events = filter(is_severe_hail, conus_hail_events()))
+  _conus_severe_hail_events
+end
+
+function conus_severe_events() :: Vector{Event}
+  global _conus_severe_events
+
+  if isnothing(_conus_severe_events)
+    _conus_severe_events = sort(vcat(conus_tornado_events(), conus_severe_wind_events(), conus_severe_hail_events()), by = (event -> event.start_seconds_from_epoch_utc))
+  end
+
+  _conus_severe_events
+end
+
+
+function conus_sig_tornado_events() :: Vector{Event}
+  global _conus_sig_tornado_events
+  isnothing(_conus_sig_tornado_events) && (_conus_sig_tornado_events = filter(is_sig_tornado, conus_tornado_events()))
+  _conus_sig_tornado_events
+end
+
+function conus_sig_wind_events() :: Vector{Event}
+  global _conus_sig_wind_events
+  isnothing(_conus_sig_wind_events) && (_conus_sig_wind_events = filter(is_sig_wind, conus_wind_events()))
+  _conus_sig_wind_events
+end
+
+function conus_sig_hail_events() :: Vector{Event}
+  global _conus_sig_hail_events
+  isnothing(_conus_sig_hail_events) && (_conus_sig_hail_events = filter(is_sig_hail, conus_hail_events()))
+  _conus_sig_hail_events
+end
+
+function conus_sig_severe_events() :: Vector{Event}
+  global _conus_sig_severe_events
+
+  if isnothing(_conus_sig_severe_events)
+    _conus_sig_severe_events = sort(vcat(conus_sig_tornado_events(), conus_sig_wind_events(), conus_sig_hail_events()), by = (event -> event.start_seconds_from_epoch_utc))
+  end
+
+  _conus_sig_severe_events
+end
+
+
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of any storm event
-# The grid is still square: "CONUS" here only means Puerto Rico/Alaska/Hawaii etc events have been filtered out
-function grid_to_conus_event_neighborhoods(grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
-  grid_to_event_neighborhoods(conus_events(), grid, miles, seconds_from_utc_epoch, seconds_before_and_after)
-end
-
-
-
 function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
   event_segments = event_segments_around_time(events, seconds_from_utc_epoch, seconds_before_and_after)
 
@@ -291,6 +338,7 @@ function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_ep
     if end_seconds <= period_end_seconds
       seg_end_latlon = end_latlon
     else
+      # This math is correct
       end_ratio = Float64(period_end_seconds - start_seconds) / duration
       seg_end_latlon = GeoUtils.ratio_on_segment(start_latlon, end_latlon, end_ratio)
     end

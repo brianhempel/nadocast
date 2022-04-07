@@ -58,7 +58,7 @@ compute_forecast_labels(forecast) = begin
   println(Forecasts.valid_yyyymmdd_hhz(forecast))
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.TORNADO_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
 X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts_0z; save_dir = "day_accumulators_validation_forecasts_0z", compute_forecast_labels = compute_forecast_labels);
@@ -400,7 +400,7 @@ compute_forecast_labels(forecast) = begin
   println(Forecasts.valid_yyyymmdd_hhz(forecast))
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.TORNADO_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
 X, y, weights = TrainingShared.get_data_labels_weights(day_validation_forecasts_0z; save_dir = "day_validation_forecasts_0z", compute_forecast_labels = compute_forecast_labels);

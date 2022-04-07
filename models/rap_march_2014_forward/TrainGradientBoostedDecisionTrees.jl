@@ -282,7 +282,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
     training_calc_inclusion_probabilities   = (labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
     validation_calc_inclusion_probabilities = (labels, is_near_storm_event) -> max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event, labels),
-    load_only                                          = load_only,
+    load_only                               = load_only,
 
     bin_split_forecast_sample_count    = 200,
     max_iterations_without_improvement = 20,

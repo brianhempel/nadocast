@@ -16,8 +16,8 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-EVENT_TIME_WINDOW_HALF_SIZE  = 30*MINUTE
-TORNADO_SPATIAL_RADIUS_MILES = 25.0
+EVENT_TIME_WINDOW_HALF_SIZE = 30*MINUTE
+EVENT_SPATIAL_RADIUS_MILES  = 25.0
 
 NEAR_EVENT_TIME_WINDOW_HALF_SIZE  = 90*MINUTE
 NEAR_EVENT_RADIUS_MILES           = 100.0
@@ -45,33 +45,69 @@ function is_test(forecast :: Forecasts.Forecast) :: Bool
 end
 
 _conus_event_hours_in_seconds_from_epoch_utc = nothing
-
 function conus_event_hours_in_seconds_from_epoch_utc()
   global _conus_event_hours_in_seconds_from_epoch_utc
-
   if isnothing(_conus_event_hours_in_seconds_from_epoch_utc)
     _conus_event_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_events(), EVENT_TIME_WINDOW_HALF_SIZE)
   end
-
   _conus_event_hours_in_seconds_from_epoch_utc
 end
 
-
 _conus_tornado_hours_in_seconds_from_epoch_utc = nothing
-
 function conus_tornado_hours_in_seconds_from_epoch_utc()
   global _conus_tornado_hours_in_seconds_from_epoch_utc
-
   if isnothing(_conus_tornado_hours_in_seconds_from_epoch_utc)
-    _conus_tornado_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.tornadoes(), EVENT_TIME_WINDOW_HALF_SIZE)
+    _conus_tornado_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_tornado_events(), EVENT_TIME_WINDOW_HALF_SIZE)
   end
-
   _conus_tornado_hours_in_seconds_from_epoch_utc
 end
 
+_conus_severe_wind_hours_in_seconds_from_epoch_utc = nothing
+function conus_severe_wind_hours_in_seconds_from_epoch_utc()
+  global _conus_severe_wind_hours_in_seconds_from_epoch_utc
+  if isnothing(_conus_severe_wind_hours_in_seconds_from_epoch_utc)
+    _conus_severe_wind_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_severe_wind_events(), EVENT_TIME_WINDOW_HALF_SIZE)
+  end
+  _conus_severe_wind_hours_in_seconds_from_epoch_utc
+end
+
+_conus_severe_hail_hours_in_seconds_from_epoch_utc = nothing
+function conus_severe_hail_hours_in_seconds_from_epoch_utc()
+  global _conus_severe_hail_hours_in_seconds_from_epoch_utc
+  if isnothing(_conus_severe_hail_hours_in_seconds_from_epoch_utc)
+    _conus_severe_hail_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_severe_hail_events(), EVENT_TIME_WINDOW_HALF_SIZE)
+  end
+  _conus_severe_hail_hours_in_seconds_from_epoch_utc
+end
+
+_conus_sig_tornado_hours_in_seconds_from_epoch_utc = nothing
+function conus_sig_tornado_hours_in_seconds_from_epoch_utc()
+  global _conus_sig_tornado_hours_in_seconds_from_epoch_utc
+  if isnothing(_conus_sig_tornado_hours_in_seconds_from_epoch_utc)
+    _conus_sig_tornado_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_sig_tornado_events(), EVENT_TIME_WINDOW_HALF_SIZE)
+  end
+  _conus_sig_tornado_hours_in_seconds_from_epoch_utc
+end
+
+_conus_sig_wind_hours_in_seconds_from_epoch_utc = nothing
+function conus_sig_wind_hours_in_seconds_from_epoch_utc()
+  global _conus_sig_wind_hours_in_seconds_from_epoch_utc
+  if isnothing(_conus_sig_wind_hours_in_seconds_from_epoch_utc)
+    _conus_sig_wind_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_sig_wind_events(), EVENT_TIME_WINDOW_HALF_SIZE)
+  end
+  _conus_sig_wind_hours_in_seconds_from_epoch_utc
+end
+
+_conus_sig_hail_hours_in_seconds_from_epoch_utc = nothing
+function conus_sig_hail_hours_in_seconds_from_epoch_utc()
+  global _conus_sig_hail_hours_in_seconds_from_epoch_utc
+  if isnothing(_conus_sig_hail_hours_in_seconds_from_epoch_utc)
+    _conus_sig_hail_hours_in_seconds_from_epoch_utc = StormEvents.event_hours_set_in_seconds_from_epoch_utc(StormEvents.conus_sig_hail_events(), EVENT_TIME_WINDOW_HALF_SIZE)
+  end
+  _conus_sig_hail_hours_in_seconds_from_epoch_utc
+end
 
 # Use all forecasts in which there is a tornado, wind, or hail event in that or an adjacent hour.
-# (Though we are only looking for tornadoes for now.)
 function is_relevant_forecast(forecast)
   valid_time = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)
 
@@ -82,6 +118,26 @@ end
 
 function forecast_is_tornado_hour(forecast)
   Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_tornado_hours_in_seconds_from_epoch_utc()
+end
+
+function forecast_is_severe_wind_hour(forecast)
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_severe_wind_hours_in_seconds_from_epoch_utc()
+end
+
+function forecast_is_severe_hail_hour(forecast)
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_severe_hail_hours_in_seconds_from_epoch_utc()
+end
+
+function forecast_is_sig_tornado_hour(forecast)
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_sig_tornado_hours_in_seconds_from_epoch_utc()
+end
+
+function forecast_is_sig_wind_hour(forecast)
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_sig_wind_hours_in_seconds_from_epoch_utc()
+end
+
+function forecast_is_sig_hail_hour(forecast)
+  Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) in conus_sig_hail_hours_in_seconds_from_epoch_utc()
 end
 
 
@@ -106,18 +162,32 @@ function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:
   (train_forecasts, validation_forecasts, test_forecasts)
 end
 
-
-function compute_forecast_labels_ef0(forecast) :: Array{Float32,1}
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
-end
-
-function compute_forecast_labels_ef2(forecast) :: Array{Float32,1}
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TORNADO_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE; rating_range = 2:5)
+function grid_to_labels(events, forecast)
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, EVENT_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
 function compute_is_near_storm_event(forecast) :: Array{Float32,1}
-  StormEvents.grid_to_conus_event_neighborhoods(forecast.grid, NEAR_EVENT_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), NEAR_EVENT_TIME_WINDOW_HALF_SIZE)
+  StormEvents.grid_to_event_neighborhoods(StormEvents.conus_events(), forecast.grid, NEAR_EVENT_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), NEAR_EVENT_TIME_WINDOW_HALF_SIZE)
 end
+
+# Dict of name to (forecast_has_event, forecast_to_gridpoint_labels)
+event_name_to_forecast_predicate = Dict(
+  "tornado"     => forecast_is_tornado_hour,
+  "wind"        => forecast_is_severe_wind_hour,
+  "hail"        => forecast_is_severe_hail_hour,
+  "sig_tornado" => forecast_is_sig_tornado_hour,
+  "sig_wind"    => forecast_is_sig_wind_hour,
+  "sig_hail"    => forecast_is_sig_hail_hour,
+)
+
+event_name_to_labeler = Dict(
+  "tornado"     => (forecast -> grid_to_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"        => (forecast -> grid_to_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "hail"        => (forecast -> grid_to_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado" => (forecast -> grid_to_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"    => (forecast -> grid_to_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_hail"    => (forecast -> grid_to_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+)
 
 
 # Concatenating all the forecasts doubles peak memory usage if done in-RAM.
@@ -130,22 +200,23 @@ end
 #
 # If save_dir already exists and loading appears to have happened, reads the data in from disk.
 function finished_loading(save_dir)
-  isdir(save_dir) && isfile(joinpath(save_dir, "labels.serialized")) && isfile(joinpath(save_dir, "weights.serialized"))
+  isdir(save_dir) && isfile(joinpath(save_dir, "weights.serialized"))
 end
 
-function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels_ef0)
+# labels are return as a dictionary of event_name_to_labels
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
   if !finished_loading(save_dir)
-    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
+    load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, event_name_to_labeler = event_name_to_labeler)
   end
   read_data_labels_weights_from_disk(save_dir)
 end
 
 # Loads the data to disk but does not read it back.
 # Returns (data_count, feature_count) if the data wasn't already saved to disk.
-function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels_ef0)
+function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
@@ -153,7 +224,7 @@ function prepare_data_labels_weights(forecasts; save_dir = nothing, X_transforme
     println("$save_dir appears to have finished loading. Skipping.")
     return (nothing, nothing)
   end
-  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, compute_forecast_labels = compute_forecast_labels)
+  load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, event_name_to_labeler = event_name_to_labeler)
 end
 
 
@@ -168,14 +239,16 @@ function mask_rows_threaded(data, mask; final_row_count=count(mask))
 end
 
 # We can keep weights and labels in memory at least. It's the features that really kill us.
-function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, compute_forecast_labels = compute_forecast_labels_ef0)
+# prior_predictor, if provided, has its logloss calculated against the first labeler
+function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler)
   mkpath(save_dir)
 
   save_path(path) = joinpath(save_dir, path)
   serialize_async(path, value) = Threads.@spawn Serialization.serialize(path, value)
 
-  labels  = Float32[]
-  weights = Float32[]
+  event_names  = collect(keys(event_name_to_labeler))
+  label_arrays = map(_ -> Float32[], event_names)
+  weights      = Float32[]
 
   prior_losses         = []
   prior_losses_weights = []
@@ -202,21 +275,22 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   feature_count = 0
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-    forecast_labels_full_grid = compute_forecast_labels(forecast)   :: Array{Float32,1}
-    forecast_labels = forecast_labels_full_grid[conus_grid_bitmask] :: Array{Float32,1}
+    forecast_label_layers_full_grid = map(labeler -> labeler(forecast), values(event_name_to_labeler))         :: Vector{Vector{Float32}}
+    forecast_label_layers           = map(layer -> layer[conus_grid_bitmask], forecast_label_layers_full_grid) :: Vector{Vector{Float32}}
 
     # PlotMap.plot_debug_map("tornadoes_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_forecast_labels(forecast))
     # PlotMap.plot_debug_map("near_events_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_is_near_storm_event(forecast))
 
     if !isnothing(calc_inclusion_probabilities)
       # is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
-      probabilities       = Float32.(calc_inclusion_probabilities(forecast, forecast_labels_full_grid)[conus_grid_bitmask])
+      probabilities       = Float32.(calc_inclusion_probabilities(forecast, forecast_label_layers_full_grid)[conus_grid_bitmask])
       probabilities       = clamp.(probabilities, 0f0, 1f0)
       mask                = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
       probabilities       = probabilities[mask]
 
       forecast_weights = conus_grid_weights[mask] ./ probabilities
-      forecast_labels  = forecast_labels[mask]
+
+      forecast_label_layers = map(layer -> layer[mask], forecast_label_layers) :: Vector{Vector{Float32}}
       # Combine conus mask and mask
       data_mask = conus_grid_bitmask[:]
       data_mask[conus_grid_bitmask] = mask
@@ -239,7 +313,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
     if !isnothing(prior_predictor)
       predictions = prior_predictor(data_masked)
-      push!(prior_losses, sum(logloss.(forecast_labels, predictions) .* forecast_weights))
+      push!(prior_losses, sum(logloss.(forecast_label_layers[1], predictions) .* forecast_weights))
       push!(prior_losses_weights, sum(forecast_weights))
       push!(prior_loss_forecasts, forecast)
     end
@@ -249,7 +323,9 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     !isnothing(serialization_task) && wait(serialization_task) # Make sure we don't get ahead of disk writes.
     serialization_task = serialize_async(save_path(data_file_name), X_transformed)
 
-    append!(labels, forecast_labels)
+    for label_layer_i in 1:length(forecast_label_layers)
+      append!(label_arrays[label_layer_i], forecast_label_layers[label_layer_i])
+    end
     append!(weights, forecast_weights)
 
     elapsed = (Base.time_ns() - start_time) / 1.0e9
@@ -260,7 +336,9 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   wait(serialization_task) # Synchronize
 
-  Serialization.serialize(save_path("labels.serialized"), labels)
+  for i in 1:length(event_names)
+    Serialization.serialize(save_path("labels-$(event_names[i]).serialized"), label_arrays[i])
+  end
   Serialization.serialize(save_path("weights.serialized"), weights)
 
   if !isnothing(prior_predictor)
@@ -277,19 +355,17 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   println()
 
-  (length(labels), feature_count)
+  (length(weights), feature_count)
 end
 
 function read_data_labels_weights_from_disk(save_dir)
   save_path(path) = joinpath(save_dir, path)
 
-  labels  = Serialization.deserialize(save_path("labels.serialized"))
   weights = Serialization.deserialize(save_path("weights.serialized"))
 
-  @assert length(labels) == length(weights)
-  data_count = length(labels)
+  data_count = length(weights)
 
-  data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.")[2])))
+  data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.|-")[2])))
 
   forecast_data_1 = Serialization.deserialize(save_path(data_file_names[1]))
 
@@ -316,13 +392,24 @@ function read_data_labels_weights_from_disk(save_dir)
 
   @assert row_i - 1 == data_count
 
-  (data, labels, weights)
+  label_file_names = sort(filter(file_name -> startswith(file_name, "labels-"), readdir(save_dir)))
+
+  Ys = Dict(
+    map(label_file_names) do label_file_name
+      event_name = split(label_file_name, r"-|\.")[2]
+      Y = Serialization.deserialize(save_path(label_file_name))
+      @assert length(Y) == length(weights)
+      event_name => Y
+    end
+  )
+
+  (data, Ys, weights)
 end
 
 
 # Provide a function that returns a loss and kwargs that contain arrays of values to try.
 # *** Assumes each array of values is in order ***
-function coordinate_descent_hyperparameter_search(f; random_start_count = 0, kwargs...)
+function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max_hyperparameter_coordinate_descent_iterations = 4, kwargs...)
   combos_tried = []
 
   last_iteration_best_loss = Inf32
@@ -383,7 +470,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, kwa
     end
   end
 
-  while true
+  while iteration_i <= max_hyperparameter_coordinate_descent_iterations
     println("Hyperparameter coordinate descent iteration $iteration_i")
 
     for (arg_name, values) in kwargs
