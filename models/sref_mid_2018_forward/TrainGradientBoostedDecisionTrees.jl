@@ -21,7 +21,7 @@ forecast_hour_range =
 event_type = get(ENV, "EVENT_TYPE", nothing)
 load_only  = parse(Bool, get(ENV, "LOAD_ONLY", "false"))
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.13"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.26"))
 
 near_storm_ratio = 1f0 # SREF is tiny
 
