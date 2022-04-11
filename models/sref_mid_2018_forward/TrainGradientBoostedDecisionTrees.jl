@@ -4,8 +4,12 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import TrainingShared
 import TrainGBDTShared
 
-push!(LOAD_PATH, @__DIR__)
-import SREF
+must_load_from_disk = parse(Bool, get(ENV, "MUST_LOAD_FROM_DISK", "false"))
+
+if !must_load_from_disk
+  push!(LOAD_PATH, @__DIR__)
+  import SREF
+end
 
 
 # SREF files come out 3-4 hours after run time
@@ -30,12 +34,13 @@ hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
-    SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
+    must_load_from_disk ? [] : SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix        = model_prefix,
     save_dir            = "sref_$(hour_range_str)_$(data_subset_ratio)",
     only_events_of_type = event_type,
     load_only           = load_only,
+    must_load_from_disk = must_load_from_disk,
 
     data_subset_ratio = data_subset_ratio,
     near_storm_ratio  = near_storm_ratio,
