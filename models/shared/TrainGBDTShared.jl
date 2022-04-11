@@ -60,8 +60,8 @@ function train_with_coordinate_descent_hyperparameter_search(
     println("  ($(length(forecasts_with_event)) with $name, $(forecasts_stats_str(forecasts_with_event)))")
   end
   label_type_count = length(train_forecasts_that_have_each_label)
-  println("$(length(validation_forecasts)) for validation, $(forecasts_stats_str(validation_forecasts))).")
-  println("$(length(test_forecasts)) for testing, $(forecasts_stats_str(test_forecasts))).")
+  println("$(length(validation_forecasts)) for validation, $(forecasts_stats_str(validation_forecasts)).")
+  println("$(length(test_forecasts)) for testing, $(forecasts_stats_str(test_forecasts)).")
 
   bin_splits_path = joinpath(specific_save_dir("samples_for_bin_splits"), "bin_splits")
   bin_splits =
