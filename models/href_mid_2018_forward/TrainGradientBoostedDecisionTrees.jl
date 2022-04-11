@@ -451,7 +451,7 @@ model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta$(sig_given_tor_str)_$(hou
 # 1:35:00 elapsed
 
 
-calc_inclusion_probabilities_regular(forecast, _labels)       = max.(data_subset_ratio, TrainingShared.compute_is_near_storm_event(forecast))
+calc_inclusion_probabilities_regular(forecast, labels)        = max.(data_subset_ratio, TrainingShared.compute_is_near_storm_event(forecast) .* is_near_storm_event, labels)
 calc_inclusion_probabilities_sig_given_tor(forecast, _labels) = TrainingShared.compute_forecast_labels_ef0(forecast)
 
 forecasts =
