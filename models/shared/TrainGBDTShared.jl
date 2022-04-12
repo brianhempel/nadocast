@@ -226,11 +226,13 @@ function train_with_coordinate_descent_hyperparameter_search(
       end
       model_path = MemoryConstrainedTreeBoosting.save("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).model", bin_splits, trees)
       print("done.\t")
+      model_path
     end
 
     try_config(; config...) = begin
 
       best_loss_for_config = Inf32
+      best_trees_for_config = nothing
 
       validation_labels = validation_Ys[event_name]
       callback_to_track_validation_loss =
@@ -245,18 +247,8 @@ function train_with_coordinate_descent_hyperparameter_search(
         validation_loss = callback_to_track_validation_loss(trees)
 
         if validation_loss < best_loss_for_config
-          best_loss_for_config = validation_loss
-        end
-
-        if validation_loss < best_loss
-          rank == root && (best_model_path = save(validation_loss, bin_splits, trees))
-          best_loss = validation_loss
-
-          # validation_scores = MemoryConstrainedTreeBoosting.apply_trees(validation_X_binned, trees)
-          # write("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).validation_scores", validation_scores)
-          # write("$(prefix)/validation_labels", validation_y)
-          # write("$(prefix)/validation_weights", validation_weights)
-
+          best_loss_for_config  = validation_loss
+          best_trees_for_config = map(MemoryConstrainedTreeBoosting.strip_tree_training_info, trees) # deep copy
         end
       end
 
@@ -268,6 +260,16 @@ function train_with_coordinate_descent_hyperparameter_search(
         mpi_comm           = mpi_comm,
         config...
       )
+
+      if best_loss_for_config < best_loss
+        rank == root && (best_model_path = save(best_loss_for_config, bin_splits, best_trees_for_config))
+        best_loss = best_loss_for_config
+
+        # validation_scores = MemoryConstrainedTreeBoosting.apply_trees(validation_X_binned, trees)
+        # write("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).validation_scores", validation_scores)
+        # write("$(prefix)/validation_labels", validation_y)
+        # write("$(prefix)/validation_weights", validation_weights)
+      end
 
       best_loss_for_config
     end
