@@ -2,6 +2,7 @@ module TrainGBDTShared
 
 import Random
 import Serialization
+using MPI
 
 import MemoryConstrainedTreeBoosting
 
