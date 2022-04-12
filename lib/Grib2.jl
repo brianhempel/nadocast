@@ -2,7 +2,6 @@ module Grib2
 
 import DelimitedFiles # For readdlm
 import JSON # For reading layer_name_normalization_substitutions.json
-import Plots
 
 push!(LOAD_PATH, @__DIR__)
 
@@ -434,6 +433,8 @@ end
 
 function plot(grid :: Grids.Grid, layer_data :: Array{<:Number,1})
   resolution_degrees = 0.1
+
+  import Plots
 
   Plots.plot(Plots.heatmap(
     grid.min_lon:resolution_degrees:grid.max_lon,

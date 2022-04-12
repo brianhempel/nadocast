@@ -73,6 +73,11 @@ evaluation/performance_diagram:
 
 # on the supercomputer
 training_setup:
+	cd ~
+	curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
+	ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+	cd nadocast_dev
+	module load zlib
 	module load PROJ
 	module load OpenMPI
 	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.instantiate()'
