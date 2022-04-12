@@ -404,7 +404,7 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
     my_part = intersect(file_full_range, my_range)
 
     if length(my_part) > 0
-      data[my_part .- (my_range.start - 1), :] = forecast_data[my_part]
+      data[my_part .- (my_range.start - 1), :] = forecast_data[my_part .- (full_i - 1), :]
       rows_filled += length(my_part)
     end
 

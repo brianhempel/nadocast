@@ -177,7 +177,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank == root && println("Loading training data")
     X_binned, Ys, weights =
       if must_load_from_disk
-        read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count)
+        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count)
       else
         get_data_labels_weights_binned(train_forecasts, "training")
       end
@@ -186,7 +186,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank == root && println("Loading validation data")
     validation_X_binned, validation_Ys, validation_weights =
       if must_load_from_disk
-        read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
+        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
       else
         get_data_labels_weights_binned(validation_forecasts, "validation")
       end
