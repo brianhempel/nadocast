@@ -358,12 +358,25 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   (length(weights), feature_count)
 end
 
-function read_data_labels_weights_from_disk(save_dir)
+function chunk_range(chunk_i, n_chunks, array_len)
+  start = div((chunk_i-1) * array_len, n_chunks) + 1
+  stop  = div( chunk_i    * array_len, n_chunks)
+  start:stop
+end
+
+# If using MPI for data-parallel distributed learning, chunk_i = rank+1, chunck_count = rank_count
+function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count = 1)
   save_path(path) = joinpath(save_dir, path)
 
-  weights = Serialization.deserialize(save_path("weights.serialized"))
+  weights_full = Serialization.deserialize(save_path("weights.serialized"))
 
-  data_count = length(weights)
+  my_range = chunk_range(chunk_i, chunk_count, length(weights_full))
+
+  weights = weights_full[my_range]
+
+  weights_full = nothing # free
+
+  data_count = length(my_range)
 
   data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.|-")[2])))
 
@@ -376,7 +389,8 @@ function read_data_labels_weights_from_disk(save_dir)
 
   data = Array{feature_type}(undef, (data_count, feature_count))
 
-  row_i = 1
+  full_i = 1
+  rows_filled  = 0
 
   for data_file_name in data_file_names
     forecast_data = Serialization.deserialize(save_path(data_file_name))
@@ -385,19 +399,30 @@ function read_data_labels_weights_from_disk(save_dir)
 
     @assert feature_count == forecast_feature_count
 
-    data[row_i:(row_i + forecast_row_count - 1), :] = forecast_data
+    file_full_range = full_i:(full_i + forecast_row_count - 1)
 
-    row_i += forecast_row_count
+    my_part = intersect(file_full_range, my_range)
+
+    if length(my_part) > 0
+      data[my_part .- (my_range.start - 1), :] = forecast_data[my_part]
+      rows_filled += length(my_part)
+    end
+
+    if file_full_range.start > my_part.stop
+      break
+    end
+
+    full_i += forecast_row_count
   end
 
-  @assert row_i - 1 == data_count
+  @assert rows_filled == data_count
 
   label_file_names = sort(filter(file_name -> startswith(file_name, "labels-"), readdir(save_dir)))
 
   Ys = Dict(
     map(label_file_names) do label_file_name
       event_name = split(label_file_name, r"-|\.")[2]
-      Y = Serialization.deserialize(save_path(label_file_name))
+      Y = Serialization.deserialize(save_path(label_file_name))[my_range]
       @assert length(Y) == length(weights)
       event_name => Y
     end
@@ -414,7 +439,8 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
 
   last_iteration_best_loss = Inf32
   best_loss                = Inf32
-  iteration_i = 1
+
+  rng = Random.MersenneTwister(100) # deterministic randomness, in case of MPI
 
   hyperparameters_to_combo(pick_value) =
     Dict(
@@ -430,7 +456,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
 
   random_combos =
     map(1:random_start_count) do _
-      hyperparameters_to_combo(rand)
+      hyperparameters_to_combo(options -> rand(rng, options))
     end
 
   best_combo = Dict(initial_combo)
@@ -443,8 +469,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
     if loss < best_loss
       best_combo = combo
       best_loss  = loss
-      println("New best! Loss: $best_loss")
-      println(best_combo)
+      print("New best! Loss: $best_loss\n$(best_combo)\n")
       (true, loss)
     else
       (false, loss)
@@ -452,8 +477,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
   end
 
   for combo in [initial_combo; random_combos]
-    print("Trying ")
-    println(combo)
+    print("Trying $(combo)\n")
     try_combo(combo)
   end
 
@@ -470,7 +494,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
     end
   end
 
-  while iteration_i <= max_hyperparameter_coordinate_descent_iterations
+  for iteration_i in 1:max_hyperparameter_coordinate_descent_iterations
     println("Hyperparameter coordinate descent iteration $iteration_i")
 
     for (arg_name, values) in kwargs
@@ -484,7 +508,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
         best_value_i -= 1
       end
 
-      while direction != nothing && ((best_value_i + direction) in 1:length(values)) && try_combo_modification(arg_name, values[best_value_i + direction])
+      while !isnothing(direction) && ((best_value_i + direction) in 1:length(values)) && try_combo_modification(arg_name, values[best_value_i + direction])
         best_value_i += direction
       end
     end
@@ -493,7 +517,6 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
       break
     end
     last_iteration_best_loss = best_loss
-    iteration_i += 1
   end
 
   println("Best hyperparameters (loss = $best_loss):")

@@ -31,6 +31,7 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     load_only = false,
     must_load_from_disk = false, # e.g. on a machine with no forecasts
+    use_mpi = false, # must_load_from_disk must be true for distributed learning
     model_prefix = "",
     prior_predictor = nothing,
     bin_split_forecast_sample_count = 100, # If not evenly divisible by the number of label types, a bit fewer might be used
@@ -153,24 +154,42 @@ function train_with_coordinate_descent_hyperparameter_search(
     TrainingShared.prepare_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, event_name_to_labeler = event_name_to_labeler, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
   end
 
+  if use_mpi
+    if must_load_from_disk
+      MPI.Init()
+      mpi_comm   = MPI.COMM_WORLD # The communication group for all processes
+      root       = 0
+      rank       = MPI.Comm_rank(mpi_comm) # Zero-indexed
+      rank_count = MPI.Comm_size(mpi_comm) # Number of processes in cluster
+    else
+      println("must_load_from_disk must be true if you want to distribute learning with MPI. (the initial dataset generation does not support MPI)")
+      exit(1)
+    end
+  else
+    mpi_comm = nothing
+    root       = 0
+    rank       = 0
+    rank_count = 1
+  end
+
   if !load_only
-    println("Loading training data")
+    rank == root && println("Loading training data")
     X_binned, Ys, weights =
       if must_load_from_disk
-        read_data_labels_weights_from_disk(specific_save_dir("training"))
+        read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count)
       else
         get_data_labels_weights_binned(train_forecasts, "training")
       end
-    println("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.")
+    print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
 
-    println("Loading validation data")
+    rank == root && println("Loading validation data")
     validation_X_binned, validation_Ys, validation_weights =
       if must_load_from_disk
-        read_data_labels_weights_from_disk(specific_save_dir("validation"))
+        read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
       else
         get_data_labels_weights_binned(validation_forecasts, "validation")
       end
-    println("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.")
+    print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
   else
     println("Loading training data")
     data_count, feature_count = prepare_data_labels_weights_binned(train_forecasts, "training")
@@ -191,7 +210,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       continue
     end
 
-    println("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels")
+    print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
 
     best_model_path = nothing
     best_loss       = Inf32
@@ -215,7 +234,8 @@ function train_with_coordinate_descent_hyperparameter_search(
         MemoryConstrainedTreeBoosting.make_callback_to_track_validation_loss(
             validation_X_binned, validation_labels;
             validation_weights                 = validation_weights,
-            max_iterations_without_improvement = max_iterations_without_improvement
+            max_iterations_without_improvement = max_iterations_without_improvement,
+            mpi_comm                           = mpi_comm
           )
 
       iteration_callback(trees) = begin
@@ -226,8 +246,8 @@ function train_with_coordinate_descent_hyperparameter_search(
         end
 
         if validation_loss < best_loss
-          best_model_path = save(validation_loss, bin_splits, trees)
-          best_loss       = validation_loss
+          rank == root && (best_model_path = save(validation_loss, bin_splits, trees))
+          best_loss = validation_loss
 
           # validation_scores = MemoryConstrainedTreeBoosting.apply_trees(validation_X_binned, trees)
           # write("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).validation_scores", validation_scores)
@@ -242,6 +262,7 @@ function train_with_coordinate_descent_hyperparameter_search(
         weights            = weights,
         iteration_count    = Int64(round(50 / config[:learning_rate])),
         iteration_callback = iteration_callback,
+        mpi_comm           = mpi_comm,
         config...
       )
 
@@ -250,9 +271,10 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     TrainingShared.coordinate_descent_hyperparameter_search(try_config; configs...)
 
-    println()
-    println(best_model_path)
-    println()
+    !isnothing(mpi_comm) && MPI.Barrier(mpi_comm)
+    rank == root && println()
+    rank == root && println(best_model_path)
+    rank == root && println()
   end
 
   ()

@@ -71,6 +71,13 @@ evaluation/reliability_diagram:
 
 evaluation/performance_diagram:
 
+# on the supercomputer
+training_setup:
+	module load PROJ
+	module load OpenMPI
+	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.instantiate()'
+	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.build("MPI"; verbose=true)'
+	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.update("MemoryConstrainedTreeBoosting")'
 
 setup:
 	# sudo dpkg-reconfigure tzdata # Choose "Other" to get UTC
