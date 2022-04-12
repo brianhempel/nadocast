@@ -219,11 +219,13 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     # Returns path
     save(validation_loss, bin_splits, trees) = begin
+      print("\tsaving...")
       try
         mkdir(prefix)
       catch
       end
-      MemoryConstrainedTreeBoosting.save("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).model", bin_splits, trees)
+      model_path = MemoryConstrainedTreeBoosting.save("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).model", bin_splits, trees)
+      print("done.\t")
     end
 
     try_config(; config...) = begin

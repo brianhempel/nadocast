@@ -485,9 +485,9 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
   try_combo_modification(arg_name, value) = begin
     combo = merge(best_combo, Dict(arg_name => value))
     if !(combo in combos_tried)
-      println("Trying $(arg_name) = $(value)")
+      print("Trying $(arg_name) = $(value)\n")
       is_best, loss = try_combo(combo)
-      println("Loss = $(loss) for $(arg_name) = $(value)")
+      print("Loss = $(loss) for $(arg_name) = $(value)\n")
       is_best
     else
       false
@@ -495,7 +495,7 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
   end
 
   for iteration_i in 1:max_hyperparameter_coordinate_descent_iterations
-    println("Hyperparameter coordinate descent iteration $iteration_i")
+    print("Hyperparameter coordinate descent iteration $iteration_i\n")
 
     for (arg_name, values) in kwargs
       best_value_i = findfirst(isequal(best_combo[arg_name]), values)
