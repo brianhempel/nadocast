@@ -431,19 +431,6 @@ function latlon_to_value_no_interpolation(grid, layer_data, (lat, lon))
   layer_data[flat_i]
 end
 
-function plot(grid :: Grids.Grid, layer_data :: Array{<:Number,1})
-  resolution_degrees = 0.1
-
-  import Plots
-
-  Plots.plot(Plots.heatmap(
-    grid.min_lon:resolution_degrees:grid.max_lon,
-    grid.min_lat:resolution_degrees:grid.max_lat,
-    (lon, lat) -> latlon_to_value_no_interpolation(grid, layer_data, (lat, lon)),
-    fill=true
-  ))
-end
-
 
 
 end # module Grib2
