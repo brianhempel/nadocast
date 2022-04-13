@@ -318,7 +318,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       push!(prior_loss_forecasts, forecast)
     end
 
-    data_file_name = Printf.@sprintf "data_%06d.serialized" forecast_i
+    data_file_name = Printf.@sprintf "data_%06d_%dx%d.serialized" forecast_i size(X_transformed,1) size(X_transformed,2)
 
     !isnothing(serialization_task) && wait(serialization_task) # Make sure we don't get ahead of disk writes.
     serialization_task = serialize_async(save_path(data_file_name), X_transformed)
@@ -369,8 +369,9 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
   save_path(path) = joinpath(save_dir, path)
 
   weights_full = Serialization.deserialize(save_path("weights.serialized"))
+  full_length  = length(weights_full)
 
-  my_range = chunk_range(chunk_i, chunk_count, length(weights_full))
+  my_range = chunk_range(chunk_i, chunk_count, full_length)
 
   weights = weights_full[my_range]
 
@@ -393,9 +394,7 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
   rows_filled  = 0
 
   for data_file_name in data_file_names
-    forecast_data = Serialization.deserialize(save_path(data_file_name))
-
-    forecast_row_count, forecast_feature_count = size(forecast_data)
+    forecast_row_count, forecast_feature_count = parse.(Int64, match(r"data_\d+_(\d+)x(\d+).serialized", data_file_name))
 
     @assert feature_count == forecast_feature_count
 
@@ -404,6 +403,9 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
     my_part = intersect(file_full_range, my_range)
 
     if length(my_part) > 0
+      forecast_data = Serialization.deserialize(save_path(data_file_name))
+      @assert forecast_row_count == size(forecast_data, 1)
+      @assert feature_count      == size(forecast_data, 2)
       data[my_part .- (my_range.start - 1), :] = forecast_data[my_part .- (full_i - 1), :]
       rows_filled += length(my_part)
     end
@@ -416,6 +418,10 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
   end
 
   @assert rows_filled == data_count
+
+  if chunk_i == chunk_count
+    @assert full_i - 1 == full_length
+  end
 
   label_file_names = sort(filter(file_name -> startswith(file_name, "labels-"), readdir(save_dir)))
 
