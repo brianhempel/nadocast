@@ -22,7 +22,7 @@ forecast_hour_range =
     2:38 # 1:87 # 4:39
   end
 
-event_types = split(get(ENV, "EVENT_TYPE", ""), ",")
+event_types = split(get(ENV, "EVENT_TYPES", ""), ",")
 event_types = event_types == [] ? nothing : event_types
 load_only   = parse(Bool, get(ENV, "LOAD_ONLY", "false"))
 distributed = parse(Bool, get(ENV, "DISTRIBUTED", "false"))

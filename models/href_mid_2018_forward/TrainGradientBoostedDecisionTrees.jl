@@ -22,7 +22,7 @@ forecast_hour_range =
 # 13:24
 # 24:35
 
-event_types       = split(get(ENV, "EVENT_TYPE", ""), ",")
+event_types       = split(get(ENV, "EVENT_TYPES", ""), ",")
 event_types       = event_types == [] ? nothing : event_types
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
 near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
