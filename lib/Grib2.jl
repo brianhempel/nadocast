@@ -436,7 +436,7 @@ function write_15km_HREF_probs_grib2(probs :: Vector; run_time :: Dates.Date, fo
     "sig_hail"    => "SHAILPROB",
   )[event_type]
 
-  date_str = Sprintf.@sprintf "%04d%02d%02d%02d" Dates.year(run_time) Dates.month(run_time) Dates.day(run_time) Dates.hour(run_time)
+  date_str = Printf.@sprintf "%04d%02d%02d%02d" Dates.year(run_time) Dates.month(run_time) Dates.day(run_time) Dates.hour(run_time)
   fcst_str =
     if isa(forecast_hour, Int64)
       "$forecast_hour hour fcst"
