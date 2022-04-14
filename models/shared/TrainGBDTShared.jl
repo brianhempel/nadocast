@@ -204,6 +204,7 @@ function train_with_coordinate_descent_hyperparameter_search(
   end
 
   event_types = isnothing(event_types) ? keys(Ys) : event_types
+  event_types = ["tornado", "wind", "hail"]
 
   for event_name in event_types
     labels = Ys[event_name]
