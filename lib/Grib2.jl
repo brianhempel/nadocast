@@ -2,6 +2,8 @@ module Grib2
 
 import DelimitedFiles # For readdlm
 import JSON # For reading layer_name_normalization_substitutions.json
+import Dates
+import Printf
 
 push!(LOAD_PATH, @__DIR__)
 
@@ -419,6 +421,38 @@ function _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, l
       downsampled_flat_i += 1
     end
   end
+
+  ()
+end
+
+
+function write_15km_HREF_probs_grib2(probs :: Vector; run_time :: Dates.Date, forecast_hour :: Union{Int64,Tuple{Int64,Int64}}, event_type :: String, out_name :: String)
+  var_name = Dict(
+    "tornado"     => "TORPROB",
+    "wind"        => "WINDPROB",
+    "hail"        => "HAILPROB",
+    "sig_tornado" => "STORPROB",
+    "sig_wind"    => "SWINDPROB",
+    "sig_hail"    => "SHAILPROB",
+  )[event_type]
+
+  date_str = Sprintf.@sprintf "%04d%02d%02d%02d" Dates.year(run_time) Dates.month(run_time) Dates.day(run_time) Dates.hour(run_time)
+  fcst_str =
+    if isa(forecast_hour, Int64)
+      "$forecast_hour hour fcst"
+    else
+      near_hr, far_hr = forecast_hour
+      "$near_hr-$far_hr hour acc fcst"
+    end
+
+  tmp_path = tempname()
+  write(tmp_path, Float32.(probs .* 100f0))
+
+  grib2_template_path = (@__DIR__) * "/href_one_field_for_grid_cropped_3x_downsampled.grib2"
+
+  run(`wgrib2 $grib2_template_path -no_header -import_bin $tmp_path -set_var $var_name -set_date $date_str -set_ftime $fcst_str -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out $out_name`)
+
+  rm(tmp_path)
 
   ()
 end

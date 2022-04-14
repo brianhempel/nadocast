@@ -18,6 +18,7 @@ push!(LOAD_PATH, @__DIR__)
 import Forecasts
 import ForecastCombinators
 import Grids
+import Grib2
 import PlotMap
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
@@ -91,6 +92,14 @@ mkpath(out_dir)
 out_path_prefix = out_dir * "nadocast_conus_tor_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
 period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
 write(period_path * ".float16.bin", Float16.(prediction))
+Grib2.write_15km_HREF_probs_grib2(
+  prediction;
+  run_time = Forecasts.run_utc_datetime(newest_forecast),
+  forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
+  event_type = "tornado",
+  period_path * ".grib2"
+)
+
 PlotMap.plot_map(
   period_path,
   newest_forecast.grid,
