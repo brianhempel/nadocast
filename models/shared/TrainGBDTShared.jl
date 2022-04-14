@@ -25,7 +25,7 @@ import Forecasts
 function train_with_coordinate_descent_hyperparameter_search(
     forecasts;
     forecast_hour_range = 1:10000,
-    only_events_of_type = nothing,
+    event_types = nothing,
 
     data_subset_ratio = data_subset_ratio,
     near_storm_ratio  = near_storm_ratio,
@@ -197,19 +197,16 @@ function train_with_coordinate_descent_hyperparameter_search(
     println("done. $(data_count) datapoints with $(feature_count) features each.")
 
     println("Loading validation data")
-    validation_data_count, validation_feature_count =
-
-    prepare_data_labels_weights_binned(validation_forecasts, "validation")
+    validation_data_count, validation_feature_count = prepare_data_labels_weights_binned(validation_forecasts, "validation")
     println("done. $(validation_data_count) datapoints with $(validation_feature_count) features each.")
 
     exit(0)
   end
 
+  event_types = isnothing(event_types) ? keys(Ys) : event_types
 
-  for (event_name, labels) in Ys
-    if !isnothing(only_events_of_type) && only_events_of_type != event_name
-      continue
-    end
+  for event_name in event_types
+    labels = Ys[event_name]
 
     print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
 

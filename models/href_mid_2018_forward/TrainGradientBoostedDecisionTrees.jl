@@ -22,7 +22,8 @@ forecast_hour_range =
 # 13:24
 # 24:35
 
-event_type        = get(ENV, "EVENT_TYPE", nothing)
+event_types       = split(get(ENV, "EVENT_TYPE", ""), ",")
+event_types       = event_types == [] ? nothing : event_types
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
 near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
 load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
@@ -36,7 +37,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     forecast_hour_range = forecast_hour_range,
     model_prefix        = model_prefix,
     save_dir            = "href_$(hour_range_str)_$(data_subset_ratio)_$(near_storm_ratio)",
-    only_events_of_type = event_type,
+    event_types         = event_types,
     load_only           = load_only,
 
     data_subset_ratio = data_subset_ratio,
