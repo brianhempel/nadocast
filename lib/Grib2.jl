@@ -427,7 +427,7 @@ function _do_downsample!(downsample, crop_height, crop_width, layer_values_2d, l
 end
 
 
-function write_15km_HREF_probs_grib2(probs :: Vector; run_time :: Dates.Date, forecast_hour :: Union{Int64,Tuple{Int64,Int64}}, event_type :: String, out_name :: String)
+function write_15km_HREF_probs_grib2(probs :: Vector; run_time :: Dates.DateTime, forecast_hour :: Union{Int64,Tuple{Int64,Int64}}, event_type :: String, out_name :: String)
   var_name = Dict(
     "tornado"     => "TORPROB",
     "wind"        => "WINDPROB",
