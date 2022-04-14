@@ -4,8 +4,12 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import TrainingShared
 import TrainGBDTShared
 
-push!(LOAD_PATH, @__DIR__)
-import HREF
+must_load_from_disk = parse(Bool, get(ENV, "MUST_LOAD_FROM_DISK", "false"))
+
+if !must_load_from_disk
+  push!(LOAD_PATH, @__DIR__)
+  import HREF
+end
 
 
 # HREF files come out 2-3 hours after run time
@@ -27,18 +31,21 @@ event_types       = event_types == [] ? nothing : event_types
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
 near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
 load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
+distributed = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
 model_prefix = "gbdt_3hr_window_3hr_min_mean_max_delta_$(hour_range_str)_$(replace(string(Dates.now()), ":" => "."))"
 
 TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
-    HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
+    must_load_from_disk ? [] : HREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts();
     forecast_hour_range = forecast_hour_range,
     model_prefix        = model_prefix,
     save_dir            = "href_$(hour_range_str)_$(data_subset_ratio)_$(near_storm_ratio)",
     event_types         = event_types,
     load_only           = load_only,
+    must_load_from_disk = must_load_from_disk,
+    use_mpi             = distributed,
 
     data_subset_ratio = data_subset_ratio,
     near_storm_ratio  = near_storm_ratio,

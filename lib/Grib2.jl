@@ -450,6 +450,7 @@ function write_15km_HREF_probs_grib2(probs :: Vector; run_time :: Dates.DateTime
 
   grib2_template_path = (@__DIR__) * "/href_one_field_for_grid_cropped_3x_downsampled.grib2"
 
+  # e.g. wgrib2 href_one_field_for_grid_cropped_3x_downsampled.grib2 -no_header -import_bin probs.float32 -set_var "TORPROB" -set_date 2022041300 -set_ftime "12-35 hour ave fcst" -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out probs.grib2; du -h probs.grib2; wgrib2 probs.grib2 -v2 -packing
   run(`wgrib2 $grib2_template_path -no_header -import_bin $tmp_path -set_var $var_name -set_date $date_str -set_ftime $fcst_str -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out $out_name`)
 
   rm(tmp_path)
