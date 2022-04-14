@@ -442,7 +442,7 @@ function write_15km_HREF_probs_grib2(probs :: Vector; run_time :: Dates.DateTime
       "$forecast_hour hour fcst"
     else
       near_hr, far_hr = forecast_hour
-      "$near_hr-$far_hr hour acc fcst"
+      "$near_hr-$far_hr hour ave fcst"
     end
 
   tmp_path = tempname()
