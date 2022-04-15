@@ -100,7 +100,6 @@ Grib2.write_15km_HREF_probs_grib2(
   event_type = "tornado",
   out_name = period_path * ".grib2",
 )
-rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
 
 PlotMap.plot_map(
   period_path,
@@ -128,6 +127,8 @@ end
 #   hourlies_movie_path = out_path_prefix * "_hourlies"
 #   run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
 # end
+
+rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
 
 if get(ENV, "TWEET", "false") == "true"
   tweet_script_path = (@__DIR__) * "/tweet.rb"
