@@ -84,6 +84,46 @@ training_setup:
 	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.build("MPI"; verbose=true)'
 	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.update("MemoryConstrainedTreeBoosting")'
 
+setup_data_webserver:
+	ssh -i ~/.ssh/id_rsa root@data.nadocast.com
+
+	adduser web # do remember the pw
+	sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/miniserve # let it bind port 80
+	# usermod -aG sudo web
+	cp -r .ssh /home/web/
+	mkdir /home/web/forecasts
+	sudo chown -R web:web /home/web/.ssh /home/web/forecasts
+
+	# Still as root...
+	curl -L https://github.com/svenstaro/miniserve/releases/download/v0.19.4/miniserve-v0.19.4-x86_64-unknown-linux-musl > /usr/bin/miniserve
+	chmod +x /usr/bin/miniserve
+	# curl -L https://github.com/svenstaro/miniserve/raw/26395cd3595db1988fa64d7c8c0bc814c6631548/packaging/miniserve%40.service > /etc/systemd/system/miniserve@.service
+	vim /etc/systemd/system/miniserve@.service
+	# [Unit]
+	# Description=miniserve for %i
+	# After=network-online.target
+	# Wants=network-online.target systemd-networkd-wait-online.service
+
+	# [Service]
+	# ExecStart=/usr/bin/miniserve --enable-tar --enable-tar-gz --enable-zip --show-wget-footer --no-symlinks --port 80 --dirs-first -- %I
+	# Restart=on-failure
+	# User=web
+	# Group=web
+
+	# [Install]
+	# WantedBy=multi-user.target
+	systemctl enable miniserve@-home-web-forecasts
+	systemctl start miniserve@-home-web-forecasts
+	systemctl status miniserve@-home-web-forecasts
+
+	ssh -i ~/.ssh/id_rsa web@data.nadocast.com
+	echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7ipPlBHZ8OwFc/updNsGshLUsDIgdwYWhXEFnu159NJiYG/gSU9aRw80V0r9MmOGOH8pY6EiTfK+hNTRxZ4pUlWHONglICMjj1d8PTqsr7V53CqjC7gB4vAWVlw1CTdTNN13nyI6aCOOjFy4kQoMp7a8GJQSyrRDBDqeE1zUk8rOBqI+wm70Vb0yq5LzA4v0D6GUJ48gMjG3OX30p/fNaqYbunucLKz0RjKyoleR0JLzqmq36ck1LgOuvYMhUK14IaicDA3Y/JNi4KEHoUDrLZFehJoruPTGNQX+82jnUP7axeQ45yblpzWOZWzcaKrrJATTznkKBN/j9rx+3YxVKXZl+QNbXKkfbClcUjUNGdD7YfiTYOEC1BNjM9MPdArh0jAqFBeDcIbDLlTrHpbbooT95PDPUB3B4vXFmNsWxpgsSHPS+gEPGhwrxFBfNqhwNvDitTkkKYVIqIbivyNyQJN9xu0SNpqFTjWhtjeRsTqOtASC5ad/HVtkayLaBORM= brian@nadocaster2" >> .ssh/authorized_keys
+
+	# rsync -r --perms --chmod=a+rx forecasts/* web@data.nadocast.com:~/forecasts/
+
+
+
+
 setup:
 	# sudo dpkg-reconfigure tzdata # Choose "Other" to get UTC
 	#
