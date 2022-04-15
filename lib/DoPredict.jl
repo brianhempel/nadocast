@@ -100,7 +100,7 @@ Grib2.write_15km_HREF_probs_grib2(
   event_type = "tornado",
   out_name = period_path * ".grib2",
 )
-rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:~/forecasts/`; wait = false)
+rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
 
 PlotMap.plot_map(
   period_path,
