@@ -87,11 +87,12 @@ nadocast_run_hour          = newest_forecast.run_hour
 paths = []
 daily_paths_to_perhaps_tweet = []
 
-out_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))"
 mkpath(out_dir)
 out_path_prefix = out_dir * "nadocast_conus_tor_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
 period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
-write(period_path * ".float16.bin", Float16.(prediction))
+# write(period_path * ".float16.bin", Float16.(prediction))
 Grib2.write_15km_HREF_probs_grib2(
   prediction[:,1];
   run_time = Forecasts.run_utc_datetime(newest_forecast),
@@ -99,6 +100,7 @@ Grib2.write_15km_HREF_probs_grib2(
   event_type = "tornado",
   out_name = period_path * ".grib2",
 )
+rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:~/forecasts/`; wait = false)
 
 PlotMap.plot_map(
   period_path,
@@ -147,3 +149,5 @@ if get(ENV, "TWEET", "false") == "true"
   #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
   # end
 end
+
+wait(rsync_process)
