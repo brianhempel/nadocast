@@ -1,5 +1,6 @@
 module TrainGBDTShared
 
+import Mmap
 import Random
 import Serialization
 using MPI
@@ -228,6 +229,11 @@ function train_with_coordinate_descent_hyperparameter_search(
     end
 
     try_config(; config...) = begin
+
+      # If we are barely over memory, preferentially page out the validation data since only a fraction of it is used.
+      if Sys.islinux()
+        Mmap.madvise!(validation_X_binned, Mmap.MADV_COLD)
+      end
 
       best_loss_for_config = Inf32
       best_trees_for_config = nothing
