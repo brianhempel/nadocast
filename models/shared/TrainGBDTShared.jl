@@ -175,7 +175,7 @@ function train_with_coordinate_descent_hyperparameter_search(
   end
 
   # If we are barely over memory, preferentially page out the validation data since only a fraction of it is used.
-  pageout_hint(arr) = Sys.islinux() ? Mmap.madvise!(arr, Mmap.MADV_COLD) : nothing
+  pageout_hint(arr) = Sys.islinux() ? (try Mmap.madvise!(arr, Mmap.MADV_COLD) catch end) : nothing
 
   if !load_only
     # Load first so it page out first
