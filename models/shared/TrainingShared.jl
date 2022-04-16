@@ -364,7 +364,7 @@ function chunk_range(chunk_i, n_chunks, array_len)
   start:stop
 end
 
-# If using MPI for data-parallel distributed learning, chunk_i = rank+1, chunck_count = rank_count
+# If using MPI for data-parallel distributed learning, chunk_i = rank+1, chunk_count = rank_count
 function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count = 1)
   save_path(path) = joinpath(save_dir, path)
 

@@ -174,7 +174,29 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank_count = 1
   end
 
+  # If we are barely over memory, preferentially page out the validation data since only a fraction of it is used.
+  pageout_hint(arr) = Sys.islinux() ? Mmap.madvise!(arr, Mmap.MADV_COLD) : nothing
+
   if !load_only
+    # Load first so it page out first
+    rank == root && println("Loading validation data")
+    validation_X_binned, validation_Ys, validation_weights =
+      if must_load_from_disk
+        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
+      else
+        get_data_labels_weights_binned(validation_forecasts, "validation")
+      end
+    print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
+
+    event_types = isnothing(event_types) ? keys(validation_Ys) : event_types
+
+    pageout_hint(validation_X_binned)
+    for event_name in keys(validation_Ys)
+      if event_name != event_types[1]
+        pageout_hint(validation_Ys[event_name])
+      end
+    end
+
     rank == root && println("Loading training data")
     X_binned, Ys, weights =
       if must_load_from_disk
@@ -184,14 +206,11 @@ function train_with_coordinate_descent_hyperparameter_search(
       end
     print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
 
-    rank == root && println("Loading validation data")
-    validation_X_binned, validation_Ys, validation_weights =
-      if must_load_from_disk
-        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
-      else
-        get_data_labels_weights_binned(validation_forecasts, "validation")
+    for event_name in keys(Ys)
+      if event_name != event_types[1]
+        pageout_hint(Ys[event_name])
       end
-    print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
+    end
   else
     println("Loading training data")
     data_count, feature_count = prepare_data_labels_weights_binned(train_forecasts, "training")
@@ -204,11 +223,9 @@ function train_with_coordinate_descent_hyperparameter_search(
     exit(0)
   end
 
-  event_types = isnothing(event_types) ? keys(Ys) : event_types
-  event_types = ["tornado", "wind", "hail"]
-
   for event_name in event_types
-    labels = Ys[event_name]
+    labels            = Ys[event_name]
+    validation_labels = validation_Ys[event_name]
 
     print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
 
@@ -230,15 +247,11 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     try_config(; config...) = begin
 
-      # If we are barely over memory, preferentially page out the validation data since only a fraction of it is used.
-      if Sys.islinux()
-        Mmap.madvise!(validation_X_binned, Mmap.MADV_COLD)
-      end
+      pageout_hint(validation_X_binned)
 
       best_loss_for_config = Inf32
       best_trees_for_config = nothing
 
-      validation_labels = validation_Ys[event_name]
       callback_to_track_validation_loss =
         MemoryConstrainedTreeBoosting.make_callback_to_track_validation_loss(
             validation_X_binned, validation_labels;
@@ -249,6 +262,8 @@ function train_with_coordinate_descent_hyperparameter_search(
 
       iteration_callback(trees) = begin
         validation_loss = callback_to_track_validation_loss(trees)
+
+        pageout_hint(validation_X_binned) # unlikely to use same features twice in a row
 
         if validation_loss < best_loss_for_config
           best_loss_for_config  = validation_loss
@@ -284,6 +299,9 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank == root && println()
     rank == root && println(best_model_path)
     rank == root && println()
+
+    pageout_hint(labels)
+    pageout_hint(validation_labels)
   end
 
   ()
