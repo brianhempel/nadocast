@@ -293,12 +293,14 @@ function train_with_coordinate_descent_hyperparameter_search(
       best_loss_for_config
     end
 
-    TrainingShared.coordinate_descent_hyperparameter_search(try_config; configs...)
+    print_mpi(str) = rank == root && print(str)
+
+    TrainingShared.coordinate_descent_hyperparameter_search(try_config; print = print_mpi, configs...)
 
     !isnothing(mpi_comm) && MPI.Barrier(mpi_comm)
-    rank == root && println()
-    rank == root && println(best_model_path)
-    rank == root && println()
+    print_mpi("")
+    print_mpi("$best_model_path\n")
+    print_mpi("")
     !isnothing(mpi_comm) && MPI.Barrier(mpi_comm)
 
     pageout_hint(labels)

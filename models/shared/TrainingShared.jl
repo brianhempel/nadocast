@@ -440,7 +440,7 @@ end
 
 # Provide a function that returns a loss and kwargs that contain arrays of values to try.
 # *** Assumes each array of values is in order ***
-function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max_hyperparameter_coordinate_descent_iterations = 4, kwargs...)
+function coordinate_descent_hyperparameter_search(f; print = print, random_start_count = 0, max_hyperparameter_coordinate_descent_iterations = 4, kwargs...)
   combos_tried = []
 
   last_iteration_best_loss = Inf32
@@ -525,8 +525,8 @@ function coordinate_descent_hyperparameter_search(f; random_start_count = 0, max
     last_iteration_best_loss = best_loss
   end
 
-  println("Best hyperparameters (loss = $best_loss):")
-  println(best_combo)
+  print("Best hyperparameters (loss = $best_loss):\n")
+  print("$best_combo\n")
 end
 
 end # module TrainingShared
