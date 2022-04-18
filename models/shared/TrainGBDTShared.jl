@@ -299,6 +299,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank == root && println()
     rank == root && println(best_model_path)
     rank == root && println()
+    !isnothing(mpi_comm) && MPI.Barrier(mpi_comm)
 
     pageout_hint(labels)
     pageout_hint(validation_labels)
