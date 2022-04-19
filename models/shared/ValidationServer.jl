@@ -39,8 +39,8 @@ function read_data_labels_weights_from_disk()
 
       forecast_data = deserialize(save_path(data_file_name))
 
-      @assert forecast_row_count     = size(forecast_data, 1)
-      @assert forecast_feature_count = size(forecast_data, 2)
+      @assert forecast_row_count     == size(forecast_data, 1)
+      @assert forecast_feature_count == size(forecast_data, 2)
 
       data[row_i:(row_i + forecast_row_count - 1), :] = forecast_data
 
