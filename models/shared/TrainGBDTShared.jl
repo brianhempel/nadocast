@@ -26,7 +26,7 @@ import Forecasts
 # brian@192.168.1.227:~/nadocast_dev:~/nadocast_dev/small_test/sref_f2-13_0.26_validation
 function make_validation_server_callback(validation_server; max_iterations_without_improvement, mpi_comm = nothing)
   host, nadocast_dir, data_dir = split(validation_server, ":")
-  server_command = `ssh $(host) "julia --project=$nadocast_dir $nadocast_dir/models/shared/ValidationServer.jl $data_dir $event_name"`
+  server_command = `ssh $(host) "source ~/.profile; julia --threads auto --project=$nadocast_dir $nadocast_dir/models/shared/ValidationServer.jl $data_dir $event_name"`
 
   is_mpi_root(mpi_comm) = isnothing(mpi_comm) || MPI.Comm_rank(mpi_comm) == 0
 
