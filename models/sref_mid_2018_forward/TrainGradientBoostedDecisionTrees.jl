@@ -22,10 +22,11 @@ forecast_hour_range =
     2:38 # 1:87 # 4:39
   end
 
-event_types = split(get(ENV, "EVENT_TYPES", ""), ",")
-event_types = event_types == [] ? nothing : event_types
-load_only   = parse(Bool, get(ENV, "LOAD_ONLY", "false"))
-distributed = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
+event_types       = split(get(ENV, "EVENT_TYPES", ""), ",")
+event_types       = event_types == [] ? nothing : event_types
+load_only         = parse(Bool, get(ENV, "LOAD_ONLY", "false"))
+distributed       = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
+validation_server = get(ENV, "VALIDATION_SERVER", nothing)
 
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.26"))
 
@@ -44,6 +45,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     load_only           = load_only,
     must_load_from_disk = must_load_from_disk,
     use_mpi             = distributed,
+    validation_server   = validation_server,
 
     data_subset_ratio = data_subset_ratio,
     near_storm_ratio  = near_storm_ratio,

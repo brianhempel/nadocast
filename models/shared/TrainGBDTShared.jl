@@ -23,6 +23,50 @@ import Forecasts
 # Positively labeled points are always included with probability 1.
 
 
+# brian@192.168.1.227:~/nadocast_dev:~/nadocast_dev/small_test/sref_f2-13_0.26_validation
+function make_validation_server_callback(validation_server; max_iterations_without_improvement, mpi_comm = nothing)
+  host, nadocast_dir, data_dir = split(validation_server, ":")
+  server_command = `ssh $(host) "julia --project=$nadocast_dir $nadocast_dir/models/shared/ValidationServer.jl $data_dir $event_name"`
+
+  is_mpi_root(mpi_comm) = isnothing(mpi_comm) || MPI.Comm_rank(mpi_comm) == 0
+
+  best_loss = Loss(Inf)
+  iterations_without_improvement = 0
+
+  if is_mpi_root(mpi_comm)
+    server = open(server_command, "r+")
+  end
+
+  iteration_callback(trees) = begin
+    new_tree = last(trees)
+
+    if is_mpi_root(mpi_comm)
+      serialize(server, new_tree)
+      validation_loss = deserialize(server) :: Loss
+    end
+    if !isnothing(mpi_comm)
+      validation_loss = MPI.bcast(validation_loss, 0, mpi_comm)
+    end
+
+    if validation_loss < best_loss
+      best_loss                      = validation_loss
+      iterations_without_improvement = 0
+    else
+      iterations_without_improvement += 1
+      if iterations_without_improvement >= max_iterations_without_improvement
+        resize!(trees, length(trees) - max_iterations_without_improvement)
+        throw(MemoryConstrainedTreeBoosting.EarlyStop())
+      end
+    end
+    print("\rBest validation loss: $best_loss    ")
+
+    validation_loss
+  end
+
+  iteration_callback
+end
+
+
 function train_with_coordinate_descent_hyperparameter_search(
     forecasts;
     forecast_hour_range = 1:10000,
@@ -34,6 +78,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     load_only = false,
     must_load_from_disk = false, # e.g. on a machine with no forecasts
     use_mpi = false, # must_load_from_disk must be true for distributed learning
+    validation_server = nothing,
     model_prefix = "",
     prior_predictor = nothing,
     bin_split_forecast_sample_count = 100, # If not evenly divisible by the number of label types, a bit fewer might be used
@@ -178,22 +223,24 @@ function train_with_coordinate_descent_hyperparameter_search(
   pageout_hint(arr) = Sys.islinux() ? (try Mmap.madvise!(arr, Mmap.MADV_COLD) catch end) : nothing
 
   if !load_only
-    # Load first so it page out first
-    rank == root && println("Loading validation data")
-    validation_X_binned, validation_Ys, validation_weights =
-      if must_load_from_disk
-        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
-      else
-        get_data_labels_weights_binned(validation_forecasts, "validation")
-      end
-    print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
+    if isnothing(validation_server)
+      # Load first so it page out first
+      rank == root && println("Loading validation data")
+      validation_X_binned, validation_Ys, validation_weights =
+        if must_load_from_disk
+          TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
+        else
+          get_data_labels_weights_binned(validation_forecasts, "validation")
+        end
+      print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
 
-    event_types = isnothing(event_types) ? keys(validation_Ys) : event_types
+      event_types = isnothing(event_types) ? keys(validation_Ys) : event_types
 
-    pageout_hint(validation_X_binned)
-    for event_name in keys(validation_Ys)
-      if event_name != event_types[1]
-        pageout_hint(validation_Ys[event_name])
+      pageout_hint(validation_X_binned)
+      for event_name in keys(validation_Ys)
+        if event_name != event_types[1]
+          pageout_hint(validation_Ys[event_name])
+        end
       end
     end
 
@@ -205,6 +252,8 @@ function train_with_coordinate_descent_hyperparameter_search(
         get_data_labels_weights_binned(train_forecasts, "training")
       end
     print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
+
+    event_types = isnothing(event_types) ? keys(Ys) : event_types
 
     for event_name in keys(Ys)
       if event_name != event_types[1]
@@ -225,7 +274,9 @@ function train_with_coordinate_descent_hyperparameter_search(
 
   for event_name in event_types
     labels            = Ys[event_name]
-    validation_labels = validation_Ys[event_name]
+    if isnothing(validation_server)
+      validation_labels = validation_Ys[event_name]
+    end
 
     print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
 
@@ -247,23 +298,31 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     try_config(; config...) = begin
 
-      pageout_hint(validation_X_binned)
+      isnothing(validation_server) && pageout_hint(validation_X_binned)
 
       best_loss_for_config = Inf32
       best_trees_for_config = nothing
 
       callback_to_track_validation_loss =
-        MemoryConstrainedTreeBoosting.make_callback_to_track_validation_loss(
-            validation_X_binned, validation_labels;
-            validation_weights                 = validation_weights,
+        if isnothing(validation_server)
+          MemoryConstrainedTreeBoosting.make_callback_to_track_validation_loss(
+              validation_X_binned, validation_labels;
+              validation_weights                 = validation_weights,
+              max_iterations_without_improvement = max_iterations_without_improvement,
+              mpi_comm                           = mpi_comm
+            )
+        else
+          make_validation_server_callback(
+            validation_server,
             max_iterations_without_improvement = max_iterations_without_improvement,
             mpi_comm                           = mpi_comm
           )
+        end
 
       iteration_callback(trees) = begin
         validation_loss = callback_to_track_validation_loss(trees)
 
-        pageout_hint(validation_X_binned) # unlikely to use same features twice in a row
+        isnothing(validation_server) && pageout_hint(validation_X_binned) # unlikely to use same features twice in a row
 
         if validation_loss < best_loss_for_config
           best_loss_for_config  = validation_loss
@@ -304,7 +363,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     !isnothing(mpi_comm) && MPI.Barrier(mpi_comm)
 
     pageout_hint(labels)
-    pageout_hint(validation_labels)
+    isnothing(validation_server) && pageout_hint(validation_labels)
   end
 
   ()
