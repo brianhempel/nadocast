@@ -16,7 +16,7 @@ function read_data_labels_weights_from_disk()
   data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.|-")[2])))
 
   data_count    = length(weights)
-  feature_count = parse.(Int64, match(r"data_\d+_\d+x(\d+).serialized", data_file_names[1]))
+  feature_count = parse(Int64, match(r"data_\d+_\d+x(\d+).serialized", data_file_names[1])[1])
 
   mmap_path = save_path("data.mmap")
   mmap_io =
