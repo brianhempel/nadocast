@@ -23,7 +23,7 @@ forecast_hour_range =
   end
 
 event_types       = split(get(ENV, "EVENT_TYPES", ""), ",")
-event_types       = event_types == [] ? nothing : event_types
+event_types       = event_types == [""] ? nothing : event_types
 load_only         = parse(Bool, get(ENV, "LOAD_ONLY", "false"))
 distributed       = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
 validation_server = get(ENV, "VALIDATION_SERVER", nothing)
