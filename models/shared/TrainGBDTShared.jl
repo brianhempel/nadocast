@@ -38,12 +38,15 @@ function make_validation_server_callback(validation_server, event_name; max_iter
     server = open(server_command, "r+")
   end
 
-  iteration_callback(trees) = begin
-    new_tree = last(trees)
+  n_sent = 0
 
+  iteration_callback(trees) = begin
     if is_mpi_root(mpi_comm)
-      Serialization.serialize(server, new_tree)
-      validation_loss = Serialization.deserialize(server) :: Loss
+      while n_sent < length(trees)
+        Serialization.serialize(server, trees[n_sent+1])
+        n_sent += 1
+        validation_loss = Serialization.deserialize(server) :: Loss
+      end
     end
     if !isnothing(mpi_comm)
       validation_loss = MPI.bcast(validation_loss, 0, mpi_comm)
