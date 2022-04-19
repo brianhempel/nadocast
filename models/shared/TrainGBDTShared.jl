@@ -22,9 +22,10 @@ import Forecasts
 #
 # Positively labeled points are always included with probability 1.
 
+const Loss = MemoryConstrainedTreeBoosting.Loss
 
-# brian@192.168.1.227:~/nadocast_dev:~/nadocast_dev/small_test/sref_f2-13_0.26_validation
-function make_validation_server_callback(validation_server; max_iterations_without_improvement, mpi_comm = nothing)
+# brian@192.168.1.227:/home/brian/nadocast_dev:/home/brian/nadocast_dev/small_test/sref_f2-13_0.26_validation
+function make_validation_server_callback(validation_server, event_name; max_iterations_without_improvement, mpi_comm = nothing)
   host, nadocast_dir, data_dir = split(validation_server, ":")
   server_command = `ssh $(host) "source ~/.profile; julia --threads auto --project=$nadocast_dir $nadocast_dir/models/shared/ValidationServer.jl $data_dir $event_name"`
 
@@ -41,8 +42,8 @@ function make_validation_server_callback(validation_server; max_iterations_witho
     new_tree = last(trees)
 
     if is_mpi_root(mpi_comm)
-      serialize(server, new_tree)
-      validation_loss = deserialize(server) :: Loss
+      Serialization.serialize(server, new_tree)
+      validation_loss = Serialization.deserialize(server) :: Loss
     end
     if !isnothing(mpi_comm)
       validation_loss = MPI.bcast(validation_loss, 0, mpi_comm)
@@ -234,7 +235,7 @@ function train_with_coordinate_descent_hyperparameter_search(
         end
       print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
 
-      event_types = isnothing(event_types) ? keys(validation_Ys) : event_types
+      event_types = isnothing(event_types) ? collect(keys(validation_Ys)) : event_types
 
       pageout_hint(validation_X_binned)
       for event_name in keys(validation_Ys)
@@ -253,7 +254,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       end
     print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
 
-    event_types = isnothing(event_types) ? keys(Ys) : event_types
+    event_types = isnothing(event_types) ? collect(keys(Ys)) : event_types
 
     for event_name in keys(Ys)
       if event_name != event_types[1]
@@ -313,7 +314,7 @@ function train_with_coordinate_descent_hyperparameter_search(
             )
         else
           make_validation_server_callback(
-            validation_server,
+            validation_server, event_name,
             max_iterations_without_improvement = max_iterations_without_improvement,
             mpi_comm                           = mpi_comm
           )

@@ -10,7 +10,7 @@ save_dir, event_name = ARGS
 function read_data_labels_weights_from_disk()
   save_path(path) = joinpath(save_dir, path)
 
-  weights = Serialization.deserialize(save_path("weights.serialized"))
+  weights = deserialize(save_path("weights.serialized"))
 
   data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.|-")[2])))
 
@@ -36,7 +36,7 @@ function read_data_labels_weights_from_disk()
 
       @assert feature_count == forecast_feature_count
 
-      forecast_data = Serialization.deserialize(save_path(data_file_name))
+      forecast_data = deserialize(save_path(data_file_name))
 
       @assert forecast_row_count     = size(forecast_data, 1)
       @assert forecast_feature_count = size(forecast_data, 2)
@@ -51,7 +51,7 @@ function read_data_labels_weights_from_disk()
     Mmap.sync!(data)
   end
 
-  y = Serialization.deserialize(save_path("labels-$event_name.serialized"))
+  y = deserialize(save_path("labels-$event_name.serialized"))
 
   (data, y, weights)
 end
