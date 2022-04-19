@@ -56,7 +56,7 @@ function example_forecast()
 end
 
 function grid()
-  Conus.href_cropped_5km_grid
+  Conus.href_cropped_5km_grid()
 end
 
 thresholds = [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6]
@@ -71,7 +71,7 @@ function reload_forecasts()
   _forecasts_day_1630 = []
 
   # threshold = 0.02
-  # grid = Conus.href_cropped_5km_grid
+  # grid = Conus.href_cropped_5km_grid()
   # # shapefile_path = "geo_regions/ln_us/ln_us.shp"
   # shapefile_path = "day1otlk_20190812_1300-shp/day1otlk_20190812_1300_torn.shp"
   #

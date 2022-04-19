@@ -25,8 +25,8 @@ import ForecastCombinators
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-GRID       = Conus.href_cropped_5km_grid;
-CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid;
+GRID       = Conus.href_cropped_5km_grid();
+CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid();
 
 # Run below is 2019-1-7 through 2021-5-31, but we are missing lots of HREFs between Nov 2020 and mid-March 2021
 

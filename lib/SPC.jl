@@ -15,7 +15,7 @@ import ArchGDAL
 #
 # Should work for tornadoes, wind, and hail (all use "DN" field to label the regions).
 #
-# rasterize_prob_regions(Conus.href_cropped_5km_grid, 0.02, "day1otlk_20190812_1300-shp/day1otlk_20190812_1300_torn.shp")
+# rasterize_prob_regions(Conus.href_cropped_5km_grid(), 0.02, "day1otlk_20190812_1300-shp/day1otlk_20190812_1300_torn.shp")
 function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
 
   mask = falses(length(grid.latlons))
@@ -109,7 +109,7 @@ end
 # import Grids
 #
 # threshold = 0.02
-# grid = Conus.href_cropped_5km_grid
+# grid = Conus.href_cropped_5km_grid()
 # # shapefile_path = "geo_regions/ln_us/ln_us.shp"
 # shapefile_path = "day1otlk_20190812_1300-shp/day1otlk_20190812_1300_torn.shp"
 #

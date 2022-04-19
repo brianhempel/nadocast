@@ -17,25 +17,38 @@ function is_in_conus_bounding_box((lat, lon))
   lat > s_extreme && lat < n_extreme && lon > w_extreme && lon < e_extreme
 end
 
+_href_cropped_5km_grid = nothing
 # Same cropping as in HREF.jl
-const href_cropped_5km_grid = Grib2.read_grid((@__DIR__) * "/href_one_field_for_grid.grib2", crop = ((1+214):(1473 - 99), (1+119):(1025-228))) :: Grids.Grid
-
-# See MakeConusGrid for how to create HREF_conus_latlons.csv
-const conus_mask_href_cropped_5km_grid = begin
-  latlons, _ = DelimitedFiles.readdlm((@__DIR__) * "/HREF_conus_latlons.csv", Float64; header = true)
-  conus_mask = falses(length(href_cropped_5km_grid.latlons))
-
-  for (lat, lon) in eachrow(latlons)
-    conus_mask[Grids.latlon_to_closest_grid_i(href_cropped_5km_grid, (lat, lon))] = true
+function href_cropped_5km_grid()
+  global _href_cropped_5km_grid
+  if isnothing(_href_cropped_5km_grid)
+    _href_cropped_5km_grid = Grib2.read_grid((@__DIR__) * "/href_one_field_for_grid.grib2", crop = ((1+214):(1473 - 99), (1+119):(1025-228))) :: Grids.Grid
   end
+  _href_cropped_5km_grid
+end
 
-  conus_mask
+
+_conus_mask_href_cropped_5km_grid = nothing
+# See MakeConusGrid for how to create HREF_conus_latlons.csv
+function conus_mask_href_cropped_5km_grid()
+  global _conus_mask_href_cropped_5km_grid
+  if isnothing(_conus_mask_href_cropped_5km_grid)
+    latlons, _ = DelimitedFiles.readdlm((@__DIR__) * "/HREF_conus_latlons.csv", Float64; header = true)
+    conus_mask = falses(length(href_cropped_5km_grid.latlons))
+
+    for (lat, lon) in eachrow(latlons)
+      conus_mask[Grids.latlon_to_closest_grid_i(href_cropped_5km_grid, (lat, lon))] = true
+    end
+
+    _conus_mask_href_cropped_5km_grid = conus_mask
+  end
+  _conus_mask_href_cropped_5km_grid
 end
 
 # Based on closest HREF 5km gridpoint
 function is_in_conus(latlon :: Tuple{Float64, Float64}) :: Bool
-  flat_i = Grids.latlon_to_closest_grid_i(href_cropped_5km_grid, latlon)
-  conus_mask_href_cropped_5km_grid[flat_i]
+  flat_i = Grids.latlon_to_closest_grid_i(href_cropped_5km_grid(), latlon)
+  conus_mask_href_cropped_5km_grid()[flat_i]
 end
 
 end # module Conus

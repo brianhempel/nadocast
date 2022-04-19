@@ -76,8 +76,8 @@ for forecast in training_and_validation_forecasts
 
   for i in 1:length(SPCOutlooks.thresholds)
     threshold = SPCOutlooks.thresholds[i]
-    painted   = ((@view data[:,1]) .>= threshold*0.999) .* Conus.conus_mask_href_cropped_5km_grid
-    unpainted = ((@view data[:,1]) .<  threshold*0.999) .* Conus.conus_mask_href_cropped_5km_grid
+    painted   = ((@view data[:,1]) .>= threshold*0.999) .* Conus.conus_mask_href_cropped_5km_grid()
+    unpainted = ((@view data[:,1]) .<  threshold*0.999) .* Conus.conus_mask_href_cropped_5km_grid()
     painted_area        = sum(forecast.grid.point_areas_sq_miles[painted])
     true_positive_area  = sum(forecast.grid.point_areas_sq_miles[painted   .* forecast_labels])
     false_negative_area = sum(forecast.grid.point_areas_sq_miles[unpainted .* forecast_labels])
