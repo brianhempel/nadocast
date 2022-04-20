@@ -119,7 +119,7 @@ function with_blurs_and_forecast_hour(prediction_forecasts, blur_radii; model_na
       end
     end
 
-    push!(new_inventory, Inventories.InventoryLine("", "", no_blur_line.date_str, "forecast_hour", "calculated", "hour fcst", "", ""))
+    push!(new_inventory, Inventories.InventoryLine("", "", base_inventory[1].date_str, "forecast_hour", "calculated", "hour fcst", "", ""))
 
     new_inventory
   end

@@ -27,7 +27,12 @@ validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast)
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
 logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
-X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_with_blurs_and_forecast_hour");
+X, Ys, weights =
+  TrainingShared.get_data_labels_weights(
+    validation_forecasts;
+    event_name_to_labeler = TrainingShared.event_name_to_labeler,
+    save_dir = "validation_forecasts_with_blurs_and_forecast_hour"
+  );
 
 length(validation_forecasts) #
 size(X) #
