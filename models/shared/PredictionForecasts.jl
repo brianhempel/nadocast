@@ -131,11 +131,12 @@ function with_blurs_and_forecast_hour(prediction_forecasts, blur_radii; model_na
 
     out = Array{Float32}(undef, (point_count, out_feature_count))
 
-    out_feature_i = 1
+    out_feature_i = 0
 
     for prediction_i in 1:prediction_count
       no_blur_data = @view base_data[:, prediction_i]
 
+      out_feature_i += 1
       out[:, out_feature_i] = no_blur_data
 
       for blur_i in 1:length(blur_radii)
@@ -146,6 +147,8 @@ function with_blurs_and_forecast_hour(prediction_forecasts, blur_radii; model_na
 
     out_feature_i += 1
     out[:, out_feature_i] .= Float32(base_forecast.forecast_hour)
+
+    @assert out_feature_i == out_feature_count
 
     out
   end

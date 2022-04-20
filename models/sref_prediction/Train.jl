@@ -8,7 +8,7 @@ import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import TrainingShared
-using Metrics
+import Metrics
 
 push!(LOAD_PATH, @__DIR__)
 import SREFPrediction
@@ -22,6 +22,9 @@ import Forecasts
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2021, 1, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
+
+# for testing
+validation_forecasts = rand(validation_forecasts, 30);
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
@@ -38,69 +41,84 @@ length(validation_forecasts) #
 size(X) #
 length(weights) #
 
-println("Dividing into bins of equal positive weight...")
 
-ŷ = X[:, 1]
+# println("Dividing into bins of equal positive weight...")
 
-sort_perm = parallel_sort_perm(ŷ);
-X       = X[sort_perm, :]
-y       = y[sort_perm]
-ŷ       = ŷ[sort_perm]
-weights = weights[sort_perm]
+# ŷ = X[:, 1]
 
-# total_logloss = sum(logloss.(y, ŷ) .* weights)
-total_positive_weight = sum(y .* weights)
+# sort_perm = parallel_sort_perm(ŷ);
+# X       = X[sort_perm, :]
+# y       = y[sort_perm]
+# ŷ       = ŷ[sort_perm]
+# weights = weights[sort_perm]
 
-bin_count = 10 # 40 equal logloss bins
-# per_bin_logloss = total_logloss / bin_count
-per_bin_pos_weight = total_positive_weight / bin_count
+# # total_logloss = sum(logloss.(y, ŷ) .* weights)
+# total_positive_weight = sum(y .* weights)
 
-# bins = map(_ -> Int64[], 1:bin_count)
-bins_Σŷ      = map(_ -> 0.0f0, 1:bin_count)
-bins_Σy      = map(_ -> 0.0f0, 1:bin_count)
-bins_Σweight = map(_ -> 0.0f0, 1:bin_count)
-bins_max     = map(_ -> 1.0f0, 1:bin_count)
+# bin_count = 10 # 40 equal logloss bins
+# # per_bin_logloss = total_logloss / bin_count
+# per_bin_pos_weight = total_positive_weight / bin_count
 
-bin_i = 1
-# bin_logloss = 0.0
-for i in 1:length(y)
-  global bin_i
-  # global bin_logloss
+# # bins = map(_ -> Int64[], 1:bin_count)
+# bins_Σŷ      = map(_ -> 0.0f0, 1:bin_count)
+# bins_Σy      = map(_ -> 0.0f0, 1:bin_count)
+# bins_Σweight = map(_ -> 0.0f0, 1:bin_count)
+# bins_max     = map(_ -> 1.0f0, 1:bin_count)
 
-  if ŷ[i] > bins_max[bin_i]
-    bin_i += 1
-    # bin_logloss = 0.0
-  end
+# bin_i = 1
+# # bin_logloss = 0.0
+# for i in 1:length(y)
+#   global bin_i
+#   # global bin_logloss
 
-  bins_Σŷ[bin_i]      += ŷ[i] * weights[i]
-  bins_Σy[bin_i]      += y[i] * weights[i]
-  bins_Σweight[bin_i] += weights[i]
+#   if ŷ[i] > bins_max[bin_i]
+#     bin_i += 1
+#     # bin_logloss = 0.0
+#   end
 
-  # bin_logloss += logloss(y[i], ŷ[i])
+#   bins_Σŷ[bin_i]      += ŷ[i] * weights[i]
+#   bins_Σy[bin_i]      += y[i] * weights[i]
+#   bins_Σweight[bin_i] += weights[i]
 
-  # if bin_logloss >= per_bin_logloss
-  #   bins_max[bin_i] = ŷ[i]
-  # end
-  if bins_Σy[bin_i] >= per_bin_pos_weight
-    bins_max[bin_i] = ŷ[i]
-  end
-end
+#   # bin_logloss += logloss(y[i], ŷ[i])
 
-println("mean_y\tmean_ŷ\tΣweight\tbin_max")
-for bin_i in 1:length(bins_Σy)
-  Σŷ      = bins_Σŷ[bin_i]
-  Σy      = bins_Σy[bin_i]
-  Σweight = bins_Σweight[bin_i]
+#   # if bin_logloss >= per_bin_logloss
+#   #   bins_max[bin_i] = ŷ[i]
+#   # end
+#   if bins_Σy[bin_i] >= per_bin_pos_weight
+#     bins_max[bin_i] = ŷ[i]
+#   end
+# end
 
-  mean_ŷ = Σŷ / Σweight
-  mean_y = Σy / Σweight
+# println("mean_y\tmean_ŷ\tΣweight\tbin_max")
+# for bin_i in 1:length(bins_Σy)
+#   Σŷ      = bins_Σŷ[bin_i]
+#   Σy      = bins_Σy[bin_i]
+#   Σweight = bins_Σweight[bin_i]
 
-  println("$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
-end
+#   mean_ŷ = Σŷ / Σweight
+#   mean_y = Σy / Σweight
+
+#   println("$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
+# end
 
 # mean_y          mean_ŷ          Σweight         bin_max
 
-roc_auc(X[:,1], y, weights) # 0.979420792683393
+features_per_prediction = 1 + length(SREFPrediction.blur_radii)
+
+for prediction_i in 1:length(SREFPrediction.models)
+  (event_name, _, _) = SREFPrediction.models[prediction_i]
+  y = Ys[event_name]
+  for j in 1:size(X,2)
+    x = @view X[:,j]
+    roc = Metrics.roc_auc(x, y, weights)
+    println("$event_name ($(round(sum(y))))\tROC: $roc")
+  end
+  # x = @view X[:,1 + features_per_prediction*(prediction_i-1)]
+  # roc = Metrics.roc_auc(x, y, weights)
+  # println("$event_name ($(round(sum(y))))\tROC: $roc")
+end
+
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
@@ -278,7 +296,7 @@ import Dates
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 # import TrainGBDTShared
 import TrainingShared
-using Metrics
+import Metrics
 
 push!(LOAD_PATH, @__DIR__)
 import SREFPrediction
