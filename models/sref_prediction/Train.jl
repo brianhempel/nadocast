@@ -2,7 +2,6 @@
 #
 # Poor man's notebook.
 
-# Any number that is 1.6777216e7 has had addition round-off error
 
 import Dates
 
@@ -25,7 +24,9 @@ cutoff = Dates.DateTime(2022, 1, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 # for testing
-validation_forecasts = rand(validation_forecasts, 30);
+# validation_forecasts = rand(validation_forecasts, 30);
+
+# rm("validation_forecasts_with_blurs_and_forecast_hour"; recursive=true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
@@ -138,6 +139,7 @@ validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(f
 # Make sure a forecast loads
 Forecasts.data(validation_forecasts_blurred[100])
 
+# rm("validation_forecasts_blurred_and_forecast_hour"; recursive=true)
 
 X2, Ys2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
 
