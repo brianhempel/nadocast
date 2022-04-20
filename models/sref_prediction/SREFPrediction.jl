@@ -99,7 +99,7 @@ function reload_forecasts()
   sref_forecasts = SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
 
   # (event_name, grib2_var_name, predict)
-  models = map(models) do (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f12_to_f23, gbdt_f21_to_f38)
+  predictors = map(models) do (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f12_to_f23, gbdt_f21_to_f38)
     predict_f2_to_f13  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../sref_mid_2018_forward/" * gbdt_f2_to_f13)
     predict_f12_to_f23 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../sref_mid_2018_forward/" * gbdt_f12_to_f23)
     predict_f21_to_f38 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../sref_mid_2018_forward/" * gbdt_f21_to_f38)
@@ -123,7 +123,7 @@ function reload_forecasts()
     (event_name, grib2_var_name, predict)
   end
 
-  _forecasts = PredictionForecasts.simple_prediction_forecasts(sref_forecasts, models)
+  _forecasts = PredictionForecasts.simple_prediction_forecasts(sref_forecasts, predictors)
 
   # The forecast hour is needed for training purposes.
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
