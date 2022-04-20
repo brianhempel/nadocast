@@ -15,6 +15,7 @@ require "fileutils"
 FORECAST_DATE = ENV["FORECAST_DATE"]       ? Date.parse(ENV["FORECAST_DATE"]) : Time.now.utc.to_date
 RUN_HOUR      = ENV["RUN_HOUR"]            ? Integer(ENV["RUN_HOUR"])         : Time.now.utc.hour
 HRRR_RAP      = ENV["HRRR_RAP"].to_s != "" ? ENV["HRRR_RAP"] == "true"        : true
+JULIA         = ENV["JULIA"]               ? ENV["JULIA"]                     : "julia"
 
 
 loop do
@@ -42,7 +43,7 @@ loop do
     FileUtils.cd File.expand_path("..", __FILE__)
 
     # DoPredict.jl will fail if the forecasts are not all downloaded.
-    if system("JULIA_NUM_THREADS=#{ENV["CORE_COUNT"]} RUN_HOUR=#{RUN_HOUR} FORECAST_DATE=#{FORECAST_DATE} time julia --project DoPredict.jl")
+    if system("JULIA_NUM_THREADS=#{ENV["CORE_COUNT"]} RUN_HOUR=#{RUN_HOUR} FORECAST_DATE=#{FORECAST_DATE} time #{JULIA} --project DoPredict.jl")
       exit 0
     end
   end
