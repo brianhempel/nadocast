@@ -159,7 +159,7 @@ end
 # 1 resulting features: blurred result
 function blurred(prediction_forecasts, forecast_hour_range, blur_lo_grid_is, blur_hi_grid_is; model_name = nothing)
 
-  inventory_transformer(base_forecast, base_inventory) = begin
+  inventory_transformer(base_forecast, base_inventory) =
     map(base_inventory) do no_blur_line
       Inventories.revise_with_feature_engineering(no_blur_line, "blurred")
     end
