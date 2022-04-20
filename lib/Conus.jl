@@ -34,10 +34,10 @@ function conus_mask_href_cropped_5km_grid()
   global _conus_mask_href_cropped_5km_grid
   if isnothing(_conus_mask_href_cropped_5km_grid)
     latlons, _ = DelimitedFiles.readdlm((@__DIR__) * "/HREF_conus_latlons.csv", Float64; header = true)
-    conus_mask = falses(length(href_cropped_5km_grid.latlons))
+    conus_mask = falses(length(href_cropped_5km_grid().latlons))
 
     for (lat, lon) in eachrow(latlons)
-      conus_mask[Grids.latlon_to_closest_grid_i(href_cropped_5km_grid, (lat, lon))] = true
+      conus_mask[Grids.latlon_to_closest_grid_i(href_cropped_5km_grid(), (lat, lon))] = true
     end
 
     _conus_mask_href_cropped_5km_grid = conus_mask
