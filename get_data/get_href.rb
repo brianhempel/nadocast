@@ -945,7 +945,7 @@ require "set"
 # Files available 2.5hrs after run time
 
 TYPES          = ["mean", "prob"]
-YMDS           = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
+YMDS           = `curl -s https://ftpprd.ncep.noaa.gov/data/nccf/com/hiresw/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [00, 06, 12, 18]
 FORECAST_HOURS = (01..36).to_a
 BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/href"
@@ -954,8 +954,8 @@ MIN_FILE_BYTES = 20_000_000
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
-  remote_files = `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
-  remote_files.map { |name| "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/#{name}" }
+  remote_files = `curl -s https://ftpprd.ncep.noaa.gov/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
+  remote_files.map { |name| "https://ftpprd.ncep.noaa.gov/data/nccf/com/hiresw/prod/href.#{ymd}/ensprod/#{name}" }
 end.to_set
 
 def alt_location(directory)
@@ -979,7 +979,7 @@ threads = THREAD_COUNT.times.map do
       forecast_hour_str = "%02d" % [forecast_hour]
 
       file_name         = "href_conus_#{year_month_day}_t#{run_hour_str}z_#{type}_f#{forecast_hour_str}.grib2"
-      url_to_get        = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
+      url_to_get        = "https://ftpprd.ncep.noaa.gov/data/nccf/com/hiresw/prod/href.#{year_month_day}/ensprod/href.t#{run_hour_str}z.conus.#{type}.f#{forecast_hour_str}.grib2"
       if AVAILABLE_FOR_DOWNLOAD.include?(url_to_get)
         base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
         directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
