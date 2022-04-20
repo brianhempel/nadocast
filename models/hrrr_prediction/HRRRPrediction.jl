@@ -100,7 +100,7 @@ function reload_forecasts()
     end
   end
 
-  _forecasts = PredictionForecasts.simple_prediction_forecasts(hrrr_forecasts, predict; inventory_misc = "calculated prob")
+  _forecasts = PredictionForecasts.simple_prediction_forecasts(hrrr_forecasts, predict)
 
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
 

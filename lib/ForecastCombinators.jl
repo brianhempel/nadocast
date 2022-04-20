@@ -9,15 +9,15 @@ import Cache
 
 
 # Copy time info, but set based_on and grid/inventory/data
-function revised_forecast(forecast, grid, get_inventory, get_data)
-  Forecasts.Forecast(forecast.model_name, forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour, forecast.forecast_hour, [forecast], grid, get_inventory, get_data, forecast.preload_paths)
+function revised_forecast(forecast, grid, get_inventory, get_data; model_name = forecast.model_name)
+  Forecasts.Forecast(model_name, forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour, forecast.forecast_hour, [forecast], grid, get_inventory, get_data, forecast.preload_paths)
 end
 
 # Create a bunch of Forecast structs whose inventory and data
 # are transformed by the given functions (if provided).
 #
 # Each transformer function is given (old_forecast, old_thing).
-function map_forecasts(old_forecasts; new_grid = nothing, inventory_transformer = nothing, data_transformer = nothing)
+function map_forecasts(old_forecasts; new_grid = nothing, inventory_transformer = nothing, data_transformer = nothing, model_name = nothing)
   map(old_forecasts) do old_forecast
     get_inventory() = inventory_transformer(old_forecast, Forecasts.inventory(old_forecast))
     get_data()      = data_transformer(old_forecast, Forecasts.data(old_forecast))
@@ -26,7 +26,7 @@ function map_forecasts(old_forecasts; new_grid = nothing, inventory_transformer 
     _get_inventory = isnothing(inventory_transformer) ? old_forecast._get_inventory : get_inventory
     _get_data      = isnothing(data_transformer)      ? old_forecast._get_data      : get_data
 
-    revised_forecast(old_forecast, grid, _get_inventory, _get_data)
+    revised_forecast(old_forecast, grid, _get_inventory, _get_data; model_name = isnothing(model_name) ? old_forecast.model_name : model_name)
   end
 end
 
@@ -38,7 +38,7 @@ end
 # Hand a list of tuples of associated forecasts, and possible a function that takes such a
 # tuple and returns the forecast whose runtime + forecast time + grid should be used as the
 # time and grid for the output forecast. If not provided, a forecast with the latest runtime is used.
-function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_forecast = nothing)
+function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_forecast = nothing, model_name = nothing)
   map(associated_forecasts) do forecasts_tuple
     forecasts_array = collect(forecasts_tuple)
 
@@ -79,11 +79,11 @@ function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_for
     canonical_forecast =
       isnothing(forecasts_tuple_to_canonical_forecast) ? last(sort(forecasts_array, by=Forecasts.run_time_in_seconds_since_epoch_utc)) : forecasts_tuple_to_canonical_forecast(forecasts_tuple)
 
-    model_names = map(forecast -> forecast.model_name, forecasts_array)
+    model_name = isnothing(model_name) ? join(map(forecast -> forecast.model_name, forecasts_array), "|") : model_name
 
     preload_paths = vcat(map(forecast -> forecast.preload_paths, forecasts_array)...)
 
-    Forecasts.Forecast(join(model_names, "|"), canonical_forecast.run_year, canonical_forecast.run_month, canonical_forecast.run_day, canonical_forecast.run_hour, canonical_forecast.forecast_hour, forecasts_array, canonical_forecast.grid, get_inventory, get_data, preload_paths)
+    Forecasts.Forecast(model_name, canonical_forecast.run_year, canonical_forecast.run_month, canonical_forecast.run_day, canonical_forecast.run_hour, canonical_forecast.forecast_hour, forecasts_array, canonical_forecast.grid, get_inventory, get_data, preload_paths)
   end
 end
 
@@ -93,11 +93,11 @@ end
 #
 # The predicate is given an inventory line. Features matching
 # the predicate are retained.
-function filter_features_forecasts(old_forecasts, predicate)
+function filter_features_forecasts(old_forecasts, predicate; model_name = nothing)
   inventory_transformer(old_forecast, old_inventory) = filter(predicate, old_inventory)
   data_transformer(old_forecast, old_data)           = old_data[:, findall(predicate, Forecasts.inventory(old_forecast))]
 
-  map_forecasts(old_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
+  map_forecasts(old_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer, model_name = model_name)
 end
 
 
@@ -106,7 +106,7 @@ end
 #
 #    get_layer_resampler = Grids.get_interpolating_upsampler
 # or get_layer_resampler = Grids.get_upsampler
-function resample_forecasts(old_forecasts, get_layer_resampler, new_grid)
+function resample_forecasts(old_forecasts, get_layer_resampler, new_grid; model_name = nothing)
 
   if isempty(old_forecasts)
     return old_forecasts
@@ -126,7 +126,7 @@ function resample_forecasts(old_forecasts, get_layer_resampler, new_grid)
     resampled
   end
 
-  map_forecasts(old_forecasts; new_grid = new_grid, data_transformer = data_transformer)
+  map_forecasts(old_forecasts; new_grid = new_grid, data_transformer = data_transformer, model_name = model_name)
 end
 
 _caching_on         = false

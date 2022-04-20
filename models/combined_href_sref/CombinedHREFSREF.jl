@@ -243,8 +243,8 @@ function reload_forecasts()
     run_date += Dates.Day(1)
   end
 
-  _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer)
-  _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer)
+  _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer; model_name = "Paired_HREF_and_SREF_hour_tornado_probabilities_href_newer")
+  _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer; model_name = "Paired_HREF_and_SREF_hour_tornado_probabilities_sref_newer")
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
@@ -328,8 +328,11 @@ function reload_forecasts()
     out
   end
 
-  _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_predict)
-  _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_predict)
+  _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_predict; model_name = "CombinedHREFSREF_hour_tornado_probability_href_newer")
+  _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_predict; model_name = "CombinedHREFSREF_hour_tornado_probability_sref_newer")
+
+
+  # Day forecasts
 
   run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined))
 
@@ -428,7 +431,7 @@ function reload_forecasts()
 
   # Caching barely helps load times, so we don't do it
 
-  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer)
+  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_tornado_probability_accumulators_from_CombinedHREFSREF_hours")
 
   day_predict(forecast, data) = begin
     indep_events_ŷs  = @view data[:,1]
@@ -470,7 +473,7 @@ function reload_forecasts()
     out
   end
 
-  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict)
+  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict; model_name = "CombinedHREFSREF_day_tornado_probability")
 
   spc_calibration = [
     (0.02, 0.016253397),
@@ -480,7 +483,7 @@ function reload_forecasts()
     (0.3,  0.32384455),
   ]
 
-  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration)
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration; model_name = "CombinedHREFSREF_day_tornado_probability_calibrated_to_SPC_thresholds")
 
   ()
 end

@@ -70,7 +70,66 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
 
 # $ LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# 18752 for training,     from 2018-06-29 00Z +2  to      2021-12-31 18Z +6.
+#   (1598 with sig_hail,  from 2018-06-29 00Z +2  to      2021-12-15 18Z +5)
+#   (7205 with hail,      from 2018-06-29 00Z +2  to      2021-12-30 18Z +4)
+#   (3107 with tornado,   from 2018-06-29 00Z +2  to      2021-12-31 18Z +5)
+#   (480 with sig_tornado,        from 2018-06-29 00Z +2  to      2021-12-16 00Z +3)
+#   (2547 with sig_wind,  from 2018-06-29 00Z +2  to      2021-12-30 18Z +3)
+#   (11077 with wind,     from 2018-06-29 00Z +2  to      2021-12-30 18Z +4)
+# 3818 for validation,    from 2018-06-30 06Z +8  to      2021-12-25 18Z +5.
+# 3495 for testing,       from 2018-07-01 06Z +10 to      2021-12-06 06Z +5.
+# Preparing bin splits by sampling 300 training forecasts with events
+# sampling 26874 datapoints...computing bin splits...done.
+# Loading training data
 
+
+
+# $ sshfs brian@nadocaster2:/Volumes/ ~/nadocaster2/
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# 18718 for training,     from 2018-06-29 00Z +13 to      2021-12-31 06Z +18.
+#   (1590 with sig_hail,  from 2018-06-29 00Z +22 to      2021-12-15 06Z +17)
+#   (7175 with hail,      from 2018-06-29 00Z +20 to      2021-12-30 06Z +16)
+#   (3103 with tornado,   from 2018-06-29 00Z +15 to      2021-12-31 06Z +17)
+#   (476 with sig_tornado,        from 2018-07-03 12Z +19 to      2021-12-15 12Z +15)
+#   (2533 with sig_wind,  from 2018-06-29 00Z +13 to      2021-12-30 06Z +15)
+#   (11050 with wind,     from 2018-06-29 00Z +13 to      2021-12-30 06Z +16)
+# 3804 for validation,    from 2018-06-29 18Z +20 to      2021-12-25 06Z +17.
+# 3509 for testing,       from 2018-06-30 18Z +22 to      2021-12-05 18Z +17.
+# Preparing bin splits by sampling 300 training forecasts with events
+# sampling 23991 datapoints...computing bin splits...done.
+# Loading training data
+
 
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# 18688 for training,     from 2018-06-29 00Z +24 to      2021-12-31 00Z +24.
+#   (1581 with sig_hail,  from 2018-06-29 00Z +24 to      2021-12-14 18Z +29)
+#   (7152 with hail,      from 2018-06-29 00Z +24 to      2021-12-29 18Z +28)
+#   (3108 with tornado,   from 2018-07-03 00Z +31 to      2021-12-30 18Z +29)
+#   (478 with sig_tornado,        from 2018-07-03 00Z +31 to      2021-12-15 00Z +27)
+#   (2527 with sig_wind,  from 2018-06-29 00Z +25 to      2021-12-29 18Z +27)
+#   (11027 with wind,     from 2018-06-29 00Z +24 to      2021-12-29 18Z +28)
+# 3787 for validation,    from 2018-06-29 06Z +32 to      2021-12-24 18Z +29.
+# 3474 for testing,       from 2018-06-30 06Z +34 to      2021-12-05 06Z +29.
+# Preparing bin splits by sampling 300 training forecasts with events
+# computing radius ranges...done
+# 300/~300 forecasts loaded.  9.504083029233334s each.  ~0.0 hours left.             left.
+# sampling 29931 datapoints...computing bin splits...done.
+# Loading training data
+# done. 28310346 datapoints with 17412 features each.
+# Loading validation data
+# done. 5812153 datapoints with 17412 features each.
+
+
+
+# on nadocaster2:
+# mkdir ~/hd
+# sshfs brian@nadocaster:/Volumes/hd/ ~/hd/
+
+# on nadocaster:
+# ln -s /Volumes/hd ~/hd
+
+# on either:
+# cd ~/hd
+# JULIA_MPI_BINARY=system DISTRIBUTED=true JULIA_NUM_THREADS=$CORE_COUNT EVENT_TYPES=tornado,wind,hail,sig_tornado,sig_wind,sig_hail MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 time mpirun -n 2 -wdir $(pwd) -hosts 192.168.1.112:1,192.168.1.121:1 -bind-to none julia --compiled-modules=no --project=/home/brian/nadocast_dev /home/brian/nadocast_dev/models/href_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl
+

@@ -7,6 +7,7 @@
 import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
+# import TrainGBDTShared
 import TrainingShared
 using Metrics
 
@@ -20,18 +21,18 @@ import Forecasts
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2021, 1, 1, 0)
+cutoff = Dates.DateTime(2020, 11, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
 const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
 logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
-X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_with_blurs_and_forecast_hour");
+X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts; save_dir = "validation_forecasts_with_blurs_and_forecast_hour");
 
-length(validation_forecasts) #
-size(X) #
-length(weights) #
+length(validation_forecasts) # 13743
+size(X) # (69663267, 6)
+length(y) # 69663267
 
 println("Dividing into bins of equal positive weight...")
 
@@ -94,6 +95,16 @@ for bin_i in 1:length(bins_Σy)
 end
 
 # mean_y          mean_ŷ          Σweight         bin_max
+# 3.9562587e-5    2.9745448e-5    1.6777216e7     0.0001958018 # This line is wrong, addition underflow
+# 0.0005520216    0.0004214814    1.2028225e6     0.00084828574
+# 0.001327565     0.0013259093    499710.62       0.0020452014
+# 0.0029022845    0.0027180477    228748.45       0.0036305543
+# 0.004871966     0.0045832614    136245.75       0.0058195237
+# 0.00831754      0.0070114285    79824.016       0.008520603
+# 0.011437667     0.010334699     58064.617       0.0127252815
+# 0.014512082     0.016303468     45715.562       0.021725489
+# 0.028301736     0.02859237      23460.266       0.039647073
+# 0.060781837     0.061157648     10820.524       1.0
 
 roc_auc(X[:,1], y, weights) # 0.979420792683393
 

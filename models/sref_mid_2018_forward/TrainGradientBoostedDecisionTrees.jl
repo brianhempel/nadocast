@@ -147,3 +147,18 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
 # time scp -C -r nadocaster2-remote:~/nadocast_dev/models/sref_mid_2018_forward/sref_f2-13_0.26_training ./
 
+
+# small_test
+# VALIDATION_SERVER=acer:/home/brian/nadocast_dev:/home/brian/nadocast_dev/small_test/sref_f2-13_0.26_validation JULIA_NUM_THREADS=$CORE_COUNT MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.26 julia --project=../../.. ../TrainGradientBoostedDecisionTrees.jl
+
+
+# on nadocaster2:
+# mkdir ~/hd
+# sshfs brian@nadocaster:/Volumes/hd/ ~/hd/
+
+# on nadocaster:
+# ln -s /Volumes/hd ~/hd
+
+# on either:
+# cd ~/hd
+# JULIA_MPI_BINARY=system DISTRIBUTED=true JULIA_NUM_THREADS=$CORE_COUNT EVENT_TYPES=hail,sig_tornado,sig_wind,sig_hail MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.17 time mpirun -n 2 -wdir $(pwd) -hosts 192.168.1.112:1,192.168.1.121:1 -bind-to none julia --compiled-modules=no --project=/home/brian/nadocast_dev /home/brian/nadocast_dev/models/sref_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl

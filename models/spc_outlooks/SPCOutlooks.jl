@@ -99,7 +99,7 @@ function reload_forecasts()
     run_hour      = time_str == "1200" ? 6 : parse(Int64, time_str) ÷ 100
     forecast_hour = 35 - run_hour # Valid end time should be 36 - run_hour, based on how the outlook valid times are labeled online, but that would cause the forecasts to be classified in the next day per our criteria
 
-    get_inventory() = [ Inventories.InventoryLine("", "", "$year_str$month_str$day_str", "tornado probability", "", "day fcst", "", "") ]
+    get_inventory() = [ Inventories.InventoryLine("", "", "$year_str$month_str$day_str", "TORPROB", "", "day fcst", "", "") ]
 
     get_data() = begin
       # ArchGDAL is probably not threadsafe, so don't thread.
