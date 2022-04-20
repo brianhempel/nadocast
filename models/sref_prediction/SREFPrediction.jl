@@ -9,12 +9,10 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import ForecastCombinators
 import Grids
-import Inventories
+
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import PredictionForecasts
-import Climatology
-import FeatureEngineeringShared
 
 
 push!(LOAD_PATH, (@__DIR__) * "/../sref_mid_2018_forward")
@@ -28,8 +26,8 @@ _forecasts_blurred = [] # For downstream combination with other forecasts
 blur_radii = [35, 50, 70, 100]
 
 # Determined in Train.jl
-blur_radius_f2  = 35
-blur_radius_f38 = 50
+blur_radius_f2  = 1
+blur_radius_f38 = 1
 
 function forecasts()
   if isempty(_forecasts)
@@ -66,12 +64,6 @@ function forecasts_blurred()
   end
 end
 
-# Yeah just dump them here
-model_paths = "
-	gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_hail/365_trees_loss_0.00337179.model	gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_sig_tornado/232_trees_loss_0.00019671764.model
-	gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-16T10.56.41.459_hail/325_trees_loss_0.0036047401.model	gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-20T04.30.47.008_sig_tornado/231_trees_loss_0.00020749163.model
-	…	…
-"
 
 # (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f12_to_f23, gbdt_f21_to_f38)
 models = [
@@ -86,8 +78,6 @@ models = [
 ]
 
 function reload_forecasts()
-  # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
-
   global _forecasts
   global _forecasts_with_blurs_and_forecast_hour
   global _forecasts_blurred
