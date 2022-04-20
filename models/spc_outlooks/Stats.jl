@@ -64,7 +64,7 @@ end
 painted_areas        = map(_ -> 0.0, SPCOutlooks.thresholds)
 true_positive_areas  = map(_ -> 0.0, SPCOutlooks.thresholds)
 false_negative_areas = map(_ -> 0.0, SPCOutlooks.thresholds)
-# conus_area           = sum(SPCOutlooks.grid().point_areas_sq _miles[Conus.conus_mask_href_cropped_5km_grid])
+# conus_area           = sum(SPCOutlooks.grid().point_areas_sq _miles[Conus.conus_mask_href_cropped_5km_grid()])
 
 for forecast in training_and_validation_forecasts
   global painted_areas
