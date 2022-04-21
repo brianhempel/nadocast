@@ -75,6 +75,14 @@ models = [
                        "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-16T10.56.41.459_wind/464_trees_loss_0.007258802.model",
                        "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-13T01.36.58.700_wind/560_trees_loss_0.0074025104.model"
   ),
+  ("hail", "HAILPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_hail/365_trees_loss_0.00337179.model",
+                       "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-16T10.56.41.459_hail/325_trees_loss_0.0036047401.model",
+                       "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-20T09.45.13.302_hail/480_trees_loss_0.0037651379.model"
+  ),
+  ("sig_tornado", "STORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_sig_tornado/232_trees_loss_0.00019671764.model",
+                              "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-20T04.30.47.008_sig_tornado/231_trees_loss_0.00020749163.model",
+                              "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-20T09.45.13.302_sig_tornado/189_trees_loss_0.00021580876.model"
+  ),
 ]
 
 function reload_forecasts()
