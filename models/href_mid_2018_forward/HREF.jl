@@ -229,7 +229,7 @@ function feature_engineered_forecasts()
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
     new_features_pre = interaction_terms,
-    use_2020_models_buggy_100mi_calc = true
+    use_2020_models_buggy_100mi_calc = true # OOPS forgot to turn this off
   )
 end
 
