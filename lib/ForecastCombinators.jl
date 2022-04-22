@@ -211,7 +211,7 @@ end
 # Wrapper that caches the underlying inventory and data on disk.
 #
 # Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
-function disk_cache_forecasts(old_forecasts; base_key)
+function disk_cache_forecasts(old_forecasts, base_key)
 
   item_key_parts(forecast) =
     [ "cached_forecasts"
