@@ -5,6 +5,7 @@ import Serialization
 
 push!(LOAD_PATH, @__DIR__)
 import GeoUtils
+import Cache
 
 struct Grid
   height               :: Int64 # Element count, after crop and downsample
@@ -327,7 +328,7 @@ end
 
 
 # For each grid point, return the indices of all grid points within so many miles.
-function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
+function _radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
   radius_is = map(_ -> Int64[], 1:grid.height*grid.width)
 
   for j in 1:grid.height
@@ -350,6 +351,16 @@ function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
 
   radius_is
 end
+
+function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
+  print("computing $(miles) radius indices...")
+  point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
+  cache_folder  = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
+  mean_is       = Cache.cached(() -> _radius_grid_is(grid, miles), [cache_folder], "mean_is_$(miles)_mi")
+  println("done")
+  mean_is
+end
+
 
 # For making 100mi mean is with a 50mi hole cut out of it.
 function radius_grid_is_less_other_is(grid, miles, grid_is_to_subtract) :: Vector{Vector{Int64}}
