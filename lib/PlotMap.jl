@@ -244,7 +244,7 @@ using PNGFiles.ImageCore.ColorTypes
 using PNGFiles.ImageCore.ColorTypes.FixedPointNumbers
 using ColorVectorSpace
 
-spc_colors =
+spc_tornado_colors =
   [ (0.0,  RGB{N0f8}(1,1,1))
   , (0.02, RGB{N0f8}(0.067,0.541,0.078))
   , (0.05, RGB{N0f8}(0.541,0.278,0.165))
@@ -255,16 +255,43 @@ spc_colors =
   , (0.60, RGB{N0f8}(0.082,0.310,0.537))
   ]
 
-function prob_to_spc_color(p)
-  _, color = spc_colors[1]
-  for (threshold, next_color) in spc_colors
-    if p < threshold*0.9999
-      return color
+spc_wind_hail_colors =
+  [ (0.0,  RGB{N0f8}(1,1,1))
+  , (0.05, RGB{N0f8}(0.541,0.278,0.165))
+  , (0.15, RGB{N0f8}(0.996,0.780,0.180))
+  , (0.30, RGB{N0f8}(0.988,0.051,0.106))
+  , (0.45, RGB{N0f8}(0.988,0.157,0.988))
+  , (0.60, RGB{N0f8}(0.565,0.224,0.918))
+  ]
+
+spc_sig_colors =
+  [ (0.0,  RGB{N0f8}(1,1,1))
+  , (0.1,  RGB{N0f8}(0.3,0.3,0.3))
+  ]
+
+function threshold_colorer(threshold_colors)
+  function prob_to_color(p)
+    _, prior_color = threshold_colors[1]
+    for (threshold, color) in threshold_colors
+      if p < threshold*0.9999
+        return prior_color
+      end
+      prior_color = color
     end
-    color = next_color
+    return prior_color
   end
-  return color
+
+  prob_to_color
 end
+
+event_name_to_colorer = Dict(
+  "tornado"     => threshold_colorer(spc_tornado_colors),
+  "wind"        => threshold_colorer(spc_wind_hail_colors),
+  "hail"        => threshold_colorer(spc_wind_hail_colors),
+  "sig_tornado" => threshold_colorer(spc_sig_colors),
+  "sig_wind"    => threshold_colorer(spc_sig_colors),
+  "sig_hail"    => threshold_colorer(spc_sig_colors),
+)
 
 function conus_lines_href_5k_native_proj()
   Float32.(Gray.(PNGFiles.load((@__DIR__) * "/conus_lines_href_5k_native_cropped_proj.png")))
@@ -301,7 +328,7 @@ end
 
 # PlotMap.plot_fast(base_path, grid, vals; val_to_color=PlotMap.prob_to_spc_color, post_process=PlotMap.add_conus_lines_href_5k_native_proj_80_pct)
 
-function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=identity)
+function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_conus_lines_href_5k_native_proj_80_pct)
   # Awww yeah rotation.
   vals = permutedims(reshape(vals, (grid.width, grid.height)))
   # Now flip vertically
