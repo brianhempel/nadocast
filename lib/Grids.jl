@@ -1,7 +1,7 @@
 module Grids
 
 import Serialization
-# import JLD # Tried using JLD but there was a problem on read-in, and the written file was 25x times larger than it needed to be.
+import Printf
 
 push!(LOAD_PATH, @__DIR__)
 import GeoUtils
@@ -355,7 +355,7 @@ end
 function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
   print("computing $(miles) radius indices...")
   point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
-  cache_folder  = @sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
+  cache_folder  = Printf.@sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
   mean_is       = Cache.cached(() -> _radius_grid_is(grid, miles), [cache_folder], "mean_is_$(miles)_mi")
   println("done")
   mean_is
