@@ -35,9 +35,9 @@ X, Ys, weights =
     save_dir = "validation_forecasts_with_blurs_and_forecast_hour"
   );
 
-length(validation_forecasts) #
-size(X) #
-length(weights) #
+length(validation_forecasts) # 19959
+size(X) # (101172171, 21)
+length(weights) # 101172171
 
 # Sanity check...tornado features should best predict tornadoes, etc
 # (this did find a bug :D)
@@ -50,8 +50,8 @@ function test_predictive_power(forecasts, X, Ys, weights)
     y = Ys[event_name]
     for j in 1:size(X,2)
       x = @view X[:,j]
-      roc = Metrics.roc_auc(x, y, weights)
-      println("$event_name ($(round(sum(y)))) feature $j $(Inventories.inventory_line_description(inventory[j]))\tROC: $roc")
+      auc = Metrics.roc_auc(x, y, weights)
+      println("$event_name ($(round(sum(y)))) feature $j $(Inventories.inventory_line_description(inventory[j]))\tAUC: $auc")
     end
   end
 end
@@ -151,8 +151,8 @@ function test_predictive_power(forecasts, X, Ys, weights)
     y = Ys[event_name]
     for j in 1:size(X,2)
       x = @view X[:,j]
-      roc = Metrics.roc_auc(x, y, weights)
-      println("$event_name ($(round(sum(y)))) feature $j $(Inventories.inventory_line_description(inventory[j]))\tROC: $roc")
+      auc = Metrics.roc_auc(x, y, weights)
+      println("$event_name ($(round(sum(y)))) feature $j $(Inventories.inventory_line_description(inventory[j]))\tAUC: $auc")
     end
   end
 end
