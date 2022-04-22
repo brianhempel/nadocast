@@ -223,12 +223,12 @@ function disk_cache_forecasts(old_forecasts, base_key)
 
   map(old_forecasts) do old_forecast
     get_inventory() =
-      Cache.cached(item_key_parts(forecast), "inventory") do
+      Cache.cached(item_key_parts(old_forecast), "inventory") do
         Forecasts.inventory(old_forecast)
       end :: Vector{Inventories.InventoryLine}
 
     get_data() = begin
-      Cache.cached(item_key_parts(forecast), "data") do
+      Cache.cached(item_key_parts(old_forecast), "data") do
         Forecasts.data(old_forecast)
       end :: Array{Float32,2}
     end
