@@ -6,6 +6,7 @@ import Forecasts
 import Grids
 import Inventories
 import Cache
+import Printf
 
 
 # Copy time info, but set based_on and grid/inventory/data
@@ -179,17 +180,6 @@ end
 #
 # Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
 function cache_forecasts(old_forecasts)
-
-  # This keying scheme is...inadequate but works because we only use forecast caching for single hour featured engineered results (so three hour windows don't have to redo so much computation)
-  # item_key_parts(forecast) =
-  #   [ "cached_forecasts"
-  #   , base_key
-  #   , forecast.model_name
-  #   , string(forecast.run_year) * string(forecast.run_month)
-  #   , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day)
-  #   , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
-  #   ]
-
   map(old_forecasts) do old_forecast
     get_inventory() = begin
       cache_lookup(_cached_inventories, 1_000_000, old_forecast) do
@@ -213,13 +203,16 @@ end
 # Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
 function disk_cache_forecasts(old_forecasts, base_key)
 
-  item_key_parts(forecast) =
+  function item_key_parts(forecast)
+    yyyymm   = Printf.@sprintf "%04d%02d"     forecast.run_year forecast.run_month
+    yyyymmdd = Printf.@sprintf "%04d%02d%02d" forecast.run_year forecast.run_month forecast.run_day
     [ "cached_forecasts"
     , base_key
-    , string(forecast.run_year) * string(forecast.run_month)
-    , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day)
-    , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
+    , yyyymm
+    , yyyymmdd
+    , yyyymmdd * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
     ]
+  end
 
   map(old_forecasts) do old_forecast
     get_inventory() =
