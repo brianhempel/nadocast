@@ -175,7 +175,7 @@ function cache_lookup(f, cache, max_cache_size_bytes, forecast)
   end
 end
 
-# Wrapper that caches the underlying inventory and data on disk.
+# Wrapper that caches the underlying inventory and data in memory.
 #
 # Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
 function cache_forecasts(old_forecasts)
@@ -207,6 +207,38 @@ function cache_forecasts(old_forecasts)
   end
 end
 
+
+# Wrapper that caches the underlying inventory and data on disk.
+#
+# Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
+function disk_cache_forecasts(old_forecasts; base_key)
+
+  item_key_parts(forecast) =
+    [ "cached_forecasts"
+    , base_key
+    , string(forecast.run_year) * string(forecast.run_month)
+    , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day)
+    , string(forecast.run_year) * string(forecast.run_month) * string(forecast.run_day) * "_t" * string(forecast.run_hour) * "z_f" * string(forecast.forecast_hour)
+    ]
+
+  map(old_forecasts) do old_forecast
+    get_inventory() =
+      Cache.cached(item_key_parts(forecast), "inventory") do
+        Forecasts.inventory(old_forecast)
+      end :: Vector{Inventories.InventoryLine}
+
+    get_data() = begin
+      Cache.cached(item_key_parts(forecast), "data") do
+        Forecasts.data(old_forecast)
+      end :: Array{Float32,2}
+    end
+
+    revised_forecast(old_forecast, old_forecast.grid, get_inventory, get_data)
+  end
+end
+
+
+# Experiment with disabling GC. It was not helpful.
 
 _gc_circumvention_on = false
 

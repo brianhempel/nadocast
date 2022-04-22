@@ -121,7 +121,13 @@ function reload_forecasts()
     (event_name, grib2_var_name, predict)
   end
 
-  _forecasts = PredictionForecasts.simple_prediction_forecasts(sref_forecasts, predictors)
+  # Don't forget to clear the cache during development.
+  # rm -r lib/computation_cache/cached_forecats/href_prediction_raw_2021_models_*
+  _forecasts =
+    ForecastCombinators.disk_cache_forecasts(
+      PredictionForecasts.simple_prediction_forecasts(sref_forecasts, predictors),
+      "sref_prediction_raw_2021_models_$(string(hash(models)))"
+    )
 
   # The forecast hour is needed for training purposes.
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
