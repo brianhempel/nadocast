@@ -122,7 +122,8 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
 
   # Make sure we don't thrash by sending multiple reads to disk at once.
   if !isnothing(preload_process)
-    wait(preload_process)
+    duration = @elapsed wait(preload_process)
+    duration > 0.1 && print(" waited $duration for disk ")
   end
 
   if i == 1
@@ -132,7 +133,7 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
   if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
     # Should dedup preload_paths
     # Also should move wgrib2 reading into preloading...it seems to stall 3s for each HRRR with low CPU usage
-    preload_process = run(pipeline(`cat $(forecasts[i+1].preload_paths)`, devnull), wait=false)
+    preload_process = run(pipeline(`cat $(unique(forecasts[i+1].preload_paths))`, devnull), wait=false)
   else
     preload_process = nothing
   end
