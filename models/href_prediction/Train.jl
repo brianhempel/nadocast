@@ -26,18 +26,45 @@ validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast)
 # for testing
 # validation_forecasts = rand(validation_forecasts, 30);
 
-# rm("validation_forecasts_with_blurs_and_forecast_hour"; recursive=true)
+validation_forecasts1 = filter(forecast -> isodd(forecast.run_day),  validation_forecasts)
+validation_forecasts2 = filter(forecast -> iseven(forecast.run_day), validation_forecasts)
 
-X, Ys, weights =
+# rm("validation_forecasts_with_blurs_and_forecast_hour1"; recursive=true)
+# rm("validation_forecasts_with_blurs_and_forecast_hour2"; recursive=true)
+
+# To double loading speed, manually run the other one of these in a separate process with USE_ALT_DISK=true
+# When it's done, run it in the main process and it will load from the save_dir
+
+X1, Ys1, weights1 =
   TrainingShared.get_data_labels_weights(
-    validation_forecasts;
+    validation_forecasts1;
     event_name_to_labeler = TrainingShared.event_name_to_labeler,
-    save_dir = "validation_forecasts_with_blurs_and_forecast_hour"
+    save_dir = "validation_forecasts_with_blurs_and_forecast_hour1"
   );
+
+X2, Ys2, weights2 =
+  TrainingShared.get_data_labels_weights(
+    validation_forecasts2;
+    event_name_to_labeler = TrainingShared.event_name_to_labeler,
+    save_dir = "validation_forecasts_with_blurs_and_forecast_hour2"
+  );
+
+X = vcat(X1, X2)
+
+Ys = Dict{String, Vector{Float32}}()
+for event_name in keys(Ys1)
+  Ys[event_name] = vcat(Ys1[event_name], Ys2[event_name])
+end
+weights = vcat(weights1, weights2)
+
+# Free
+X1, Ys1, weights1 = (nothing, nothing, nothing)
+X2, Ys2, weights2 = (nothing, nothing, nothing)
 
 length(validation_forecasts) #
 size(X) #
 length(weights) #
+
 
 # Sanity check...tornado features should best predict tornadoes, etc
 # (this did find a bug :D)

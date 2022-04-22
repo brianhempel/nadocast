@@ -267,10 +267,19 @@ common_layers_mean = filter(line -> line != "", split(read(open((@__DIR__) * "/c
 common_layers_prob = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_prob.txt"), String), "\n"))
 
 function reload_forecasts()
-  href_paths = vcat(
-    Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_1/href"),
-    Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_3/href")
-  )
+  href_paths =
+    if get(ENV, "USE_ALT_DISK", "false") == "true" then
+      println("Using SREF_HREF_2 and SREF_HREF_4")
+      vcat(
+        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_2/href"),
+        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_4/href")
+      )
+    else
+      vcat(
+        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_1/href"),
+        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_3/href")
+      )
+    end
 
   global _forecasts
 

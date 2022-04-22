@@ -123,7 +123,7 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
   # Make sure we don't thrash by sending multiple reads to disk at once.
   if !isnothing(preload_process)
     duration = @elapsed wait(preload_process)
-    duration > 0.1 && print(" waited $duration for disk ")
+    duration > 0.1 && print(" waited $(Float32(duration))s for disk ")
   end
 
   if i == 1
