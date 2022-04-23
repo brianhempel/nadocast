@@ -24,7 +24,7 @@ function parallel_iterate(f, count)
 end
 
 # Sample sort
-function parallel_sort_perm1(arr)
+function parallel_sort_perm_i64(arr)
   sample_count = Threads.nthreads() * 20
   if length(arr) < sample_count || Threads.nthreads() == 1
     return sortperm(arr; alg = Base.Sort.MergeSort)
@@ -85,9 +85,8 @@ function parallel_sort_perm1(arr)
   out
 end
 
-function parallel_sort_perm2(arr)
-  IndexT = length(arr) <= typemax(UInt32) ? UInt32 : Int64
-
+# Sample sort, UInt32 for indices
+function parallel_sort_perm_u32(arr)
   sample_count = Threads.nthreads() * 20
   if length(arr) < sample_count || Threads.nthreads() == 1
     return sortperm(arr; alg = Base.Sort.MergeSort)
@@ -99,7 +98,7 @@ function parallel_sort_perm2(arr)
 
   bin_splits = map(thread_i -> samples[Int64(round(thread_i/Threads.nthreads()*sample_count))], 1:(Threads.nthreads() - 1))
 
-  thread_bins_bins = map(_ -> map(_ -> IndexT[], 1:Threads.nthreads()), 1:Threads.nthreads())
+  thread_bins_bins = map(_ -> map(_ -> UInt32[], 1:Threads.nthreads()), 1:Threads.nthreads())
   Threads.@threads for i in 1:length(arr)
     thread_bins = thread_bins_bins[Threads.threadid()]
 
@@ -112,15 +111,15 @@ function parallel_sort_perm2(arr)
       end
     end
 
-    push!(thread_bins[bin_i], IndexT(i))
+    push!(thread_bins[bin_i], UInt32(i))
   end
 
-  outs = map(_ -> IndexT[], 1:Threads.nthreads())
+  outs = map(_ -> UInt32[], 1:Threads.nthreads())
 
   Threads.@threads for _ in 1:Threads.nthreads()
     my_thread_bins = map(thread_i -> thread_bins_bins[thread_i][Threads.threadid()], 1:Threads.nthreads())
 
-    my_out = Vector{IndexT}(undef, sum(length.(my_thread_bins)))
+    my_out = Vector{UInt32}(undef, sum(length.(my_thread_bins)))
 
     my_i = 1
     for j = 1:length(my_thread_bins)
@@ -135,7 +134,7 @@ function parallel_sort_perm2(arr)
     outs[Threads.threadid()] = my_out
   end
 
-  out = Vector{IndexT}(undef, length(arr))
+  out = Vector{UInt32}(undef, length(arr))
 
   Threads.@threads for _ in 1:Threads.nthreads()
     my_out = outs[Threads.threadid()]
@@ -148,6 +147,9 @@ function parallel_sort_perm2(arr)
   out
 end
 
+function parallel_sort_perm(arr)
+  length(arr) <= typemax(UInt32) ? parallel_sort_perm_u32(arr) : parallel_sort_perm_i64(arr)
+end
 
 function parallel_apply_sort_perm(arr, perm)
   out = Vector{eltype(arr)}(undef, length(arr))
@@ -170,7 +172,7 @@ function parallel_float64_sum(arr)
   sum(thread_sums)
 end
 
-function roc_auc1(ŷ, y, weights; sort_perm = parallel_sort_perm1(ŷ), total_weight = parallel_float64_sum(weights), positive_weight = parallel_float64_sum(y .* weights))
+function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ), total_weight = parallel_float64_sum(weights), positive_weight = parallel_float64_sum(y .* weights))
   y       = parallel_apply_sort_perm(y, sort_perm)
   weights = parallel_apply_sort_perm(weights, sort_perm)
 
@@ -186,39 +188,6 @@ function roc_auc1(ŷ, y, weights; sort_perm = parallel_sort_perm1(ŷ), total_wei
 
   last_fpr = false_pos_weight / negative_weight # = 1.0
   for i in 1:length(y)
-    if y[i] > 0.5f0
-      true_pos_weight -= Float64(weights[i])
-    else
-      false_pos_weight -= Float64(weights[i])
-    end
-    fpr = false_pos_weight / negative_weight
-    tpr = true_pos_weight  / positive_weight
-    if fpr != last_fpr
-      auc += (last_fpr - fpr) * tpr
-    end
-    last_fpr = fpr
-  end
-
-  auc
-end
-
-function roc_auc2(ŷ, y, weights; sort_perm = parallel_sort_perm1(ŷ), total_weight = parallel_float64_sum(weights), positive_weight = parallel_float64_sum(y .* weights))
-  # y       = parallel_apply_sort_perm(y, sort_perm)
-  # ŷ       = parallel_apply_sort_perm(ŷ, sort_perm)
-  # weights = parallel_apply_sort_perm(weights, sort_perm)
-
-  negative_weight  = total_weight - positive_weight
-  true_pos_weight  = positive_weight
-  false_pos_weight = negative_weight
-
-  # tpr = true_pos/total_pos
-  # fpr = false_pos/total_neg
-  # ROC is tpr vs fpr
-
-  auc = 0.0
-
-  last_fpr = false_pos_weight / negative_weight # = 1.0
-  for i in sort_perm
     if y[i] > 0.5f0
       true_pos_weight -= Float64(weights[i])
     else
