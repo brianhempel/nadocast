@@ -25,6 +25,8 @@ end
 
 # Sample sort
 function parallel_sort_perm(arr)
+  IndexT = length(arr) <= typemax(UInt32) ? UInt32 : Int64
+
   sample_count = Threads.nthreads() * 20
   if length(arr) < sample_count || Threads.nthreads() == 1
     return sortperm(arr; alg = Base.Sort.MergeSort)
@@ -36,7 +38,7 @@ function parallel_sort_perm(arr)
 
   bin_splits = map(thread_i -> samples[Int64(round(thread_i/Threads.nthreads()*sample_count))], 1:(Threads.nthreads() - 1))
 
-  thread_bins_bins = map(_ -> map(_ -> Int64[], 1:Threads.nthreads()), 1:Threads.nthreads())
+  thread_bins_bins = map(_ -> map(_ -> IndexT[], 1:Threads.nthreads()), 1:Threads.nthreads())
   Threads.@threads for i in 1:length(arr)
     thread_bins = thread_bins_bins[Threads.threadid()]
 
@@ -49,15 +51,15 @@ function parallel_sort_perm(arr)
       end
     end
 
-    push!(thread_bins[bin_i], i)
+    push!(thread_bins[bin_i], IndexT(i))
   end
 
-  outs = map(_ -> Int64[], 1:Threads.nthreads())
+  outs = map(_ -> IndexT[], 1:Threads.nthreads())
 
   Threads.@threads for _ in 1:Threads.nthreads()
     my_thread_bins = map(thread_i -> thread_bins_bins[thread_i][Threads.threadid()], 1:Threads.nthreads())
 
-    my_out = Vector{Int64}(undef, sum(length.(my_thread_bins)))
+    my_out = Vector{IndexT}(undef, sum(length.(my_thread_bins)))
 
     my_i = 1
     for j = 1:length(my_thread_bins)
@@ -72,7 +74,7 @@ function parallel_sort_perm(arr)
     outs[Threads.threadid()] = my_out
   end
 
-  out = Vector{Int64}(undef, length(arr))
+  out = Vector{IndexT}(undef, length(arr))
 
   Threads.@threads for _ in 1:Threads.nthreads()
     my_out = outs[Threads.threadid()]
@@ -107,9 +109,9 @@ function parallel_float64_sum(arr)
 end
 
 function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ), total_weight = parallel_float64_sum(weights), positive_weight = parallel_float64_sum(y .* weights))
-  # y       = parallel_apply_sort_perm(y, sort_perm)
+  y       = parallel_apply_sort_perm(y, sort_perm)
   # ŷ       = parallel_apply_sort_perm(ŷ, sort_perm)
-  # weights = parallel_apply_sort_perm(weights, sort_perm)
+  weights = parallel_apply_sort_perm(weights, sort_perm)
 
   negative_weight  = total_weight - positive_weight
   true_pos_weight  = positive_weight
