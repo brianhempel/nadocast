@@ -107,9 +107,9 @@ function parallel_float64_sum(arr)
 end
 
 function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ), total_weight = parallel_float64_sum(weights), positive_weight = parallel_float64_sum(y .* weights))
-  y       = parallel_apply_sort_perm(y, sort_perm)
-  ŷ       = parallel_apply_sort_perm(ŷ, sort_perm)
-  weights = parallel_apply_sort_perm(weights, sort_perm)
+  # y       = parallel_apply_sort_perm(y, sort_perm)
+  # ŷ       = parallel_apply_sort_perm(ŷ, sort_perm)
+  # weights = parallel_apply_sort_perm(weights, sort_perm)
 
   negative_weight  = total_weight - positive_weight
   true_pos_weight  = positive_weight
@@ -122,7 +122,7 @@ function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ), total_weigh
   auc = 0.0
 
   last_fpr = false_pos_weight / negative_weight # = 1.0
-  for i in 1:length(y)
+  for i in sort_perm
     if y[i] > 0.5f0
       true_pos_weight -= Float64(weights[i])
     else
