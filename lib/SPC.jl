@@ -218,7 +218,7 @@ function _add_geom_to_mask!(mask, xys, geom)
       end
 
       # mask[i] = test_point(x, y, point, geom)
-      mask[i] = in_geom_quadtree(quadtree, x, y, point, geom)
+      mask[i] = isnothing(quadtree) ? test_point(x, y, point, geom) : in_geom_quadtree(quadtree, x, y, point, geom)
     end
   end
   ()
