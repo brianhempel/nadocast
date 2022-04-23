@@ -352,11 +352,15 @@ function _radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
   radius_is
 end
 
+function grid_cache_folder(grid)
+  point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
+  Printf.@sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
+end
+
 function radius_grid_is(grid, miles) :: Vector{Vector{Int64}}
   print("computing $(miles)mi radius indices...")
-  point_size_km = 1.61 * sqrt(grid.point_areas_sq_miles[div(length(grid.point_areas_sq_miles), 2)])
-  cache_folder  = Printf.@sprintf "grid_%.1fkm_%dx%d_downsample_%dx_%.2f_%.2f_%.2f-%.2f" point_size_km grid.width grid.height grid.downsample grid.min_lat grid.max_lat grid.min_lon grid.max_lon
-  mean_is       = Cache.cached(() -> _radius_grid_is(grid, miles), [cache_folder], "mean_is_$(miles)_mi")
+  cache_folder = grid_cache_folder(grid)
+  mean_is      = Cache.cached(() -> _radius_grid_is(grid, miles), [cache_folder], "mean_is_$(miles)_mi")
   println("done")
   mean_is
 end

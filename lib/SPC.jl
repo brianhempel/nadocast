@@ -120,9 +120,9 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
 end
 
 # ArchGDAL.intersects
-# Slow as snot. Build an Octtree using GEOS intersects? https://libgeos.org/doxygen/geos__c_8h.html#a6f2f2d573ed7c8f39167baa05e5a814d
+# Slow as snot. quadtree speeds it a littl
 
-mutable struct Octtree
+mutable struct Quadtree
   on_edge   :: Bool
   inside    :: Bool # only valid if on_edge is false
   minX      :: Float64
@@ -132,10 +132,10 @@ mutable struct Octtree
   # Child quadrants
   midX      :: Float64
   midY      :: Float64
-  top_left  :: Union{Octtree,Nothing}
-  top_right :: Union{Octtree,Nothing}
-  bot_left  :: Union{Octtree,Nothing}
-  bot_right :: Union{Octtree,Nothing}
+  top_left  :: Union{Quadtree,Nothing}
+  top_right :: Union{Quadtree,Nothing}
+  bot_left  :: Union{Quadtree,Nothing}
+  bot_right :: Union{Quadtree,Nothing}
 end
 
 function make_rect(f, minX, maxX, minY, maxY)
@@ -148,7 +148,7 @@ function make_rect(f, minX, maxX, minY, maxY)
   ])
 end
 
-function make_octree(geom, minX, maxX, minY, maxY, min_size)
+function make_quadree(geom, minX, maxX, minY, maxY, min_size)
   if min(maxX-minX, maxY-minY) < min_size
     return nothing
   end
@@ -158,15 +158,15 @@ function make_octree(geom, minX, maxX, minY, maxY, min_size)
 
   make_rect(minX, maxX, minY, maxY) do rect
     if ArchGDAL.contains(geom, rect)
-      Octtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+      Quadtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
     elseif ArchGDAL.disjoint(geom, rect)
-      Octtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+      Quadtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
     else
-      Octtree(true, false, minX, maxX, minY, maxY, midX, midY,
-        make_octree(geom, minX, midX, midY, maxY, min_size),
-        make_octree(geom, midX, maxX, midY, maxY, min_size),
-        make_octree(geom, minX, midX, minY, midY, min_size),
-        make_octree(geom, midX, maxX, minY, midY, min_size)
+      Quadtree(true, false, minX, maxX, minY, maxY, midX, midY,
+        make_quadree(geom, minX, midX, midY, maxY, min_size),
+        make_quadree(geom, midX, maxX, midY, maxY, min_size),
+        make_quadree(geom, minX, midX, minY, midY, min_size),
+        make_quadree(geom, midX, maxX, minY, midY, min_size)
       )
     end
   end
@@ -177,16 +177,16 @@ function test_point(x, y, point, geom)
   ArchGDAL.contains(geom, point)
 end
 
-function in_geom_octtree(tree, x, y, point, geom)
+function in_geom_quadtree(tree, x, y, point, geom)
   if tree.on_edge
     if x <= tree.midX && y >= tree.midY
-      isnothing(tree.top_left)  ? test_point(x, y, point, geom) : in_geom_octtree(tree.top_left,  x, y, point, geom)
+      isnothing(tree.top_left)  ? test_point(x, y, point, geom) : in_geom_quadtree(tree.top_left,  x, y, point, geom)
     elseif x >= tree.midX && y >= tree.midY
-      isnothing(tree.top_right) ? test_point(x, y, point, geom) : in_geom_octtree(tree.top_right, x, y, point, geom)
+      isnothing(tree.top_right) ? test_point(x, y, point, geom) : in_geom_quadtree(tree.top_right, x, y, point, geom)
     elseif x <= tree.midX && y <= tree.midY
-      isnothing(tree.bot_left)  ? test_point(x, y, point, geom) : in_geom_octtree(tree.bot_left,  x, y, point, geom)
+      isnothing(tree.bot_left)  ? test_point(x, y, point, geom) : in_geom_quadtree(tree.bot_left,  x, y, point, geom)
     else
-      isnothing(tree.bot_right) ? test_point(x, y, point, geom) : in_geom_octtree(tree.bot_right, x, y, point, geom)
+      isnothing(tree.bot_right) ? test_point(x, y, point, geom) : in_geom_quadtree(tree.bot_right, x, y, point, geom)
     end
   else
     tree.inside
@@ -197,13 +197,13 @@ end
 function _add_geom_to_mask!(mask, xys, geom)
   bounds = ArchGDAL.getenvelope(geom)
 
-  # print("making octtree...")
+  # print("making quadtree...")
   x1, y1 = xys[1]
   x2, y2 = xys[2]
   min_size = max(abs(x2-x1), abs(y2-y1)) * 3
-  octtree = make_octree(geom, bounds.MinX, bounds.MaxX, bounds.MinY, bounds.MaxY, min_size)
+  quadtree = make_quadree(geom, bounds.MinX, bounds.MaxX, bounds.MinY, bounds.MaxY, min_size)
   # println("done.")
-  # println(octtree)
+  # println(quadtree)
 
   ArchGDAL.createpoint(0,0) do point
     for i in 1:length(xys)
@@ -218,7 +218,7 @@ function _add_geom_to_mask!(mask, xys, geom)
       end
 
       # mask[i] = test_point(x, y, point, geom)
-      mask[i] = in_geom_octtree(octtree, x, y, point, geom)
+      mask[i] = in_geom_quadtree(quadtree, x, y, point, geom)
     end
   end
   ()
