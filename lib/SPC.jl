@@ -8,6 +8,65 @@ module SPC
 
 import ArchGDAL
 
+push!(LOAD_PATH, @__DIR__)
+import Cache
+import Grids
+
+
+# Read the SPC probability shapefile and return the threshold probabilities in the file
+# Returned array is unique, sorted, range 0.0-1.0
+function threshold_probs(shapefile_path)
+  thresholds = Float64[]
+
+  ArchGDAL.registerdrivers() do
+    ArchGDAL.importEPSG(4326) do wgs84
+    # ArchGDAL.importEPSG(4269) do nad83
+      ArchGDAL.read(shapefile_path) do dataset
+        @assert ArchGDAL.nlayer(dataset) == 1
+        layer = ArchGDAL.getlayer(dataset, 0)
+        feature_count = ArchGDAL.nfeature(layer)
+        for feature_i in 0:(feature_count-1)
+          ArchGDAL.getfeature(layer, feature_i) do feature
+            # DN field contains the probability level (in percent: 2, 5, 10 etc)
+            dn =
+              if isa(ArchGDAL.getfield(feature, "DN"), String)
+                # println("DN: $(ArchGDAL.getfield(feature, "DN"))")
+                parse(Float64, ArchGDAL.getfield(feature, "DN"))
+              else
+                ArchGDAL.getfield(feature, "DN")
+              end
+            push!(thresholds, Float64(dn) * 0.01)
+          end
+        end
+      end
+    end
+  end
+
+  sort(unique(thresholds))
+end
+
+
+function latlons_on_spacial_ref(grid, spatialref)
+  wkt_str = ArchGDAL.toWKT(spatialref)
+
+  Cache.cached([Grids.grid_cache_folder(grid)], "xys_reprojected_$(hash(wkt_str))") do
+    ArchGDAL.importEPSG(4326) do wgs84
+      ArchGDAL.createcoordtrans(wgs84, spatialref) do transform
+        ArchGDAL.createpoint(0,0) do point
+          println(wkt_str)
+          map(grid.latlons) do (lat, lon)
+            ArchGDAL.setpoint!(point, 0, lon, lat)
+            ArchGDAL.transform!(point, transform)
+            x = ArchGDAL.getx(point, 0)
+            y = ArchGDAL.gety(point, 0)
+            (x, y)
+          end
+        end
+      end
+    end
+  end
+end
+
 
 # Read the SPC probability shapefile and returns BitArray mask for the given grid.
 #
@@ -24,6 +83,7 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
     ArchGDAL.importEPSG(4326) do wgs84
     # ArchGDAL.importEPSG(4269) do nad83
       ArchGDAL.read(shapefile_path) do dataset
+        println(shapefile_path)
         # println(dataset)
         @assert ArchGDAL.nlayer(dataset) == 1
         layer = ArchGDAL.getlayer(dataset, 0)
@@ -47,18 +107,8 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
               # println(geom)
               spatialref = ArchGDAL.getspatialref(geom)
               # println(spatialref)
-              ArchGDAL.createcoordtrans(spatialref, wgs84) do transform
-                ArchGDAL.transform!(geom, transform)
-                # println(geom)
-              end
-              ArchGDAL.createpoint(0,0) do point
-                _add_geom_to_mask!(mask, grid.latlons, geom, point)
-                # test_point(-90.3, 39.9, geom, point)
-                # test_point(-91.9, 41.7, geom, point)
-                # test_point(-91.9, 41.8, geom, point)
-                # test_point(-96.03, 45.15, geom, point)
-                # test_point(-95.95, 45.15, geom, point)
-              end
+              xys = latlons_on_spacial_ref(grid, spatialref)
+              _add_geom_to_mask!(mask, xys, geom)
             end
           end
         end
@@ -69,25 +119,108 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
   mask
 end
 
+# ArchGDAL.intersects
+# Slow as snot. Build an Octtree using GEOS intersects? https://libgeos.org/doxygen/geos__c_8h.html#a6f2f2d573ed7c8f39167baa05e5a814d
 
-# Mutates mask. On HREF grid, ~3-5s per geom.
-function _add_geom_to_mask!(mask, grid_latlons, geom, point)
-  bounds = ArchGDAL.getenvelope(geom)
+mutable struct Octtree
+  on_edge   :: Bool
+  inside    :: Bool # only valid if on_edge is false
+  minX      :: Float64
+  maxX      :: Float64
+  minY      :: Float64
+  maxY      :: Float64
+  # Child quadrants
+  midX      :: Float64
+  midY      :: Float64
+  top_left  :: Union{Octtree,Nothing}
+  top_right :: Union{Octtree,Nothing}
+  bot_left  :: Union{Octtree,Nothing}
+  bot_right :: Union{Octtree,Nothing}
+end
 
-  for i in 1:length(grid_latlons)
-    lat, lon = grid_latlons[i]
+function make_rect(f, minX, maxX, minY, maxY)
+  ArchGDAL.createpolygon(f, [
+    [minX, maxY],
+    [maxX, maxY],
+    [maxX, minY],
+    [minX, minY],
+    [minX, maxY],
+  ])
+end
 
-    if mask[i] || lon > bounds.MaxX || lon < bounds.MinX || lat > bounds.MaxY || lat < bounds.MinY
-      continue
-    end
-
-    ArchGDAL.setpoint!(point, 0, lon, lat)
-
-    if ArchGDAL.contains(geom, point)
-      mask[i] = true
-    end
+function make_octree(geom, minX, maxX, minY, maxY, min_size)
+  if min(maxX-minX, maxY-minY) < min_size
+    return nothing
   end
 
+  midX = 0.5*(minX + maxX)
+  midY = 0.5*(minY + maxY)
+
+  make_rect(minX, maxX, minY, maxY) do rect
+    if ArchGDAL.contains(geom, rect)
+      Octtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+    elseif ArchGDAL.disjoint(geom, rect)
+      Octtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+    else
+      Octtree(true, false, minX, maxX, minY, maxY, midX, midY,
+        make_octree(geom, minX, midX, midY, maxY, min_size),
+        make_octree(geom, midX, maxX, midY, maxY, min_size),
+        make_octree(geom, minX, midX, minY, midY, min_size),
+        make_octree(geom, midX, maxX, minY, midY, min_size)
+      )
+    end
+  end
+end
+
+function test_point(x, y, point, geom)
+  ArchGDAL.setpoint!(point, 0, x, y)
+  ArchGDAL.contains(geom, point)
+end
+
+function in_geom_octtree(tree, x, y, point, geom)
+  if tree.on_edge
+    if x <= tree.midX && y >= tree.midY
+      isnothing(tree.top_left)  ? test_point(x, y, point, geom) : in_geom_octtree(tree.top_left,  x, y, point, geom)
+    elseif x >= tree.midX && y >= tree.midY
+      isnothing(tree.top_right) ? test_point(x, y, point, geom) : in_geom_octtree(tree.top_right, x, y, point, geom)
+    elseif x <= tree.midX && y <= tree.midY
+      isnothing(tree.bot_left)  ? test_point(x, y, point, geom) : in_geom_octtree(tree.bot_left,  x, y, point, geom)
+    else
+      isnothing(tree.bot_right) ? test_point(x, y, point, geom) : in_geom_octtree(tree.bot_right, x, y, point, geom)
+    end
+  else
+    tree.inside
+  end
+end
+
+# Mutates mask. On HREF grid, ~3-5s per geom.
+function _add_geom_to_mask!(mask, xys, geom)
+  bounds = ArchGDAL.getenvelope(geom)
+
+  # print("making octtree...")
+  x1, y1 = xys[1]
+  x2, y2 = xys[2]
+  min_size = max(abs(x2-x1), abs(y2-y1)) * 3
+  octtree = make_octree(geom, bounds.MinX, bounds.MaxX, bounds.MinY, bounds.MaxY, min_size)
+  # println("done.")
+  # println(octtree)
+
+  ArchGDAL.createpoint(0,0) do point
+    for i in 1:length(xys)
+      if mask[i]
+        continue
+      end
+
+      x, y = xys[i]
+
+      if x > bounds.MaxX || x < bounds.MinX || y > bounds.MaxY || y < bounds.MinY
+        continue
+      end
+
+      # mask[i] = test_point(x, y, point, geom)
+      mask[i] = in_geom_octtree(octtree, x, y, point, geom)
+    end
+  end
   ()
 end
 
