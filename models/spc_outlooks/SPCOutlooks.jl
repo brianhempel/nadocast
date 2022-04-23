@@ -143,6 +143,10 @@ function reload_forecasts()
     end
   end
 
+  _forecasts_day_0600 = ForecastCombinators.disk_cache_forecasts(_forecasts_day_0600, "spc_day_1_0600_$(hash(models))")
+  _forecasts_day_1300 = ForecastCombinators.disk_cache_forecasts(_forecasts_day_1300, "spc_day_1_1300_$(hash(models))")
+  _forecasts_day_1630 = ForecastCombinators.disk_cache_forecasts(_forecasts_day_1630, "spc_day_1_1630_$(hash(models))")
+
   ()
 end
 
