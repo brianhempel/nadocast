@@ -64,7 +64,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     max_depth                   = [3, 4, 5, 6, 7, 8],
     max_delta_score             = [0.56, 1.0, 1.8, 3.2, 5.6],
     learning_rate               = [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
-    feature_fraction            = [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0],
+    feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
+    # feature_fraction            = [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0], this is how we actually trained
     bagging_temperature         = [0.25]
   )
 
