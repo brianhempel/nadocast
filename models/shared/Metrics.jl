@@ -42,7 +42,7 @@ function parallel_sort_perm_i64(arr)
 
     x = arr[i]
     bin_i = Threads.nthreads()
-    for k in 1:length(bin_splits)
+    @inbounds for k in 1:length(bin_splits)
       if bin_splits[k] > x
         bin_i = k
         break
@@ -104,7 +104,7 @@ function parallel_sort_perm_u32(arr)
 
     x = arr[i]
     bin_i = Threads.nthreads()
-    for k in 1:length(bin_splits)
+    @inbounds for k in 1:length(bin_splits)
       if bin_splits[k] > x
         bin_i = k
         break
@@ -154,7 +154,7 @@ end
 function parallel_apply_sort_perm(arr, perm)
   out = Vector{eltype(arr)}(undef, length(arr))
 
-  Threads.@threads for i in 1:length(perm)
+  @inbounds Threads.@threads for i in 1:length(perm)
     out[i] = arr[perm[i]]
   end
 
@@ -164,7 +164,7 @@ end
 function parallel_float64_sum(arr)
   thread_sums = parallel_iterate(length(arr)) do thread_range
     thread_sum = 0.0
-    for i in thread_range
+    @inbounds for i in thread_range
       thread_sum += Float64(arr[i])
     end
     thread_sum
@@ -172,36 +172,109 @@ function parallel_float64_sum(arr)
   sum(thread_sums)
 end
 
-function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ), total_weight = parallel_float64_sum(weights), positive_weight = parallel_float64_sum(y .* weights))
-  y       = parallel_apply_sort_perm(y, sort_perm)
-  weights = parallel_apply_sort_perm(weights, sort_perm)
-
-  negative_weight  = total_weight - positive_weight
-  true_pos_weight  = positive_weight
-  false_pos_weight = negative_weight
+function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
+  y_sorted       = Vector{eltype(y)}(undef, length(y))
+  weights_sorted = Vector{eltype(weights)}(undef, length(weights))
 
   # tpr = true_pos/total_pos
   # fpr = false_pos/total_neg
   # ROC is tpr vs fpr
 
-  auc = 0.0
-
-  last_fpr = false_pos_weight / negative_weight # = 1.0
-  for i in 1:length(y)
-    if y[i] > 0.5f0
-      true_pos_weight -= Float64(weights[i])
-    else
-      false_pos_weight -= Float64(weights[i])
+  thread_pos_weights, thread_neg_weights = parallel_iterate(length(y)) do thread_range
+    pos_weight = 0.0
+    neg_weight = 0.0
+    @inbounds for i in thread_range
+      j                 = sort_perm[i]
+      y_sorted[i]       = y[j]
+      weights_sorted[i] = weights[j]
+      if y_sorted[i] > 0.5f0
+        pos_weight += Float64(weights_sorted[i])
+      else
+        neg_weight += Float64(weights_sorted[i])
+      end
     end
-    fpr = false_pos_weight / negative_weight
-    tpr = true_pos_weight  / positive_weight
-    if fpr != last_fpr
-      auc += (last_fpr - fpr) * tpr
-    end
-    last_fpr = fpr
+    pos_weight, neg_weight
   end
 
-  auc
+  total_pos_weight = sum(thread_pos_weights)
+  total_neg_weight = sum(thread_neg_weights)
+
+  thread_aucs = parallel_iterate(length(y)) do thread_range
+    true_pos_weight  = sum(@view thread_pos_weights[Threads.threadid():Threads.nthreads()])
+    false_pos_weight = sum(@view thread_neg_weights[Threads.threadid():Threads.nthreads()])
+
+    auc = 0.0
+
+    last_fpr = false_pos_weight / total_neg_weight
+    @inbounds for i in thread_range
+      if y_sorted[i] > 0.5f0
+        true_pos_weight -= Float64(weights_sorted[i])
+      else
+        false_pos_weight -= Float64(weights_sorted[i])
+      end
+      fpr = false_pos_weight / total_neg_weight
+      tpr = true_pos_weight  / total_pos_weight
+      if fpr != last_fpr
+        auc += (last_fpr - fpr) * tpr
+      end
+      last_fpr = fpr
+    end
+
+    auc
+  end
+
+  sum(thread_aucs)
+end
+
+# More cache misses, less allocation. Slightly slower on my machine
+function roc_auc_less_mem(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
+  # tpr = true_pos/total_pos
+  # fpr = false_pos/total_neg
+  # ROC is tpr vs fpr
+
+  thread_pos_weights, thread_neg_weights = parallel_iterate(length(y)) do thread_range
+    pos_weight = 0.0
+    neg_weight = 0.0
+    @inbounds for i in thread_range
+      j = sort_perm[i]
+      if y[j] > 0.5f0
+        pos_weight += Float64(weights[j])
+      else
+        neg_weight += Float64(weights[j])
+      end
+    end
+    pos_weight, neg_weight
+  end
+
+  total_pos_weight = sum(thread_pos_weights)
+  total_neg_weight = sum(thread_neg_weights)
+
+  thread_aucs = parallel_iterate(length(y)) do thread_range
+    true_pos_weight  = sum(@view thread_pos_weights[Threads.threadid():Threads.nthreads()])
+    false_pos_weight = sum(@view thread_neg_weights[Threads.threadid():Threads.nthreads()])
+
+    auc = 0.0
+
+    last_fpr = false_pos_weight / total_neg_weight
+    @inbounds for i in thread_range
+      j = sort_perm[i]
+      if y[j] > 0.5f0
+        true_pos_weight -= Float64(weights[j])
+      else
+        false_pos_weight -= Float64(weights[j])
+      end
+      fpr = false_pos_weight / total_neg_weight
+      tpr = true_pos_weight  / total_pos_weight
+      if fpr != last_fpr
+        auc += (last_fpr - fpr) * tpr
+      end
+      last_fpr = fpr
+    end
+
+    auc
+  end
+
+  sum(thread_aucs)
 end
 
 # CSI = hits / (hits + false alarms + misses)
@@ -253,3 +326,40 @@ function mean_csi(ŷ, y, weights)
 end
 
 end # module Metrics
+
+# push!(LOAD_PATH, (@__DIR__))
+# import Metrics
+# import Random
+# Random.seed!(0)
+# y = rand(Bool, 100000)
+# ŷ = y .* (1 .- rand(100000) .* rand(100000)) .+ (1 .- y) .* (rand(100000) .* rand(100000))
+# weights = rand(100000)
+# Metrics.roc_auc(ŷ, y, weights)
+# Metrics.roc_auc_less_mem(ŷ, y, weights)
+# # 0.9277449649005693
+
+# Random.seed!(0)
+# y = rand(Bool, 100_000_000)
+# ŷ = y .* (1 .- rand(100_000_000) .* rand(100_000_000)) .+ (1 .- y) .* (rand(100_000_000) .* rand(100_000_000))
+# weights = rand(100_000_000)
+# Metrics.roc_auc(ŷ, y, weights)
+# Metrics.roc_auc_less_mem(ŷ, y, weights)
+# @time Metrics.roc_auc(ŷ, y, weights)
+# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
+# @time Metrics.roc_auc(ŷ, y, weights)
+# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
+# @time Metrics.roc_auc(ŷ, y, weights)
+# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
+
+# Random.seed!(0)
+# y = Float32.(rand(Bool, 6_000_000))
+# ŷ = Float32.(y .* (1 .- rand(6_000_000) .* rand(6_000_000)) .+ (1 .- y) .* (rand(6_000_000) .* rand(6_000_000)))
+# weights = Float32.(rand(6_000_000))
+# Metrics.roc_auc(ŷ, y, weights)
+# Metrics.roc_auc_less_mem(ŷ, y, weights)
+# @time Metrics.roc_auc(ŷ, y, weights)
+# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
+# @time Metrics.roc_auc(ŷ, y, weights)
+# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
+# @time Metrics.roc_auc(ŷ, y, weights)
+# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
