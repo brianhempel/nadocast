@@ -68,9 +68,14 @@ end
 
 # (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f13_to_f24, gbdt_f24_to_f35)
 models = [
-  ("tornado", "TORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-16T10.56.27.856_tornado/391_trees_loss_0.0010360148.model",
-                         "gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-04-19T11.41.57.211_tornado/317_trees_loss_0.001094988.model",
-                         "gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-04-16T14.36.46.241_tornado/308_trees_loss_0.0011393429.model"
+  # ("tornado", "TORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-16T10.56.27.856_tornado/391_trees_loss_0.0010360148.model",
+  #                        "gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-04-19T11.41.57.211_tornado/317_trees_loss_0.001094988.model",
+  #                        "gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-04-16T14.36.46.241_tornado/308_trees_loss_0.0011393429.model"
+  # ),
+  # The below tor model was trained with same hyperparameter space as the SREF
+  ("tornado", "TORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-23T20.18.52.994_tornado/342_trees_loss_0.001037691.model",
+                         "gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-04-24T08.58.17.687_tornado/285_trees_loss_0.0010958544.model",
+                         "gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-04-24T20.47.08.891_tornado/326_trees_loss_0.0011457962.model"
   ),
   ("wind", "WINDPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-16T10.56.27.856_wind/754_trees_loss_0.0062351814.model",
                        "gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-04-19T11.41.57.211_wind/581_trees_loss_0.00660574.model",
@@ -128,11 +133,11 @@ function reload_forecasts()
   end
 
   # Don't forget to clear the cache during development.
-  # rm -r lib/computation_cache/cached_forecats/href_prediction_raw_2021_models
+  # rm -r lib/computation_cache/cached_forecasts/href_prediction_raw_2021_models
   _forecasts =
     ForecastCombinators.disk_cache_forecasts(
       PredictionForecasts.simple_prediction_forecasts(href_forecasts, predictors),
-      "href_prediction_raw_2021_models_$(string(hash(models)))"
+      "href_prediction_raw_2021_models_$(hash(models))"
     )
 
   _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
