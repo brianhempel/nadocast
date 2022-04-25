@@ -410,7 +410,7 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     best_model_path = nothing
     best_loss       = Inf32
-    prefix          = "$(model_prefix)_$(event_name)"
+    prefix          = "$(model_prefix)_$(event_name)_climatology_$(climatology_amount)"
 
     # Returns path
     save(validation_loss, bin_splits, trees) = begin
