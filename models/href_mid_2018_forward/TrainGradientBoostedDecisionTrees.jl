@@ -26,12 +26,13 @@ forecast_hour_range =
 # 13:24
 # 24:35
 
-event_types       = split(get(ENV, "EVENT_TYPES", ""), ",")
-event_types       = event_types == [""] ? nothing : event_types
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
-near_storm_ratio  = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
-load_only         = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
+event_types        = split(get(ENV, "EVENT_TYPES", ""), ",")
+event_types        = event_types == [""] ? nothing : event_types
+data_subset_ratio  = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
+near_storm_ratio   = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
+load_only          = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 distributed = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
+climatology_amount = get(ENV, "CLIMATOLOGY", "some") # options: none, minimal, some, all
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
@@ -49,6 +50,8 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
     data_subset_ratio = data_subset_ratio,
     near_storm_ratio  = near_storm_ratio,
+
+    climatology_amount = climatology_amount, # can vary this without reloading the data
 
     bin_split_forecast_sample_count    = 300, # will be divided among the label types
     max_iterations_without_improvement = 20,
