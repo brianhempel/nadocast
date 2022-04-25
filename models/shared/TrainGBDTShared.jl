@@ -276,6 +276,75 @@ function train_with_coordinate_descent_hyperparameter_search(
     exit(0)
   end
 
+  feature_file_path = joinpath(specific_save_dir("training"), "features.txt")
+  feature_names = readlines(feature_file_path)
+
+  # Climatology features:
+  # hail_day_climatological_spatial_prob:calculated:hour fcst::
+  # hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # sig_hail_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # sig_hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # sig_severe_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_tornado_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # sig_tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_wind_day_climatological_spatial_prob:calculated:hour fcst::
+  # sig_wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # sig_wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # tornado_day_climatological_spatial_prob:calculated:hour fcst::
+  # tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # wind_day_climatological_spatial_prob:calculated:hour fcst::
+  # wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+  # wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+  # hour_in_day_climatological_severe_prob:calculated:hour fcst::
+  # month_climatological_tornado_day_prob:calculated:hour fcst::
+  # month_climatological_wind_day_prob:calculated:hour fcst::
+  # month_climatological_hail_day_prob:calculated:hour fcst::
+  # month_climatological_severe_day_prob:calculated:hour fcst::
+  # month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::
+  # month_climatological_wind_day_given_severe_day_prob:calculated:hour fcst::
+  # month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::
+
+  climatology_to_include = Dict(
+    "tornado" => [ # and sig_tornado
+      "severe_day_climatological_spatial_prob:calculated:hour fcst::",
+      "tornado_day_climatological_spatial_prob:calculated:hour fcst::",
+      "tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::",
+      "tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
+      "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
+      "month_climatological_tornado_day_prob:calculated:hour fcst::",
+      "month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::",
+      "month_climatological_severe_day_prob:calculated:hour fcst::",
+    ],
+    "wind" => [ # and sig_wind
+      "severe_day_climatological_spatial_prob:calculated:hour fcst::",
+      "wind_day_climatological_spatial_prob:calculated:hour fcst::",
+      "wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::",
+      "wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
+      "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
+      "month_climatological_wind_day_prob:calculated:hour fcst::",
+      "month_climatological_wind_day_given_severe_day_prob:calculated:hour fcst::",
+      "month_climatological_severe_day_prob:calculated:hour fcst::",
+    ],
+    "hail" => [ # and sig_hail
+      "severe_day_climatological_spatial_prob:calculated:hour fcst::",
+      "hail_day_climatological_spatial_prob:calculated:hour fcst::",
+      "hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::",
+      "hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
+      "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
+      "month_climatological_hail_day_prob:calculated:hour fcst::",
+      "month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::",
+      "month_climatological_severe_day_prob:calculated:hour fcst::",
+    ],
+  )
+
   for event_name in event_types
     labels            = Ys[event_name]
     if isnothing(validation_server)
@@ -283,6 +352,20 @@ function train_with_coordinate_descent_hyperparameter_search(
     end
 
     print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
+
+
+    # "sig_tornado" => "tornado" etc
+    non_sig_event_name = replace(event_name, "sig_" => "")
+    # Exclude sig climatology and climatology not related to feature.
+    exclude_features =
+      findall(feature_names) do feature_name
+        contains(feature_name, r"_day_") && # Climatology feature
+        !(feature_name in climatology_to_include[non_sig_event_name])
+      end
+
+    for feature_name in feature_names[exclude_features]
+      print_mpi("Excluding $feature_name\n")
+    end
 
     best_model_path = nothing
     best_loss       = Inf32
@@ -340,6 +423,7 @@ function train_with_coordinate_descent_hyperparameter_search(
         iteration_count    = Int64(round(50 / config[:learning_rate])),
         iteration_callback = iteration_callback,
         mpi_comm           = mpi_comm,
+        exclude_features   = exclude_features,
         config...
       )
 
