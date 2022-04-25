@@ -345,6 +345,8 @@ function train_with_coordinate_descent_hyperparameter_search(
     ],
   )
 
+  print_mpi(str) = rank == root && print(str)
+
   for event_name in event_types
     labels            = Ys[event_name]
     if isnothing(validation_server)
@@ -439,8 +441,6 @@ function train_with_coordinate_descent_hyperparameter_search(
 
       best_loss_for_config
     end
-
-    print_mpi(str) = rank == root && print(str)
 
     TrainingShared.coordinate_descent_hyperparameter_search(try_config; print = print_mpi, configs...)
 
