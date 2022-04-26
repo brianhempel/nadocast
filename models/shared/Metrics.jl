@@ -172,6 +172,7 @@ function parallel_float64_sum(arr)
   sum(thread_sums)
 end
 
+# This calc erroneously assumes all ŷ are distinct
 function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
   y_sorted       = Vector{eltype(y)}(undef, length(y))
   weights_sorted = Vector{eltype(weights)}(undef, length(weights))
@@ -276,6 +277,75 @@ function roc_auc_less_mem(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
 
   sum(thread_aucs)
 end
+
+# This part is fast and does not need to be threaded.
+function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
+  # Arrays are sorted from lowest score to highest
+  # Assume everything above threshold is predicted
+  # (Starting POD      = 100%)
+  true_pos_weight      = total_pos_weight
+  predicted_pos_weight = total_weight
+  thresh               = zero(ŷ_sorted[1])
+  last_sr              = true_pos_weight / predicted_pos_weight
+  last_pod             = true_pos_weight / total_pos_weight
+  area                 = 0.0
+
+  i = 1
+  @inbounds while i <= length(y_sorted)
+    thresh = ŷ_sorted[i]
+    @inbounds while i <= length(y_sorted) && ŷ_sorted[i] == thresh
+      if y_sorted[i] > 0.5f0
+        true_pos_weight -= Float64(weights_sorted[i])
+      end
+      predicted_pos_weight -= Float64(weights_sorted[i])
+      i += 1
+    end
+
+    sr  = true_pos_weight / predicted_pos_weight
+    pod = true_pos_weight / total_pos_weight
+
+    if pod != last_pod
+      area += (last_pod - pod) * (0.5 * sr + 0.5 * last_sr)
+    end
+
+    last_sr  = sr
+    last_pod = pod
+  end
+
+  area
+end
+
+# Area under the precison-recall curve (success ratio vs probability of detection)
+# = area to the left of the performance diagram curve
+# This calc correctly handles when ŷ are not distinct
+function area_under_pr_curve(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
+  ŷ_sorted       = Vector{eltype(ŷ)}(undef, length(ŷ))
+  y_sorted       = Vector{eltype(y)}(undef, length(y))
+  weights_sorted = Vector{eltype(weights)}(undef, length(weights))
+
+  thread_pos_weights, thread_neg_weights = parallel_iterate(length(y)) do thread_range
+    pos_weight = 0.0
+    neg_weight = 0.0
+    @inbounds for i in thread_range
+      j                 = sort_perm[i]
+      y_sorted[i]       = y[j]
+      ŷ_sorted[i]       = ŷ[j]
+      weights_sorted[i] = weights[j]
+      if y_sorted[i] > 0.5f0
+        pos_weight += Float64(weights_sorted[i])
+      else
+        neg_weight += Float64(weights_sorted[i])
+      end
+    end
+    pos_weight, neg_weight
+  end
+
+  total_pos_weight = sum(thread_pos_weights)
+  total_weight     = total_pos_weight + sum(thread_neg_weights)
+
+  _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
+end
+
 
 # CSI = hits / (hits + false alarms + misses)
 #     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)

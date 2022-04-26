@@ -126,12 +126,11 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
     duration > 0.1 && print(" waited $(Float32(duration))s for disk ")
   end
 
-  if i == 1
+  if i == 1 && get(ENV, "FORECAST_DISK_PREFETCH", "true") == "true"
     # Don't trash the disk with mad seeks on the first iteration.
-    preload_process = run(pipeline(`cat $(forecasts[i].preload_paths)`, devnull))
+    preload_process = run(pipeline(`cat $(unique(forecasts[i].preload_paths))`, devnull))
   end
-  if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1
-    # Should dedup preload_paths
+  if i+1 <= length(forecasts) && length(forecasts[i+1].preload_paths) >= 1 && get(ENV, "FORECAST_DISK_PREFETCH", "true") == "true"
     # Also should move wgrib2 reading into preloading...it seems to stall 3s for each HRRR with low CPU usage
     preload_process = run(pipeline(`cat $(unique(forecasts[i+1].preload_paths))`, devnull), wait=false)
   else
