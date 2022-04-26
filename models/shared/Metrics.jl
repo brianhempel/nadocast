@@ -278,6 +278,9 @@ function roc_auc_less_mem(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
   sum(thread_aucs)
 end
 
+
+const ε = eps(0.1)
+
 # This part is fast and does not need to be threaded.
 function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
   # Arrays are sorted from lowest score to highest
@@ -301,7 +304,7 @@ function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, tot
       i += 1
     end
 
-    sr  = true_pos_weight / predicted_pos_weight
+    sr  = true_pos_weight / (predicted_pos_weight + ε)
     pod = true_pos_weight / total_pos_weight
 
     if pod != last_pod
