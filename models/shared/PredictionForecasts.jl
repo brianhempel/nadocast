@@ -160,7 +160,7 @@ end
 # Linear combination of the two blur results s.t. at the near (lo) forecast hour only the first blur is used and
 # at the far (hi) forecast hour, only the second blur is used.
 # 1 resulting features: blurred result
-function blurred(prediction_forecasts, forecast_hour_range, blur_lo_grid_is, blur_hi_grid_is; model_name = nothing)
+function blurred(prediction_forecasts, forecast_hour_range, blur_grid_is; model_name = nothing)
 
   inventory_transformer(base_forecast, base_inventory) =
     map(base_inventory) do no_blur_line
@@ -173,6 +173,8 @@ function blurred(prediction_forecasts, forecast_hour_range, blur_lo_grid_is, blu
     out = Array{Float32}(undef, (point_count, prediction_count))
 
     for prediction_i in 1:prediction_count
+      blur_lo_grid_is, blur_hi_grid_is = blur_grid_is[prediction_i]
+
       no_blur_data = @view base_data[:, prediction_i]
       blur_lo_data = FeatureEngineeringShared.meanify_threaded(no_blur_data, blur_lo_grid_is)
       blur_hi_data = FeatureEngineeringShared.meanify_threaded(no_blur_data, blur_hi_grid_is)

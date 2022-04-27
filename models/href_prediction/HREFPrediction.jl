@@ -139,10 +139,31 @@ function reload_forecasts()
 
   grid = _forecasts[1].grid
 
-  blur_lo_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f2))
-  blur_hi_grid_is = Grids.radius_grid_is(grid, Float64(blur_radius_f35))
+  # Determined in Train.jl
+  # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
+  # tornado     15                  15                   0.03856513
+  # wind        25                  25                   0.115486614
+  # hail        25                  15                   0.0744874
+  # hail        15                  25                   0.0744809 # 0.01% difference, let's use it for justice
+  # sig_tornado 25                  35                   0.034162313
+  # sig_wind    15                  35                   0.016272869
+  # sig_hail    15                  25                   0.015544395
 
-  _forecasts_blurred = ForecastCombinators.circumvent_gc_forecasts(PredictionForecasts.blurred(_forecasts, 2:35, blur_lo_grid_is, blur_hi_grid_is))
+  blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
+  blur_25mi_grid_is = Grids.radius_grid_is(grid, 25.0)
+  blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
+
+  # Needs to be the same order as models
+  blur_grid_is = [
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado
+    (blur_25mi_grid_is, blur_25mi_grid_is), # wind
+    (blur_15mi_grid_is, blur_25mi_grid_is), # hail
+    (blur_25mi_grid_is, blur_35mi_grid_is), # sig_tornado
+    (blur_15mi_grid_is, blur_35mi_grid_is), # sig_wind
+    (blur_15mi_grid_is, blur_25mi_grid_is), # sig_hail
+  ]
+
+  _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:35, blur_grid_is)
 
   ()
 end
