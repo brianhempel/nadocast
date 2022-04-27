@@ -116,6 +116,11 @@ function grid()
   HREF.grid()
 end
 
+@assert length(HREFPrediction.models)     == length(SREFPrediction.models)
+@assert map(first, HREFPrediction.models) == map(first, SREFPrediction.models) # Same event names
+# array of (event_name, grib2_var_name)
+models = map((event_name, grib2_var_name, _, _, _) -> (event_name, grib2_var_name), HREFPrediction.models)
+
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
@@ -243,247 +248,247 @@ function reload_forecasts()
     run_date += Dates.Day(1)
   end
 
-  _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer; model_name = "Paired_HREF_and_SREF_hour_tornado_probabilities_href_newer")
-  _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer; model_name = "Paired_HREF_and_SREF_hour_tornado_probabilities_sref_newer")
+  _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer; model_name = "Paired_HREF_and_SREF_hour_severe_probabilities_href_newer")
+  _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer; model_name = "Paired_HREF_and_SREF_hour_severe_probabilities_sref_newer")
 
-  ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+  # ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  href_newer_predict(forecasts, data) = begin
-    href_ŷs = @view data[:,1]
-    sref_ŷs = @view data[:,2]
+  # href_newer_predict(forecasts, data) = begin
+  #   href_ŷs = @view data[:,1]
+  #   sref_ŷs = @view data[:,2]
 
-    out = Array{Float32}(undef, length(href_ŷs))
+  #   out = Array{Float32}(undef, length(href_ŷs))
 
-    bin_maxes = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0]
+  #   bin_maxes = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0]
 
-    Threads.@threads for i in 1:length(href_ŷs)
-      href_ŷ = href_ŷs[i]
-      sref_ŷ = sref_ŷs[i]
-      if href_ŷ <= bin_maxes[1]
-        # Bin 1-2 predictor only
-        ŷ = href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[2]
-        # Bin 1-2 and 2-3 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
-        ŷ = ratio*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[3]
-        # Bin 2-3 and 3-4 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
-        ŷ = ratio*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[4]
-        # Bin 3-4 and 4-5 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
-        ŷ = ratio*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[5]
-        # Bin 4-5 and 5-6 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
-        ŷ = ratio*href_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
-      else
-        # Bin 5-6 predictor only
-        ŷ = href_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
-      end
-      out[i] = ŷ
-    end
+  #   Threads.@threads for i in 1:length(href_ŷs)
+  #     href_ŷ = href_ŷs[i]
+  #     sref_ŷ = sref_ŷs[i]
+  #     if href_ŷ <= bin_maxes[1]
+  #       # Bin 1-2 predictor only
+  #       ŷ = href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[2]
+  #       # Bin 1-2 and 2-3 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
+  #       ŷ = ratio*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[3]
+  #       # Bin 2-3 and 3-4 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
+  #       ŷ = ratio*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[4]
+  #       # Bin 3-4 and 4-5 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
+  #       ŷ = ratio*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[5]
+  #       # Bin 4-5 and 5-6 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
+  #       ŷ = ratio*href_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
+  #     else
+  #       # Bin 5-6 predictor only
+  #       ŷ = href_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
+  #     end
+  #     out[i] = ŷ
+  #   end
 
-    out
-  end
+  #   out
+  # end
 
-  sref_newer_predict(forecast, data) = begin
-    href_ŷs = @view data[:,1]
-    sref_ŷs = @view data[:,2]
+  # sref_newer_predict(forecast, data) = begin
+  #   href_ŷs = @view data[:,1]
+  #   sref_ŷs = @view data[:,2]
 
-    out = Array{Float32}(undef, length(href_ŷs))
+  #   out = Array{Float32}(undef, length(href_ŷs))
 
-    bin_maxes = Float32[0.0009233353, 0.0038515618, 0.00954726, 0.01923272, 0.035036117, 1.0]
+  #   bin_maxes = Float32[0.0009233353, 0.0038515618, 0.00954726, 0.01923272, 0.035036117, 1.0]
 
-    Threads.@threads for i in 1:length(href_ŷs)
-      href_ŷ = href_ŷs[i]
-      sref_ŷ = sref_ŷs[i]
-      if href_ŷ <= bin_maxes[1]
-        # Bin 1-2 predictor only
-        ŷ = sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[2]
-        # Bin 1-2 and 2-3 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
-        ŷ = ratio*sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[3]
-        # Bin 2-3 and 3-4 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
-        ŷ = ratio*sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[4]
-        # Bin 3-4 and 4-5 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
-        ŷ = ratio*sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[5]
-        # Bin 4-5 and 5-6 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
-        ŷ = ratio*sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
-      else
-        # Bin 5-6 predictor only
-        ŷ = sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
-      end
-      out[i] = ŷ
-    end
+  #   Threads.@threads for i in 1:length(href_ŷs)
+  #     href_ŷ = href_ŷs[i]
+  #     sref_ŷ = sref_ŷs[i]
+  #     if href_ŷ <= bin_maxes[1]
+  #       # Bin 1-2 predictor only
+  #       ŷ = sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[2]
+  #       # Bin 1-2 and 2-3 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
+  #       ŷ = ratio*sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[3]
+  #       # Bin 2-3 and 3-4 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
+  #       ŷ = ratio*sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[4]
+  #       # Bin 3-4 and 4-5 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
+  #       ŷ = ratio*sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
+  #     elseif href_ŷ <= bin_maxes[5]
+  #       # Bin 4-5 and 5-6 predictors
+  #       ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
+  #       ŷ = ratio*sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
+  #     else
+  #       # Bin 5-6 predictor only
+  #       ŷ = sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
+  #     end
+  #     out[i] = ŷ
+  #   end
 
-    out
-  end
+  #   out
+  # end
 
-  _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_predict; model_name = "CombinedHREFSREF_hour_tornado_probability_href_newer")
-  _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_predict; model_name = "CombinedHREFSREF_hour_tornado_probability_sref_newer")
+  # _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_predict; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer")
+  # _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_predict; model_name = "CombinedHREFSREF_hour_severe_probabilities_sref_newer")
 
 
-  # Day forecasts
+  # # Day forecasts
 
-  run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined))
+  # run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined))
 
-  run_date = Dates.Date(2019, 1, 9)
-  associated_forecasts = []
-  while run_date <= Dates.Date(Dates.now(Dates.UTC))
-    run_year  = Dates.year(run_date)
-    run_month = Dates.month(run_date)
-    run_day   = Dates.day(run_date)
+  # run_date = Dates.Date(2019, 1, 9)
+  # associated_forecasts = []
+  # while run_date <= Dates.Date(Dates.now(Dates.UTC))
+  #   run_year  = Dates.year(run_date)
+  #   run_month = Dates.month(run_date)
+  #   run_day   = Dates.day(run_date)
 
-    for run_hour in 0:3:21
-      run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+  #   for run_hour in 0:3:21
+  #     run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
 
-      forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
+  #     forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
 
-      forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
+  #     forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
 
-      forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
+  #     forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
 
-      if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
-        push!(associated_forecasts, forecasts_for_convective_day)
-      end
+  #     if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
+  #       push!(associated_forecasts, forecasts_for_convective_day)
+  #     end
 
-      # 1. Try both independent events total prob and max hourly prob as the main descriminator
-      # 2. bin predictions into 10 bins of equal weight of positive labels
-      # 3. combine bin-pairs (overlapping, 9 bins total)
-      # 4. train a logistic regression for each bin,
-      #   σ(a1*logit(independent events total prob) +
-      #     a2*logit(max hourly prob) +
-      #     a3*logit(2nd highest hourly prob) +
-      #     a4*logit(3rd highest hourly prob) +
-      #     a5*logit(4th highest hourly prob) +
-      #     a6*logit(5th highest hourly prob) +
-      #     a7*logit(6th highest hourly prob) +
-      #     a8*logit(tornado day climatological prob) +
-      #     a9*logit(tornado day given severe day climatological prob) +
-      #     a10*logit(geomean(above two)) +
-      #     a11*logit(tornado prob for given month) +
-      #     a12*logit(tornado prob given severe day for given month) +
-      #     a13*logit(geomean(above two)) +
-      #     b)
-      #   Check & eliminate terms via 3-fold cross-validation.
-      # 5. prediction is weighted mean of the two overlapping logistic models
-      # 6. should thereby be absolutely calibrated (check)
-      # 7. calibrate to SPC thresholds (linear interpolation)
-    end
+  #     # 1. Try both independent events total prob and max hourly prob as the main descriminator
+  #     # 2. bin predictions into 10 bins of equal weight of positive labels
+  #     # 3. combine bin-pairs (overlapping, 9 bins total)
+  #     # 4. train a logistic regression for each bin,
+  #     #   σ(a1*logit(independent events total prob) +
+  #     #     a2*logit(max hourly prob) +
+  #     #     a3*logit(2nd highest hourly prob) +
+  #     #     a4*logit(3rd highest hourly prob) +
+  #     #     a5*logit(4th highest hourly prob) +
+  #     #     a6*logit(5th highest hourly prob) +
+  #     #     a7*logit(6th highest hourly prob) +
+  #     #     a8*logit(tornado day climatological prob) +
+  #     #     a9*logit(tornado day given severe day climatological prob) +
+  #     #     a10*logit(geomean(above two)) +
+  #     #     a11*logit(tornado prob for given month) +
+  #     #     a12*logit(tornado prob given severe day for given month) +
+  #     #     a13*logit(geomean(above two)) +
+  #     #     b)
+  #     #   Check & eliminate terms via 3-fold cross-validation.
+  #     # 5. prediction is weighted mean of the two overlapping logistic models
+  #     # 6. should thereby be absolutely calibrated (check)
+  #     # 7. calibrate to SPC thresholds (linear interpolation)
+  #   end
 
-    run_date += Dates.Day(1)
-  end
+  #   run_date += Dates.Day(1)
+  # end
 
-  # Which run time and forecast hour to use for the set.
-  # Namely: latest run time, then longest forecast hour
-  choose_canonical_forecast(day_hourlies) = begin
-    canonical = day_hourlies[1]
-    for forecast in day_hourlies
-      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
-        canonical = forecast
-      end
-    end
-    canonical
-  end
+  # # Which run time and forecast hour to use for the set.
+  # # Namely: latest run time, then longest forecast hour
+  # choose_canonical_forecast(day_hourlies) = begin
+  #   canonical = day_hourlies[1]
+  #   for forecast in day_hourlies
+  #     if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
+  #       canonical = forecast
+  #     end
+  #   end
+  #   canonical
+  # end
 
-  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  # day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
-  day_inventory_transformer(base_forecast, base_inventory) = begin
-    [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
-    , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
-    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
-    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
-    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
-    ]
-  end
+  # day_inventory_transformer(base_forecast, base_inventory) = begin
+  #   [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
+  #   , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
+  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
+  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
+  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
+  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
+  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
+  #   ]
+  # end
 
-  day_data_transformer(base_forecast, base_data) = begin
-    point_count, hours_count = size(base_data)
-    out = Array{Float32}(undef, (point_count, 2))
-    Threads.@threads for i in 1:point_count
-      # sorted_probs = sort((@view base_data[i,:]); rev = true)
-      prob_no_tor = 1.0
-      for hour_i in 1:hours_count
-        prob_no_tor *= 1.0 - Float64(base_data[i,hour_i])
-      end
-      out[i,1] = Float32(1.0 - prob_no_tor)
-      out[i,2] = maximum(@view base_data[i,:])
-      # out[i,2] = sorted_probs[1]
-      # out[i,3] = sorted_probs[2]
-      # out[i,4] = sorted_probs[3]
-      # out[i,5] = sorted_probs[4]
-      # out[i,6] = sorted_probs[5]
-      # out[i,7] = sorted_probs[6]
-    end
-    out
-  end
+  # day_data_transformer(base_forecast, base_data) = begin
+  #   point_count, hours_count = size(base_data)
+  #   out = Array{Float32}(undef, (point_count, 2))
+  #   Threads.@threads for i in 1:point_count
+  #     # sorted_probs = sort((@view base_data[i,:]); rev = true)
+  #     prob_no_tor = 1.0
+  #     for hour_i in 1:hours_count
+  #       prob_no_tor *= 1.0 - Float64(base_data[i,hour_i])
+  #     end
+  #     out[i,1] = Float32(1.0 - prob_no_tor)
+  #     out[i,2] = maximum(@view base_data[i,:])
+  #     # out[i,2] = sorted_probs[1]
+  #     # out[i,3] = sorted_probs[2]
+  #     # out[i,4] = sorted_probs[3]
+  #     # out[i,5] = sorted_probs[4]
+  #     # out[i,6] = sorted_probs[5]
+  #     # out[i,7] = sorted_probs[6]
+  #   end
+  #   out
+  # end
 
-  # Caching barely helps load times, so we don't do it
+  # # Caching barely helps load times, so we don't do it
 
-  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_tornado_probability_accumulators_from_CombinedHREFSREF_hours")
+  # _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
 
-  day_predict(forecast, data) = begin
-    indep_events_ŷs  = @view data[:,1]
-    max_hourly_probs = @view data[:,2]
+  # day_predict(forecast, data) = begin
+  #   indep_events_ŷs  = @view data[:,1]
+  #   max_hourly_probs = @view data[:,2]
 
-    out = Array{Float32}(undef, length(indep_events_ŷs))
+  #   out = Array{Float32}(undef, length(indep_events_ŷs))
 
-    bin_maxes = Float32[0.008833055, 0.025307992, 0.06799701, 0.11479675, 0.18474162, 1.0]
+  #   bin_maxes = Float32[0.008833055, 0.025307992, 0.06799701, 0.11479675, 0.18474162, 1.0]
 
-    Threads.@threads for i in 1:length(indep_events_ŷs)
-      indep_events_ŷ   = indep_events_ŷs[i]
-      max_hourly_prob  = max_hourly_probs[i]
-      if indep_events_ŷ <= bin_maxes[1]
-        # Bin 1-2 predictor only
-        ŷ = day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
-      elseif indep_events_ŷ <= bin_maxes[2]
-        # Bin 1-2 and 2-3 predictors
-        ratio = ratio_between(indep_events_ŷ, bin_maxes[1], bin_maxes[2])
-        ŷ = ratio*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
-      elseif indep_events_ŷ <= bin_maxes[3]
-        # Bin 2-3 and 3-4 predictors
-        ratio = ratio_between(indep_events_ŷ, bin_maxes[2], bin_maxes[3])
-        ŷ = ratio*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob)
-      elseif indep_events_ŷ <= bin_maxes[4]
-        # Bin 3-4 and 4-5 predictors
-        ratio = ratio_between(indep_events_ŷ, bin_maxes[3], bin_maxes[4])
-        ŷ = ratio*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob)
-      elseif indep_events_ŷ <= bin_maxes[5]
-        # Bin 4-5 and 5-6 predictors
-        ratio = ratio_between(indep_events_ŷ, bin_maxes[4], bin_maxes[5])
-        ŷ = ratio*day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob)
-      else
-        # Bin 5-6 predictor only
-        ŷ = day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob)
-      end
-      out[i] = ŷ
-    end
+  #   Threads.@threads for i in 1:length(indep_events_ŷs)
+  #     indep_events_ŷ   = indep_events_ŷs[i]
+  #     max_hourly_prob  = max_hourly_probs[i]
+  #     if indep_events_ŷ <= bin_maxes[1]
+  #       # Bin 1-2 predictor only
+  #       ŷ = day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
+  #     elseif indep_events_ŷ <= bin_maxes[2]
+  #       # Bin 1-2 and 2-3 predictors
+  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[1], bin_maxes[2])
+  #       ŷ = ratio*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
+  #     elseif indep_events_ŷ <= bin_maxes[3]
+  #       # Bin 2-3 and 3-4 predictors
+  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[2], bin_maxes[3])
+  #       ŷ = ratio*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob)
+  #     elseif indep_events_ŷ <= bin_maxes[4]
+  #       # Bin 3-4 and 4-5 predictors
+  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[3], bin_maxes[4])
+  #       ŷ = ratio*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob)
+  #     elseif indep_events_ŷ <= bin_maxes[5]
+  #       # Bin 4-5 and 5-6 predictors
+  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[4], bin_maxes[5])
+  #       ŷ = ratio*day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob)
+  #     else
+  #       # Bin 5-6 predictor only
+  #       ŷ = day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob)
+  #     end
+  #     out[i] = ŷ
+  #   end
 
-    out
-  end
+  #   out
+  # end
 
-  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict; model_name = "CombinedHREFSREF_day_tornado_probability")
+  # _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict; model_name = "CombinedHREFSREF_day_severe_probabilities")
 
-  spc_calibration = [
-    (0.02, 0.016253397),
-    (0.05, 0.0649308),
-    (0.1,  0.18771306),
-    (0.15, 0.28330332),
-    (0.3,  0.32384455),
-  ]
+  # spc_calibration = [
+  #   (0.02, 0.016253397),
+  #   (0.05, 0.0649308),
+  #   (0.1,  0.18771306),
+  #   (0.15, 0.28330332),
+  #   (0.3,  0.32384455),
+  # ]
 
-  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration; model_name = "CombinedHREFSREF_day_tornado_probability_calibrated_to_SPC_thresholds")
+  # _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration; model_name = "CombinedHREFSREF_day_severe_probabilities_calibrated_to_SPC_thresholds")
 
   ()
 end

@@ -38,25 +38,20 @@ X, Ys, weights =
     save_dir = "validation_forecasts_href_newer"
   );
 
-@assert length(HREFPrediction.models) == length(SREFPrediction.models)
+event_types_count = length(CombinedHREFSREF.models)
 
-event_types_count = length(HREFPrediction.models)
-
-
-# Sanity check...tornado features should best predict tornadoes, etc
-# and HREF should do best
-
+# Confirm that HREF models are better
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  for prediction_i in 1:event_types_count
-    (event_name, _, _) = HREFPrediction.models[prediction_i]
+  # Feature order is all HREF severe probs then all SREF severe probs
+  for feature_i in 1:length(inventory)
+    prediction_i = 1 + (feature_i - 1) % event_types_count
+    (event_name, _) = CombinedHREFSREF.models[prediction_i]
     y = Ys[event_name]
-    for j in 1:size(X,2)
-      x = @view X[:,j]
-      auc = Metrics.roc_auc(x, y, weights)
-      println("$event_name ($(round(sum(y)))) feature $j $(Inventories.inventory_line_description(inventory[j]))\tAUC: $auc")
-    end
+    x = @view X[:,feature_i]
+    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
 test_predictive_power(validation_forecasts, X, Ys, weights)
@@ -311,26 +306,6 @@ for bin_i in 1:bin_count
 end
 
 # mean_y  mean_ŷ  Σweight bin_max
-# 5.322560722124211e-6    5.8811573125446005e-6   3.911319965931541e8     9.887987e-5
-# 0.00019897465672958535  0.00019454206020272648  1.0462843866977692e7    0.00037690063
-# 0.0005686291530310367   0.0005456260122432716   3.659761417550981e6     0.0007842968
-# 0.001124113270554064    0.0010030568344838555   1.8515379332851768e6    0.0012828964
-# 0.0017085736510547634   0.0015725956070797495   1.2181251957098246e6    0.001929728
-# 0.0022484146804597534   0.002339690964324273    925741.6350624561       0.002841651
-# 0.002882528989945521    0.0034183730723036767   722101.1699277163       0.0041100453
-# 0.004501347402880451    0.004745127229969608    462419.2483088374       0.0055032303
-# 0.006560868100279065    0.006242639048840438    317262.77945637703      0.0071106516
-# 0.008274812728123419    0.008048372308300503    251514.2555526495       0.009134761
-# 0.01040401562636757     0.010259118930113867    200084.54374402761      0.011555698
-# 0.01253964938577878     0.013084069069929535    165975.35050690174      0.01495919
-# 0.016783502945246494    0.017087142267366313    124033.5082758069       0.019724188
-# 0.02196217402350504     0.02273457447872943     94769.14799720049       0.026396887
-# 0.031611153830540376    0.02990545021054135     65836.33591234684       0.03387627
-# 0.03894577068013097     0.03799737080267973     53439.49512767792       0.042718615
-# 0.04518538143221551     0.04810086833999881     46055.43351483345       0.05448793
-# 0.06681750111822628     0.06099447983555109     31156.07918536663       0.068961926
-# 0.0943207881878254      0.07820774570388521     22066.47932779789       0.0906716
-# 0.11065026340006642     0.12204214860594781     18722.128450989723      1.0
 
 Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9834577307320753
 
