@@ -119,7 +119,7 @@ end
 @assert length(HREFPrediction.models)     == length(SREFPrediction.models)
 @assert map(first, HREFPrediction.models) == map(first, SREFPrediction.models) # Same event names
 # array of (event_name, grib2_var_name)
-models = map(((event_name, grib2_var_name, _, _, _)) -> (event_name, grib2_var_name), HREFPrediction.models)
+models = map(((event_name, grib2_var_name, _, _, _),) -> (event_name, grib2_var_name), HREFPrediction.models)
 
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
