@@ -32,7 +32,7 @@ data_subset_ratio  = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
 near_storm_ratio   = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
 load_only          = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 distributed = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
-climatology_amount = get(ENV, "CLIMATOLOGY", "some") # options: none, minimal, some, all
+climatology_amount = get(ENV, "CLIMATOLOGY", "all") # options: none, minimal, some, all
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 

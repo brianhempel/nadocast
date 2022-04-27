@@ -27,7 +27,7 @@ event_types        = event_types == [""] ? nothing : event_types
 load_only          = parse(Bool, get(ENV, "LOAD_ONLY", "false"))
 distributed        = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
 validation_server  = get(ENV, "VALIDATION_SERVER", nothing)
-climatology_amount = get(ENV, "CLIMATOLOGY", "some") # options: none, minimal, some, all
+climatology_amount = get(ENV, "CLIMATOLOGY", "all") # options: none, minimal, some, all
 
 
 data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.26"))
