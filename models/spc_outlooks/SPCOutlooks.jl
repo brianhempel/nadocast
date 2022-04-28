@@ -124,6 +124,7 @@ function reload_forecasts()
         shapefile_path = replace(torn_shapefile_path, "_torn.shp" => shapefile_suffix)
         thresholds = SPC.threshold_probs(shapefile_path) # it's sorted
         for threshold in thresholds
+          threshold == 0.0 && continue # There's a file with an empty 0.0 threshold that crashes stuff.
           mask = SPC.rasterize_prob_regions(grid(), threshold, shapefile_path)
           data[mask, model_i] .= threshold
         end
