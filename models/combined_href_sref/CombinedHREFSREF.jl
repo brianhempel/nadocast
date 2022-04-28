@@ -254,49 +254,6 @@ function reload_forecasts()
   _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer; model_name = "Paired_HREF_and_SREF_hour_severe_probabilities_href_newer")
   _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer; model_name = "Paired_HREF_and_SREF_hour_severe_probabilities_sref_newer")
 
-  ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
-
-  href_newer_predict(forecast, data) = begin
-    href_ŷs = @view data[:,1]
-    sref_ŷs = @view data[:,2]
-
-    out = Array{Float32}(undef, length(href_ŷs))
-
-    bin_maxes = Float32[0.000962529, 0.0040673064, 0.009957244, 0.020302918, 0.037081156, 1.0]
-
-
-
-    Threads.@threads for i in 1:length(href_ŷs)
-      href_ŷ = href_ŷs[i]
-      sref_ŷ = sref_ŷs[i]
-      if href_ŷ <= bin_maxes[1]
-        # Bin 1-2 predictor only
-        ŷ = href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[2]
-        # Bin 1-2 and 2-3 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[1], bin_maxes[2])
-        ŷ = ratio*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_1_2_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[3]
-        # Bin 2-3 and 3-4 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[2], bin_maxes[3])
-        ŷ = ratio*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_2_3_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[4]
-        # Bin 3-4 and 4-5 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[3], bin_maxes[4])
-        ŷ = ratio*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_3_4_predict(href_ŷ, sref_ŷ)
-      elseif href_ŷ <= bin_maxes[5]
-        # Bin 4-5 and 5-6 predictors
-        ratio = ratio_between(href_ŷ, bin_maxes[4], bin_maxes[5])
-        ŷ = ratio*href_newer_bin_5_6_predict(href_ŷ, sref_ŷ) + (1f0 - ratio)*href_newer_bin_4_5_predict(href_ŷ, sref_ŷ)
-      else
-        # Bin 5-6 predictor only
-        ŷ = href_newer_bin_5_6_predict(href_ŷ, sref_ŷ)
-      end
-      out[i] = ŷ
-    end
-
-    out
-  end
 
   href_newer_event_to_bins = Dict{String, Vector{Float32}}(
     "tornado"     => [0.0010219938,  0.0040875063, 0.00994226,   0.021133944, 0.042196225, 1.0],
@@ -318,6 +275,9 @@ function reload_forecasts()
   # Returns array of (event_name, var_name, predict)
   function make_models(event_to_bins, event_to_bins_logistic_coeffs)
     event_types_count = length(models)
+
+    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+
     map(1:event_types_count) do model_i
       event_name, var_name = models[model_i]
 
@@ -330,7 +290,7 @@ function reload_forecasts()
         bin_maxes            = event_to_bins[event_name]
         bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
 
-        @assert length(bin_maxes) == length(bins_logistic_coeffs) - 1
+        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
         # # Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
         # href_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565f0*logit(href_ŷ) + 0.19299681f0*logit(sref_ŷ) + -0.21271989f0)
@@ -371,6 +331,7 @@ function reload_forecasts()
 
   _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer")
   # _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_sref_newer")
+  _forecasts_sref_newer_combined = Forecasts.Forecast[]
 
 
   # # Day forecasts

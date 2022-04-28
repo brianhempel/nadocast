@@ -321,7 +321,7 @@ println(event_to_bins_logistic_coeffs)
 # 7. predictions should thereby be calibrated (check)
 
 
-# CHECKING
+# CHECKING CALIBRATION
 
 import Dates
 
@@ -351,6 +351,7 @@ length(combined_validation_forecasts) #
 # Make sure a forecast loads
 Forecasts.data(combined_validation_forecasts[100])
 
+# rm("combined_validation_forecasts_href_newer"; recursive=true)
 
 X, y, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "combined_validation_forecasts_href_newer");
 
