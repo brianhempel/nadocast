@@ -411,6 +411,7 @@ import CombinedHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import Inventories
 import StormEvents
 
 MINUTE = 60 # seconds
@@ -432,121 +433,241 @@ length(day_validation_forecasts)
 
 day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
 length(day_validation_forecasts_0z) # Expected: 132
-#
+# 132
 
-compute_forecast_labels(forecast) = begin
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+compute_day_labels(events, forecast) = begin
   # Annoying that we have to recalculate this.
   # The end_seconds will always be the last hour of the convective day
   # start_seconds depends on whether the run started during the day or not
   # I suppose for 0Z the answer is always "no" but whatev here's the right math
   start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  utc_datetime = Dates.unix2datetime(start_seconds)
-  println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  println(Forecasts.valid_yyyymmdd_hhz(forecast))
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  # utc_datetime = Dates.unix2datetime(start_seconds)
+  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-X, y, weights = TrainingShared.get_data_labels_weights(day_validation_forecasts_0z; save_dir = "day_validation_forecasts_0z", compute_forecast_labels = compute_forecast_labels);
+event_name_to_day_labeler = Dict(
+  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+)
 
+# rm("day_accumulators_validation_forecasts_0z"; recursive = true)
 
-ŷ = X[:,1];
+X, Ys, weights =
+  TrainingShared.get_data_labels_weights(
+    day_validation_forecasts_0z;
+    event_name_to_labeler = event_name_to_day_labeler,
+    save_dir = "day_validation_forecasts_0z",
+  );
 
-sort_perm = sortperm(ŷ);
-X       = X[sort_perm, :]; #
-y       = y[sort_perm];
-ŷ       = ŷ[sort_perm];
-weights = weights[sort_perm];
+# Confirm that the accs are better than the maxes
+function test_predictive_power(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
 
-# total_logloss = sum(logloss.(y, ŷ) .* weights)
-total_positive_weight = sum(y .* weights) # 5821.8076f0
-
-bin_count = 20
-# per_bin_logloss = total_logloss / bin_count
-per_bin_pos_weight = total_positive_weight / bin_count # 291.0904f0
-
-# bins = map(_ -> Int64[], 1:bin_count)
-bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
-bins_Σy      = map(_ -> 0.0, 1:bin_count)
-bins_Σweight = map(_ -> 0.0, 1:bin_count)
-bins_max     = map(_ -> 1.0f0, 1:bin_count)
-
-bin_i = 1
-# bin_logloss = 0.0
-for i in 1:length(y)
-  global bin_i
-  # global bin_logloss
-
-  if ŷ[i] > bins_max[bin_i]
-    bin_i += 1
-    # bin_logloss = 0.0
-  end
-
-  bins_Σŷ[bin_i]      += ŷ[i] * weights[i]
-  bins_Σy[bin_i]      += y[i] * weights[i]
-  bins_Σweight[bin_i] += weights[i]
-
-  # bin_logloss += logloss(y[i], ŷ[i])
-
-  # if bin_logloss >= per_bin_logloss
-  #   bins_max[bin_i] = ŷ[i]
-  # end
-  if bins_Σy[bin_i] >= per_bin_pos_weight
-    bins_max[bin_i] = ŷ[i]
+  # Feature order is all HREF severe probs then all SREF severe probs
+  for feature_i in 1:length(inventory)
+    prediction_i = feature_i
+    (event_name, _) = CombinedHREFSREF.models[prediction_i]
+    y = Ys[event_name]
+    x = @view X[:,feature_i]
+    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
+test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
 
-println("bins_max = ")
-println(bins_max)
-# Float32[0.00097577664, 0.0035424125, 0.0068334113, 0.010702337, 0.014457697, 0.018155066, 0.021734202, 0.027651712, 0.03753781, 0.05559306, 0.076415844, 0.0933851, 0.10967304, 0.12784216, 0.14595553, 0.1621963, 0.18518762, 0.2340388, 0.30211022, 1.0]Float32[0.0070357043, 0.01022332, 0.021027338, 0.023034172, 0.025326166, 0.0274165, 0.02900777, 0.030673556, 0.032790024, 0.03441065, 0.037875757, 0.04150515, 0.047454756, 0.058034927, 0.073863976, 0.08908757, 0.12828249, 0.17552827, 1.0, 1.0]
+# tornado (8326.0)     feature 1 TORPROB:calculated:hour   fcst:calculated_prob: AU-PR-curve: 0.12910289299673042
+# wind (63336.0)       feature 2 WINDPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.407616606429577
+# hail (28152.0)       feature 3 HAILPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.24281549180460507
+# sig_tornado (1138.0) feature 4 STORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.09322716799320344
+# sig_wind (7555.0)    feature 5 SWINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.08475474530886153
+# sig_hail (3887.0)    feature 6 SHAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.07277620173520509
 
-println("mean_y\tmean_ŷ\tΣweight\tbin_max")
-for bin_i in 1:bin_count
-  Σŷ      = bins_Σŷ[bin_i]
-  Σy      = bins_Σy[bin_i]
-  Σweight = bins_Σweight[bin_i]
 
-  mean_ŷ = Σŷ / Σweight
-  mean_y = Σy / Σweight
 
-  println("$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
+# test y vs ŷ
+
+function test_calibration(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
+
+  println("event_name\tmean_y\tmean_ŷ\tΣweight\tbin_max")
+  for feature_i in 1:length(inventory)
+    prediction_i = feature_i
+    (event_name, _) = CombinedHREFSREF.models[prediction_i]
+    y = Ys[event_name]
+    ŷ = @view X[:, feature_i]
+
+    sort_perm      = Metrics.parallel_sort_perm(ŷ);
+    y_sorted       = Metrics.parallel_apply_sort_perm(y, sort_perm);
+    ŷ_sorted       = Metrics.parallel_apply_sort_perm(ŷ, sort_perm);
+    weights_sorted = Metrics.parallel_apply_sort_perm(weights, sort_perm);
+
+    bin_count = 10
+    per_bin_pos_weight = Float64(sum(y .* weights)) / bin_count
+
+    # bins = map(_ -> Int64[], 1:bin_count)
+    bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
+    bins_Σy      = map(_ -> 0.0, 1:bin_count)
+    bins_Σweight = map(_ -> 0.0, 1:bin_count)
+    bins_max     = map(_ -> 1.0f0, 1:bin_count)
+
+    bin_i = 1
+    for i in 1:length(y_sorted)
+      if ŷ_sorted[i] > bins_max[bin_i]
+        bin_i += 1
+      end
+
+      bins_Σŷ[bin_i]      += Float64(ŷ_sorted[i] * weights_sorted[i])
+      bins_Σy[bin_i]      += Float64(y_sorted[i] * weights_sorted[i])
+      bins_Σweight[bin_i] += Float64(weights_sorted[i])
+
+      if bins_Σy[bin_i] >= per_bin_pos_weight
+        bins_max[bin_i] = ŷ_sorted[i]
+      end
+    end
+
+    for bin_i in 1:bin_count
+      Σŷ      = bins_Σŷ[bin_i]
+      Σy      = bins_Σy[bin_i]
+      Σweight = bins_Σweight[bin_i]
+
+      mean_ŷ = Σŷ / Σweight
+      mean_y = Σy / Σweight
+
+      println("$event_name\t$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
+    end
+  end
 end
+test_calibration(day_validation_forecasts_0z, X, Ys, weights)
 
-# mean_y  mean_ŷ  Σweight bin_max
-# 0.0001089659531147851   0.0001039783132379927   2.6742326298045516e6    0.00097577664
-# 0.001760340660025297    0.0019026741997471292   165492.52153635025      0.0035424125
-# 0.0048276268251249395   0.004946116178554242    60406.159088253975      0.0068334113
-# 0.008558151635295863    0.008590979826240427    34042.4254655242        0.010702337
-# 0.0133678045274549      0.012463140159311574    21802.550265967846      0.014457697
-# 0.016984762764517724    0.016286686422954007    17190.005229771137      0.018155066
-# 0.01987269476873383     0.019829021253987382    14691.411134302616      0.021734202
-# 0.023482472772874543    0.024303937577457836    12433.217101633549      0.027651712
-# 0.029936281457548806    0.03196438758504661     9738.050294101238       0.03753781
-# 0.041338372255156755    0.04526684442033121     7049.755621552467       0.05559306
-# 0.05315587254576701     0.06531589970701189     5476.31123059988        0.076415844
-# 0.08852993524984791     0.08458178404722025     3297.176026880741       0.0933851
-# 0.12224831704323326     0.1010973370449811      2385.681490957737       0.10967304
-# 0.14548918026167934     0.11838054484039393     2006.3990591168404      0.12784216
-# 0.15331280352287868     0.13717977935837336     1900.389076769352       0.14595553
-# 0.14773744775283826     0.15395207248511505     1971.3568314313889      0.1621963
-# 0.15843580980211655     0.17308492055260047     1840.2607005238533      0.18518762
-# 0.13703903462860317     0.20657700500765952     2126.0651206970215      0.2340388
-# 0.2538073639221181      0.2602755820478401      1148.4315833449364      0.30211022
-# 0.5049433181045647      0.34571517923806827     559.0556263923645       1.0
+# event_name      mean_y                  mean_ŷ                  Σweight                 bin_max
+# tornado         0.00019144406754754303  0.0001832241002183749   4.086482674550891e6     0.003163401
+# tornado         0.005762722391111711    0.0059539586538002965   135795.3601744771       0.010594597
+# tornado         0.014085254526087958    0.014560240166900624    55555.9188156724        0.019611735
+# tornado         0.025749083150050013    0.024464624404798668    30378.764231026173      0.031200647
+# tornado         0.03901497303780279     0.04068398627041344     20055.702448546886      0.0556092
+# tornado         0.065860549666099       0.07232758857712564     11876.44122749567       0.08892811
+# tornado         0.11792354227887294     0.09764554820728881     6632.709095716476       0.10743219
+# tornado         0.13714207066720346     0.11922264653996906     5701.757938027382       0.13338953
+# tornado         0.11950217629916997     0.1629445887353792      6545.895178794861       0.21110983
+# tornado         0.3223328187072219      0.2578566699321067      2412.3904927372932      1.0
+# wind            0.001468393779175532    0.001403827470378238    4.008272053004682e6     0.028952872
+# wind            0.042684383100977365    0.04519850326760836     137889.67413407564      0.067867324
+# wind            0.08652308964665463     0.08806486755178454     68020.54129821062       0.11400817
+# wind            0.1462680052638156      0.13932669910442497     40238.03479319811       0.1691322
+# wind            0.19387856701171788     0.19778705117992362     30358.51892721653       0.22992225
+# wind            0.26006468302927577     0.2599617751010517      22630.43121212721       0.2912621
+# wind            0.3216356207214249      0.31738174725452556     18299.949753046036      0.34566957
+# wind            0.37530013253877215     0.3813419102150456      15683.16629344225       0.42783338
+# wind            0.5051760111478776      0.4935101982184035      11650.013535499573      0.5762383
+# wind            0.7005335272862856      0.7065631723542611      8395.23120188713        1.0
+# hail            0.0006361628101032178   0.000632607502902406    4.08976477201128e6      0.017750435
+# hail            0.027668078984610604    0.026912153209588983    94021.54924637079       0.039141823
+# hail            0.049324641333907404    0.04917863959617647     52744.689136207104      0.060695738
+# hail            0.07076239578858932     0.07077144068676647     36765.249469578266      0.08320593
+# hail            0.0945895789869977      0.09751802311160625     27510.14194124937       0.11524189
+# hail            0.13315121865397708     0.13177904001076032     19543.177692770958      0.15030804
+# hail            0.16760804177128757     0.17147839525232203     15522.64737278223       0.19774066
+# hail            0.22509880666894788     0.22628648956572045     11557.537741959095      0.26114574
+# hail            0.32135948067427483     0.29953004735426947     8096.390666127205       0.34962097
+# hail            0.43937859376043        0.4447459271823616      5911.4588750600815      1.0
+# sig_tornado     2.571871549061692e-5    1.9986018385744473e-5   4.251143661282301e6     0.0006216399
+# sig_tornado     0.001428204109318158    0.0018039419639181778   76732.54330050945       0.0050245933
+# sig_tornado     0.008097979718414744    0.007703846572923989    13551.042606294155      0.011668011
+# sig_tornado     0.011247669363099348    0.016459588651393253    9704.275691211224       0.022787407
+# sig_tornado     0.04009750246890077     0.025934578686081566    2729.2030975818634      0.029620264
+# sig_tornado     0.03658756842066715     0.03613689887174313     2991.6218940615654      0.046061274
+# sig_tornado     0.0519084164793314      0.059100801103409734    2107.990620672703       0.076002166
+# sig_tornado     0.07994975637014516     0.09154583990714128     1366.5978977680206      0.11275637
+# sig_tornado     0.16979111384982726     0.13710055728824463     647.3261821866035       0.1662113
+# sig_tornado     0.22524476619828537     0.21917497324751414     463.35158079862595      1.0
+# sig_wind        0.00017331051707854     0.0001581066155393539   4.038138275197029e6     0.0028377278
+# sig_wind        0.0047390320219361836   0.004583017978492242    147848.3398333788       0.007203269
+# sig_wind        0.009499470345166806    0.010207280582933466    73677.81734418869       0.014998861
+# sig_wind        0.01880426208865085     0.019974838924628386    37250.23594087362       0.026544504
+# sig_wind        0.03413324505167252     0.032354517222172786    20504.770110189915      0.039056044
+# sig_wind        0.040920646498821954    0.04715748584821698     17106.25998610258       0.058905784
+# sig_wind        0.08090383866161632     0.0711214670676529      8658.907377064228       0.08654974
+# sig_wind        0.08416943865290621     0.10041986582952954     8314.231711268425       0.11052245
+# sig_wind        0.11545896491469304     0.11655473676112905     6068.401515364647       0.12404624
+# sig_wind        0.1797980379304038      0.14082417659091237     3870.375137925148       1.0
+# sig_hail        8.558498271245034e-5    8.17697466598171e-5     4.23456178406769e6      0.005622294
+# sig_hail        0.007994276778490537    0.008954205778869398    45310.74785798788       0.013451036
+# sig_hail        0.015417645442972493    0.017320155666033284    23497.35624051094       0.02173031
+# sig_hail        0.024363196379011007    0.024430214146091225    14878.557882726192      0.026939921
+# sig_hail        0.03239713531442493     0.029028804919280133    11162.627854585648      0.031307817
+# sig_hail        0.03590073703696473     0.03412947338812053     10096.31495910883       0.037602838
+# sig_hail        0.036933492455797495    0.043795592147574974    9790.91767668724        0.05339017
+# sig_hail        0.06697919386624233     0.062257185093183384    5410.661112964153       0.07159327
+# sig_hail        0.10515508426842482     0.07950517096073371     3446.4898949861526      0.09021059
+# sig_hail        0.10845700375706654     0.12097012510236035     3282.1566061377525      1.0
 
-
-
-
-# Expected: 0.9704562360340072
-Metrics.roc_auc((@view X[:,1]), y, weights) # 0.9704562387563738
 
 
 
 
 # Calibrate to SPC
+
+target_success_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
+  "tornado" => [
+    (0.02, 0.050728736928645046),
+    (0.05, 0.11486038942521988),
+    (0.1,  0.22690348338037045),
+    (0.15, 0.3046782911820712),
+    (0.3,  0.31560627664076046), # lol
+  ],
+  "wind" => [
+    (0.05, 0.13461838497658143),
+    (0.15, 0.25485816629457203),
+    (0.3,  0.43476976026058434),
+    (0.45, 0.6185653041815565),
+  ],
+  "hail" => [
+    (0.05, 0.08021216469509043),
+    (0.15, 0.16136397567347519),
+    (0.3,  0.3011316257061734),
+    (0.45, 0.5444239242570899),
+  ],
+  "sig_tornado" => [(0.1, 0.08721705058958064)],
+  "sig_wind"    => [(0.1, 0.1163905700911105)],
+  "sig_hail"    => [(0.1, 0.08379410166467652)],
+)
+
+target_PODs = Dict{String,Vector{Tuple{Float64,Float64}}}(
+  "tornado" => [
+    (0.02, 0.6615090274606944),
+    (0.05, 0.3915418238912139),
+    (0.1,  0.13042915979366457),
+    (0.15, 0.027773066438696918),
+    (0.3,  0.008323827309277956),
+  ],
+  "wind" => [
+    (0.05, 0.7129517911854782),
+    (0.15, 0.38983512353226496),
+    (0.3,  0.10680248115276206),
+    (0.45, 0.015289658660478881),
+  ],
+  "hail" => [
+    (0.05, 0.7457921051915138),
+    (0.15, 0.41143213280714935),
+    (0.3,  0.0778527553093847),
+    (0.45, 0.009683467798086529),
+  ],
+  "sig_tornado" => [(0.1, 0.17764733377105618)],
+  "sig_wind"    => [(0.1, 0.08622702385365015)],
+  "sig_hail"    => [(0.1, 0.2454541775633861)],
+)
+
+
 
 function success_ratio(ŷ, y, weights, threshold)
   painted_weight       = 0.0
@@ -564,41 +685,6 @@ function success_ratio(ŷ, y, weights, threshold)
   true_positive_weight / painted_weight
 end
 
-target_success_ratios = [
-  (0.02, 0.0485357084712472),
-  (0.05, 0.11142399542325385),
-  (0.1, 0.22373785045573905),
-  (0.15, 0.33311809995812625),
-  (0.3, 0.42931275151328113)
-]
-
-println("nominal_prob\tthreshold\tsuccess_ratio")
-
-thresholds_to_match_success_ratio =
-  map(target_success_ratios) do (nominal_prob, target_success_ratio)
-    threshold = 0.5f0
-    step = 0.25f0
-    while step > 0.00000001f0
-      sr = success_ratio(ŷ, y, weights, threshold)
-      if isnan(sr) || sr > target_success_ratio
-        threshold -= step
-      else
-        threshold += step
-      end
-      step *= 0.5f0
-    end
-    println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
-    threshold
-  end
-
-# nominal_prob    threshold       success_ratio
-# 0.02    0.0127295405    0.04853525616997882
-# 0.05    0.040039346     0.11142667300267296
-# 0.1     0.18400295      0.2237468737640593
-# 0.15    0.23302902      0.33317687621379216
-# 0.3     0.26344         0.42958206936270776
-
-
 function probability_of_detection(ŷ, y, weights, threshold)
   positive_weight      = 0.0
   true_positive_weight = 0.0
@@ -615,63 +701,80 @@ function probability_of_detection(ŷ, y, weights, threshold)
   true_positive_weight / positive_weight
 end
 
-target_PODs = [
-  (0.02, 0.672673334503246),
-  (0.05, 0.4098841063979484),
-  (0.1, 0.14041993254469878),
-  (0.15, 0.029338579808637542),
-  (0.3, 0.00679180457194558)
-]
 
-println("nominal_prob\tthreshold\tPOD")
+function spc_calibrate(prediction_i, X, Ys, weights)
+  event_name, _ = CombinedHREFSREF.models[prediction_i]
+  y = Ys[event_name]
+  ŷ = @view X[:, prediction_i]
 
-thresholds_to_match_POD =
-  map(target_PODs) do (nominal_prob, target_POD)
-    threshold = 0.5f0
-    step = 0.25f0
-    while step > 0.00000001f0
-      pod = probability_of_detection(ŷ, y, weights, threshold)
-      if isnan(pod) || pod > target_POD
-        threshold += step
-      else
-        threshold -= step
+  println("nominal_prob\tthreshold\tsuccess_ratio")
+
+  thresholds_to_match_success_ratio =
+    map(target_success_ratios[event_name]) do (nominal_prob, target_success_ratio)
+      threshold = 0.5f0
+      step = 0.25f0
+      while step > 0.00000001f0
+        sr = success_ratio(ŷ, y, weights, threshold)
+        if isnan(sr) || sr > target_success_ratio
+          threshold -= step
+        else
+          threshold += step
+        end
+        step *= 0.5f0
       end
-      step *= 0.5f0
+      println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
+      threshold
     end
-    println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
-    threshold
+
+  # nominal_prob    threshold       success_ratio
+  # 0.02    0.0127295405    0.04853525616997882
+  # 0.05    0.040039346     0.11142667300267296
+  # 0.1     0.18400295      0.2237468737640593
+  # 0.15    0.23302902      0.33317687621379216
+  # 0.3     0.26344         0.42958206936270776
+
+  println("nominal_prob\tthreshold\tPOD")
+
+  thresholds_to_match_POD =
+    map(target_PODs[event_name]) do (nominal_prob, target_POD)
+      threshold = 0.5f0
+      step = 0.25f0
+      while step > 0.00000001f0
+        pod = probability_of_detection(ŷ, y, weights, threshold)
+        if isnan(pod) || pod > target_POD
+          threshold += step
+        else
+          threshold -= step
+        end
+        step *= 0.5f0
+      end
+      println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
+      threshold
+    end
+
+  for i in 1:length(target_PODs)
+    nominal_prob, _ = target_PODs[i]
+    threshold_to_match_succes_ratio = thresholds_to_match_success_ratio[i]
+    threshold_to_match_POD = thresholds_to_match_POD[i]
+    mean_threshold = (threshold_to_match_succes_ratio + threshold_to_match_POD) * 0.5f0
+    sr  = success_ratio(ŷ, y, weights, mean_threshold)
+    pod = probability_of_detection(ŷ, y, weights, mean_threshold)
+    println("$event_name\t$nominal_prob\t$threshold_to_match_succes_ratio\t$threshold_to_match_POD\t$mean_threshold\t$sr\t$pod")
   end
-
-# nominal_prob    threshold       POD
-# 0.02    0.019777253     0.672573803962084
-# 0.05    0.08982225      0.40978062116159975
-# 0.1     0.19142316      0.14033469816696242
-# 0.15    0.33357763      0.02943007176491364
-# 0.3     0.3842491       0.006698613290046718
-
-println("nominal_prob\tthreshold_to_match_succes_ratio\tthreshold_to_match_POD\tmean_threshold\tsuccess_ratio\tPOD")
-
-for i in 1:length(target_PODs)
-  nominal_prob, _ = target_PODs[i]
-  threshold_to_match_succes_ratio = thresholds_to_match_success_ratio[i]
-  threshold_to_match_POD = thresholds_to_match_POD[i]
-  mean_threshold = (threshold_to_match_succes_ratio + threshold_to_match_POD) * 0.5f0
-  sr  = success_ratio(ŷ, y, weights, mean_threshold)
-  pod = probability_of_detection(ŷ, y, weights, mean_threshold)
-  println("$nominal_prob\t$threshold_to_match_succes_ratio\t$threshold_to_match_POD\t$mean_threshold\t$sr\t$pod")
+end
+println("event_name\tnominal_prob\tthreshold_to_match_succes_ratio\tthreshold_to_match_POD\tmean_threshold\tsuccess_ratio\tPOD")
+for prediction_i in 1:event_types_count
+  spc_calibrate(prediction_i, X, Ys, weights)
 end
 
-# nominal_prob    threshold_to_match_succes_ratio threshold_to_match_POD  mean_threshold  success_ratio   POD
-# 0.02    0.0127295405    0.019777253     0.016253397     0.05632502012753043     0.7290002254123179
-# 0.05    0.040039346     0.08982225      0.0649308       0.1382464577013378      0.47516603256458734
-# 0.1     0.18400295      0.19142316      0.18771306      0.2310717260852238      0.145134634956839
-# 0.15    0.23302902      0.33357763      0.28330332      0.4875050416418053      0.062033164663175995
-# 0.3     0.26344         0.3842491       0.32384455      0.5220695437305608      0.036442226839582884
+# event_name   nominal_prob    threshold_to_match_succes_ratio threshold_to_match_POD  mean_threshold  success_ratio   POD
 
-calibration = [
-  (0.02, 0.016253397),
-  (0.05, 0.0649308),
-  (0.1,  0.18771306),
-  (0.15, 0.28330332),
-  (0.3,  0.32384455),
-]
+
+
+# calibration = [
+#   (0.02, 0.016253397),
+#   (0.05, 0.0649308),
+#   (0.1,  0.18771306),
+#   (0.15, 0.28330332),
+#   (0.3,  0.32384455),
+# ]
