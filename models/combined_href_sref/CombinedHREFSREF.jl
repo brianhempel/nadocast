@@ -120,6 +120,7 @@ end
 @assert map(first, HREFPrediction.models) == map(first, SREFPrediction.models) # Same event names
 # array of (event_name, grib2_var_name)
 models = map(((event_name, grib2_var_name, _, _, _),) -> (event_name, grib2_var_name), HREFPrediction.models)
+event_types_count = length(models)
 
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
@@ -220,8 +221,6 @@ function reload_forecasts()
 
   # Returns array of (event_name, var_name, predict)
   function make_models(event_to_bins, event_to_bins_logistic_coeffs)
-    event_types_count = length(models)
-
     ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
     map(1:event_types_count) do model_i
@@ -344,8 +343,6 @@ function reload_forecasts()
   end
 
   day_data_transformer(base_forecast, base_data) = begin
-    event_types_count = length(models)
-
     point_count, base_feature_count = size(base_data)
     hours_count = div(base_feature_count, event_types_count)
 
