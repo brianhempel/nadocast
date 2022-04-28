@@ -232,13 +232,17 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
-    println(f, "rm $base_path.nc")
-    println(f, "rm $base_path.xyz")
+    # println(f, "rm $base_path.nc")
+    # println(f, "rm $base_path.xyz")
+    # if !isnothing(sig_vals)
+    #   println(f, "rm $base_path-sig.nc")
+    #   println(f, "rm $base_path-sig.xyz")
+    # end
   end
 
   plot() = begin
     run(`sh $base_path.sh`)
-    rm(base_path * ".sh")
+    # rm(base_path * ".sh")
   end
 
   @async plot()
