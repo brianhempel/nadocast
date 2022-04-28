@@ -305,7 +305,7 @@ function reload_forecasts()
             ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ, sref_ŷ)
           elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
             # Bin 5-6 predictor only
-            ŷ = predict_one(bins_logistic_coeffs[length(bin_maxes)], href_ŷ, sref_ŷ)
+            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ, sref_ŷ)
           else
             # Overlapping bins
             higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
@@ -315,7 +315,7 @@ function reload_forecasts()
 
             # Bin 1-2 and 2-3 predictors
             ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
-            ratio*predict_one(coeffs_higher_bin, href_ŷ, sref_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ, sref_ŷ)
+            ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ, sref_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ, sref_ŷ)
           end
           out[i] = ŷ
         end
