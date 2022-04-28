@@ -907,7 +907,7 @@ X, Ys, weights =
   TrainingShared.get_data_labels_weights(
     day_validation_forecasts_0z;
     event_name_to_labeler = event_name_to_day_labeler,
-    save_dir = "day_validation_forecasts_0z",
+    save_dir = "day_validation_forecasts_0z_spc_calibrated",
   );
 
 # Confirm that the accs are better than the maxes
@@ -925,6 +925,16 @@ function test_predictive_power(forecasts, X, Ys, weights)
   end
 end
 test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
+
+# tornado (8326.0)     feature 1 TORPROB:calculated:hour   fcst:calculated_prob: AU-PR-curve: 0.12910289118631163
+# wind (63336.0)       feature 2 WINDPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.4076166080130104
+# hail (28152.0)       feature 3 HAILPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.24281549137715708
+# sig_tornado (1138.0) feature 4 STORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.09322716799320344
+# sig_wind (7555.0)    feature 5 SWINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.08475474579815966
+# sig_hail (3887.0)    feature 6 SHAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.0727762015599357
+
+# Yep, that's unchanged!
+
 
 target_success_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
   "tornado" => [
@@ -1074,3 +1084,23 @@ for prediction_i in 1:length(CombinedHREFSREF.models)
   event_name, _ = CombinedHREFSREF.models[prediction_i]
   calibrations[event_name] = spc_calibrate(prediction_i, X, Ys, weights)
 end
+
+# event_name      nominal_prob    threshold_to_match_succes_ratio threshold_to_match_POD  mean_threshold  success_ratio           POD
+# tornado         0.02            0.0145724565                    0.022738352             0.018655404     0.05927062614766337     0.7357301796004513
+# tornado         0.05            0.03927873                      0.059221342             0.049250036     0.12933375779388187     0.4633115774305384
+# tornado         0.1             0.093651995                     0.10508071              0.09936635      0.2577960043775589      0.14462476933577742
+# tornado         0.15            0.2715841                       0.13205521              0.20181966      0.2348807750696644      0.006138932381166391
+# tornado         0.3             0.37645632                      0.1485431               0.26249972      0.29040593698579        0.005512840471253729
+# wind            0.05            0.01683949                      0.08296512              0.049902305     0.21327360357599012     0.8079320037289051
+# wind            0.15            0.07174833                      0.21547179              0.14361006      0.3458116242820063      0.5714318508074652
+# wind            0.3             0.21148114                      0.38777882              0.29963         0.586480634971858       0.20031806041584502
+# wind            0.45            0.31978613                      0.78341365              0.55159986      0.8352297195856766      0.042701978011109115
+# hail            0.05            0.022294775                     0.07359822              0.047946498     0.10646251427884203     0.8360045859843113
+# hail            0.15            0.10074367                      0.18163772              0.1411907       0.2002707524909718      0.5396125414257729
+# hail            0.3             0.22166397                      0.34964204              0.285653        0.3796638051091829      0.18973000759737998
+# hail            0.45            0.41856432                      0.52450764              0.47153598      0.6026694365021374      0.01205135608020926
+# sig_tornado     0.1             0.050181612                     0.13948123              0.09483142      0.13142122243009974     0.29421793546267744
+# sig_wind        0.1             0.08469264                      0.116955206             0.100823924     0.1400181395832151      0.20048482143175006
+# sig_hail        0.1             0.087000266                     0.10708104              0.09704065      0.09149244333150056     0.2904158717211753
+
+# looks right enough
