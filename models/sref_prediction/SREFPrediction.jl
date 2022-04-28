@@ -80,13 +80,13 @@ models = [
                               "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-20T04.30.47.008_sig_tornado/231_trees_loss_0.00020749163.model",
                               "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-20T09.45.13.302_sig_tornado/189_trees_loss_0.00021580876.model"
   ),
-  ("sig_wind", "SWINDPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-22T08.00.21.554_sig_wind/211_trees_loss_0.0010130208.model",
-                            "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-22T08.06.21.664_sig_wind/262_trees_loss_0.001065569.model",
-                            "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-22T08.00.27.390_sig_wind/183_trees_loss_0.0010853795.model"
+  ("sig_wind", "SWINDPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-22T08.00.21.554_sig_wind/211_trees_loss_0.0010130208.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-22T08.06.21.664_sig_wind/262_trees_loss_0.001065569.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-22T08.00.27.390_sig_wind/183_trees_loss_0.0010853795.model"
   ),
-  ("sig_hail", "SHAILPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-22T08.00.21.554_sig_hail/263_trees_loss_0.00052539556.model",
-                            "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-22T08.06.21.664_sig_hail/290_trees_loss_0.0005572099.model",
-                            "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-22T08.00.27.390_sig_hail/319_trees_loss_0.0005862602.model"
+  ("sig_hail", "SHAILPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-22T08.00.21.554_sig_hail/263_trees_loss_0.00052539556.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-22T08.06.21.664_sig_hail/290_trees_loss_0.0005572099.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-22T08.00.27.390_sig_hail/319_trees_loss_0.0005862602.model"
   ),
 ]
 

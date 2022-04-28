@@ -136,18 +136,18 @@ function test_predictive_power(forecasts, X, Ys, weights)
 end
 test_predictive_power(validation_forecasts_0z, X, Ys, weights)
 
-# tornado (8326.0)     feature 1 independent events total TORPROB:calculated:day    fcst:: AU-PR-curve: 0.12862590219455652
-# tornado (8326.0)     feature 2 highest hourly TORPROB:calculated:day              fcst:: AU-PR-curve: 0.11601147163983896
-# wind (63336.0)       feature 3 independent events total WINDPROB:calculated:day   fcst:: AU-PR-curve: 0.4070694067680044
-# wind (63336.0)       feature 4 highest hourly WINDPROB:calculated:day             fcst:: AU-PR-curve: 0.38303104871692784
-# hail (28152.0)       feature 5 independent events total HAILPROB:calculated:day   fcst:: AU-PR-curve: 0.23917144549298752
-# hail (28152.0)       feature 6 highest hourly HAILPROB:calculated:day             fcst:: AU-PR-curve: 0.222086339604639
-# sig_tornado (1138.0) feature 7 independent events total STORPROB:calculated:day   fcst:: AU-PR-curve: 0.08828535008120504
-# sig_tornado (1138.0) feature 8 highest hourly STORPROB:calculated:day             fcst:: AU-PR-curve: 0.07309166844703058
-# sig_wind (7555.0)    feature 9 independent events total SWINDPROB:calculated:day  fcst:: AU-PR-curve: 0.0807134420010289 (only exception. oh well)
-# sig_wind (7555.0)    feature 10 highest hourly SWINDPROB:calculated:day           fcst:: AU-PR-curve: 0.08173225765702283
-# sig_hail (3887.0)    feature 11 independent events total SHAILPROB:calculated:day fcst:: AU-PR-curve: 0.07042914553475686
-# sig_hail (3887.0)    feature 12 highest hourly SHAILPROB:calculated:day           fcst:: AU-PR-curve: 0.06251880831100963
+# tornado (8326.0)     feature 1 independent events total TORPROB:calculated:day   fcst:: AU-PR-curve: 0.12862590219455652
+# tornado (8326.0)     feature 2 highest hourly TORPROB:calculated:day             fcst:: AU-PR-curve: 0.11601147163983896
+# wind (63336.0)       feature 3 independent events total WINDPROB:calculated:day  fcst:: AU-PR-curve: 0.4070694067680044
+# wind (63336.0)       feature 4 highest hourly WINDPROB:calculated:day            fcst:: AU-PR-curve: 0.38303104871692784
+# hail (28152.0)       feature 5 independent events total HAILPROB:calculated:day  fcst:: AU-PR-curve: 0.23917144549298752
+# hail (28152.0)       feature 6 highest hourly HAILPROB:calculated:day            fcst:: AU-PR-curve: 0.222086339604639
+# sig_tornado (1138.0) feature 7 independent events total STORPROB:calculated:day  fcst:: AU-PR-curve: 0.08828535008120504
+# sig_tornado (1138.0) feature 8 highest hourly STORPROB:calculated:day            fcst:: AU-PR-curve: 0.07309166844703058
+# sig_wind (7555.0)    feature 9 independent events total SWINDPRO:calculated:day  fcst:: AU-PR-curve: 0.0807134420010289 (only exception. oh well)
+# sig_wind (7555.0)    feature 10 highest hourly SWINDPRO:calculated:day           fcst:: AU-PR-curve: 0.08173225765702283
+# sig_hail (3887.0)    feature 11 independent events total SHAILPRO:calculated:day fcst:: AU-PR-curve: 0.07042914553475686
+# sig_hail (3887.0)    feature 12 highest hourly SHAILPRO:calculated:day           fcst:: AU-PR-curve: 0.06251880831100963
 
 
 
@@ -485,12 +485,12 @@ function test_predictive_power(forecasts, X, Ys, weights)
 end
 test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
 
-# tornado (8326.0)     feature 1 TORPROB:calculated:hour   fcst:calculated_prob: AU-PR-curve: 0.12910289299673042
-# wind (63336.0)       feature 2 WINDPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.407616606429577
-# hail (28152.0)       feature 3 HAILPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.24281549180460507
-# sig_tornado (1138.0) feature 4 STORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.09322716799320344
-# sig_wind (7555.0)    feature 5 SWINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.08475474530886153
-# sig_hail (3887.0)    feature 6 SHAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.07277620173520509
+# tornado (8326.0)     feature 1 TORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.12910289299673042
+# wind (63336.0)       feature 2 WINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.407616606429577
+# hail (28152.0)       feature 3 HAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.24281549180460507
+# sig_tornado (1138.0) feature 4 STORPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.09322716799320344
+# sig_wind (7555.0)    feature 5 SWINDPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.08475474530886153
+# sig_hail (3887.0)    feature 6 SHAILPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.07277620173520509
 
 
 
@@ -926,12 +926,12 @@ function test_predictive_power(forecasts, X, Ys, weights)
 end
 test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
 
-# tornado (8326.0)     feature 1 TORPROB:calculated:hour   fcst:calculated_prob: AU-PR-curve: 0.12910289118631163
-# wind (63336.0)       feature 2 WINDPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.4076166080130104
-# hail (28152.0)       feature 3 HAILPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.24281549137715708
-# sig_tornado (1138.0) feature 4 STORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.09322716799320344
-# sig_wind (7555.0)    feature 5 SWINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.08475474579815966
-# sig_hail (3887.0)    feature 6 SHAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.0727762015599357
+# tornado (8326.0)     feature 1 TORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.12910289118631163
+# wind (63336.0)       feature 2 WINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.4076166080130104
+# hail (28152.0)       feature 3 HAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.24281549137715708
+# sig_tornado (1138.0) feature 4 STORPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.09322716799320344
+# sig_wind (7555.0)    feature 5 SWINDPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.08475474579815966
+# sig_hail (3887.0)    feature 6 SHAILPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.0727762015599357
 
 # Yep, that's unchanged!
 

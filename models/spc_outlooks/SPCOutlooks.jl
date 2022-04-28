@@ -60,12 +60,12 @@ function grid()
 end
 
 models = [
-  ("tornado",     "TORPROB",   "_torn.shp"),
-  ("wind",        "WINDPROB",  "_wind.shp"),
-  ("hail",        "HAILPROB",  "_hail.shp"),
-  ("sig_tornado", "STORPROB",  "_sigtorn.shp"),
-  ("sig_wind",    "SWINDPROB", "_sigwind.shp"),
-  ("sig_hail",    "SHAILPROB", "_sighail.shp"),
+  ("tornado",     "TORPROB",  "_torn.shp"),
+  ("wind",        "WINDPROB", "_wind.shp"),
+  ("hail",        "HAILPROB", "_hail.shp"),
+  ("sig_tornado", "STORPROB", "_sigtorn.shp"),
+  ("sig_wind",    "SWINDPRO", "_sigwind.shp"),
+  ("sig_hail",    "SHAILPRO", "_sighail.shp"),
 ]
 
 # thresholds = [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6]
