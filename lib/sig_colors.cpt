@@ -1,7 +1,7 @@
 # Pattern 26 at 300ppi
 # https://docs.generic-mapping-tools.org/6.2/cookbook/predefined-patterns.html
 0.0	255/255/255@100	0.1	255/255/255@100
-0.1	p300/26	1.0	220/220/220	L	; 10%
+0.1	p300/26	1.0	p300/26	L	; 10%
 B	255/255/255@100
 F	255/255/255@100
 N	255/0/255@100
