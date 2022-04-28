@@ -150,7 +150,10 @@ end
 #   run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
 # end
 
-rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
+should_publish = get(ENV, "PUBLISH", "false") == true
+if should_publish
+  rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
+end
 
 if get(ENV, "TWEET", "false") == "true"
   tweet_script_path = (@__DIR__) * "/tweet.rb"
@@ -159,7 +162,7 @@ if get(ENV, "TWEET", "false") == "true"
     if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(newest_forecast)
       "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast"
     else
-      "$(nadocast_run_hour)Z Day Tornado Forecast"
+      "$(nadocast_run_hour)Z Day Tornado Forecast (New 2021 Models)"
     end
 
   for path in daily_paths_to_perhaps_tweet
@@ -173,4 +176,4 @@ if get(ENV, "TWEET", "false") == "true"
   # end
 end
 
-wait(rsync_process)
+should_publish && wait(rsync_process)
