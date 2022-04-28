@@ -858,6 +858,9 @@ println()
 #
 # Poor man's notebook.
 
+# The unblurred prediction forecasts should be in the lib/computation_cache, so don't waste time hitting disk
+# FORECAST_DISK_PREFETCH=false make julia
+
 import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
@@ -871,7 +874,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
-(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_blurred_and_forecast_hour(); just_hours_near_storm_events = false);
+(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_blurred(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 1, 1, 0)
@@ -880,9 +883,9 @@ validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(f
 # Make sure a forecast loads
 Forecasts.data(validation_forecasts_blurred[100])
 
-# rm("validation_forecasts_blurred_and_forecast_hour"; recursive=true)
+# rm("validation_forecasts_blurred"; recursive=true)
 
-X2, Ys2, weights2 = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; save_dir = "validation_forecasts_blurred_and_forecast_hour");
+X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "validation_forecasts_blurred");
 
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
@@ -890,11 +893,28 @@ function test_predictive_power(forecasts, X, Ys, weights)
   for prediction_i in 1:length(SREFPrediction.models)
     (event_name, _, _) = SREFPrediction.models[prediction_i]
     y = Ys[event_name]
-    for j in 1:size(X,2)
-      x = @view X[:,j]
-      auc = Metrics.roc_auc(x, y, weights)
-      println("$event_name ($(round(sum(y)))) feature $j $(Inventories.inventory_line_description(inventory[j]))\tAUC: $auc")
-    end
+    x = @view X[:,prediction_i]
+    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+    println("$event_name ($(round(sum(y)))) feature $prediction_i $(Inventories.inventory_line_description(inventory[prediction_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
-test_predictive_power(validation_forecasts_blurred, X2, Ys2, weights2)
+test_predictive_power(validation_forecasts_blurred, X, Ys, weights)
+
+# EXPECTED:
+# event_name  AU_PR
+# tornado     0.020957047
+# wind        0.09067886
+# hail        0.057110623
+# sig_tornado 0.013260133
+# sig_wind    0.012308959
+# sig_hail    0.013652643
+
+# ACTUAL:
+# tornado (9554.0)     feature 1 TORPROB:calculated:hour   fcst:calculated_prob:blurred AU-PR-curve: 0.020957046595993258
+# wind (76241.0)       feature 2 WINDPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.09067886564861938
+# hail (33947.0)       feature 3 HAILPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.057110620698781485
+# sig_tornado (1456.0) feature 4 STORPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.013260132978854111
+# sig_wind (7763.0)    feature 5 SWINDPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.012308958537568998
+# sig_hail (4210.0)    feature 6 SHAILPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.013652642732904893
+
+# Yay!
