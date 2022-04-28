@@ -373,47 +373,77 @@ function reload_forecasts()
 
   _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
 
-  # day_predict(forecast, data) = begin
-  #   indep_events_ŷs  = @view data[:,1]
-  #   max_hourly_probs = @view data[:,2]
+  event_to_0z_day_bins = Dict{String, Vector{Float32}}(
+    "tornado"     => [0.009299877,  0.028508391, 0.062506445, 0.10407963, 0.1940539,   1.0],
+    "wind"        => [0.06972501,   0.1592437,   0.2574959,   0.36441022, 0.5204422,   1.0],
+    "hail"        => [0.03756313,   0.08204184,  0.14231205,  0.21637398, 0.34320852,  1.0],
+    "sig_tornado" => [0.0041370555, 0.016406734, 0.02879601,  0.07119626, 0.14319168,  1.0],
+    "sig_wind"    => [0.007097877,  0.02519015,  0.047340583, 0.07464776, 0.099326596, 1.0],
+    "sig_hail"    => [0.01275157,   0.022190364, 0.03249627,  0.05409533, 0.09080737,  1.0],
+  )
+  event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"     => [[0.7984841,     0.19232666,  0.06514242], [1.07512,    -0.0651204,   -0.31374842],  [1.5962993, -0.2032799,   0.6382291],   [0.83288527, -0.19397551, -1.1356705],  [0.60632825,  0.068164125, -0.642197]],
+    "wind"        => [[0.700852,      0.29223275,  0.16097507], [1.1891124,  -0.0350956,   -0.022556616], [1.1438317, -0.10413974, -0.27913937],  [0.8871091,  -0.04730344, -0.34016654], [0.9359743,   0.11857994,   0.024626805]],
+    "hail"        => [[0.67091036,    0.4049075,   0.702673],   [0.78364456,  0.113389224, -0.28517193],  [1.185529,  -0.12618165, -0.33549955],  [1.5202497,  -0.6613805,  -1.5395572],  [1.5235753,  -0.6790004,   -1.5636766]],
+    "sig_tornado" => [[1.1255901,    -0.09031829, -0.2014342],  [0.7604227,   0.56255525,   2.073743],    [-1.00439,   1.5047965,   0.034532372], [0.6268594,   0.6715986,   1.3238566],  [1.653894,   -0.29033047,  -0.088192254]],
+    "sig_wind"    => [[-0.034680896,  0.88001555,  0.32633656], [1.0652515,   0.0716145,    0.32573313],  [0.5629955,  0.5333647,   0.90708613],  [0.8774715,   1.0666903,   4.0418673],  [0.30341336,  0.22051479,  -0.58996856]],
+    "sig_hail"    => [[1.8899088,    -0.68954426, -0.28587562], [2.1869068,  -1.1520596,   -1.635874],    [1.1694325, -0.6678911,  -2.8746517],   [2.2023127,  -0.62016976,  0.41733724], [1.2492256,  -0.3587903,   -1.0017315]],
+  )
 
-  #   out = Array{Float32}(undef, length(indep_events_ŷs))
 
-  #   bin_maxes = Float32[0.008833055, 0.025307992, 0.06799701, 0.11479675, 0.18474162, 1.0]
+  # Returns array of (event_name, var_name, predict)
+  function make_day_models(event_to_day_bins, event_to_day_bins_logistic_coeffs)
+    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  #   Threads.@threads for i in 1:length(indep_events_ŷs)
-  #     indep_events_ŷ   = indep_events_ŷs[i]
-  #     max_hourly_prob  = max_hourly_probs[i]
-  #     if indep_events_ŷ <= bin_maxes[1]
-  #       # Bin 1-2 predictor only
-  #       ŷ = day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[2]
-  #       # Bin 1-2 and 2-3 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[1], bin_maxes[2])
-  #       ŷ = ratio*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[3]
-  #       # Bin 2-3 and 3-4 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[2], bin_maxes[3])
-  #       ŷ = ratio*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[4]
-  #       # Bin 3-4 and 4-5 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[3], bin_maxes[4])
-  #       ŷ = ratio*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob)
-  #     elseif indep_events_ŷ <= bin_maxes[5]
-  #       # Bin 4-5 and 5-6 predictors
-  #       ratio = ratio_between(indep_events_ŷ, bin_maxes[4], bin_maxes[5])
-  #       ŷ = ratio*day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) + (1f0 - ratio)*day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob)
-  #     else
-  #       # Bin 5-6 predictor only
-  #       ŷ = day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob)
-  #     end
-  #     out[i] = ŷ
-  #   end
+    map(1:event_types_count) do model_i
+      event_name, var_name = models[model_i]
 
-  #   out
-  # end
+      predict(forecasts, data) = begin
+        total_prob_ŷs = @view data[:, model_i*2 - 1]
+        max_hourly_ŷs = @view data[:, model_i*2]
 
-  # _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_predict; model_name = "CombinedHREFSREF_day_severe_probabilities")
+        out = Array{Float32}(undef, length(total_prob_ŷs))
+
+        bin_maxes            = event_to_day_bins[event_name]
+        bins_logistic_coeffs = event_to_day_bins_logistic_coeffs[event_name]
+
+        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+
+        predict_one(coeffs, total_prob_ŷ, max_hourly_ŷ) = σ(coeffs[1]*logit(total_prob_ŷ) + coeffs[2]*logit(max_hourly_ŷ) + coeffs[3])
+
+        Threads.@threads for i in 1:length(total_prob_ŷs)
+          total_prob_ŷ = total_prob_ŷs[i]
+          max_hourly_ŷ = max_hourly_ŷs[i]
+          if total_prob_ŷ <= bin_maxes[1]
+            # Bin 1-2 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[1], total_prob_ŷ, max_hourly_ŷ)
+          elseif total_prob_ŷ > bin_maxes[length(bin_maxes) - 1]
+            # Bin 5-6 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], total_prob_ŷ, max_hourly_ŷ)
+          else
+            # Overlapping bins
+            higher_bin_i = findfirst(bin_max -> total_prob_ŷ <= bin_max, bin_maxes)
+            lower_bin_i  = higher_bin_i - 1
+            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+
+            # Bin 1-2 and 2-3 predictors
+            ratio = ratio_between(total_prob_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+            ŷ = ratio*predict_one(coeffs_higher_bin, total_prob_ŷ, max_hourly_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, total_prob_ŷ, max_hourly_ŷ)
+          end
+          out[i] = ŷ
+        end
+
+        out
+      end
+
+      (event_name, var_name, predict)
+    end
+  end
+
+  # We only ever use the 0Z forecasts (normally) but here we are using the 0Z calibration non-0Z runs too
+  day_models = make_day_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
+  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
 
   # spc_calibration = [
   #   (0.02, 0.016253397),
