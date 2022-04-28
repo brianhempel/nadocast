@@ -127,60 +127,6 @@ models = map(((event_name, grib2_var_name, _, _, _),) -> (event_name, grib2_var_
 logit(p) = log(p / (one(p) - p))
 
 
-bins_maxes = Dict{String,Vector{Float32}}()
-
-# # Bin 1-2 --------
-# # -1.0 < HREF_ŷ <= 0.0040673064
-# # Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
-# href_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565f0*logit(href_ŷ) + 0.19299681f0*logit(sref_ŷ) + -0.21271989f0)
-# # Bin 2-3 --------
-# # 0.000962529 < HREF_ŷ <= 0.009957244
-# # Fit logistic coefficients: Float32[0.84564245, 0.14841641, -0.06817224]
-# href_newer_bin_2_3_predict(href_ŷ, sref_ŷ) = σ(0.84564245f0*logit(href_ŷ) + 0.14841641f0*logit(sref_ŷ) + -0.06817224f0)
-# # Bin 3-4 --------
-# # 0.0040673064 < HREF_ŷ <= 0.020302918
-# # Fit logistic coefficients: Float32[0.9977281, 0.14388186, 0.64254296]
-# href_newer_bin_3_4_predict(href_ŷ, sref_ŷ) = σ(0.9977281f0*logit(href_ŷ) + 0.14388186f0*logit(sref_ŷ) + 0.64254296f0)
-# # Bin 4-5 --------
-# # 0.009957244 < HREF_ŷ <= 0.037081156
-# # Fit logistic coefficients: Float32[1.3795987, 0.091625534, 1.9759048]
-# href_newer_bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.3795987f0*logit(href_ŷ) + 0.091625534f0*logit(sref_ŷ) + 1.9759048f0)
-# # Bin 5-6 --------
-# # 0.020302918 < HREF_ŷ <= 1.0
-# # Fit logistic coefficients: Float32[0.9358031, 0.1812378, 0.836498]
-# href_newer_bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.9358031f0*logit(href_ŷ) + 0.1812378f0*logit(sref_ŷ) + 0.836498f0)
-
-
-# # Bin 1-2 --------
-# # -1.0 < HREF_ŷ <= 0.0038515618
-# # Fit logistic coefficients: Float32[0.68609446, 0.29776412, -0.06935765]
-# sref_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.68609446f0*logit(href_ŷ) + 0.29776412f0*logit(sref_ŷ) + -0.06935765f0)
-# # Bin 2-3 --------
-# # 0.0009233353 < HREF_ŷ <= 0.00954726
-# # Fit logistic coefficients: Float32[0.73588675, 0.26439694, 0.021931686]
-# sref_newer_bin_2_3_predict(href_ŷ, sref_ŷ) = σ(0.73588675f0*logit(href_ŷ) + 0.26439694f0*logit(sref_ŷ) + 0.021931686f0)
-# # Bin 3-4 --------
-# # 0.0038515618 < HREF_ŷ <= 0.01923272
-# # Fit logistic coefficients: Float32[0.8676892, 0.3169111, 0.9392679]
-# sref_newer_bin_3_4_predict(href_ŷ, sref_ŷ) = σ(0.8676892f0*logit(href_ŷ) + 0.3169111f0*logit(sref_ŷ) + 0.9392679f0)
-# # Bin 4-5 --------
-# # 0.00954726 < HREF_ŷ <= 0.035036117
-# # Fit logistic coefficients: Float32[1.2143207, 0.26236853, 2.1367016]
-# sref_newer_bin_4_5_predict(href_ŷ, sref_ŷ) = σ(1.2143207f0*logit(href_ŷ) + 0.26236853f0*logit(sref_ŷ) + 2.1367016f0)
-# # Bin 5-6 --------
-# # 0.01923272 < HREF_ŷ <= 1.0
-# # Fit logistic coefficients: Float32[0.851503, 0.31797588, 1.0932944]
-# sref_newer_bin_5_6_predict(href_ŷ, sref_ŷ) = σ(0.851503f0*logit(href_ŷ) + 0.31797588f0*logit(sref_ŷ) + 1.0932944f0)
-
-
-# day_bins_logistic_coeffs = Vector{Float32}[Float32[0.8790791, 0.17466258, 0.42071092], Float32[0.5856237, 0.17571865, -0.84646785], Float32[1.4197825, 0.00979548, 0.91951996], Float32[1.5459903, -0.15001805, 0.5937435], Float32[1.1762913, -0.5233394, -1.4415414]]
-
-# day_bin_1_2_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[1][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[1][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[1][3])
-# day_bin_2_3_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[2][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[2][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[2][3])
-# day_bin_3_4_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[3][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[3][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[3][3])
-# day_bin_4_5_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[4][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[4][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[4][3])
-# day_bin_5_6_predict(indep_events_ŷ, max_hourly_prob) = σ(day_bins_logistic_coeffs[5][1]*logit(indep_events_ŷ) + day_bins_logistic_coeffs[5][2]*logit(max_hourly_prob) + day_bins_logistic_coeffs[5][3])
-
 
 function reload_forecasts()
   # href_paths = Grib2.all_grib2_file_paths_in("/Volumes/SREF_HREF_1/href")
@@ -334,106 +280,100 @@ function reload_forecasts()
   _forecasts_sref_newer_combined = Forecasts.Forecast[]
 
 
-  # # Day forecasts
+  # Day forecasts
 
-  # run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined))
+  run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined))
 
-  # run_date = Dates.Date(2019, 1, 9)
-  # associated_forecasts = []
-  # while run_date <= Dates.Date(Dates.now(Dates.UTC))
-  #   run_year  = Dates.year(run_date)
-  #   run_month = Dates.month(run_date)
-  #   run_day   = Dates.day(run_date)
+  run_date = Dates.Date(2019, 1, 9)
+  associated_forecasts = []
+  while run_date <= Dates.Date(Dates.now(Dates.UTC))
+    run_year  = Dates.year(run_date)
+    run_month = Dates.month(run_date)
+    run_day   = Dates.day(run_date)
 
-  #   for run_hour in 0:3:21
-  #     run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+    for run_hour in 0:3:21
+      run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
 
-  #     forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
+      forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
 
-  #     forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
+      forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
 
-  #     forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
+      forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
 
-  #     if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
-  #       push!(associated_forecasts, forecasts_for_convective_day)
-  #     end
+      if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
+        push!(associated_forecasts, forecasts_for_convective_day)
+      end
 
-  #     # 1. Try both independent events total prob and max hourly prob as the main descriminator
-  #     # 2. bin predictions into 10 bins of equal weight of positive labels
-  #     # 3. combine bin-pairs (overlapping, 9 bins total)
-  #     # 4. train a logistic regression for each bin,
-  #     #   σ(a1*logit(independent events total prob) +
-  #     #     a2*logit(max hourly prob) +
-  #     #     a3*logit(2nd highest hourly prob) +
-  #     #     a4*logit(3rd highest hourly prob) +
-  #     #     a5*logit(4th highest hourly prob) +
-  #     #     a6*logit(5th highest hourly prob) +
-  #     #     a7*logit(6th highest hourly prob) +
-  #     #     a8*logit(tornado day climatological prob) +
-  #     #     a9*logit(tornado day given severe day climatological prob) +
-  #     #     a10*logit(geomean(above two)) +
-  #     #     a11*logit(tornado prob for given month) +
-  #     #     a12*logit(tornado prob given severe day for given month) +
-  #     #     a13*logit(geomean(above two)) +
-  #     #     b)
-  #     #   Check & eliminate terms via 3-fold cross-validation.
-  #     # 5. prediction is weighted mean of the two overlapping logistic models
-  #     # 6. should thereby be absolutely calibrated (check)
-  #     # 7. calibrate to SPC thresholds (linear interpolation)
-  #   end
+      # 1. Try both independent events total prob and max hourly prob as the main descriminator
+      # 2. bin predictions into 10 bins of equal weight of positive labels
+      # 3. combine bin-pairs (overlapping, 9 bins total)
+      # 4. train a logistic regression for each bin,
+      #   σ(a1*logit(independent events total prob) +
+      #     a2*logit(max hourly prob) +
+      #     b)
+      # 5. prediction is weighted mean of the two overlapping logistic models
+      # 6. should thereby be absolutely calibrated (check)
+      # 7. calibrate to SPC thresholds (linear interpolation)
+    end
 
-  #   run_date += Dates.Day(1)
-  # end
+    run_date += Dates.Day(1)
+  end
 
-  # # Which run time and forecast hour to use for the set.
-  # # Namely: latest run time, then longest forecast hour
-  # choose_canonical_forecast(day_hourlies) = begin
-  #   canonical = day_hourlies[1]
-  #   for forecast in day_hourlies
-  #     if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
-  #       canonical = forecast
-  #     end
-  #   end
-  #   canonical
-  # end
+  # Which run time and forecast hour to use for the set.
+  # Namely: latest run time, then longest forecast hour
+  choose_canonical_forecast(day_hourlies) = begin
+    canonical = day_hourlies[1]
+    for forecast in day_hourlies
+      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
+        canonical = forecast
+      end
+    end
+    canonical
+  end
 
-  # day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
-  # day_inventory_transformer(base_forecast, base_inventory) = begin
-  #   [ Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total tornado probability", "calculated", "day fcst", "", "")
-  #   , Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "2nd highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "3rd highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "4th highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "5th highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   # , Inventories.InventoryLine("", "", base_inventory[1].date_str, "6th highest hourly tornado probability", "calculated", "day fcst", "", "")
-  #   ]
-  # end
+  day_inventory_transformer(base_forecast, base_inventory) = begin
+    out = Inventories.InventoryLine[]
+    for line in base_inventory
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(line.abbrev)", "calculated", "day fcst", "", ""))
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(line.abbrev)", "calculated", "day fcst", "", ""))
+    end
+    out
+  end
 
-  # day_data_transformer(base_forecast, base_data) = begin
-  #   point_count, hours_count = size(base_data)
-  #   out = Array{Float32}(undef, (point_count, 2))
-  #   Threads.@threads for i in 1:point_count
-  #     # sorted_probs = sort((@view base_data[i,:]); rev = true)
-  #     prob_no_tor = 1.0
-  #     for hour_i in 1:hours_count
-  #       prob_no_tor *= 1.0 - Float64(base_data[i,hour_i])
-  #     end
-  #     out[i,1] = Float32(1.0 - prob_no_tor)
-  #     out[i,2] = maximum(@view base_data[i,:])
-  #     # out[i,2] = sorted_probs[1]
-  #     # out[i,3] = sorted_probs[2]
-  #     # out[i,4] = sorted_probs[3]
-  #     # out[i,5] = sorted_probs[4]
-  #     # out[i,6] = sorted_probs[5]
-  #     # out[i,7] = sorted_probs[6]
-  #   end
-  #   out
-  # end
+  day_data_transformer(base_forecast, base_data) = begin
+    event_types_count = length(models)
 
-  # # Caching barely helps load times, so we don't do it
+    point_count, base_feature_count = size(base_data)
+    hours_count = div(base_feature_count, event_types_count)
 
-  # _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
+    out = Array{Float32}(undef, (point_count, 2 * base_feature_count))
+
+    Threads.@threads for i in 1:point_count
+      for event_i in 1:event_types_count
+        prob_no_tor = 1.0
+        for hour_i in 1:hours_count
+          prob_no_tor *= 1.0 - Float64((@view X[i, event_i:event_types_count:base_feature_count])[hour_i])
+        end
+        out[i, event_i*2 - 1] = Float32(1.0 - prob_no_tor)
+        out[i, event_i*2    ] = maximum(@view X[i, event_i:event_types_count:base_feature_count])
+
+        # sorted_probs = sort((@view X[i,:]); rev = true)
+        # out[i,2] = sorted_probs[1]
+        # out[i,3] = sorted_probs[2]
+        # out[i,4] = sorted_probs[3]
+        # out[i,5] = sorted_probs[4]
+        # out[i,6] = sorted_probs[5]
+        # out[i,7] = sorted_probs[6]
+      end
+    end
+    out
+  end
+
+  # Caching barely helps load times, so we don't do it
+
+  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
 
   # day_predict(forecast, data) = begin
   #   indep_events_ŷs  = @view data[:,1]

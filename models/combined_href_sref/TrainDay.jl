@@ -23,18 +23,16 @@ HOUR   = 60*MINUTE
 # (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer());
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
-length(validation_forecasts) # 903
-
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2020, 11, 1, 0)
+cutoff = Dates.DateTime(2022, 1, 1, 0)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
-length(validation_forecasts) # 735
+length(validation_forecasts) #
 
 @time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
 
 validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, validation_forecasts);
-length(validation_forecasts_0z) # 92
+length(validation_forecasts_0z) #
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -45,23 +43,39 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
-compute_forecast_labels(forecast) = begin
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+
+compute_day_labels(events, forecast) = begin
   # Annoying that we have to recalculate this.
   # The end_seconds will always be the last hour of the convective day
   # start_seconds depends on whether the run started during the day or not
   # I suppose for 0Z the answer is always "no" but whatev here's the right math
   start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  utc_datetime = Dates.unix2datetime(start_seconds)
-  println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  println(Forecasts.valid_yyyymmdd_hhz(forecast))
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  # utc_datetime = Dates.unix2datetime(start_seconds)
+  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_conus_tornado_neighborhoods(forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-X, y, weights = TrainingShared.get_data_labels_weights(validation_forecasts_0z; save_dir = "day_accumulators_validation_forecasts_0z", compute_forecast_labels = compute_forecast_labels);
+event_name_to_day_labeler = Dict(
+  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+)
+
+X, Ys, weights =
+  TrainingShared.get_data_labels_weights(
+    validation_forecasts_0z;
+    event_name_to_labeler = event_name_to_day_labeler,
+    save_dir = "day_accumulators_validation_forecasts_0z",
+  );
+
 
 
 # should do some checks here.
@@ -374,7 +388,7 @@ length(day_validation_forecasts)
 # 903
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2020, 11, 1, 0)
+cutoff = Dates.DateTime(2022, 1, 1, 0)
 day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
 
 length(day_validation_forecasts) # Expected: 735
