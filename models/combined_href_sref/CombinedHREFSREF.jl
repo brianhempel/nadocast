@@ -354,12 +354,12 @@ function reload_forecasts()
       for event_i in 1:event_types_count
         prob_no_tor = 1.0
         for hour_i in 1:hours_count
-          prob_no_tor *= 1.0 - Float64((@view X[i, event_i:event_types_count:base_feature_count])[hour_i])
+          prob_no_tor *= 1.0 - Float64((@view base_data[i, event_i:event_types_count:base_feature_count])[hour_i])
         end
         out[i, event_i*2 - 1] = Float32(1.0 - prob_no_tor)
-        out[i, event_i*2    ] = maximum(@view X[i, event_i:event_types_count:base_feature_count])
+        out[i, event_i*2    ] = maximum(@view base_data[i, event_i:event_types_count:base_feature_count])
 
-        # sorted_probs = sort((@view X[i,:]); rev = true)
+        # sorted_probs = sort((@view base_data[i, event_i:event_types_count:base_feature_count]); rev = true)
         # out[i,2] = sorted_probs[1]
         # out[i,3] = sorted_probs[2]
         # out[i,4] = sorted_probs[3]
