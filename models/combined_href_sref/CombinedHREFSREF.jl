@@ -335,9 +335,10 @@ function reload_forecasts()
 
   day_inventory_transformer(base_forecast, base_inventory) = begin
     out = Inventories.InventoryLine[]
-    for line in base_inventory
-      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(line.abbrev)", "calculated", "day fcst", "", ""))
-      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(line.abbrev)", "calculated", "day fcst", "", ""))
+    for model_i in 1:event_types_count
+      event_name, var_name = models[model_i]
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(var_name)", "calculated", "day fcst", "", ""))
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(var_name)", "calculated", "day fcst", "", ""))
     end
     out
   end
@@ -348,7 +349,7 @@ function reload_forecasts()
     point_count, base_feature_count = size(base_data)
     hours_count = div(base_feature_count, event_types_count)
 
-    out = Array{Float32}(undef, (point_count, 2 * base_feature_count))
+    out = Array{Float32}(undef, (point_count, 2 * event_types_count))
 
     Threads.@threads for i in 1:point_count
       for event_i in 1:event_types_count

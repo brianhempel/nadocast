@@ -29,10 +29,10 @@ validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast)
 
 length(validation_forecasts) #
 
-@time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
-
 validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, validation_forecasts);
 length(validation_forecasts_0z) #
+
+@time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
 
 
 # const ε = 1e-15 # Smallest Float64 power of 10 you can add to 1.0 and not round off to 1.0
@@ -68,6 +68,8 @@ event_name_to_day_labeler = Dict(
   "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
   "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
 )
+
+# rm("day_accumulators_validation_forecasts_0z"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
