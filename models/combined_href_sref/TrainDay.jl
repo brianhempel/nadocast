@@ -623,7 +623,8 @@ target_success_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
     (0.05, 0.11486038942521988),
     (0.1,  0.22690348338037045),
     (0.15, 0.3046782911820712),
-    (0.3,  0.31560627664076046), # lol
+    # (0.3,  0.31560627664076046), # lol, too close! this is probably a consequence of lack of data, so let's target 40% SR
+    (0.3,  0.4),
   ],
   "wind" => [
     (0.05, 0.13461838497658143),
@@ -707,7 +708,7 @@ function spc_calibrate(prediction_i, X, Ys, weights)
   y = Ys[event_name]
   ŷ = @view X[:, prediction_i]
 
-  println("nominal_prob\tthreshold\tsuccess_ratio")
+  # println("nominal_prob\tthreshold\tsuccess_ratio")
 
   thresholds_to_match_success_ratio =
     map(target_success_ratios[event_name]) do (nominal_prob, target_success_ratio)
@@ -722,18 +723,11 @@ function spc_calibrate(prediction_i, X, Ys, weights)
         end
         step *= 0.5f0
       end
-      println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
+      # println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
       threshold
     end
 
-  # nominal_prob    threshold       success_ratio
-  # 0.02    0.0127295405    0.04853525616997882
-  # 0.05    0.040039346     0.11142667300267296
-  # 0.1     0.18400295      0.2237468737640593
-  # 0.15    0.23302902      0.33317687621379216
-  # 0.3     0.26344         0.42958206936270776
-
-  println("nominal_prob\tthreshold\tPOD")
+  # println("nominal_prob\tthreshold\tPOD")
 
   thresholds_to_match_POD =
     map(target_PODs[event_name]) do (nominal_prob, target_POD)
@@ -748,27 +742,58 @@ function spc_calibrate(prediction_i, X, Ys, weights)
         end
         step *= 0.5f0
       end
-      println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
+      # println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
       threshold
     end
 
-  for i in 1:length(target_PODs)
-    nominal_prob, _ = target_PODs[i]
+  thresholds = Tuple{Float32,Float32}[]
+  for i in 1:length(target_PODs[event_name])
+    nominal_prob, _ = target_PODs[event_name][i]
     threshold_to_match_succes_ratio = thresholds_to_match_success_ratio[i]
     threshold_to_match_POD = thresholds_to_match_POD[i]
     mean_threshold = (threshold_to_match_succes_ratio + threshold_to_match_POD) * 0.5f0
     sr  = success_ratio(ŷ, y, weights, mean_threshold)
     pod = probability_of_detection(ŷ, y, weights, mean_threshold)
     println("$event_name\t$nominal_prob\t$threshold_to_match_succes_ratio\t$threshold_to_match_POD\t$mean_threshold\t$sr\t$pod")
+    push!(thresholds, (Float32(nominal_prob), Float32(mean_threshold)))
   end
+  thresholds
 end
 println("event_name\tnominal_prob\tthreshold_to_match_succes_ratio\tthreshold_to_match_POD\tmean_threshold\tsuccess_ratio\tPOD")
-for prediction_i in 1:event_types_count
-  spc_calibrate(prediction_i, X, Ys, weights)
+calibrations = Dict{String,Vector{Tuple{Float32,Float32}}}()
+for prediction_i in 1:length(CombinedHREFSREF.models)
+  event_name, _ = CombinedHREFSREF.models[prediction_i]
+  calibrations[event_name] = spc_calibrate(prediction_i, X, Ys, weights)
 end
 
-# event_name   nominal_prob    threshold_to_match_succes_ratio threshold_to_match_POD  mean_threshold  success_ratio   POD
+# event_name   nominal_prob  threshold_to_match_succes_ratio  threshold_to_match_POD  mean_threshold  success_ratio         POD
+# tornado      0.02          0.01310648                       0.022883907             0.017995194     0.062252367844859956  0.7237450145071389
+# tornado      0.05          0.052413                         0.09069385              0.071553424     0.13041471700846416   0.4595979609764453
+# tornado      0.1           0.1621605                        0.18851317              0.17533684      0.2602604408764249    0.14314764321503318
+# tornado      0.15          0.3515455                        0.2584691               0.3050073       0.2477242309012129    0.008127872749010829
+# tornado      0.3           0.4236154                        0.30122894              0.36242217      0.34169923357087156   0.005138386437942132
+# wind         0.05          0.021778211                      0.10755004              0.064664125     0.21349036193848545   0.8077283104148264
+# wind         0.15          0.09295757                       0.29656035              0.19475895      0.35260570410877334   0.5574172101278139
+# wind         0.3           0.29035532                       0.56562936              0.42799234      0.587179141844545     0.19983921956088188
+# wind         0.45          0.45901692                       0.8673674               0.66319215      0.7595734431193403    0.06063552925564667
+# hail         0.05          0.01444374                       0.05034159              0.032392666     0.10835004167125925   0.8305503616488299
+# hail         0.15          0.07098855                       0.14591776              0.108453155     0.20702496087073188   0.5193486074366591
+# hail         0.3           0.19331579                       0.37884295              0.28607938      0.39332204971781815   0.16613831846637464
+# hail         0.45          0.5076345                        0.625119                0.56637675      0.5888789612140184    0.013460490246840578
+# sig_tornado  0.1           0.04061179                       0.121247366             0.08092958      0.13623988675028018   0.2807708016672483
+# sig_wind     0.1           0.092810735                      0.12636001              0.109585375     0.13657851645778404   0.20438348540838872
+# sig_hail     0.1           0.04965006                       0.06448765              0.057068855     0.09399092050668835   0.28431260828958804
 
+
+# prediction_i = 1
+# event_name, _ = CombinedHREFSREF.models[prediction_i];
+# y = Ys[event_name];
+# ŷ = @view X[:, prediction_i];
+# for threshold in 0.25:0.01:0.6
+#   sr  = success_ratio(ŷ, y, weights, threshold)
+#   pod = probability_of_detection(ŷ, y, weights, threshold)
+#   println("$threshold\t$sr\t$pod")
+# end
 
 
 # calibration = [
@@ -778,3 +803,274 @@ end
 #   (0.15, 0.28330332),
 #   (0.3,  0.32384455),
 # ]
+
+println(calibrations)
+
+# calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
+#   "tornado" => [
+#     (0.02, 0.017995194),
+#     (0.05, 0.071553424),
+#     (0.1,  0.17533684),
+#     (0.15, 0.3050073),
+#     (0.3,  0.36242217)
+#   ],
+#   "wind" => [
+#     (0.05, 0.064664125),
+#     (0.15, 0.19475895),
+#     (0.3,  0.42799234),
+#     (0.45, 0.66319215)
+#   ],
+#   "hail" => [
+#     (0.05, 0.032392666),
+#     (0.15, 0.108453155),
+#     (0.3,  0.28607938),
+#     (0.45, 0.56637675)
+#   ],
+#   "sig_tornado" => [(0.1, 0.08092958)],
+#   "sig_wind"    => [(0.1, 0.109585375)],
+#   "sig_hail"    => [(0.1, 0.057068855)],
+# )
+
+
+
+
+
+
+# CHECK
+
+import Dates
+import Printf
+
+push!(LOAD_PATH, (@__DIR__) * "/../shared")
+# import TrainGBDTShared
+import TrainingShared
+import LogisticRegression
+using Metrics
+
+push!(LOAD_PATH, @__DIR__)
+import CombinedHREFSREF
+
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
+import Inventories
+import StormEvents
+
+MINUTE = 60 # seconds
+HOUR   = 60*MINUTE
+
+(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_spc_calibrated(); just_hours_near_storm_events = false);
+
+length(day_validation_forecasts)
+# 903
+
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2022, 1, 1, 0)
+day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
+
+length(day_validation_forecasts)
+
+# Make sure a forecast loads
+@time Forecasts.data(day_validation_forecasts[10])
+
+day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
+length(day_validation_forecasts_0z) # Expected: 132
+# 132
+
+compute_day_labels(events, forecast) = begin
+  # Annoying that we have to recalculate this.
+  # The end_seconds will always be the last hour of the convective day
+  # start_seconds depends on whether the run started during the day or not
+  # I suppose for 0Z the answer is always "no" but whatev here's the right math
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  # utc_datetime = Dates.unix2datetime(start_seconds)
+  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+end
+
+event_name_to_day_labeler = Dict(
+  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+)
+
+# rm("day_accumulators_validation_forecasts_0z"; recursive = true)
+
+X, Ys, weights =
+  TrainingShared.get_data_labels_weights(
+    day_validation_forecasts_0z;
+    event_name_to_labeler = event_name_to_day_labeler,
+    save_dir = "day_validation_forecasts_0z",
+  );
+
+# Confirm that the accs are better than the maxes
+function test_predictive_power(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
+
+  # Feature order is all HREF severe probs then all SREF severe probs
+  for feature_i in 1:length(inventory)
+    prediction_i = feature_i
+    (event_name, _) = CombinedHREFSREF.models[prediction_i]
+    y = Ys[event_name]
+    x = @view X[:,feature_i]
+    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+  end
+end
+test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
+
+target_success_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
+  "tornado" => [
+    (0.02, 0.050728736928645046),
+    (0.05, 0.11486038942521988),
+    (0.1,  0.22690348338037045),
+    (0.15, 0.3046782911820712),
+    # (0.3,  0.31560627664076046), # lol, too close! this is probably a consequence of lack of data, so let's target 40% SR
+    (0.3,  0.4),
+  ],
+  "wind" => [
+    (0.05, 0.13461838497658143),
+    (0.15, 0.25485816629457203),
+    (0.3,  0.43476976026058434),
+    (0.45, 0.6185653041815565),
+  ],
+  "hail" => [
+    (0.05, 0.08021216469509043),
+    (0.15, 0.16136397567347519),
+    (0.3,  0.3011316257061734),
+    (0.45, 0.5444239242570899),
+  ],
+  "sig_tornado" => [(0.1, 0.08721705058958064)],
+  "sig_wind"    => [(0.1, 0.1163905700911105)],
+  "sig_hail"    => [(0.1, 0.08379410166467652)],
+)
+
+target_PODs = Dict{String,Vector{Tuple{Float64,Float64}}}(
+  "tornado" => [
+    (0.02, 0.6615090274606944),
+    (0.05, 0.3915418238912139),
+    (0.1,  0.13042915979366457),
+    (0.15, 0.027773066438696918),
+    (0.3,  0.008323827309277956),
+  ],
+  "wind" => [
+    (0.05, 0.7129517911854782),
+    (0.15, 0.38983512353226496),
+    (0.3,  0.10680248115276206),
+    (0.45, 0.015289658660478881),
+  ],
+  "hail" => [
+    (0.05, 0.7457921051915138),
+    (0.15, 0.41143213280714935),
+    (0.3,  0.0778527553093847),
+    (0.45, 0.009683467798086529),
+  ],
+  "sig_tornado" => [(0.1, 0.17764733377105618)],
+  "sig_wind"    => [(0.1, 0.08622702385365015)],
+  "sig_hail"    => [(0.1, 0.2454541775633861)],
+)
+
+
+
+function success_ratio(ŷ, y, weights, threshold)
+  painted_weight       = 0.0
+  true_positive_weight = 0.0
+
+  for i in 1:length(y)
+    if ŷ[i] >= threshold
+      painted_weight += Float64(weights[i])
+      if y[i] > 0.5f0
+        true_positive_weight += Float64(weights[i])
+      end
+    end
+  end
+
+  true_positive_weight / painted_weight
+end
+
+function probability_of_detection(ŷ, y, weights, threshold)
+  positive_weight      = 0.0
+  true_positive_weight = 0.0
+
+  for i in 1:length(y)
+    if y[i] > 0.5f0
+      positive_weight += Float64(weights[i])
+      if ŷ[i] >= threshold
+        true_positive_weight += Float64(weights[i])
+      end
+    end
+  end
+
+  true_positive_weight / positive_weight
+end
+
+
+function spc_calibrate(prediction_i, X, Ys, weights)
+  event_name, _ = CombinedHREFSREF.models[prediction_i]
+  y = Ys[event_name]
+  ŷ = @view X[:, prediction_i]
+
+  # println("nominal_prob\tthreshold\tsuccess_ratio")
+
+  thresholds_to_match_success_ratio =
+    map(target_success_ratios[event_name]) do (nominal_prob, target_success_ratio)
+      threshold = 0.5f0
+      step = 0.25f0
+      while step > 0.00000001f0
+        sr = success_ratio(ŷ, y, weights, threshold)
+        if isnan(sr) || sr > target_success_ratio
+          threshold -= step
+        else
+          threshold += step
+        end
+        step *= 0.5f0
+      end
+      # println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
+      threshold
+    end
+
+  # println("nominal_prob\tthreshold\tPOD")
+
+  thresholds_to_match_POD =
+    map(target_PODs[event_name]) do (nominal_prob, target_POD)
+      threshold = 0.5f0
+      step = 0.25f0
+      while step > 0.00000001f0
+        pod = probability_of_detection(ŷ, y, weights, threshold)
+        if isnan(pod) || pod > target_POD
+          threshold += step
+        else
+          threshold -= step
+        end
+        step *= 0.5f0
+      end
+      # println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
+      threshold
+    end
+
+  thresholds = Tuple{Float32,Float32}[]
+  for i in 1:length(target_PODs[event_name])
+    nominal_prob, _ = target_PODs[event_name][i]
+    threshold_to_match_succes_ratio = thresholds_to_match_success_ratio[i]
+    threshold_to_match_POD = thresholds_to_match_POD[i]
+    mean_threshold = (threshold_to_match_succes_ratio + threshold_to_match_POD) * 0.5f0
+    sr  = success_ratio(ŷ, y, weights, mean_threshold)
+    pod = probability_of_detection(ŷ, y, weights, mean_threshold)
+    println("$event_name\t$nominal_prob\t$threshold_to_match_succes_ratio\t$threshold_to_match_POD\t$mean_threshold\t$sr\t$pod")
+    push!(thresholds, (Float32(nominal_prob), Float32(mean_threshold)))
+  end
+  thresholds
+end
+println("event_name\tnominal_prob\tthreshold_to_match_succes_ratio\tthreshold_to_match_POD\tmean_threshold\tsuccess_ratio\tPOD")
+calibrations = Dict{String,Vector{Tuple{Float32,Float32}}}()
+for prediction_i in 1:length(CombinedHREFSREF.models)
+  event_name, _ = CombinedHREFSREF.models[prediction_i]
+  calibrations[event_name] = spc_calibrate(prediction_i, X, Ys, weights)
+end

@@ -24,36 +24,40 @@ function weighted_prediction_between_models_at_different_forecast_hours(forecast
   (1 - high_weight) .* low_hour_predict(data) .+ high_weight .* high_hour_predict(data)
 end
 
-# combined_sref_href_calibration = [
-#   (0.02, 0.016253397),
-#   (0.05, 0.0649308),
-#   (0.1,  0.18771306),
-#   (0.15, 0.28330332),
-#   (0.3,  0.32384455),
-# ]
-function calibrated_forecasts(base_forecasts, calibration; model_name = nothing)
+# calibrations should be ordered
+function calibrated_forecasts(base_forecasts, calibrations; model_name = nothing)
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  calibration = [(0,0); calibration; (1,1)]
-  calibs = map(calib -> Float32.(calib), calibration)
+  # Add 0,0 and 1,1 and make sure they're Float32
+  calibrations =
+    map(calibrations) do calibration
+      calibration = [(0f0,0f0); calibration; (1f0,1f0)]
+      map(calib -> Float32.(calib), calibration)
+    end :: Vector{Vector{Tuple{Float32,Float32}}}
+
+  # Mutates out
+  function calibrate!(out, base_data, thresholds, feature_i)
+    Threads.@threads for i in 1:size(base_data,1)
+      x = base_data[i,feature_i]
+      for k in 2:length(thresholds)
+        lo_spc, lo_thres = thresholds[k-1]
+        hi_spc, hi_thres = thresholds[k]
+        if x < hi_thres || k == length(thresholds)
+          ratio = ratio_between(x, lo_thres, hi_thres)
+          out[i,feature_i] = lo_spc + ratio * (hi_spc - lo_spc)
+          break
+        end
+      end
+    end
+  end
 
   data_transformer(base_forecast, base_data) = begin
     out = Array{Float32}(undef, size(base_data))
 
-    for j in 1:size(base_data,2) # should always only be 1 feature in these forecasts
-      Threads.@threads for i in 1:size(base_data,1)
-        x        = base_data[i,j]
-        for k in 2:length(calibs)
-          lo_spc, lo_thres = calibs[k-1]
-          hi_spc, hi_thres = calibs[k]
-          if x < hi_thres || k == length(calibs)
-            ratio = ratio_between(x, lo_thres, hi_thres)
-            out[i,j] = lo_spc + ratio * (hi_spc - lo_spc)
-            break
-          end
-        end
-      end
+    for feature_i in 1:size(base_data, 2)
+      thresholds = calibrations[feature_i]
+      calibrate!(out, base_data, thresholds, feature_i)
     end
 
     out

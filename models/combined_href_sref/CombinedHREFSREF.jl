@@ -445,15 +445,38 @@ function reload_forecasts()
   day_models = make_day_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
 
-  # spc_calibration = [
-  #   (0.02, 0.016253397),
-  #   (0.05, 0.0649308),
-  #   (0.1,  0.18771306),
-  #   (0.15, 0.28330332),
-  #   (0.3,  0.32384455),
-  # ]
+  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
+    "tornado" => [
+      (0.02, 0.017995194),
+      (0.05, 0.071553424),
+      (0.1,  0.17533684),
+      (0.15, 0.3050073),
+      (0.3,  0.36242217)
+    ],
+    "wind" => [
+      (0.05, 0.064664125),
+      (0.15, 0.19475895),
+      (0.3,  0.42799234),
+      (0.45, 0.66319215)
+    ],
+    "hail" => [
+      (0.05, 0.032392666),
+      (0.15, 0.108453155),
+      (0.3,  0.28607938),
+      (0.45, 0.56637675)
+    ],
+    "sig_tornado" => [(0.1, 0.08092958)],
+    "sig_wind"    => [(0.1, 0.109585375)],
+    "sig_hail"    => [(0.1, 0.057068855)],
+  )
 
-  # _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, spc_calibration; model_name = "CombinedHREFSREF_day_severe_probabilities_calibrated_to_SPC_thresholds")
+  # ensure ordered the same as the features in the data
+  calibrations =
+    map(models) do (event_name, _)
+      spc_calibrations[event_name]
+    end
+
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "CombinedHREFSREF_day_severe_probabilities_calibrated_to_SPC_thresholds")
 
   ()
 end
