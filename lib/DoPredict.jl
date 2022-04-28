@@ -74,7 +74,7 @@ sref_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(newest_fo
 
 ForecastCombinators.turn_forecast_caching_on()
 # ForecastCombinators.turn_forecast_gc_circumvention_on()
-prediction = Forecasts.data(newest_forecast);
+predictions = Forecasts.data(newest_forecast);
 ForecastCombinators.clear_cached_forecasts()
 
 
@@ -84,39 +84,61 @@ nadocast_run_time_utc      = Forecasts.run_utc_datetime(newest_forecast)
 nadocast_run_hour          = newest_forecast.run_hour
 
 
-paths = []
+plotting_paths = []
 daily_paths_to_perhaps_tweet = []
 
 out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
 rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))"
 mkpath(out_dir)
-out_path_prefix = out_dir * "nadocast_conus_tornado_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
-# write(period_path * ".float16.bin", Float16.(prediction))
-Grib2.write_15km_HREF_probs_grib2(
-  prediction[:,1];
-  run_time = Forecasts.run_utc_datetime(newest_forecast),
-  forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
-  event_type = "tornado",
-  out_name = period_path * ".grib2",
-)
 
-PlotMap.plot_map(
-  period_path,
-  newest_forecast.grid,
-  prediction;
-  run_time_utc = nadocast_run_time_utc,
-  forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
-  hrrr_run_hours = hrrr_run_hours,
-  rap_run_hours  = rap_run_hours,
-  href_run_hours = href_run_hours,
-  sref_run_hours = sref_run_hours
-)
-push!(paths, period_path)
-push!(daily_paths_to_perhaps_tweet, period_path)
+non_sig_model_count = div(length(CombinedHREFSREF.models), 2)
+for model_i in 1:non_sig_model_count
+  event_name, _     = CombinedHREFSREF.models[model_i]
+  sig_event_name, _ = CombinedHREFSREF.models[model_i + non_sig_model_count]
+  out_path_prefix     = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+  sig_out_path_prefix = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+  period_path         = out_path_prefix     * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
+  sig_period_path     = sig_out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
+  # write(period_path * ".float16.bin", Float16.(prediction))
+  prediction     = @view predictions[:, model_i]
+  sig_prediction = @view predictions[:, model_i + non_sig_model_count]
+
+  Grib2.write_15km_HREF_probs_grib2(
+    prediction;
+    run_time = Forecasts.run_utc_datetime(newest_forecast),
+    forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
+    event_type = event_name,
+    out_name = period_path * ".grib2",
+  )
+  Grib2.write_15km_HREF_probs_grib2(
+    sig_prediction;
+    run_time = Forecasts.run_utc_datetime(newest_forecast),
+    forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
+    event_type = sig_event_name,
+    out_name = period_path * ".grib2",
+  )
+
+  PlotMap.plot_map(
+    period_path,
+    newest_forecast.grid,
+    prediction;
+    sig_vals = sig_prediction,
+    run_time_utc = nadocast_run_time_utc,
+    forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+    hrrr_run_hours = hrrr_run_hours,
+    rap_run_hours  = rap_run_hours,
+    href_run_hours = href_run_hours,
+    sref_run_hours = sref_run_hours
+  )
+  push!(plotting_paths, period_path)
+
+  if event_name == "tornado"
+    push!(daily_paths_to_perhaps_tweet, period_path)
+  end
+end
 
 # @sync doesn't seem to work; poll until subprocesses are done.
-for path in paths
+for path in plotting_paths
   while !isfile(path * ".pdf") || isfile(path * ".sh")
     sleep(1)
   end

@@ -10,7 +10,9 @@ import PNGFiles.ImageCore.ColorTypes
 push!(LOAD_PATH, @__DIR__)
 import Grids
 
-colors_path = (@__DIR__) * "/prob_colors.cpt"
+tornado_colors_path   = (@__DIR__) * "/tornado_colors.cpt"
+wind_hail_colors_path = (@__DIR__) * "/wind_hail_colors.cpt"
+sig_colors_path       = (@__DIR__) * "/sig_colors.cpt"
 
 HOUR = 60*60
 
@@ -89,10 +91,16 @@ end
 # Requires GMT >=6
 #
 # For daily forecast, provide a multi-hour range for forecast_hour_range
-function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_range=nothing, hrrr_run_hours=Int64[], rap_run_hours=Int64[], href_run_hours=Int64[], sref_run_hours=Int64[])
+function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing, forecast_hour_range=nothing, hrrr_run_hours=Int64[], rap_run_hours=Int64[], href_run_hours=Int64[], sref_run_hours=Int64[], event_title="Tor")
   open(base_path * ".xyz", "w") do f
     # lon lat val
     DelimitedFiles.writedlm(f, map(i -> (grid.latlons[i][2], grid.latlons[i][1], vals[i]), 1:length(vals)), '\t')
+  end
+  if !isnothing(sig_vals)
+    open(base_path * "-sig.xyz", "w") do f
+      # lon lat val
+      DelimitedFiles.writedlm(f, map(i -> (grid.latlons[i][2], grid.latlons[i][1], sig_vals[i]), 1:length(sig_vals)), '\t')
+    end
   end
   # gmt nearneighbor cape.xyz -R-139/-58/17/58 -I1k -S15k -Gcape.nc
   # gmt surface cape.xyz -R-139/-58/17/58 -I1k -Gcape.nc
@@ -115,7 +123,7 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
     # gmt begin href_20190602_t18z_w0.75_sref15z_20190602_19z-11z pdf
     #
     # gmt coast $region $projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america
-    # gmt grdimage href_20190602_t18z_w0.75_sref15z_20190602_19z-11z.nc -nn $region $projection -Clib/prob_colors.cpt # draw the predictions using the projection
+    # gmt grdimage href_20190602_t18z_w0.75_sref15z_20190602_19z-11z.nc -nn $region $projection -Clib/tornado_colors.cpt # draw the predictions using the projection
     # gmt coast -Q # stop clipping
     #
     # gmt coast $region $projection -A500 -N2/thinnest -t65 # draw state borders 65% transparent
@@ -135,15 +143,36 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
     #
     # gmt end
 
+    colors_path = Dict(
+      "Tor"  => tornado_colors_path,
+      "Wind" => wind_hail_colors_path,
+      "Hail" => wind_hail_colors_path,
+    )[event_title]
+
+    hazard_str = Dict(
+      "Tor"  => "a tornado",
+      "Wind" => "50+ knot damaging thunderstorm winds",
+      "Hail" => "1+ inch hail",
+    )[event_title]
+
     println(f, "projection=-Jl-100/35/33/45/0.3")
     println(f, "region=-R-120.7/22.8/-63.7/47.7+r # +r makes the map square rather than weird shaped")
 
     println(f, "gmt sphinterpolate $base_path.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
 
+    if !isnothing(sig_vals)
+      println(f, "gmt sphinterpolate $base_path-sig.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -G$base_path-sig.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
+    end
+
     println(f, "gmt begin $base_path pdf")
 
     println(f, "gmt coast \$region \$projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
     println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$colors_path  # draw the predictions using the projection")
+
+    if !isnothing(sig_vals)
+      println(f, "gmt grdimage $base_path-sig.nc -nn \$region \$projection -C$sig_colors_path")
+    end
+
     println(f, "gmt coast -Q # stop clipping")
 
     println(f, "gmt coast \$region \$projection -A500 -N2/thinnest -t65 # draw state borders 65% transparent")
@@ -159,7 +188,7 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
       valid_stop  = run_time_utc + Dates.Hour(forecast_hour_range.stop)
 
       if is_day_forecast
-        println(f, "L 7pt,Helvetica-Bold C Nadocast Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
+        println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
         println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
       else
@@ -192,13 +221,13 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
         end
         println(f, "L 4pt,Helvetica C $sources_str")
       end
-      println(f, "L 4pt,Helvetica C 2020 Models")
+      println(f, "L 4pt,Helvetica C 2021 Models")
       println(f, "L 4pt,Helvetica,gray C @_nadocast.com@_")
       println(f, "EOF")
     end
 
     println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.05+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
-    println(f, "echo '-95.606 27.376 Chance of a tornado within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    println(f, "echo '-95.606 27.376 Chance of $hazard_str within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
     println(f, "gmt end")
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
@@ -220,7 +249,7 @@ function plot_map(base_path, grid, vals; run_time_utc=nothing, forecast_hour_ran
   #   run(`gmt begin $base_path.pdf pdf`)
   #   run(`gmt grdimage $(base_path * ".nc") -nn -Jl-100/35/33/45/0.3 -C$(colors_path)`)
   #   run(`gmt coast -R-139/-58/17/58 -Jl-100/35/33/45/0.3 -N1 -N2/thinnest -A500 -Wthinnest`)
-  #   # run(`gmt colorbar -DjCB -Cprob_colors.cpt`) # Skip legend for uncalibrated images.
+  #   # run(`gmt colorbar -DjCB -Ctornado_colors.cpt`) # Skip legend for uncalibrated images.
   #   run(`gmt end`)
   #   # run(`convert -density 250 $(base_path * ".pdf") $(base_path * ".png")`) # `convert` utility from ImageMagick
   #   # run(`optipng -o2 -strip all $base_path.png`)                            # `optipng` utility
