@@ -21,7 +21,16 @@ end
 function map_forecasts(old_forecasts; new_grid = nothing, inventory_transformer = nothing, data_transformer = nothing, model_name = nothing)
   map(old_forecasts) do old_forecast
     get_inventory() = inventory_transformer(old_forecast, Forecasts.inventory(old_forecast))
-    get_data()      = data_transformer(old_forecast, Forecasts.data(old_forecast))
+    get_data()      = begin
+      duration = @elapsed (out = data_transformer(old_forecast, Forecasts.data(old_forecast)))
+      if get(ENV, "SHOW_TIMING", "false") == "true"
+        name = isnothing(model_name) ? old_forecast.model_name : model_name
+        println("$(Float32(duration))\t$name")
+      end
+      out
+    end
+
+
 
     grid           = isnothing(new_grid)              ? old_forecast.grid           : new_grid
     _get_inventory = isnothing(inventory_transformer) ? old_forecast._get_inventory : get_inventory
