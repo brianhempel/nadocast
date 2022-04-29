@@ -10,6 +10,8 @@ import MemoryConstrainedTreeBoosting
 # $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
 # $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_DATE=2019-4-7 RUN_HOUR=0 HRRR_RAP=false make forecast
 
+# FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_DATE=2022-4-5 RUN_HOUR=0 HRRR_RAP=false JULIA_NUM_THREADS=$CORE_COUNT FORECAST_DISK_PREFETCH=false julia --project=. lib/DoPredict.jl
+
 
 import Dates
 using Printf

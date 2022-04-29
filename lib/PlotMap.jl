@@ -151,7 +151,7 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     hazard_str = Dict(
       "Tor"  => "a tornado",
-      "Wind" => "50+ knot damaging thunderstorm winds",
+      "Wind" => "50+ knot t-storm wind",
       "Hail" => "1+ inch hail",
     )[event_title]
 
@@ -237,7 +237,7 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.0695+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
     println(f, "echo '-95.55 27.93 Chance of $hazard_str within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
-    println(f, "echo '-95.65 25.35 Black hatched = 10%+ chance of $sig_hazard_str.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    println(f, "echo '-95.65 25.35 Black hatched = 10%+ chance of $sig_hazard_str' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
     println(f, "gmt end")
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
