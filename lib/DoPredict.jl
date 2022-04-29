@@ -154,7 +154,7 @@ end
 #   run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
 # end
 
-should_publish = get(ENV, "PUBLISH", "false") == true
+should_publish = get(ENV, "PUBLISH", "false") == "true"
 if should_publish
   rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
 end
