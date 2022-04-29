@@ -95,6 +95,7 @@ non_sig_model_count = div(length(CombinedHREFSREF.models), 2)
 for model_i in 1:non_sig_model_count
   event_name, _     = CombinedHREFSREF.models[model_i]
   sig_event_name, _ = CombinedHREFSREF.models[model_i + non_sig_model_count]
+  println("ploting $event_name...")
   out_path_prefix     = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
   sig_out_path_prefix = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
   period_path         = out_path_prefix     * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
@@ -115,7 +116,7 @@ for model_i in 1:non_sig_model_count
     run_time = Forecasts.run_utc_datetime(newest_forecast),
     forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
     event_type = sig_event_name,
-    out_name = period_path * ".grib2",
+    out_name = sig_period_path * ".grib2",
   )
 
   PlotMap.plot_map(
@@ -123,6 +124,7 @@ for model_i in 1:non_sig_model_count
     newest_forecast.grid,
     prediction;
     sig_vals = sig_prediction,
+    event_title = Dict("tornado" => "Tor", "wind" => "Wind", "hail" => "Hail")[event_name],
     run_time_utc = nadocast_run_time_utc,
     forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
     hrrr_run_hours = hrrr_run_hours,

@@ -177,9 +177,9 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     if !isnothing(sig_vals)
       println(f, "# Dump contour to file, then draw it as a polygon")
-      println(f, "gmt contour $base_path-sig.xyz \$region \$projection -C/Users/brian/Documents/open_source/nadocast/lib/sig_colors.cpt -D$base_path-sig_counter.xy")
-      println(f, "gmt psxy $base_path-sig_counter.xy \$region \$projection -Gp26+b-+r800 # pattern fill")
-      println(f, "gmt psxy $base_path-sig_counter.xy \$region \$projection -W0.4p # pen, width 0.4pt")
+      println(f, "gmt contour $base_path-sig.xyz \$region \$projection -C/Users/brian/Documents/open_source/nadocast/lib/sig_colors.cpt -D$base_path-sig_contour.xy")
+      println(f, "gmt psxy $base_path-sig_contour.xy \$region \$projection -Gp26+b-+r800 # pattern fill")
+      println(f, "gmt psxy $base_path-sig_contour.xy \$region \$projection -W0.4p # pen, width 0.4pt")
       println(f, "gmt grdimage $base_path-sig.nc -nn \$region \$projection -C$sig_colors_path")
     end
 
@@ -243,18 +243,18 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
-    println(f, "rm $base_path.nc")
-    println(f, "rm $base_path.xyz")
-    if !isnothing(sig_vals)
-      println(f, "rm $base_path-sig.nc")
-      println(f, "rm $base_path-sig.xyz")
-      println(f, "rm $base_path-sig_counter.xy")
-    end
+    # println(f, "rm $base_path.nc")
+    # println(f, "rm $base_path.xyz")
+    # if !isnothing(sig_vals)
+    #   println(f, "rm $base_path-sig.nc")
+    #   println(f, "rm $base_path-sig.xyz")
+    #   println(f, "rm $base_path-sig_contour.xy")
+    # end
   end
 
   plot() = begin
     run(`sh $base_path.sh`)
-    rm(base_path * ".sh")
+    # rm(base_path * ".sh")
   end
 
   @async plot()
