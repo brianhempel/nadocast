@@ -155,6 +155,12 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
       "Hail" => "1+ inch hail",
     )[event_title]
 
+    sig_hazard_str = Dict(
+      "Tor"  => "EF2+",
+      "Wind" => "65kt+",
+      "Hail" => "2in+",
+    )[event_title]
+
     println(f, "projection=-Jl-100/35/33/45/0.3")
     println(f, "region=-R-120.7/22.8/-63.7/47.7+r # +r makes the map square rather than weird shaped")
 
@@ -170,6 +176,10 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
     println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$colors_path  # draw the predictions using the projection")
 
     if !isnothing(sig_vals)
+      println(f, "# Dump contour to file, then draw it as a polygon")
+      println(f, "gmt contour $base_path-sig.xyz \$region \$projection -C/Users/brian/Documents/open_source/nadocast/lib/sig_colors.cpt -D$base_path-sig_counter.xy")
+      println(f, "gmt psxy $base_path-sig_counter.xy \$region \$projection -Gp26+b-+r800 # pattern fill")
+      println(f, "gmt psxy $base_path-sig_counter.xy \$region \$projection -W0.4p # pen, width 0.4pt")
       println(f, "gmt grdimage $base_path-sig.nc -nn \$region \$projection -C$sig_colors_path")
     end
 
@@ -226,23 +236,25 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
       println(f, "EOF")
     end
 
-    println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.05+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
-    println(f, "echo '-95.606 27.376 Chance of $hazard_str within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.0695+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
+    println(f, "echo '-95.55 27.93 Chance of $hazard_str within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    println(f, "echo '-95.65 25.35 Black hatched = 10%+ chance of $sig_hazard_str.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
     println(f, "gmt end")
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
-    # println(f, "rm $base_path.nc")
-    # println(f, "rm $base_path.xyz")
-    # if !isnothing(sig_vals)
-    #   println(f, "rm $base_path-sig.nc")
-    #   println(f, "rm $base_path-sig.xyz")
-    # end
+    println(f, "rm $base_path.nc")
+    println(f, "rm $base_path.xyz")
+    if !isnothing(sig_vals)
+      println(f, "rm $base_path-sig.nc")
+      println(f, "rm $base_path-sig.xyz")
+      println(f, "rm $base_path-sig_counter.xy")
+    end
   end
 
   plot() = begin
     run(`sh $base_path.sh`)
-    # rm(base_path * ".sh")
+    rm(base_path * ".sh")
   end
 
   @async plot()
