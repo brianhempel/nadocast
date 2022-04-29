@@ -160,6 +160,7 @@ sum(weights) # 7.063547f8
 #
 # ...which is the same as the area to the left of the performance diagram curve (which is what we want to optimize for anyway).
 
+# ROC AUC:
 # 2020 tornado models on same dataset: 0.9845657137724223
 # 2021:                                0.9840355246144981
 # 2021 w/higher feat fraction:         0.9827257079052968

@@ -493,7 +493,6 @@ test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
 # sig_hail (3887.0)    feature 6 SHAILPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.07277620173520509
 
 
-
 # test y vs ŷ
 
 function test_calibration(forecasts, X, Ys, weights)
@@ -610,6 +609,102 @@ test_calibration(day_validation_forecasts_0z, X, Ys, weights)
 # sig_hail        0.06697919386624233     0.062257185093183384    5410.661112964153       0.07159327
 # sig_hail        0.10515508426842482     0.07950517096073371     3446.4898949861526      0.09021059
 # sig_hail        0.10845700375706654     0.12097012510236035     3282.1566061377525      1.0
+
+
+
+
+
+
+
+# blurrrrr
+
+import Dates
+import Printf
+
+push!(LOAD_PATH, (@__DIR__) * "/../shared")
+# import TrainGBDTShared
+import TrainingShared
+import LogisticRegression
+using Metrics
+
+push!(LOAD_PATH, @__DIR__)
+import CombinedHREFSREF
+
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
+import Inventories
+import StormEvents
+
+MINUTE = 60 # seconds
+HOUR   = 60*MINUTE
+
+(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
+
+length(day_validation_forecasts)
+# 903
+
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2022, 1, 1, 0)
+day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
+
+length(day_validation_forecasts)
+
+# Make sure a forecast loads
+@time Forecasts.data(day_validation_forecasts[10])
+
+day_validation_forecasts_0z_with_blurs_and_forecasts_hour = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
+length(day_validation_forecasts_0z_with_blurs_and_forecasts_hour) # Expected: 132
+#
+
+compute_day_labels(events, forecast) = begin
+  # Annoying that we have to recalculate this.
+  # The end_seconds will always be the last hour of the convective day
+  # start_seconds depends on whether the run started during the day or not
+  # I suppose for 0Z the answer is always "no" but whatev here's the right math
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  # utc_datetime = Dates.unix2datetime(start_seconds)
+  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+end
+
+event_name_to_day_labeler = Dict(
+  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+)
+
+X, Ys, weights =
+  TrainingShared.get_data_labels_weights(
+    day_validation_forecasts_0z_with_blurs_and_forecasts_hour;
+    event_name_to_labeler = event_name_to_day_labeler,
+    save_dir = "day_validation_forecasts_0z_with_blurs_and_forecasts_hour",
+  );
+
+println("Determining best blur radii to maximize area under precision-recall curve")
+
+function test_predictive_power(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
+
+  # Feature order is all HREF severe probs then all SREF severe probs
+  for feature_i in 1:length(inventory)
+    prediction_i = feature_i
+    (event_name, _) = CombinedHREFSREF.models[prediction_i]
+    y = Ys[event_name]
+    x = @view X[:,feature_i]
+    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+  end
+end
+test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
+
 
 
 

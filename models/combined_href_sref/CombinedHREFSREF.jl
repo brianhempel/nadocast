@@ -39,6 +39,8 @@ _forecasts_sref_newer_combined = []
 # For day, allow 0Z to 21Z runs
 _forecasts_day_accumulators   = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 _forecasts_day                = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_with_blurs_and_forecast_hour = [] # For Train.jl
+_forecasts_day_blurred = []
 _forecasts_day_spc_calibrated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 
 # SREF 3 hours behind HREF
@@ -99,6 +101,24 @@ function forecasts_day()
   end
 end
 
+function forecasts_day_with_blurs_and_forecast_hour()
+  if isempty(_forecasts_day_with_blurs_and_forecast_hour)
+    reload_forecasts()
+    _forecasts_day_with_blurs_and_forecast_hour
+  else
+    _forecasts_day_with_blurs_and_forecast_hour
+  end
+end
+
+function forecasts_blurred()
+  if isempty(_forecasts_blurred)
+    reload_forecasts()
+    _forecasts_blurred
+  else
+    _forecasts_blurred
+  end
+end
+
 function forecasts_day_spc_calibrated()
   if isempty(_forecasts_day_spc_calibrated)
     reload_forecasts()
@@ -127,6 +147,7 @@ event_types_count = length(models)
 
 logit(p) = log(p / (one(p) - p))
 
+blur_radii = HREFPrediction.blur_radii
 
 
 function reload_forecasts()
@@ -138,6 +159,8 @@ function reload_forecasts()
   global _forecasts_sref_newer_combined
   global _forecasts_day_accumulators
   global _forecasts_day
+  global _forecasts_day_with_blurs_and_forecast_hour
+  global _forecasts_day_blurred
   global _forecasts_day_spc_calibrated
 
   _forecasts_href_newer = []
@@ -444,6 +467,8 @@ function reload_forecasts()
   # We only ever use the 0Z forecasts (normally) but here we are using the 0Z calibration non-0Z runs too
   day_models = make_day_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
+
+  _forecasts_day_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts_day, blur_radii)
 
   spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
     "tornado" => [
