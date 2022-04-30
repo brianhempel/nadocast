@@ -39,8 +39,8 @@ _forecasts_sref_newer_combined = []
 # For day, allow 0Z to 21Z runs
 _forecasts_day_accumulators   = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 _forecasts_day                = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
-_forecasts_day_with_blurs_and_forecast_hour = [] # For Train.jl
-_forecasts_day_blurred = []
+# _forecasts_day_with_blurs_and_forecast_hour = [] # For Train.jl
+# _forecasts_day_blurred = []
 _forecasts_day_spc_calibrated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 
 # SREF 3 hours behind HREF
@@ -101,23 +101,23 @@ function forecasts_day()
   end
 end
 
-function forecasts_day_with_blurs_and_forecast_hour()
-  if isempty(_forecasts_day_with_blurs_and_forecast_hour)
-    reload_forecasts()
-    _forecasts_day_with_blurs_and_forecast_hour
-  else
-    _forecasts_day_with_blurs_and_forecast_hour
-  end
-end
+# function forecasts_day_with_blurs_and_forecast_hour()
+#   if isempty(_forecasts_day_with_blurs_and_forecast_hour)
+#     reload_forecasts()
+#     _forecasts_day_with_blurs_and_forecast_hour
+#   else
+#     _forecasts_day_with_blurs_and_forecast_hour
+#   end
+# end
 
-function forecasts_blurred()
-  if isempty(_forecasts_blurred)
-    reload_forecasts()
-    _forecasts_blurred
-  else
-    _forecasts_blurred
-  end
-end
+# function forecasts_day_blurred()
+#   if isempty(_forecasts_day_blurred)
+#     reload_forecasts()
+#     _forecasts_day_blurred
+#   else
+#     _forecasts_day_blurred
+#   end
+# end
 
 function forecasts_day_spc_calibrated()
   if isempty(_forecasts_day_spc_calibrated)
@@ -159,8 +159,8 @@ function reload_forecasts()
   global _forecasts_sref_newer_combined
   global _forecasts_day_accumulators
   global _forecasts_day
-  global _forecasts_day_with_blurs_and_forecast_hour
-  global _forecasts_day_blurred
+  # global _forecasts_day_with_blurs_and_forecast_hour
+  # global _forecasts_day_blurred
   global _forecasts_day_spc_calibrated
 
   _forecasts_href_newer = []
@@ -468,31 +468,31 @@ function reload_forecasts()
   day_models = make_day_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
 
-  _forecasts_day_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts_day, blur_radii)
+  # _forecasts_day_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts_day, blur_radii)
 
   spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
     "tornado" => [
-      (0.02, 0.017995194),
-      (0.05, 0.071553424),
-      (0.1,  0.17533684),
-      (0.15, 0.3050073),
-      (0.3,  0.36242217)
+      (0.02, 0.01799427),
+      (0.05, 0.07155262),
+      (0.1,  0.17533639),
+      (0.15, 0.22911775),
+      (0.3,  0.25342447)
     ],
     "wind" => [
-      (0.05, 0.064664125),
-      (0.15, 0.19475895),
-      (0.3,  0.42799234),
-      (0.45, 0.66319215)
+      (0.05, 0.06466381),
+      (0.15, 0.19475871),
+      (0.3,  0.42799288),
+      (0.45, 0.66319275)
     ],
     "hail" => [
-      (0.05, 0.032392666),
-      (0.15, 0.108453155),
-      (0.3,  0.28607938),
-      (0.45, 0.56637675)
+      (0.05, 0.03239231),
+      (0.15, 0.10845302),
+      (0.3,  0.28606683),
+      (0.45, 0.5663775)
     ],
-    "sig_tornado" => [(0.1, 0.08092958)],
-    "sig_wind"    => [(0.1, 0.109585375)],
-    "sig_hail"    => [(0.1, 0.057068855)],
+    "sig_tornado" => [(0.1, 0.08093022)],
+    "sig_wind"    => [(0.1, 0.1095853)],
+    "sig_hail"    => [(0.1, 0.057069816)],
   )
 
   # ensure ordered the same as the features in the data
