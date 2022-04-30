@@ -398,6 +398,49 @@ function mean_csi(ŷ, y, weights)
   Float32(sum(csis) / length(csis))
 end
 
+
+
+
+function success_ratio(ŷ, y, weights, threshold)
+  thread_painted_weights, thread_true_pos_weights = parallel_iterate(length(y)) do thread_range
+    painted_weight  = 0.0
+    true_pos_weight = 0.0
+
+    @inbounds for i in thread_range
+      if ŷ[i] >= threshold
+        painted_weight += Float64(weights[i])
+        if y[i] > 0.5f0
+          true_pos_weight += Float64(weights[i])
+        end
+      end
+    end
+
+    painted_weight, true_pos_weight
+  end
+
+  sum(thread_true_pos_weights) / sum(thread_painted_weights)
+end
+
+function probability_of_detection(ŷ, y, weights, threshold)
+  thread_pos_weights, thread_true_pos_weights = parallel_iterate(length(y)) do thread_range
+    pos_weight      = 0.0
+    true_pos_weight = 0.0
+
+    for i in 1:length(y)
+      if y[i] > 0.5f0
+        pos_weight += Float64(weights[i])
+        if ŷ[i] >= threshold
+          true_pos_weight += Float64(weights[i])
+        end
+      end
+    end
+
+    pos_weight, true_pos_weight
+  end
+
+  sum(thread_true_pos_weights) / sum(thread_pos_weights)
+end
+
 end # module Metrics
 
 # push!(LOAD_PATH, (@__DIR__))
