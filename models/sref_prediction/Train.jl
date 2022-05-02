@@ -734,19 +734,19 @@ test_predictive_power(validation_forecasts_blurred, X, Ys, weights)
 
 # EXPECTED:
 # event_name  AU_PR
-# tornado     0.020957047
-# wind        0.09067886
-# hail        0.057110623
-# sig_tornado 0.013260133
-# sig_wind    0.012308959
-# sig_hail    0.013652643
+# tornado     0.02083797
+# wind        0.09102787
+# hail        0.057103045
+# sig_tornado 0.012623444
+# sig_wind    0.012305792
+# sig_hail    0.013548006
 
 # ACTUAL:
-# tornado (9554.0)     feature 1 TORPROB:calculated:hour   fcst:calculated_prob:blurred AU-PR-curve: 0.020957046595993258
-# wind (76241.0)       feature 2 WINDPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.09067886564861938
-# hail (33947.0)       feature 3 HAILPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.057110620698781485
-# sig_tornado (1456.0) feature 4 STORPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.013260132978854111
-# sig_wind (7763.0)    feature 5 SWINDPRO:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.012308958537568998
-# sig_hail (4210.0)    feature 6 SHAILPRO:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.013652642732904893
+# tornado (9554.0)     feature 1 TORPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.02083796959205332
+# wind (76241.0)       feature 2 WINDPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.09102787200044242
+# hail (33947.0)       feature 3 HAILPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.05710304639853705
+# sig_tornado (1456.0) feature 4 STORPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.012623443771072064
+# sig_wind (7763.0)    feature 5 SWINDPRO:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.012305792115681254
+# sig_hail (4210.0)    feature 6 SHAILPRO:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.013548005914149246
 
 # Yay!
