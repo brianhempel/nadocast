@@ -141,12 +141,12 @@ function reload_forecasts()
 
   # Determined in Train.jl
   # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
-  # tornado     0                   50                   0.020957047
-  # wind        35                  50                   0.09067886
-  # hail        0                   35                   0.057110623
-  # sig_tornado 35                  35                   0.013260133
-  # sig_wind    35                  70                   0.012308959
-  # sig_hail    0                   50                   0.013652643
+  # tornado     0                   50                   0.02083797
+  # wind        50                  50                   0.09102787
+  # hail        0                   35                   0.057103045
+  # sig_tornado 50                  35                   0.012623444 lol
+  # sig_wind    35                  70                   0.012305792
+  # sig_hail    0                   50                   0.013548006
 
   blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
   blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
@@ -156,9 +156,9 @@ function reload_forecasts()
   # Needs to be the same order as models
   blur_grid_is = [
     (blur_0mi_grid_is,  blur_50mi_grid_is), # tornado
-    (blur_35mi_grid_is, blur_50mi_grid_is), # wind
+    (blur_50mi_grid_is, blur_50mi_grid_is), # wind
     (blur_0mi_grid_is,  blur_35mi_grid_is), # hail
-    (blur_35mi_grid_is, blur_35mi_grid_is), # sig_tornado
+    (blur_50mi_grid_is, blur_35mi_grid_is), # sig_tornado lol
     (blur_35mi_grid_is, blur_70mi_grid_is), # sig_wind
     (blur_0mi_grid_is,  blur_50mi_grid_is), # sig_hail
   ]
