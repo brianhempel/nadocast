@@ -241,9 +241,9 @@ version = "0.19.2"
 
 [[MPICH_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "3dacfc006764fe498515a022c3976b7e133c4008"
+git-tree-sha1 = "9f781ffc4020c24ca05d83fa4eb4df0d34832b18"
 uuid = "7cb0a576-ebde-5e09-9194-50597f1243b4"
-version = "4.0.2+0"
+version = "4.0.2+1"
 
 [[MappedArrays]]
 git-tree-sha1 = "e8b359ef06ec72e8c030463fe02efe5527ee5142"
@@ -260,7 +260,7 @@ uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 
 [[MemoryConstrainedTreeBoosting]]
 deps = ["BSON", "MPI", "Random", "SIMD"]
-git-tree-sha1 = "600a561ea9e750a2a61cf2465f12ae52800ea81f"
+git-tree-sha1 = "aaf2bffe1863047d412c9caaec5e1d26cc7c12f9"
 repo-rev = "master"
 repo-url = "https://github.com/brianhempel/MemoryConstrainedTreeBoosting.jl"
 uuid = "892701ce-1da2-11e9-2428-fd1c8d726794"
@@ -306,9 +306,9 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
 [[OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "043017e0bdeff61cfbb7afeb558ab29536bbb5ed"
+git-tree-sha1 = "aee446d0b3d5764e35289762f6a18e8ea041a592"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.10.8"
+version = "1.11.0"
 
 [[OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
