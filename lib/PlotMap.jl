@@ -144,21 +144,30 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
     # gmt end
 
     colors_path = Dict(
-      "Tor"  => tornado_colors_path,
-      "Wind" => wind_hail_colors_path,
-      "Hail" => wind_hail_colors_path,
+      "Tor"     => tornado_colors_path,
+      "Wind"    => wind_hail_colors_path,
+      "Hail"    => wind_hail_colors_path,
+      "Sigtor"  => tornado_colors_path,
+      "Sigwind" => wind_hail_colors_path,
+      "Sighail" => wind_hail_colors_path,
     )[event_title]
 
     hazard_str = Dict(
-      "Tor"  => "a tornado",
-      "Wind" => "50+ knot t-storm wind",
-      "Hail" => "1+ inch hail",
+      "Tor"     => "a tornado",
+      "Wind"    => "50+ knot t-storm wind",
+      "Hail"    => "1+ inch hail",
+      "Sigtor"  => "an EF2+ tornado",
+      "Sigwind" => "65+ knot t-storm wind",
+      "Sighail" => "2+ inch hail",
     )[event_title]
 
     sig_hazard_str = Dict(
-      "Tor"  => "EF2+",
-      "Wind" => "65kt+",
-      "Hail" => "2in+",
+      "Tor"     => "EF2+",
+      "Wind"    => "65kt+",
+      "Hail"    => "2in+",
+      "Sigtor"  => "",
+      "Sigwind" => "",
+      "Sighail" => "",
     )[event_title]
 
     println(f, "projection=-Jl-100/35/33/45/0.3")
@@ -237,7 +246,9 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     println(f, "gmt colorbar --FONT_ANNOT_PRIMARY=4p,Helvetica --MAP_FRAME_PEN=0i --MAP_TICK_LENGTH_PRIMARY=0i --MAP_TICK_PEN_PRIMARY=0 -Dn0.54/0.0695+w1.4i/0.1i+h -S -L0i -Np -C$colors_path")
     println(f, "echo '-95.55 27.93 Chance of $hazard_str within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
-    println(f, "echo '-95.65 25.35 Black hatched = 10%+ chance of $sig_hazard_str' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    if !isnothing(sig_vals)
+      println(f, "echo '-95.65 25.35 Black hatched = 10%+ chance of $sig_hazard_str' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    end
     println(f, "gmt end")
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")

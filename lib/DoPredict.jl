@@ -135,6 +135,19 @@ for model_i in 1:non_sig_model_count
     sref_run_hours = sref_run_hours
   )
   push!(plotting_paths, period_path)
+  PlotMap.plot_map(
+    sig_period_path,
+    newest_forecast.grid,
+    sig_prediction;
+    event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_hail" => "Sighail")[sig_event_name],
+    run_time_utc = nadocast_run_time_utc,
+    forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+    hrrr_run_hours = hrrr_run_hours,
+    rap_run_hours  = rap_run_hours,
+    href_run_hours = href_run_hours,
+    sref_run_hours = sref_run_hours
+  )
+  push!(plotting_paths, sig_period_path)
 
   if event_name == "tornado"
     push!(daily_paths_to_perhaps_tweet, period_path)
