@@ -61,13 +61,18 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     max_hyperparameter_coordinate_descent_iterations = 2,
 
     # Roughly factors of 1.78 (4 steps per power of 10)
-    min_data_weight_in_leaf     = [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
-    l2_regularization           = [3.2],
-    max_leaves                  = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
-    max_depth                   = [3, 4, 5, 6, 7, 8],
-    max_delta_score             = [0.56, 1.0, 1.8, 3.2, 5.6],
+    min_data_weight_in_leaf     = [560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0],
+    # min_data_weight_in_leaf     = [100.0, 180.0, 320.0, 560.0, 1000.0, 1800.0, 3200.0, 5600.0, 10000.0, 18000.0, 32000.0, 56000.0, 100000.0, 180000.0, 320000.0, 560000.0, 1000000.0, 1800000.0, 3200000.0, 5600000.0, 10000000.0],
+    l2_regularization           = [0.0032, 0.032, 0.32, 3.2, 32.0, 320., 3200., 32000., 320000, 3200000.],
+    # l2_regularization           = [3.2],
+    max_leaves                  = [10, 12, 15, 20, 25],
+    # max_leaves                  = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 35],
+    max_depth                   = [5, 6, 7, 8],
+    # max_depth                   = [3, 4, 5, 6, 7, 8],
+    max_delta_score             = [0.56, 1.0],
+    # max_delta_score             = [0.56, 1.0, 1.8, 3.2, 5.6],
     learning_rate               = [0.063], # [0.025, 0.040, 0.063, 0.1, 0.16], # factors of 1.585 (5 steps per power of 10)
-    feature_fraction            = [0.1, 0.25, 0.5, 0.75, 1.0],
+    feature_fraction            = [0.025, 0.05, 0.1, 0.25, 0.5, 0.75],
     # feature_fraction            = [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0], this is how we actually trained
     bagging_temperature         = [0.25]
   )
