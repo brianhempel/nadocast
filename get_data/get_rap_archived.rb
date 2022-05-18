@@ -6,15 +6,18 @@
 # Usage: ruby get_rap_archived.rb https://www1.ncdc.noaa.gov/pub/has/model/HAS011081869/ [thread_count]
 
 require 'date'
+require 'tempfile'
 
 base_url = ARGV[0] || raise("Usage: ruby get_rap_archived.rb https://www1.ncdc.noaa.gov/pub/has/model/HAS011081869/ [thread_count] [base_directory]")
 
-THREAD_COUNT = Integer(ARGV[1] || "6")
-FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes")
-MIN_FILE_BYTES = 10_000_000
-FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [1,2,3,5,6,7,11,12,13,16,17,18]
+THREAD_COUNT     = Integer(ARGV[1] || "6")
+FORECASTS_ROOT   = (ENV["FORECASTS_ROOT"] || "/Volumes")
+MIN_FILE_BYTES   = 10_000_000
+FORECAST_HOURS   = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || [1,2,3,5,6,7,11,12,13,16,17,18]
+FIELD_FILTER     = ENV["FIELD_FILTER"] # e.g. ":(REFC|REFD):", passed to wgrib2's -match option https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/match.html
+OUT_TOP_DIR_NAME = ENV["OUT_TOP_DIR_NAME"] || "rap" # The name of the top directory on the storage HDs
 # VALIDATION_RUN_HOURS = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
-FILE_NAME_REGEXP = /\Arap_130_\w+_(#{FORECAST_HOURS.map {|i| "%03d" % i}.join("|")}).grb2/
+FILE_NAME_REGEXP = /\A(rap|ruc2)_130_\w+_(#{FORECAST_HOURS.map {|i| "%03d" % i}.join("|")}).grb2/
 
 html = `curl -s #{base_url}`
 
@@ -68,9 +71,9 @@ threads = THREAD_COUNT.times.map do
         if file_name =~ FILE_NAME_REGEXP
           base_directory =
             if ([run_date.year, run_date.month] <=> [2017, 12]) <= 0
-              "#{FORECASTS_ROOT}/RAP_1/rap" # and backup copy on RAP_2
+              "#{FORECASTS_ROOT}/RAP_1/#{OUT_TOP_DIR_NAME}" # and backup copy on RAP_2
             else
-              "#{FORECASTS_ROOT}/RAP_3/rap" # and backup copy on RAP_4
+              "#{FORECASTS_ROOT}/RAP_3/#{OUT_TOP_DIR_NAME}" # and backup copy on RAP_4
             end
           directory = "#{base_directory}/#{year_str}#{month_str}/#{year_str}#{month_str}#{day_str}"
           # # Backup location
@@ -83,8 +86,16 @@ threads = THREAD_COUNT.times.map do
             puts "#{file_name} -> #{path}"
             data = `curl -f -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}" #{tar_url}`
             if data.bytesize == file_size
-              File.write(path, data)
-              # File.write(alt_path, data)
+              if FIELD_FILTER
+                tmp = Tempfile.new(file_name)
+                tmp.write(data)
+                tmp.close
+                system("wgrib2 #{tmp.path} -match #{FIELD_FILTER.inspect} -grib #{path}")
+                tmp.unlink
+              else
+                File.write(path, data)
+                # File.write(alt_path, data)
+              end
             elsif !$?.success?
               STDERR.puts "Failed: curl -f -s --show-error -H\"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}\" #{tar_url}"
               exit 1

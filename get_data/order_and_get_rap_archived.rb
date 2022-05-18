@@ -2,11 +2,11 @@
 
 # Usage:
 #
-# $ ruby order_and_get_rap_archived.rb 2014-2-1 2018-12-31
+# $ EMAIL=asdf@example.com ruby order_and_get_rap_archived.rb 2014-2-1 2018-12-31
 #
 # Or, if there are still rap_archive_dates_to_order or outstanding_orders
 #
-# $ ruby order_and_get_rap_archived.rb
+# $ EMAIL=asdf@example.com ruby order_and_get_rap_archived.rb
 
 # Automates and downloading from the long term storage request system at https://www.ncei.noaa.gov/has/HAS.FileAppRouter?datasetname=RAP130&subqueryby=STATION&applname=&outdest=FILE
 #
@@ -29,6 +29,8 @@ require 'fileutils'
 
 MAX_SIMULTANEOUS_ORDERS = ENV["MAX_SIMULTANEOUS_ORDERS"]&.to_i || 2
 DAYS_PER_ORDER          = ENV["DAYS_PER_ORDER"]&.to_i          || 15
+DATASET                 = ENV["DATASET"]                       || "RAP130" # or "RUCANL130" or "RAPANL130"
+EMAIL                   = ENV["EMAIL"]                         || (puts "What is your email?"; gets.strip)
 
 class PersistentHash
   include Enumerable
@@ -148,16 +150,16 @@ def make_order(dates_to_order, outstanding_orders)
     'outmed'        => "FTP",
     'outpath'       => "",
     'pri'           => "500",
-    'datasetname'   => "RAP130",
+    'datasetname'   => DATASET, # "RAP130" or "RUCANL130" or "RAPANL130"
     'directsub'     => "Y",
-    'emailadd'      => "brianhempel@uchicago.edu",
+    'emailadd'      => EMAIL,
     'outdest'       => "FILE",
     'applname'      => "",
     'subqueryby'    => "STATION",
     'tmeth'         => "Awaiting-Data-Transfer",
   )
 
-  print "Ordering RAP from #{order_start_date} to #{order_end_date}..."
+  print "Ordering #{DATASET} from #{order_start_date} to #{order_end_date}..."
 
   response =
     begin

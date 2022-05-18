@@ -37,6 +37,9 @@ storm_events_for_climatology:
 	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/hail_events_1998-2013_downloaded.csv > storm_data/hail_events_1998-2013.csv # The merge deduplicates and sorts
 	rm storm_data/tornadoes_1998-2013_downloaded.csv storm_data/wind_events_1998-2013_downloaded.csv storm_data/hail_events_1998-2013_downloaded.csv
 
+reflectivity_analysis:
+	DATASET=RUCANL130 DAYS_PER_ORDER=60 FORECAST_HOURS=0 FIELD_FILTER=REFC OUT_TOP_DIR_NAME=ruc_anl_reflectivity ruby storm_data/order_and_get_rap_archived.rb 2008-11-1 2012-5-1
+	DATASET=RAPANL130 DAYS_PER_ORDER=60 FORECAST_HOURS=0 FIELD_FILTER=REFC OUT_TOP_DIR_NAME=rap_anl_reflectivity ruby storm_data/order_and_get_rap_archived.rb 2012-5-9 2022-5-15
 
 # download_forecast_and_publish:
 # 	TWEET=true ruby lib/download_and_forecast.rb
