@@ -141,13 +141,12 @@ function reload_forecasts()
 
   # Determined in Train.jl
   # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
-  # tornado     15                  15                   0.03856513
-  # wind        25                  25                   0.115486614
-  # hail        25                  15                   0.0744874
-  # hail        15                  25                   0.0744809 # 0.01% difference, let's use it for justice
-  # sig_tornado 25                  35                   0.034162313
-  # sig_wind    15                  35                   0.016272869
-  # sig_hail    15                  25                   0.015544395
+  # tornado     15                  15                   0.038589306
+  # wind        25                  25                   0.115706086
+  # hail        15                  25                   0.07425974
+  # sig_tornado 25                  35                   0.03381651
+  # sig_wind    15                  35                   0.016237844
+  # sig_hail    15                  25                   0.015587974
 
   blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
   blur_25mi_grid_is = Grids.radius_grid_is(grid, 25.0)

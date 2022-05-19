@@ -267,265 +267,265 @@ function test_predictive_power(forecasts, X, Ys, weights)
 end
 test_predictive_power(validation_forecasts, X, Ys, weights)
 
+# tornado (68134.0)    feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.03809341923679216
+# tornado (68134.0)    feature 2 TORPROB:calculated:hour   fcst:calculated_prob:15mi  mean AU-PR-curve: 0.03858930727538041 ***best tor***
+# tornado (68134.0)    feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi    mean AU-PR-curve: 0.03849788709844083
+# tornado (68134.0)    feature 4 TORPROB:calculated:hour   fcst:calculated_prob:35mi  mean AU-PR-curve: 0.037841004621810365
+# tornado (68134.0)    feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi    mean AU-PR-curve: 0.035916983157636764
+# tornado (68134.0)    feature 6 TORPROB:calculated:hour   fcst:calculated_prob:70mi  mean AU-PR-curve: 0.032578160798125616
+# tornado (68134.0)    feature 7 TORPROB:calculated:hour   fcst:calculated_prob:100mi mean AU-PR-curve: 0.027195448840758918
+# tornado (68134.0)    feature 8  WINDPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.009395700931404427
+# tornado (68134.0)    feature 9  WINDPROB:calculated:hour  fcst:calculated_prob:15mi mean AU-PR-curve: 0.009430582678922323
+# tornado (68134.0)    feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.009372667178212118
+# tornado (68134.0)    feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.009184660747417448
+# tornado (68134.0)    feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.008788058691009711
+# tornado (68134.0)    feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.008013845601424721
+# tornado (68134.0)    feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.006775424952470916
+# tornado (68134.0)    feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.005491191319329745
+# tornado (68134.0)    feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.005544830649903299
+# tornado (68134.0)    feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.005554961775140985
+# tornado (68134.0)    feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.005514144197587153
+# tornado (68134.0)    feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.005352276664250288
+# tornado (68134.0)    feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.004999772642223141
+# tornado (68134.0)    feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.004312186860941715
+# tornado (68134.0)    feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.029975491734984813
+# tornado (68134.0)    feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.030437580246747913
+# tornado (68134.0)    feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.030378770669097867
+# tornado (68134.0)    feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.029919143756071843
+# tornado (68134.0)    feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.02874023385401975
+# tornado (68134.0)    feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.02653325820253399
+# tornado (68134.0)    feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.02279371568483029
+# tornado (68134.0)    feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.008015426182622156
+# tornado (68134.0)    feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.008043342655526592
+# tornado (68134.0)    feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.008000340971535186
+# tornado (68134.0)    feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.007857179445884014
+# tornado (68134.0)    feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.007557328177332453
+# tornado (68134.0)    feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0070119495235905355
+# tornado (68134.0)    feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.006103273184647692
+# tornado (68134.0)    feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.004218347687955302
+# tornado (68134.0)    feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.004260599913850644
+# tornado (68134.0)    feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.004240587809628718
+# tornado (68134.0)    feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0041587762417662445
+# tornado (68134.0)    feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.004015641871789456
+# tornado (68134.0)    feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.003762491633090937
+# tornado (68134.0)    feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0033225369061155303
+# tornado (68134.0)    feature 43 forecast_hour:calculated:hour fcst::                     AU-PR-curve: 9.023639634213338e-5
+# wind (562866.0)      feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.04951877712146706
+# wind (562866.0)      feature 2 TORPROB:calculated:hour   fcst:calculated_prob:15mi  mean AU-PR-curve: 0.04986577539922757
+# wind (562866.0)      feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi    mean AU-PR-curve: 0.0497909675884383
+# wind (562866.0)      feature 4 TORPROB:calculated:hour   fcst:calculated_prob:35mi  mean AU-PR-curve: 0.04930766219301333
+# wind (562866.0)      feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi    mean AU-PR-curve: 0.04801431329613518
+# wind (562866.0)      feature 6 TORPROB:calculated:hour   fcst:calculated_prob:70mi  mean AU-PR-curve: 0.04531221042064368
+# wind (562866.0)      feature 7 TORPROB:calculated:hour   fcst:calculated_prob:100mi mean AU-PR-curve: 0.040197105559454153
+# wind (562866.0)      feature 8  WINDPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.11425857172613606
+# wind (562866.0)      feature 9  WINDPROB:calculated:hour  fcst:calculated_prob:15mi mean AU-PR-curve: 0.11550551929169148
+# wind (562866.0)      feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.11570608229578414 ***best wind***
+# wind (562866.0)      feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.11504890954246082
+# wind (562866.0)      feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.11261633942775649
+# wind (562866.0)      feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.10689794250957872
+# wind (562866.0)      feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.09627795425148059
+# wind (562866.0)      feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.029186549460025846
+# wind (562866.0)      feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.02912924606127656
+# wind (562866.0)      feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.028885081027534752
+# wind (562866.0)      feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.02833634091533701
+# wind (562866.0)      feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.027200237258412644
+# wind (562866.0)      feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.025403159779908584
+# wind (562866.0)      feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.02241454706790836
+# wind (562866.0)      feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.03963689872998119
+# wind (562866.0)      feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.039875357122756694
+# wind (562866.0)      feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.03978328545735312
+# wind (562866.0)      feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.03934036946102498
+# wind (562866.0)      feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.03822971996958463
+# wind (562866.0)      feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.03594286332240919
+# wind (562866.0)      feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.03180594821964994
+# wind (562866.0)      feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.07181419414894027
+# wind (562866.0)      feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.07234172807389372
+# wind (562866.0)      feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.07227699119027357
+# wind (562866.0)      feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.07168056920137697
+# wind (562866.0)      feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.07011647348923615
+# wind (562866.0)      feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.066837985357281
+# wind (562866.0)      feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.060383713434271506
+# wind (562866.0)      feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.020194223363102424
+# wind (562866.0)      feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.020137788229596103
+# wind (562866.0)      feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.019964386232662897
+# wind (562866.0)      feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.019611400886410786
+# wind (562866.0)      feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.01890605806747935
+# wind (562866.0)      feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.017801867671298703
+# wind (562866.0)      feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.01594217507198899
+# wind (562866.0)      feature 43 forecast_hour:calculated:hour fcst::                     AU-PR-curve: 0.0007303467435103636
+# hail (246689.0)      feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.016366443637846687
+# hail (246689.0)      feature 2 TORPROB:calculated:hour   fcst:calculated_prob:15mi  mean AU-PR-curve: 0.016363472003528307
+# hail (246689.0)      feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi    mean AU-PR-curve: 0.016254229963658395
+# hail (246689.0)      feature 4 TORPROB:calculated:hour   fcst:calculated_prob:35mi  mean AU-PR-curve: 0.015980176018150074
+# hail (246689.0)      feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi    mean AU-PR-curve: 0.01537246577318613
+# hail (246689.0)      feature 6 TORPROB:calculated:hour   fcst:calculated_prob:70mi  mean AU-PR-curve: 0.014364716931832791
+# hail (246689.0)      feature 7 TORPROB:calculated:hour   fcst:calculated_prob:100mi mean AU-PR-curve: 0.012628569564300474
+# hail (246689.0)      feature 8  WINDPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.01751366697974395
+# hail (246689.0)      feature 9  WINDPROB:calculated:hour  fcst:calculated_prob:15mi mean AU-PR-curve: 0.017529754534793787
+# hail (246689.0)      feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.017426824086990506
+# hail (246689.0)      feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.017171745270266166
+# hail (246689.0)      feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.01657035396381233
+# hail (246689.0)      feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.015608939391916182
+# hail (246689.0)      feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.013999127338429009
+# hail (246689.0)      feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.07318164087797681
+# hail (246689.0)      feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.07421523124137194 ***best hail***
+# hail (246689.0)      feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.074210069125944
+# hail (246689.0)      feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.07324084265752918
+# hail (246689.0)      feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.07026437660731606
+# hail (246689.0)      feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.06454941343296884
+# hail (246689.0)      feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.05430872665070556
+# hail (246689.0)      feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.012055260716347486
+# hail (246689.0)      feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.012093386152189026
+# hail (246689.0)      feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.012054515095979938
+# hail (246689.0)      feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.011922344232779247
+# hail (246689.0)      feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.01161260575790171
+# hail (246689.0)      feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.011023223569139397
+# hail (246689.0)      feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.009912012344971266
+# hail (246689.0)      feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.020199316312547556
+# hail (246689.0)      feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.020245456797655968
+# hail (246689.0)      feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.02016611759077021
+# hail (246689.0)      feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.019937283540232227
+# hail (246689.0)      feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.019363277498103012
+# hail (246689.0)      feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.018352379479905506
+# hail (246689.0)      feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.01644525816139401
+# hail (246689.0)      feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.052777219134225686
+# hail (246689.0)      feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.053263537532633375
+# hail (246689.0)      feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.05307112167403091
+# hail (246689.0)      feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.05221884518306501
+# hail (246689.0)      feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.049923962367745274
+# hail (246689.0)      feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.045900650991045594
+# hail (246689.0)      feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.03880359409494361
+# hail (246689.0)      feature 43 forecast_hour:calculated:hour fcst::                     AU-PR-curve: 0.00031771735739933725
+# sig_tornado (9182.0) feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.019408982194337104
+# sig_tornado (9182.0) feature 2 TORPROB:calculated:hour   fcst:calculated_prob:15mi  mean AU-PR-curve: 0.020339854241600046
+# sig_tornado (9182.0) feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi    mean AU-PR-curve: 0.02075142147683586
+# sig_tornado (9182.0) feature 4 TORPROB:calculated:hour   fcst:calculated_prob:35mi  mean AU-PR-curve: 0.021028647463596922
+# sig_tornado (9182.0) feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi    mean AU-PR-curve: 0.020804835080558602
+# sig_tornado (9182.0) feature 6 TORPROB:calculated:hour   fcst:calculated_prob:70mi  mean AU-PR-curve: 0.019910501580679203
+# sig_tornado (9182.0) feature 7 TORPROB:calculated:hour   fcst:calculated_prob:100mi mean AU-PR-curve: 0.017384060023300334
+# sig_tornado (9182.0) feature 8  WINDPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0027652332208500468
+# sig_tornado (9182.0) feature 9  WINDPROB:calculated:hour  fcst:calculated_prob:15mi mean AU-PR-curve: 0.0027798020953503787
+# sig_tornado (9182.0) feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.002765715711404773
+# sig_tornado (9182.0) feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0027063844800939846
+# sig_tornado (9182.0) feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.0026095094040228506
+# sig_tornado (9182.0) feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0023613610570926845
+# sig_tornado (9182.0) feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.001975697067069967
+# sig_tornado (9182.0) feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0009807275584009475
+# sig_tornado (9182.0) feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.0009898340550745723
+# sig_tornado (9182.0) feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.0009938698471880973
+# sig_tornado (9182.0) feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0009931525421620934
+# sig_tornado (9182.0) feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.0009824533000562393
+# sig_tornado (9182.0) feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0009388192550265813
+# sig_tornado (9182.0) feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0008179714210316302
+# sig_tornado (9182.0) feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.032372271249524916
+# sig_tornado (9182.0) feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.03352600321260325
+# sig_tornado (9182.0) feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.03373667786251336 ***best sigtor***
+# sig_tornado (9182.0) feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.033368880793342
+# sig_tornado (9182.0) feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.03180527072806252
+# sig_tornado (9182.0) feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.028561029753815158
+# sig_tornado (9182.0) feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.02316841523563225
+# sig_tornado (9182.0) feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.002075768534447326
+# sig_tornado (9182.0) feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.0020791739130354247
+# sig_tornado (9182.0) feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.0020605750689877736
+# sig_tornado (9182.0) feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0020123398950101204
+# sig_tornado (9182.0) feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.0019312824565669237
+# sig_tornado (9182.0) feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0017790987798680415
+# sig_tornado (9182.0) feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.001538221026817875
+# sig_tornado (9182.0) feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0007297079849924315
+# sig_tornado (9182.0) feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.0007284317971438842
+# sig_tornado (9182.0) feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.000723788044158793
+# sig_tornado (9182.0) feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0007139218327491783
+# sig_tornado (9182.0) feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.0006942640213690924
+# sig_tornado (9182.0) feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0006605474180031003
+# sig_tornado (9182.0) feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0006008873319494659
+# sig_tornado (9182.0) feature 43 forecast_hour:calculated:hour fcst::                     AU-PR-curve: 1.2735864479380344e-5
+# sig_wind (57701.0)   feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.006094259814489804
+# sig_wind (57701.0)   feature 2 TORPROB:calculated:hour   fcst:calculated_prob:15mi  mean AU-PR-curve: 0.006123523078937593
+# sig_wind (57701.0)   feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi    mean AU-PR-curve: 0.006096825173807593
+# sig_wind (57701.0)   feature 4 TORPROB:calculated:hour   fcst:calculated_prob:35mi  mean AU-PR-curve: 0.00600962860395727
+# sig_wind (57701.0)   feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi    mean AU-PR-curve: 0.0057970860008838
+# sig_wind (57701.0)   feature 6 TORPROB:calculated:hour   fcst:calculated_prob:70mi  mean AU-PR-curve: 0.005406145430564985
+# sig_wind (57701.0)   feature 7 TORPROB:calculated:hour   fcst:calculated_prob:100mi mean AU-PR-curve: 0.004707681932102453
+# sig_wind (57701.0)   feature 8  WINDPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.011083927529895232
+# sig_wind (57701.0)   feature 9  WINDPROB:calculated:hour  fcst:calculated_prob:15mi mean AU-PR-curve: 0.011129491434742298
+# sig_wind (57701.0)   feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.011074623121302772
+# sig_wind (57701.0)   feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.010926747431581067
+# sig_wind (57701.0)   feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.010589837733394772
+# sig_wind (57701.0)   feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.01000279620816406
+# sig_wind (57701.0)   feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.008974209387622728
+# sig_wind (57701.0)   feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.00500779018633884
+# sig_wind (57701.0)   feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.005036027016565651
+# sig_wind (57701.0)   feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.005024064047501076
+# sig_wind (57701.0)   feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0049681960224662826
+# sig_wind (57701.0)   feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.004813197121675836
+# sig_wind (57701.0)   feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.004510175833185109
+# sig_wind (57701.0)   feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.003959203649605776
+# sig_wind (57701.0)   feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.005470766362163563
+# sig_wind (57701.0)   feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.0054888260966505405
+# sig_wind (57701.0)   feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.005468978791141284
+# sig_wind (57701.0)   feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.00539998386036541
+# sig_wind (57701.0)   feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.005240256322716095
+# sig_wind (57701.0)   feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.004923300914914417
+# sig_wind (57701.0)   feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.004351323413906337
+# sig_wind (57701.0)   feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.015982477433103947
+# sig_wind (57701.0)   feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.016188654524609786
+# sig_wind (57701.0)   feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.01621067405530351 ***best sigwind***
+# sig_wind (57701.0)   feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.01611063170708923
+# sig_wind (57701.0)   feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.01579234069946467
+# sig_wind (57701.0)   feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.015124744299665118
+# sig_wind (57701.0)   feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.013735235017930055
+# sig_wind (57701.0)   feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.004135178733046252
+# sig_wind (57701.0)   feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.004137935092992308
+# sig_wind (57701.0)   feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.0041147087708857735
+# sig_wind (57701.0)   feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.004059891206968263
+# sig_wind (57701.0)   feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.003935937315956243
+# sig_wind (57701.0)   feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.003716473079527257
+# sig_wind (57701.0)   feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0033191743870137637
+# sig_wind (57701.0)   feature 43 forecast_hour:calculated:hour fcst::                     AU-PR-curve: 7.421561014472997e-5
+# sig_hail (30597.0)   feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.0027281072285540017
+# sig_hail (30597.0)   feature 2 TORPROB:calculated:hour   fcst:calculated_prob:15mi  mean AU-PR-curve: 0.00272940075653071
+# sig_hail (30597.0)   feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi    mean AU-PR-curve: 0.0027131088660382924
+# sig_hail (30597.0)   feature 4 TORPROB:calculated:hour   fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0026656223228365573
+# sig_hail (30597.0)   feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi    mean AU-PR-curve: 0.0025596238797890914
+# sig_hail (30597.0)   feature 6 TORPROB:calculated:hour   fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0023698549557959617
+# sig_hail (30597.0)   feature 7 TORPROB:calculated:hour   fcst:calculated_prob:100mi mean AU-PR-curve: 0.0020457844169989225
+# sig_hail (30597.0)   feature 8  WINDPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0021993606677390737
+# sig_hail (30597.0)   feature 9  WINDPROB:calculated:hour  fcst:calculated_prob:15mi mean AU-PR-curve: 0.002195652296800663
+# sig_hail (30597.0)   feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.0021768396125813384
+# sig_hail (30597.0)   feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0021379153149256517
+# sig_hail (30597.0)   feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.0020559799953049017
+# sig_hail (30597.0)   feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0019287135532202759
+# sig_hail (30597.0)   feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0017282565401535706
+# sig_hail (30597.0)   feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.01516031831443958
+# sig_hail (30597.0)   feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.01531364481444899
+# sig_hail (30597.0)   feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.015234390253753794
+# sig_hail (30597.0)   feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.014895086627373507
+# sig_hail (30597.0)   feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.014209915840622115
+# sig_hail (30597.0)   feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.012885311313063268
+# sig_hail (30597.0)   feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.010733071657578306
+# sig_hail (30597.0)   feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0020384095822184
+# sig_hail (30597.0)   feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.0020420512396392013
+# sig_hail (30597.0)   feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.0020297474889828426
+# sig_hail (30597.0)   feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.001995538558719344
+# sig_hail (30597.0)   feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.0019241915792183094
+# sig_hail (30597.0)   feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.00180164100314552
+# sig_hail (30597.0)   feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0015935803623303374
+# sig_hail (30597.0)   feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0032930838756027353
+# sig_hail (30597.0)   feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.0033111390163943757
+# sig_hail (30597.0)   feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.003301501020561235
+# sig_hail (30597.0)   feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.0032682356286284765
+# sig_hail (30597.0)   feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.003180087716377742
+# sig_hail (30597.0)   feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0030328626050877255
+# sig_hail (30597.0)   feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0027043900882929755
+# sig_hail (30597.0)   feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.015385460547444888
+# sig_hail (30597.0)   feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi  mean AU-PR-curve: 0.01557374595014855 ***best sighail***
+# sig_hail (30597.0)   feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi  mean AU-PR-curve: 0.015514858453339856
+# sig_hail (30597.0)   feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi  mean AU-PR-curve: 0.015189997280659078
+# sig_hail (30597.0)   feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi  mean AU-PR-curve: 0.014414316345688587
+# sig_hail (30597.0)   feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi  mean AU-PR-curve: 0.0129907158916543
+# sig_hail (30597.0)   feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.01069562879026595
+# sig_hail (30597.0)   feature 43 forecast_hour:calculated:hour fcst::                     AU-PR-curve: 3.993461625611225e-5
 
-# tornado (68134.0)    feature 1 TORPROB:calculated:hour fcst:calculated_prob:              AU-PR-curve: 0.038092913737913965
-# tornado (68134.0)    feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean     AU-PR-curve: 0.03856512528258033 ***best tor***
-# tornado (68134.0)    feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean     AU-PR-curve: 0.03845738122730976
-# tornado (68134.0)    feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean     AU-PR-curve: 0.037783075394596896
-# tornado (68134.0)    feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean     AU-PR-curve: 0.03586202958529153
-# tornado (68134.0)    feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean     AU-PR-curve: 0.032635863699013196
-# tornado (68134.0)    feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean    AU-PR-curve: 0.027478088541143805
-# tornado (68134.0)    feature 8 WINDPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.009138211652795516
-# tornado (68134.0)    feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.009153928145848759
-# tornado (68134.0)    feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.009096792262488855
-# tornado (68134.0)    feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.0089207569549636
-# tornado (68134.0)    feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.0085562486094652
-# tornado (68134.0)    feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.007815819662820645
-# tornado (68134.0)    feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.006618790180379198
-# tornado (68134.0)    feature 15 HAILPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.005503808613302046
-# tornado (68134.0)    feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.005557626076828263
-# tornado (68134.0)    feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.005568308265734539
-# tornado (68134.0)    feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.005528017957230592
-# tornado (68134.0)    feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.005366238417300644
-# tornado (68134.0)    feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.005013933282289027
-# tornado (68134.0)    feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.004325847107365612
-# tornado (68134.0)    feature 22 STORPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.030279414344508843
-# tornado (68134.0)    feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.030781845313049006
-# tornado (68134.0)    feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.0307313441846042
-# tornado (68134.0)    feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.03026258939257635
-# tornado (68134.0)    feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.029036629860555364
-# tornado (68134.0)    feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.02676152279379891
-# tornado (68134.0)    feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.022927036019328127
-# tornado (68134.0)    feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.008029663062378034
-# tornado (68134.0)    feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.008056663805061742
-# tornado (68134.0)    feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.008014100037020824
-# tornado (68134.0)    feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.007871403222770698
-# tornado (68134.0)    feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.007571982275867091
-# tornado (68134.0)    feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.007027223460010957
-# tornado (68134.0)    feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0061186815950853785
-# tornado (68134.0)    feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0042083250880540855
-# tornado (68134.0)    feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.004245717403462443
-# tornado (68134.0)    feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.004225796880890934
-# tornado (68134.0)    feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.004143293996058427
-# tornado (68134.0)    feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.0040000605534679465
-# tornado (68134.0)    feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0037472009142315737
-# tornado (68134.0)    feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.003307826526581784
-# tornado (68134.0)    feature 43 forecast_hour:calculated:hour fcst::                      AU-PR-curve: 9.023639634213338e-5
-# wind (562866.0)      feature 1 TORPROB:calculated:hour fcst:calculated_prob:              AU-PR-curve: 0.04918463256936391
-# wind (562866.0)      feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean     AU-PR-curve: 0.049519221319923104
-# wind (562866.0)      feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean     AU-PR-curve: 0.049432050846926125
-# wind (562866.0)      feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean     AU-PR-curve: 0.048922509880212954
-# wind (562866.0)      feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean     AU-PR-curve: 0.0475990396362673
-# wind (562866.0)      feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean     AU-PR-curve: 0.04486746284022893
-# wind (562866.0)      feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean    AU-PR-curve: 0.039745146699839556
-# wind (562866.0)      feature 8 WINDPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.11387557670254292
-# wind (562866.0)      feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.11519925200319703
-# wind (562866.0)      feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.11548662037783414 ***best wind***
-# wind (562866.0)      feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.11498115747699791
-# wind (562866.0)      feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.11273335372993429
-# wind (562866.0)      feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.10718166918997074
-# wind (562866.0)      feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.09650616070474936
-# wind (562866.0)      feature 15 HAILPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.029397657049463472
-# wind (562866.0)      feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.029340638488842247
-# wind (562866.0)      feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.029095213349960628
-# wind (562866.0)      feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.028542748043704602
-# wind (562866.0)      feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.027398446404583828
-# wind (562866.0)      feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.025588920265580982
-# wind (562866.0)      feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.02258128098611348
-# wind (562866.0)      feature 22 STORPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.03994307508533854
-# wind (562866.0)      feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.04018644839544405
-# wind (562866.0)      feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.0400939445905491
-# wind (562866.0)      feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.039643639889518176
-# wind (562866.0)      feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.038520980257138716
-# wind (562866.0)      feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.0362207392906237
-# wind (562866.0)      feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.03206042508756286
-# wind (562866.0)      feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.07179553395962818
-# wind (562866.0)      feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.07231771148823514
-# wind (562866.0)      feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.07225372527455799
-# wind (562866.0)      feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.07165441882275721
-# wind (562866.0)      feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.0700819551077755
-# wind (562866.0)      feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.06679649820937893
-# wind (562866.0)      feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.060329869754028306
-# wind (562866.0)      feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.02027317393706811
-# wind (562866.0)      feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.020215979752234735
-# wind (562866.0)      feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.02004178692738622
-# wind (562866.0)      feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.019687677654435846
-# wind (562866.0)      feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.01898013902344102
-# wind (562866.0)      feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.017872853472723476
-# wind (562866.0)      feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.01600741925450469
-# wind (562866.0)      feature 43 forecast_hour:calculated:hour fcst::                      AU-PR-curve: 0.0007303467435103636
-# hail (246689.0)      feature 1 TORPROB:calculated:hour fcst:calculated_prob:              AU-PR-curve: 0.01637261248335978
-# hail (246689.0)      feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean     AU-PR-curve: 0.016370586636360776
-# hail (246689.0)      feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean     AU-PR-curve: 0.016261919954696846
-# hail (246689.0)      feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean     AU-PR-curve: 0.01598924533026332
-# hail (246689.0)      feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean     AU-PR-curve: 0.015386401080774938
-# hail (246689.0)      feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean     AU-PR-curve: 0.014384973485001446
-# hail (246689.0)      feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean    AU-PR-curve: 0.012661499570824016
-# hail (246689.0)      feature 8 WINDPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.01725518624006352
-# hail (246689.0)      feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.01727356725859199
-# hail (246689.0)      feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.017172912058746048
-# hail (246689.0)      feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.01692710551492894
-# hail (246689.0)      feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.01633817289393868
-# hail (246689.0)      feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.015403977471742478
-# hail (246689.0)      feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.01382022306737807
-# hail (246689.0)      feature 15 HAILPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.07338978299850449
-# hail (246689.0)      feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.07443952832328785
-# hail (246689.0)      feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.07445061357719689 ***best hail***
-# hail (246689.0)      feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.07349545712340752
-# hail (246689.0)      feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.07053449459238521
-# hail (246689.0)      feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.06480901004735605
-# hail (246689.0)      feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.05451709269494041
-# hail (246689.0)      feature 22 STORPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.01210756289590851
-# hail (246689.0)      feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.012148114641810164
-# hail (246689.0)      feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.012110632880191825
-# hail (246689.0)      feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.011979329081814993
-# hail (246689.0)      feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.011668818144941553
-# hail (246689.0)      feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.011075362492995929
-# hail (246689.0)      feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.009953654252707958
-# hail (246689.0)      feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.020153606212438682
-# hail (246689.0)      feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.020200490514324557
-# hail (246689.0)      feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.020121779063159945
-# hail (246689.0)      feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.01989453589038338
-# hail (246689.0)      feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.019322016214765564
-# hail (246689.0)      feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.018313401317087842
-# hail (246689.0)      feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.016409278629683586
-# hail (246689.0)      feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.052807506263340305
-# hail (246689.0)      feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.053293503180016945
-# hail (246689.0)      feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.05310005871427087
-# hail (246689.0)      feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.05224484224404801
-# hail (246689.0)      feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.049949320025603185
-# hail (246689.0)      feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0459187345525047
-# hail (246689.0)      feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.038791941883513786
-# hail (246689.0)      feature 43 forecast_hour:calculated:hour fcst::                      AU-PR-curve: 0.00031771735739933725
-# sig_tornado (9182.0) feature 1 TORPROB:calculated:hour fcst:calculated_prob:              AU-PR-curve: 0.020184379534294042
-# sig_tornado (9182.0) feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean     AU-PR-curve: 0.021144926654606173
-# sig_tornado (9182.0) feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean     AU-PR-curve: 0.021580260324859362
-# sig_tornado (9182.0) feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean     AU-PR-curve: 0.021904851224180396
-# sig_tornado (9182.0) feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean     AU-PR-curve: 0.02180155822768238
-# sig_tornado (9182.0) feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean     AU-PR-curve: 0.021381120089437884
-# sig_tornado (9182.0) feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean    AU-PR-curve: 0.019070311605259287
-# sig_tornado (9182.0) feature 8 WINDPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.002558607805941661
-# sig_tornado (9182.0) feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.0025719149597759395
-# sig_tornado (9182.0) feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.002559434398368522
-# sig_tornado (9182.0) feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.00250682586597828
-# sig_tornado (9182.0) feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.0024204158409261993
-# sig_tornado (9182.0) feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.002198464887538905
-# sig_tornado (9182.0) feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.001852951677827093
-# sig_tornado (9182.0) feature 15 HAILPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.0009792484051565032
-# sig_tornado (9182.0) feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.0009883905826187278
-# sig_tornado (9182.0) feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.0009926773120351624
-# sig_tornado (9182.0) feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.0009923050240455804
-# sig_tornado (9182.0) feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.0009818430744605376
-# sig_tornado (9182.0) feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.0009380236570838718
-# sig_tornado (9182.0) feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.0008168493857262371
-# sig_tornado (9182.0) feature 22 STORPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.0324614175173982
-# sig_tornado (9182.0) feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.0337699770470802
-# sig_tornado (9182.0) feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.034055771154099815 ***best sigtor***
-# sig_tornado (9182.0) feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.033751310075924794
-# sig_tornado (9182.0) feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.03218272774563538
-# sig_tornado (9182.0) feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.028903409792467895
-# sig_tornado (9182.0) feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.02339701297718336
-# sig_tornado (9182.0) feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0020895934407504377
-# sig_tornado (9182.0) feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.002092873006957537
-# sig_tornado (9182.0) feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.0020745528726702107
-# sig_tornado (9182.0) feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.0020270281192032147
-# sig_tornado (9182.0) feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.0019469680859835168
-# sig_tornado (9182.0) feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0017953926942175426
-# sig_tornado (9182.0) feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0015543784638183717
-# sig_tornado (9182.0) feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0007247091495270593
-# sig_tornado (9182.0) feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.0007232785583409606
-# sig_tornado (9182.0) feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.0007184958944572933
-# sig_tornado (9182.0) feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.0007084174491098745
-# sig_tornado (9182.0) feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.0006882672783247524
-# sig_tornado (9182.0) feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0006538859882123982
-# sig_tornado (9182.0) feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0005932834146331394
-# sig_tornado (9182.0) feature 43 forecast_hour:calculated:hour fcst::                      AU-PR-curve: 1.2735864479380344e-5
-# sig_wind (57701.0)   feature 1 TORPROB:calculated:hour fcst:calculated_prob:              AU-PR-curve: 0.0060210072176445145
-# sig_wind (57701.0)   feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean     AU-PR-curve: 0.006048969453979045
-# sig_wind (57701.0)   feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean     AU-PR-curve: 0.006022840470670077
-# sig_wind (57701.0)   feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean     AU-PR-curve: 0.0059372341635195195
-# sig_wind (57701.0)   feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean     AU-PR-curve: 0.0057279642086105744
-# sig_wind (57701.0)   feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean     AU-PR-curve: 0.005342553684812942
-# sig_wind (57701.0)   feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean    AU-PR-curve: 0.004656146055115123
-# sig_wind (57701.0)   feature 8 WINDPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.010766316380641511
-# sig_wind (57701.0)   feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.010824801872930988
-# sig_wind (57701.0)   feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.010781795360701119
-# sig_wind (57701.0)   feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.010648535541028771
-# sig_wind (57701.0)   feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.010331358814089487
-# sig_wind (57701.0)   feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.009769018181861192
-# sig_wind (57701.0)   feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.008766611596835257
-# sig_wind (57701.0)   feature 15 HAILPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.00500354359593779
-# sig_wind (57701.0)   feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.005032446282118618
-# sig_wind (57701.0)   feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.0050209789298699455
-# sig_wind (57701.0)   feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.004965501899952111
-# sig_wind (57701.0)   feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.0048105855576805415
-# sig_wind (57701.0)   feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.004507640259407646
-# sig_wind (57701.0)   feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.003957855311428943
-# sig_wind (57701.0)   feature 22 STORPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.005491124046034227
-# sig_wind (57701.0)   feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.005509467028734762
-# sig_wind (57701.0)   feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.005489005027342889
-# sig_wind (57701.0)   feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.005418662009577087
-# sig_wind (57701.0)   feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.00525597087691415
-# sig_wind (57701.0)   feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.00493524817965473
-# sig_wind (57701.0)   feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.004360755760358743
-# sig_wind (57701.0)   feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.01601545251926452
-# sig_wind (57701.0)   feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.016222622433558598
-# sig_wind (57701.0)   feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.016241121316946938 ***best sigwind***
-# sig_wind (57701.0)   feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.016137694990441976
-# sig_wind (57701.0)   feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.01581277364880481
-# sig_wind (57701.0)   feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.015141527379450011
-# sig_wind (57701.0)   feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.013747707743660425
-# sig_wind (57701.0)   feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0041438678826870865
-# sig_wind (57701.0)   feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.004146304300789253
-# sig_wind (57701.0)   feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.0041226884886457335
-# sig_wind (57701.0)   feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.004067287481384556
-# sig_wind (57701.0)   feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.003942654070018957
-# sig_wind (57701.0)   feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0037227515226612275
-# sig_wind (57701.0)   feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.003325584685750076
-# sig_wind (57701.0)   feature 43 forecast_hour:calculated:hour fcst::                      AU-PR-curve: 7.421561014472997e-5
-# sig_hail (30597.0)   feature 1 TORPROB:calculated:hour fcst:calculated_prob:              AU-PR-curve: 0.0027471818967157225
-# sig_hail (30597.0)   feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean     AU-PR-curve: 0.002749050920758793
-# sig_hail (30597.0)   feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean     AU-PR-curve: 0.00273302580973768
-# sig_hail (30597.0)   feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean     AU-PR-curve: 0.002685779527336153
-# sig_hail (30597.0)   feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean     AU-PR-curve: 0.0025799616482731326
-# sig_hail (30597.0)   feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean     AU-PR-curve: 0.0023900383225517316
-# sig_hail (30597.0)   feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean    AU-PR-curve: 0.002064537744714158
-# sig_hail (30597.0)   feature 8 WINDPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.0021542919258318014
-# sig_hail (30597.0)   feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.0021502725642520326
-# sig_hail (30597.0)   feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.0021314589974564153
-# sig_hail (30597.0)   feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.0020923526682915593
-# sig_hail (30597.0)   feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.002009398184703421
-# sig_hail (30597.0)   feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.0018811438978874185
-# sig_hail (30597.0)   feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.0016824989046255432
-# sig_hail (30597.0)   feature 15 HAILPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.01518139135734051
-# sig_hail (30597.0)   feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.01534259206035175
-# sig_hail (30597.0)   feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.015273089283459905
-# sig_hail (30597.0)   feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.014948374469927993
-# sig_hail (30597.0)   feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.01428404617962779
-# sig_hail (30597.0)   feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.012984404855172174
-# sig_hail (30597.0)   feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.010837741356282807
-# sig_hail (30597.0)   feature 22 STORPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.002048044614833259
-# sig_hail (30597.0)   feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.0020522768842563778
-# sig_hail (30597.0)   feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean   AU-PR-curve: 0.0020404803563425014
-# sig_hail (30597.0)   feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean   AU-PR-curve: 0.0020068326342661306
-# sig_hail (30597.0)   feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean   AU-PR-curve: 0.0019360064615904814
-# sig_hail (30597.0)   feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean   AU-PR-curve: 0.0018136608623679378
-# sig_hail (30597.0)   feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean  AU-PR-curve: 0.0016051746945991898
-# sig_hail (30597.0)   feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.0032941122590802105
-# sig_hail (30597.0)   feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.003313157617177453
-# sig_hail (30597.0)   feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.003304428458238803
-# sig_hail (30597.0)   feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.0032713038054582705
-# sig_hail (30597.0)   feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.0031818200623134783
-# sig_hail (30597.0)   feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0030361237740777584
-# sig_hail (30597.0)   feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0027028669361492726
-# sig_hail (30597.0)   feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.015346508970791128
-# sig_hail (30597.0)   feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.015531681729515856 ***best sighail***
-# sig_hail (30597.0)   feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.01546989425889235
-# sig_hail (30597.0)   feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.015140278728833254
-# sig_hail (30597.0)   feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.014363193551997125
-# sig_hail (30597.0)   feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.012943015408153992
-# sig_hail (30597.0)   feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.01065905099940301
-# sig_hail (30597.0)   feature 43 forecast_hour:calculated:hour fcst::                      AU-PR-curve: 3.993461625611225e-5
 
 
 # tornado (68134)    feature 1 TORPROB:calculated:hour fcst:calculated_prob:              ROC: 0.9840355246144981
@@ -826,316 +826,316 @@ for prediction_i in 1:length(HREFPrediction.models)
 end
 
 # blur_radius_f2  blur_radius_f38 AU_PR_tornado
-# 0       0       0.0380929
-# 0       15      0.03830932
-# 0       25      0.03828504
-# 0       35      0.03811438
-# 0       50      0.037652444
-# 0       70      0.036949728
-# 0       100     0.03583728
-# 15      0       0.03849197
-# 15      15      0.03856513
-# 15      25      0.038526017
-# 15      35      0.03833931
-# 15      50      0.037866782
-# 15      70      0.03715156
-# 15      100     0.03603181
-# 25      0       0.03848133
-# 25      15      0.03853256
-# 25      25      0.03845738
-# 25      35      0.038236875
-# 25      50      0.037724618
-# 25      70      0.036972165
-# 25      100     0.03582087
-# 35      0       0.03815995
-# 35      15      0.038194023
-# 35      25      0.038077522
-# 35      35      0.037783075
-# 35      50      0.037182696
-# 35      70      0.036343995
-# 35      100     0.03511797
-# 50      0       0.037174955
-# 50      15      0.03718365
-# 50      25      0.037015006
-# 50      35      0.03661892
-# 50      50      0.03586203
-# 50      70      0.034865133
-# 50      100     0.03349937
-# 70      0       0.0356374
-# 70      15      0.035625294
-# 70      25      0.035397198
-# 70      35      0.034873012
-# 70      50      0.033898324
-# 70      70      0.032635864
-# 70      100     0.031073641
-# 100     0       0.033395763
-# 100     15      0.0334185
-# 100     25      0.03315884
-# 100     35      0.032520637
-# 100     50      0.031279597
-# 100     70      0.02964025
-# 100     100     0.027478088
-# Best tornado: 15        15      0.03856513
+# 0       0       0.03809342
+# 0       15      0.038320705
+# 0       25      0.038313318
+# 0       35      0.03815591
+# 0       50      0.03770487
+# 0       70      0.03701286
+# 0       100     0.03591176
+# 15      0       0.03850322
+# 15      15      0.038589306
+# 15      25      0.03856
+# 15      35      0.038383294
+# 15      50      0.03791692
+# 15      70      0.037213624
+# 15      100     0.03610798
+# 25      0       0.038503136
+# 25      15      0.038566124
+# 25      25      0.038497888
+# 25      35      0.038285214
+# 25      50      0.03777889
+# 25      70      0.037036855
+# 25      100     0.03590152
+# 35      0       0.038191244
+# 35      15      0.03823522
+# 35      25      0.0381263
+# 35      35      0.037841003
+# 35      50      0.037245423
+# 35      70      0.036412958
+# 35      100     0.03519801
+# 50      0       0.03720261
+# 50      15      0.03722399
+# 50      25      0.037064433
+# 50      35      0.036677442
+# 50      50      0.03591698
+# 50      70      0.034904987
+# 50      100     0.033516776
+# 70      0       0.035612933
+# 70      15      0.03561966
+# 70      25      0.035404064
+# 70      35      0.034890126
+# 70      50      0.03390078
+# 70      70      0.03257816
+# 70      100     0.030886205
+# 100     0       0.03325529
+# 100     15      0.033287812
+# 100     25      0.03303947
+# 100     35      0.03241653
+# 100     50      0.031177698
+# 100     70      0.02945765
+# 100     100     0.027195448
+# Best tornado: 15        15      0.038589306
 
 # blur_radius_f2  blur_radius_f38 AU_PR_wind
-# 0       0       0.11387558
-# 0       15      0.11443071
-# 0       25      0.11459447
-# 0       35      0.11458798
-# 0       50      0.11428203
-# 0       70      0.11338613
-# 0       100     0.111703716
-# 15      0       0.11489694
-# 15      15      0.115199246
-# 15      25      0.11531972
-# 15      35      0.115287215
-# 15      50      0.11496686
-# 15      70      0.11407072
-# 15      100     0.11240323
-# 25      0       0.11518349
-# 25      15      0.11543674
-# 25      25      0.115486614
-# 25      35      0.115392156
-# 25      50      0.11501253
-# 25      70      0.11405865
-# 25      100     0.11235156
-# 35      0       0.11500097
-# 35      15      0.115215465
-# 35      25      0.11519623
-# 35      35      0.11498116
-# 35      50      0.11445734
-# 35      70      0.113362774
-# 35      100     0.11152597
-# 50      0       0.11381371
-# 50      15      0.11399506
-# 50      25      0.113894254
-# 50      35      0.113522165
-# 50      50      0.11273336
-# 50      70      0.1113322
-# 50      100     0.10917358
-# 70      0       0.11087611
-# 70      15      0.11102812
-# 70      25      0.11083625
-# 70      35      0.11027317
-# 70      50      0.10912439
-# 70      70      0.10718167
-# 70      100     0.10435845
-# 100     0       0.10597582
-# 100     15      0.1060986
-# 100     25      0.10580449
-# 100     35      0.10500043
-# 100     50      0.103393205
-# 100     70      0.10065172
-# 100     100     0.09650616
-# Best wind: 25   25      0.115486614
+# 0       0       0.11425857
+# 0       15      0.1148392
+# 0       25      0.11502065
+# 0       35      0.11503661
+# 0       50      0.11478107
+# 0       70      0.11396844
+# 0       100     0.112427205
+# 15      0       0.115185045
+# 15      15      0.11550552
+# 15      25      0.11564684
+# 15      35      0.11564439
+# 15      50      0.11537782
+# 15      70      0.11456819
+# 15      100     0.113056764
+# 25      0       0.115367495
+# 25      15      0.115639046
+# 25      25      0.115706086
+# 25      35      0.115644746
+# 25      50      0.1153247
+# 25      70      0.1144664
+# 25      100     0.11292721
+# 35      0       0.115006104
+# 35      15      0.11524059
+# 35      25      0.11523594
+# 35      35      0.11504892
+# 35      50      0.1146022
+# 35      70      0.113621235
+# 35      100     0.11197347
+# 50      0       0.11361388
+# 50      15      0.11380467
+# 50      25      0.11370797
+# 50      35      0.11334789
+# 50      50      0.11261634
+# 50      70      0.11136181
+# 50      100     0.10942233
+# 70      0       0.11053029
+# 70      15      0.110678054
+# 70      25      0.11047181
+# 70      35      0.10987993
+# 70      50      0.10873095
+# 70      70      0.10689795
+# 70      100     0.1043184
+# 100     0       0.105620965
+# 100     15      0.105760865
+# 100     25      0.10547316
+# 100     35      0.104660586
+# 100     50      0.10300152
+# 100     70      0.10023475
+# 100     100     0.09627795
+# Best wind: 25   25      0.115706086
 
 # blur_radius_f2  blur_radius_f38 AU_PR_hail
-# 0       0       0.073389776
-# 0       15      0.07391185
-# 0       25      0.0739978
-# 0       35      0.07384685
-# 0       50      0.07331552
-# 0       70      0.07239307
-# 0       100     0.070906155
-# 15      0       0.07415522
-# 15      15      0.07443954
-# 15      25      0.0744809
-# 15      35      0.07430244
-# 15      50      0.07376281
-# 15      70      0.07284978
-# 15      100     0.071408145
-# 25      0       0.074251525
-# 25      15      0.0744874
-# 25      25      0.074450605
-# 25      35      0.07420511
-# 25      50      0.07360149
-# 25      70      0.07264397
-# 25      100     0.07118752
-# 35      0       0.07379301
-# 35      15      0.0739977
-# 35      25      0.07387899
-# 35      35      0.073495455
-# 35      50      0.07272919
-# 35      70      0.071638405
-# 35      100     0.0700942
-# 50      0       0.07223941
-# 50      15      0.07243
-# 50      25      0.07221675
-# 50      35      0.07163351
-# 50      50      0.0705345
-# 50      70      0.06909127
-# 50      100     0.06722426
-# 70      0       0.06932287
-# 70      15      0.06952071
-# 70      25      0.06920731
-# 70      35      0.06839888
-# 70      50      0.06685042
-# 70      70      0.06480901
-# 70      100     0.0622709
-# 100     0       0.064614646
-# 100     15      0.06480104
-# 100     25      0.06440657
-# 100     35      0.06336205
-# 100     50      0.06126437
-# 100     70      0.058369793
-# 100     100     0.05451709
-# Best hail: 25   15      0.0744874
+# 0       0       0.07318163
+# 0       15      0.0737054
+# 0       25      0.07379321
+# 0       35      0.07364843
+# 0       50      0.073127076
+# 0       70      0.07222181
+# 0       100     0.07075998
+# 15      0       0.07392695
+# 15      15      0.07421523
+# 15      25      0.07425974
+# 15      35      0.07408572
+# 15      50      0.073557705
+# 15      70      0.07266323
+# 15      100     0.07124361
+# 25      0       0.074002996
+# 25      15      0.074242875
+# 25      25      0.07421008
+# 25      35      0.07397271
+# 25      50      0.07338229
+# 25      70      0.07243879
+# 25      100     0.071004264
+# 35      0       0.07351991
+# 35      15      0.07372961
+# 35      25      0.07361579
+# 35      35      0.07324083
+# 35      50      0.0724898
+# 35      70      0.07141548
+# 35      100     0.0698963
+# 50      0       0.071930416
+# 50      15      0.07212494
+# 50      25      0.07191672
+# 50      35      0.071345136
+# 50      50      0.07026436
+# 50      70      0.06884639
+# 50      100     0.06701053
+# 70      0       0.068984434
+# 70      15      0.06917874
+# 70      25      0.06887235
+# 70      35      0.068080544
+# 70      50      0.0665504
+# 70      70      0.06454941
+# 70      100     0.06204971
+# 100     0       0.06426858
+# 100     15      0.06445081
+# 100     25      0.06405096
+# 100     35      0.06302279
+# 100     50      0.060948372
+# 100     70      0.058095183
+# 100     100     0.054308724
+# Best hail: 15   25      0.07425974
 
 # blur_radius_f2  blur_radius_f38 AU_PR_sig_tornado
-# 0       0       0.03246142
-# 0       15      0.033061862
-# 0       25      0.033272173
-# 0       35      0.033423796
-# 0       50      0.033405352
-# 0       70      0.033174813
-# 0       100     0.032493047
-# 15      0       0.033410273
-# 15      15      0.033769976
-# 15      25      0.033960946
-# 15      35      0.034111153
-# 15      50      0.034105085
-# 15      70      0.03391962
-# 15      100     0.033307504
-# 25      0       0.033593286
-# 25      15      0.033930384
-# 25      25      0.03405577
-# 25      35      0.034162313
-# 25      50      0.034111384
-# 25      70      0.0339117
-# 25      100     0.03331883
-# 35      0       0.033320095
-# 35      15      0.03363533
-# 35      25      0.03372108
-# 35      35      0.03375131
-# 35      50      0.033606347
-# 35      70      0.03331573
-# 35      100     0.032698747
-# 50      0       0.032271024
-# 50      15      0.032555506
-# 50      25      0.032572202
-# 50      35      0.032482762
-# 50      50      0.032182727
-# 50      70      0.03172961
-# 50      100     0.030975612
-# 70      0       0.030250784
-# 70      15      0.030488998
-# 70      25      0.030429272
-# 70      35      0.030191215
-# 70      50      0.029655166
-# 70      70      0.028903408
-# 70      100     0.02781331
-# 100     0       0.027218424
-# 100     15      0.027477967
-# 100     25      0.027382178
-# 100     35      0.027008526
-# 100     50      0.026203575
-# 100     70      0.025011359
-# 100     100     0.023397012
-# Best sig_tornado: 25    35      0.034162313
+# 0       0       0.03237228
+# 0       15      0.03292119
+# 0       25      0.033107318
+# 0       35      0.033235956
+# 0       50      0.033199463
+# 0       70      0.032973863
+# 0       100     0.03234522
+# 15      0       0.03320229
+# 15      15      0.033526
+# 15      25      0.03368453
+# 15      35      0.03380525
+# 15      50      0.03377654
+# 15      70      0.033599578
+# 15      100     0.033050727
+# 25      0       0.033346925
+# 25      15      0.033632178
+# 25      25      0.033736676
+# 25      35      0.03381651
+# 25      50      0.03374406
+# 25      70      0.033543672
+# 25      100     0.03301898
+# 35      0       0.033047143
+# 35      15      0.033310197
+# 35      25      0.03336976
+# 35      35      0.033368878
+# 35      50      0.033209093
+# 35      70      0.032922104
+# 35      100     0.032363143
+# 50      0       0.03202782
+# 50      15      0.03225422
+# 50      25      0.032249294
+# 50      35      0.032124363
+# 50      50      0.031805273
+# 50      70      0.031339016
+# 50      100     0.030610599
+# 70      0       0.030093733
+# 70      15      0.030264659
+# 70      25      0.03017111
+# 70      35      0.029892702
+# 70      50      0.02932476
+# 70      70      0.028561028
+# 70      100     0.02747392
+# 100     0       0.02718754
+# 100     15      0.027370635
+# 100     25      0.027224505
+# 100     35      0.026794223
+# 100     50      0.025927367
+# 100     70      0.024721023
+# 100     100     0.023168415
+# Best sig_tornado: 25    35      0.03381651
 
 # blur_radius_f2  blur_radius_f38 AU_PR_sig_wind
-# 0       0       0.016015451
-# 0       15      0.016128669
-# 0       25      0.01616838
-# 0       35      0.016189512
-# 0       50      0.016188394
-# 0       70      0.016154964
-# 0       100     0.0160643
-# 15      0       0.0161626
-# 15      15      0.016222622
-# 15      25      0.016254812
-# 15      35      0.016272869
-# 15      50      0.016269665
-# 15      70      0.016236434
-# 15      100     0.016149253
-# 25      0       0.016174493
-# 25      15      0.016223341
-# 25      25      0.016241122
-# 25      35      0.016247837
-# 25      50      0.016234364
-# 25      70      0.016193287
-# 25      100     0.016102593
-# 35      0       0.016103344
-# 35      15      0.01614545
-# 35      25      0.01615179
-# 35      35      0.016137695
-# 35      50      0.01610135
-# 35      70      0.016038712
-# 35      100     0.015926668
-# 50      0       0.015902225
-# 50      15      0.015938943
-# 50      25      0.015932225
-# 50      35      0.01589259
-# 50      50      0.015812773
-# 50      70      0.015703445
-# 50      100     0.015538966
-# 70      0       0.015522251
-# 70      15      0.015554685
-# 70      25      0.015534708
-# 70      35      0.015466662
-# 70      50      0.0153316595
-# 70      70      0.015141527
-# 70      100     0.014873189
-# 100     0       0.014837958
-# 100     15      0.014869529
-# 100     25      0.014834235
-# 100     35      0.014731016
-# 100     50      0.014522398
-# 100     70      0.014213325
-# 100     100     0.013747708
-# Best sig_wind: 15       35      0.016272869
+# 0       0       0.015982477
+# 0       15      0.016093707
+# 0       25      0.016134672
+# 0       35      0.016156817
+# 0       50      0.016158082
+# 0       70      0.016126579
+# 0       100     0.01603801
+# 15      0       0.016129857
+# 15      15      0.016188655
+# 15      25      0.016220633
+# 15      35      0.016237844
+# 15      50      0.016237346
+# 15      70      0.016207851
+# 15      100     0.016123284
+# 25      0       0.016143903
+# 25      15      0.016192678
+# 25      25      0.016210673
+# 25      35      0.016216163
+# 25      50      0.016204923
+# 25      70      0.016165476
+# 25      100     0.016076013
+# 35      0       0.016075268
+# 35      15      0.01611751
+# 35      25      0.01612431
+# 35      35      0.016110633
+# 35      50      0.016077263
+# 35      70      0.016017968
+# 35      100     0.015909143
+# 50      0       0.015877284
+# 50      15      0.015913932
+# 50      25      0.01590801
+# 50      35      0.01586983
+# 50      50      0.01579234
+# 50      70      0.01568642
+# 50      100     0.015526874
+# 70      0       0.015497869
+# 70      15      0.01553034
+# 70      25      0.015511257
+# 70      35      0.015444803
+# 70      50      0.015312641
+# 70      70      0.015124745
+# 70      100     0.014860065
+# 100     0       0.014813265
+# 100     15      0.014844882
+# 100     25      0.014810547
+# 100     35      0.014709301
+# 100     50      0.014504516
+# 100     70      0.014197887
+# 100     100     0.013735235
+# Best sig_wind: 15       35      0.016237844
 
 # blur_radius_f2  blur_radius_f38 AU_PR_sig_hail
-# 0       0       0.0153465085
-# 0       15      0.015466008
-# 0       25      0.015493708
-# 0       35      0.015465641
-# 0       50      0.015371837
-# 0       70      0.01518398
-# 0       100     0.014952504
-# 15      0       0.015470042
-# 15      15      0.0155316815
-# 15      25      0.015544395
-# 15      35      0.015506284
-# 15      50      0.015408426
-# 15      70      0.015219534
-# 15      100     0.015000783
-# 25      0       0.015427134
-# 25      15      0.015476295
-# 25      25      0.015469894
-# 25      35      0.015413173
-# 25      50      0.0152959535
-# 25      70      0.01509281
-# 25      100     0.014866378
-# 35      0       0.015222007
-# 35      15      0.015258313
-# 35      25      0.015230694
-# 35      35      0.015140278
-# 35      50      0.014981992
-# 35      70      0.014737622
-# 35      100     0.014478411
-# 50      0       0.014770379
-# 50      15      0.014792764
-# 50      25      0.014739467
-# 50      35      0.014599809
-# 50      50      0.014363194
-# 50      70      0.014037584
-# 50      100     0.013688218
-# 70      0       0.0140114585
-# 70      15      0.014028065
-# 70      25      0.013948858
-# 70      35      0.013750541
-# 70      50      0.013408101
-# 70      70      0.012943015
-# 70      100     0.012451445
-# 100     0       0.012915809
-# 100     15      0.012934895
-# 100     25      0.012841559
-# 100     35      0.012589661
-# 100     50      0.012114886
-# 100     70      0.011460391
-# 100     100     0.010659051
-# Best sig_hail: 15       25      0.015544395
+# 0       0       0.015385461
+# 0       15      0.015506115
+# 0       25      0.0155356
+# 0       35      0.0155116925
+# 0       50      0.015421791
+# 0       70      0.015237438
+# 0       100     0.015011334
+# 15      0       0.015510789
+# 15      15      0.015573746
+# 15      25      0.015587974
+# 15      35      0.01555286
+# 15      50      0.015458695
+# 15      70      0.015273759
+# 15      100     0.015061713
+# 25      0       0.015469778
+# 25      15      0.015519621
+# 25      25      0.015514858
+# 25      35      0.015461082
+# 25      50      0.01534767
+# 25      70      0.015147802
+# 25      100     0.01492863
+# 35      0       0.015266805
+# 35      15      0.015304009
+# 35      25      0.015278034
+# 35      35      0.015189998
+# 35      50      0.015034933
+# 35      70      0.014793917
+# 35      100     0.014541294
+# 50      0       0.014813177
+# 50      15      0.014836785
+# 50      25      0.014785355
+# 50      35      0.014648365
+# 50      50      0.014414316
+# 50      70      0.014090983
+# 50      100     0.013747987
+# 70      0       0.014046268
+# 70      15      0.0140640475
+# 70      25      0.013987178
+# 70      35      0.013792071
+# 70      50      0.013453575
+# 70      70      0.012990715
+# 70      100     0.012501941
+# 100     0       0.012933281
+# 100     15      0.012950038
+# 100     25      0.012857055
+# 100     35      0.012609563
+# 100     50      0.012142011
+# 100     70      0.011493708
+# 100     100     0.010695629
+# Best sig_hail: 15       25      0.015587974
 
 
 
@@ -1462,13 +1462,12 @@ end
 println()
 
 # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
-# tornado     15                  15                   0.03856513
-# wind        25                  25                   0.115486614
-# hail        25                  15                   0.0744874
-# hail        15                  25                   0.0744809 # 0.01% difference, let's use it for justice
-# sig_tornado 25                  35                   0.034162313
-# sig_wind    15                  35                   0.016272869
-# sig_hail    15                  25                   0.015544395
+# tornado     15                  15                   0.038589306
+# wind        25                  25                   0.115706086
+# hail        15                  25                   0.07425974
+# sig_tornado 25                  35                   0.03381651
+# sig_wind    15                  35                   0.016237844
+# sig_hail    15                  25                   0.015587974
 
 
 # event_name      best_blur_radius_f2     best_blur_radius_f38    AUC
