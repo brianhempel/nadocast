@@ -116,6 +116,7 @@ end
 
 # FCC method, per Wikipedia https://en.wikipedia.org/wiki/Geographical_distance#Ellipsoidal_Earth_projected_to_a_plane
 # Surprisingly good! Generally much less than 0.01% error over short distances, and not completely awful over long distances.
+# Precondition: longitudes don't cross over (raw lon2-lon1 < 180)
 function instantish_distance((lat1, lon1), (lat2, lon2))
   mean_lat = (lat1 + lat2) / 2.0 / 180.0 * π
   dlat     = lat2 - lat1

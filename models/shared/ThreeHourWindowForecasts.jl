@@ -286,7 +286,7 @@ function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(for
     Climatology.hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
     Climatology.hail_day_given_severe_day_spatial_probability_feature(grid),
     Climatology.severe_day_spatial_probability_feature(grid),
-    Climatology.severe_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    Climatology.severe_day_geomean_absolute_and_conditional_spatial_probability_feature(grid), # opps this is the same as the severe_day prob
     Climatology.sig_hail_day_spatial_probability_feature(grid),
     Climatology.sig_hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
     Climatology.sig_hail_day_given_severe_day_spatial_probability_feature(grid),

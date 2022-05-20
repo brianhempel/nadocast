@@ -350,6 +350,7 @@ function area_under_pr_curve(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
 end
 
 
+
 # CSI = hits / (hits + false alarms + misses)
 #     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)
 #     = 1 / (1/POD + 1/(1-FAR) - 1)
@@ -450,32 +451,12 @@ end # module Metrics
 # y = rand(Bool, 100000)
 # ŷ = y .* (1 .- rand(100000) .* rand(100000)) .+ (1 .- y) .* (rand(100000) .* rand(100000))
 # weights = rand(100000)
-# Metrics.roc_auc(ŷ, y, weights)
-# Metrics.roc_auc_less_mem(ŷ, y, weights)
-# # 0.9277449649005693
+# println(Metrics.area_under_pr_curve(ŷ, y, weights))
+
 
 # Random.seed!(0)
-# y = rand(Bool, 100_000_000)
-# ŷ = y .* (1 .- rand(100_000_000) .* rand(100_000_000)) .+ (1 .- y) .* (rand(100_000_000) .* rand(100_000_000))
-# weights = rand(100_000_000)
-# Metrics.roc_auc(ŷ, y, weights)
-# Metrics.roc_auc_less_mem(ŷ, y, weights)
-# @time Metrics.roc_auc(ŷ, y, weights)
-# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
-# @time Metrics.roc_auc(ŷ, y, weights)
-# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
-# @time Metrics.roc_auc(ŷ, y, weights)
-# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
-
-# Random.seed!(0)
-# y = Float32.(rand(Bool, 6_000_000))
-# ŷ = Float32.(y .* (1 .- rand(6_000_000) .* rand(6_000_000)) .+ (1 .- y) .* (rand(6_000_000) .* rand(6_000_000)))
-# weights = Float32.(rand(6_000_000))
-# Metrics.roc_auc(ŷ, y, weights)
-# Metrics.roc_auc_less_mem(ŷ, y, weights)
-# @time Metrics.roc_auc(ŷ, y, weights)
-# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
-# @time Metrics.roc_auc(ŷ, y, weights)
-# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
-# @time Metrics.roc_auc(ŷ, y, weights)
-# @time Metrics.roc_auc_less_mem(ŷ, y, weights)
+# y = rand(Bool, 10_000_000)
+# ŷ = y .* (1 .- rand(10_000_000) .* rand(10_000_000)) .+ (1 .- y) .* (rand(10_000_000) .* rand(10_000_000))
+# weights = rand(10_000_000)
+# Metrics.area_under_pr_curve(ŷ, y, weights)
+# @time Metrics.area_under_pr_curve(ŷ, y, weights)
