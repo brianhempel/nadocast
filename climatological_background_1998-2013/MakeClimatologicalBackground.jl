@@ -137,6 +137,7 @@ end
 # Returns (day_count, tornado_day_counts_grid, event_day_counts_grid)
 function count_events_by_day(range_in_seconds_from_epoch, grid, convective_day_to_events_of_interest, convective_day_to_all_events)
   day_count = 0
+  seg_count = 0
 
   event_of_interest_day_counts_grid = zeros(Float32, size(grid.latlons))
   event_day_counts_grid             = zeros(Float32, size(grid.latlons))
@@ -152,11 +153,15 @@ function count_events_by_day(range_in_seconds_from_epoch, grid, convective_day_t
     event_of_interest_segments = StormEvents.event_segments_around_time(events_of_interest, day_seconds_from_epoch + 12*HOUR, 12*HOUR)
     event_segments             = StormEvents.event_segments_around_time(events,             day_seconds_from_epoch + 12*HOUR, 12*HOUR)
 
+    seg_count += length(event_of_interest_segments)
+
     count_neighborhoods!(event_of_interest_day_counts_grid, grid, event_of_interest_segments, NEIGHBORHOOD_RADIUS_MILES)
     count_neighborhoods!(event_day_counts_grid,             grid, event_segments,             NEIGHBORHOOD_RADIUS_MILES)
     day_count += 1
   end
-  println()
+  println("Seg count: $seg_count")
+  println("Days: $day_count")
+  println(sum(event_of_interest_day_counts_grid))
 
   (day_count, event_of_interest_day_counts_grid, event_day_counts_grid)
 end
@@ -369,9 +374,9 @@ for (event_name, events_of_interest) in types
     # global event_day_counts_grid
     # global day_count
     fold_day_count, fold_event_day_counts_grid, fold_severe_day_counts_grid = fold_day_event_and_severe_counts[fold_i]
-    event_day_counts_grid .+= fold_event_day_counts_grid
-    severe_day_counts_grid   .+= fold_severe_day_counts_grid
-    day_count                += fold_day_count
+    event_day_counts_grid  .+= fold_event_day_counts_grid
+    severe_day_counts_grid .+= fold_severe_day_counts_grid
+    day_count               += fold_day_count
   end
 
   mean_is = compute_conus_radius_grid_is(best_blur_radius)
