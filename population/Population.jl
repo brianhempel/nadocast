@@ -158,12 +158,14 @@ write("pop_density_on_15km_grid.float16.bin", Float16.(pop_density_on_15km_grid)
 import Dates
 
 # So I can check in a grib viewer if it looks right
+# The Grib2 quantization has a habit of over-quantizing the low density regions, so DO NOT USE this. Use the Float16 version above.
+# The Grib2 only has 406 discrete levels, compared to 17861 for the Float16 version.
 Grib2.write_15km_HREF_probs_grib2(
   pop_density_on_15km_grid;
   run_time = Dates.DateTime(2020,1,1,0,0,0),
   forecast_hour = 0,
   event_type = "tornado",
-  out_name = "pop_density_on_15km_grid.grib2",
+  out_name = "pop_density_on_15km_grid_but_do_not_use.grib2",
 )
 
 # Grib2.write_15km_HREF_probs_grib2(
@@ -173,3 +175,7 @@ Grib2.write_15km_HREF_probs_grib2(
 #   event_type = "tornado",
 #   out_name = "pop_density_on_15km_grid_no_aa.grib2",
 # )
+
+
+PNGFiles.save("data_corrected_on_15km_grid.png", Gray.(clamp.(transpose(reshape(pop_density_on_15km_grid, (width, height)))[height:-1:1,:] ./ 2_000,0.0,1.0)))
+PNGFiles.save("data_corrected_on_15km_grid_log2.png", Gray.(clamp.(transpose(reshape(log.(pop_density_on_15km_grid) ./ log(2), (width, height)))[height:-1:1,:] ./ maximum(log.(pop_density_on_15km_grid) ./ log(2)),0.0,1.0)))
