@@ -6,7 +6,7 @@
 #
 # If given only one CSV, still deduplicates and sorts.
 #
-# $ ruby merge_csvs.rb file1.csv file2.csv file3.csv > out.csv
+# $ ruby deduplicate_sort_merge_csvs.rb file1.csv file2.csv file3.csv > out.csv
 #
 # See Makefile task "storm_events" at the project root.
 
