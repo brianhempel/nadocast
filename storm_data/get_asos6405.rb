@@ -11,18 +11,18 @@ require "csv"
 
 start_year, start_month = (ENV["START_YEAR_MONTH"] || "2000-1").split("-").map(&:to_i)
 
-here           = File.expand_path("..", __FILE__)
-process_script = File.expand_path("../process_asos6405.rb", __FILE__)
+HERE           = File.expand_path("..", __FILE__)
+PROCESS_SCRIPT = File.expand_path("../process_asos6405.rb", __FILE__)
 
 def out_path(year, month)
-  File.expand_path("../gusts-%04d-%02d.csv" % [year, month], __FILE__)
+  File.join(HERE, "gusts-%04d-%02d.csv" % [year, month])
 end
 
 def good_row_counts_path(year, month)
-  File.expand_path("../good_row_counts-%04d-%02d.csv" % [year, month], __FILE__)
+  File.join(HERE, "good_row_counts-%04d-%02d.csv" % [year, month])
 end
 
-FileUtils.cd here
+FileUtils.cd HERE
 
 # This doesn't have as many stations
 # system("curl https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv > isd-history.csv")
@@ -66,7 +66,7 @@ process_thread = nil
 
     puts "#{year}-#{month}"
 
-    FileUtils.cd here
+    FileUtils.cd HERE
 
     # Initialize new gusts.csv and good_row_counts.csv
     # These need to match process_asos6405.rb
@@ -108,9 +108,9 @@ process_thread = nil
 
     # Generate CSV gust lines from all files, sort them, and write them to gusts.csv
     # But do it while we download more data
-    dat_glob = File.join(here, month_dir, "*.dat")
+    dat_glob = File.join(HERE, month_dir, "*.dat")
     process_thread = Thread.new do
-      cmd = "GOOD_ROW_COUNTS_PATH=#{good_row_counts_path(year, month)} ruby #{process_script} #{dat_glob}"
+      cmd = "GOOD_ROW_COUNTS_PATH=#{good_row_counts_path(year, month)} ruby #{PROCESS_SCRIPT} #{dat_glob}"
       puts cmd
       buf = `#{cmd}`.lines.sort.join
       File.open(out_path(year, month), "a") { |out| out.print(buf) }
