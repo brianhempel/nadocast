@@ -11,35 +11,15 @@ require "csv"
 
 start_year, start_month = (ENV["START_YEAR_MONTH"] || "2000-1").split("-").map(&:to_i)
 
-here                 = File.expand_path("..", __FILE__)
-process_script       = File.expand_path("../process_asos6405.rb", __FILE__)
-out_path             = File.expand_path("../gusts.csv", __FILE__)
-good_row_counts_path = File.expand_path("../good_row_counts.csv", __FILE__)
+here           = File.expand_path("..", __FILE__)
+process_script = File.expand_path("../process_asos6405.rb", __FILE__)
 
-if !ENV["START_YEAR_MONTH"]
-  # Initialize new gusts.csv and good_row_counts.csv
-  # These need to match process_asos6405.rb
-  File.write(out_path, %w[
-    time_str
-    time_seconds
-    wban_id
-    name
-    state
-    county
-    knots
-    gust_knots
-    lat
-    lon
-  ].to_csv)
+def out_path(year, month)
+  File.expand_path("../gusts-%04d-%02d.csv" % [year, month], __FILE__)
+end
 
-  File.write(good_row_counts_path, %w[
-    convective_date
-    convective_day_index
-    wban_id
-    lat
-    lon
-    good_row_count
-  ].to_csv)
+def good_row_counts_path(year, month)
+  File.expand_path("../good_row_counts-%04d-%02d.csv" % [year, month], __FILE__)
 end
 
 FileUtils.cd here
@@ -88,6 +68,30 @@ process_thread = nil
 
     FileUtils.cd here
 
+    # Initialize new gusts.csv and good_row_counts.csv
+    # These need to match process_asos6405.rb
+    File.write(out_path(year, month), %w[
+      time_str
+      time_seconds
+      wban_id
+      name
+      state
+      county
+      knots
+      gust_knots
+      lat
+      lon
+    ].to_csv)
+
+    File.write(good_row_counts_path(year, month), %w[
+      convective_date
+      convective_day_index
+      wban_id
+      lat
+      lon
+      good_row_count
+    ].to_csv)
+
     month_dir = "asos/6405-#{year}#{month}"
     FileUtils.mkdir_p month_dir
     FileUtils.cd month_dir
@@ -106,10 +110,10 @@ process_thread = nil
     # But do it while we download more data
     dat_glob = File.join(here, month_dir, "*.dat")
     process_thread = Thread.new do
-      cmd = "GOOD_ROW_COUNTS_PATH=#{good_row_counts_path} ruby #{process_script} #{dat_glob}"
+      cmd = "GOOD_ROW_COUNTS_PATH=#{good_row_counts_path(year, month)} ruby #{process_script} #{dat_glob}"
       puts cmd
       buf = `#{cmd}`.lines.sort.join
-      File.open(out_path, "a") { |out| out.print(buf) }
+      File.open(out_path(year, month), "a") { |out| out.print(buf) }
       system("rm #{dat_glob}")
     end
   end
