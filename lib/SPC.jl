@@ -171,7 +171,7 @@ function make_quadree(geom, minX, maxX, minY, maxY, min_size)
         )
       end
     catch err
-      if isa(err, GDALError)
+      if isa(err, ArchGDAL.GDAL.GDALError)
         println(geom)
         println(ArchGDAL.toWKT(geom))
         println(rect)
