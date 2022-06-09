@@ -157,17 +157,28 @@ function make_quadree(geom, minX, maxX, minY, maxY, min_size)
   midY = 0.5*(minY + maxY)
 
   make_rect(minX, maxX, minY, maxY) do rect
-    if ArchGDAL.contains(geom, rect)
-      Quadtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
-    elseif ArchGDAL.disjoint(geom, rect)
-      Quadtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
-    else
-      Quadtree(true, false, minX, maxX, minY, maxY, midX, midY,
-        make_quadree(geom, minX, midX, midY, maxY, min_size),
-        make_quadree(geom, midX, maxX, midY, maxY, min_size),
-        make_quadree(geom, minX, midX, minY, midY, min_size),
-        make_quadree(geom, midX, maxX, minY, midY, min_size)
-      )
+    try
+      if ArchGDAL.contains(geom, rect)
+        Quadtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+      elseif ArchGDAL.disjoint(geom, rect)
+        Quadtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+      else
+        Quadtree(true, false, minX, maxX, minY, maxY, midX, midY,
+          make_quadree(geom, minX, midX, midY, maxY, min_size),
+          make_quadree(geom, midX, maxX, midY, maxY, min_size),
+          make_quadree(geom, minX, midX, minY, midY, min_size),
+          make_quadree(geom, midX, maxX, minY, midY, min_size)
+        )
+      end
+    catch err
+      if isa(err, GDALError)
+        println(geom)
+        println(ArchGDAL.toWKT(geom))
+        println(rect)
+        rethrow()
+      else
+        rethrow()
+      end
     end
   end
 end
