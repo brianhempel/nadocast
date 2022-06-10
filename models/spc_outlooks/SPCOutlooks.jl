@@ -68,8 +68,6 @@ models = [
   ("sig_hail",    "SHAILPRO", "_sighail.shp"),
 ]
 
-# thresholds = [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6]
-
 function reload_forecasts()
   global _forecasts_day_0600
   global _forecasts_day_1300

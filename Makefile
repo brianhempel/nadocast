@@ -208,6 +208,10 @@ setup:
 	# twurl authorize --consumer-key key --consumer-secret secret
 	# scp ~/.twurlrc nadocaster:~/.twurlrc # if authorization done on foreign machine
 
+	# curl -L https://github.com/shssoichiro/oxipng/releases/download/v5.0.1/oxipng-5.0.1-x86_64-unknown-linux-musl.tar.gz | tar -xvz
+	# mv oxipng-5.0.1-x86_64-unknown-linux-musl/oxipng ~/bin/
+	# rm -r oxipng-5.0.1-x86_64-unknown-linux-musl
+
 	# sudo apt install ffmpeg
 
 	# make forecast

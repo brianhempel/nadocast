@@ -71,6 +71,8 @@ function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals)
     println(f, "gmt end")
 
     # println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
+    # # reduce png size
+    # println(f, "which oxipng && oxipng --strip safe $base_path.png")
 
     println(f, "rm $base_path.nc")
     println(f, "rm $base_path.xyz")
@@ -253,6 +255,9 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
 
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
+    # reduce png size
+    println(f, "which oxipng && oxipng --strip safe $base_path.png")
+
     println(f, "rm $base_path.nc")
     println(f, "rm $base_path.xyz")
     if !isnothing(sig_vals)
@@ -393,6 +398,10 @@ function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_co
     vals[grid.height - j + 1,:] = row
   end
   PNGFiles.save("$base_path.png", post_process(val_to_color.(vals)); compression_level = 9)
+end
+
+function optimize_png(base_path; wait = true)
+  run(`oxipng --strip safe $(path * ".png")`; wait = wait)
 end
 
 end # module PlotMap

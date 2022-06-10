@@ -207,7 +207,16 @@ function cache_forecasts(old_forecasts)
 end
 
 
-# Wrapper that caches the underlying inventory and data on disk.
+# Wrapper that caches the underlying inventory and data on disk in the lib/computation_cache/cached_forecasts folder.
+#
+# It's up to you to clean this out to expire the cache (or choose a base_key that will change when the underlying computation changes).
+#
+# Right now we are using this in these places:
+# - The hourly individual prediction forecasts just after running the GBDT but before bluring and combination and calibration
+# - The SPC outlooks (rasterizing the probs is kinda slow)
+#
+# Set the environment variable FORECAST_DISK_PREFETCH=false when you know you are going to hit cache instead of the grib2s on disk. This
+# setting will tell Forecasts.jl not to dump the next forecast's grib2s to /dev/null while the prior forecast is loading.
 #
 # Grid not cached; probably wasteful to do so since most grids are pointed to a single place.
 function disk_cache_forecasts(old_forecasts, base_key)
