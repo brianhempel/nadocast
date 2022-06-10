@@ -157,28 +157,17 @@ function make_quadree(geom, minX, maxX, minY, maxY, min_size)
   midY = 0.5*(minY + maxY)
 
   make_rect(minX, maxX, minY, maxY) do rect
-    try
-      if ArchGDAL.contains(geom, rect)
-        Quadtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
-      elseif ArchGDAL.disjoint(geom, rect)
-        Quadtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
-      else
-        Quadtree(true, false, minX, maxX, minY, maxY, midX, midY,
-          make_quadree(geom, minX, midX, midY, maxY, min_size),
-          make_quadree(geom, midX, maxX, midY, maxY, min_size),
-          make_quadree(geom, minX, midX, minY, midY, min_size),
-          make_quadree(geom, midX, maxX, minY, midY, min_size)
-        )
-      end
-    catch err
-      if isa(err, ArchGDAL.GDAL.GDALError)
-        println(geom)
-        println(ArchGDAL.toWKT(geom))
-        println(rect)
-        rethrow()
-      else
-        rethrow()
-      end
+    if ArchGDAL.contains(geom, rect)
+      Quadtree(false, true, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+    elseif ArchGDAL.disjoint(geom, rect)
+      Quadtree(false, false, minX, maxX, minY, maxY, midX, midY, nothing, nothing, nothing, nothing)
+    else
+      Quadtree(true, false, minX, maxX, minY, maxY, midX, midY,
+        make_quadree(geom, minX, midX, midY, maxY, min_size),
+        make_quadree(geom, midX, maxX, midY, maxY, min_size),
+        make_quadree(geom, minX, midX, minY, midY, min_size),
+        make_quadree(geom, midX, maxX, minY, midY, min_size)
+      )
     end
   end
 end
@@ -212,7 +201,20 @@ function _add_geom_to_mask!(mask, xys, geom)
   x1, y1 = xys[1]
   x2, y2 = xys[2]
   min_size = max(abs(x2-x1), abs(y2-y1)) * 3
-  quadtree = make_quadree(geom, bounds.MinX, bounds.MaxX, bounds.MinY, bounds.MaxY, min_size)
+  quadtree =
+    try
+      make_quadree(geom, bounds.MinX, bounds.MaxX, bounds.MinY, bounds.MaxY, min_size)
+    catch err
+      if isa(err, ArchGDAL.GDAL.GDALError)
+        # There is at least one bad polygon in the SPC dataset
+        # It kind of loops over itself.
+        println("Bad geom: $(ArchGDAL.toWKT(geom))")
+        nothing
+      else
+        rethrow()
+      end
+    end
+
   # println("done.")
   # println(quadtree)
 
