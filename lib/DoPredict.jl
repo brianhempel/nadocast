@@ -113,6 +113,7 @@ function do_forecast(forecast)
 
   out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
   rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))"
+  changelog_file = (@__DIR__) * "/../forecasts/CHANGELOG.txt)"
   mkpath(out_dir)
 
   non_sig_model_count = div(length(CombinedHREFSREF.models), 2)
@@ -191,7 +192,7 @@ function do_forecast(forecast)
 
   should_publish = get(ENV, "PUBLISH", "false") == "true"
   if should_publish
-    rsync_process = run(`rsync -r --perms --chmod=a+rx $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
+    rsync_process = run(`rsync -r --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
   end
 
   if get(ENV, "TWEET", "false") == "true"

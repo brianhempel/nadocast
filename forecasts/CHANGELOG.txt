@@ -1,7 +1,7 @@
 
 2022-6-11 Slight calibration change to the "2021" models. A tad cooler overall, but the main motive is to cool off the high end of wind&hail. Calibration diff: https://github.com/brianhempel/nadocast/commit/dd8799401d8746ef0544f3c25609d528c33cdcee#diff-c2b6138b0e9747b882b884b277ac31e9769aa48968607c6036f12e9002b12d83
 
-2022-4-29 From this date onward, "2020" models are always prefixed with "nadocast_2020_models_". Files with the plain "nadocast_" are now the "2021" models. Before this date is currently ambiguous—you'll have to look at the PNGs or PDFs to know.
+2022-4-29 From this date onward, "2020" models are always prefixed with "nadocast_2020_models_". Files with the plain "nadocast_" are now the "2021" models. Before this date it's ambiguous—you'll have to look at the PNGs or PDFs to know.
 
 
 
