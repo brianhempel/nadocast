@@ -208,7 +208,7 @@ function _add_geom_to_mask!(mask, xys, geom)
       if isa(err, ArchGDAL.GDAL.GDALError)
         # There is at least one bad polygon in the SPC dataset
         # It kind of loops over itself.
-        # I had to manually fix day1otlk_20200409_1300_wind.shp with the "Fix Geometries" tool in the "Processing Toolbox" pane in QGIS.
+        # I had to manually fix several files with the "Fix Geometries" tool in the "Processing Toolbox" pane in QGIS.
         println("Bad geom: $(ArchGDAL.toWKT(geom))")
         nothing
       else
