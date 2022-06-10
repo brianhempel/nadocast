@@ -2,9 +2,7 @@ import Dates
 import Printf
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/shared")
-# import TrainGBDTShared
 import TrainingShared
-import LogisticRegression
 using Metrics
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/spc_outlooks")
@@ -28,14 +26,13 @@ HOUR   = 60*MINUTE
 GRID       = Conus.href_cropped_5km_grid();
 CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid();
 
-# Run below is 2019-1-7 through 2021-5-31, but we are missing lots of HREFs between Nov 2020 and mid-March 2021
+# Run below is 2019-1-7 through 2021-12-31, but we are missing lots of HREFs between Nov 2020 and mid-March 2021
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
 spc_forecasts = SPCOutlooks.forecasts_day_0600()
-# (spc_train_forecasts, spc_validation_forecasts, spc_test_forecasts) = TrainingShared.forecasts_train_validation_test(SPCOutlooks.forecasts_day_0600(); just_hours_near_storm_events = false);
 
-length(spc_forecasts) # 968
+length(spc_forecasts) #
 
 
 (train_forecasts, validation_forecasts, test_forecasts) =
@@ -44,29 +41,30 @@ length(spc_forecasts) # 968
     just_hours_near_storm_events = false
   );
 
-length(test_forecasts) # 1064
+length(test_forecasts) #
 test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
-length(test_forecasts) # 133
-
+length(test_forecasts) #
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2021, 9, 1, 0)
+cutoff = Dates.DateTime(2022, 1, 1, 0)
 
 test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-length(test_forecasts) # 116
+length(test_forecasts) #
 
-training_data_end = Dates.DateTime(2020, 11, 1, 0)
-other_test_forecasts = vcat(train_forecasts, validation_forecasts);
-length(other_test_forecasts) # 6358
-other_test_forecasts = filter(forecast -> forecast.run_hour == 0, other_test_forecasts);
-length(other_test_forecasts) # 796
-other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, other_test_forecasts);
-length(other_test_forecasts) # 694
-other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) > training_data_end, other_test_forecasts);
-length(other_test_forecasts) # 144
-
-test_forecasts = vcat(test_forecasts, other_test_forecasts);
-length(test_forecasts) # 260
+# If you want to augment the test set with all the days after training
+#
+# training_data_end = Dates.DateTime(2022, 1, 1, 0)
+# other_test_forecasts = vcat(train_forecasts, validation_forecasts);
+# length(other_test_forecasts) # 6358
+# other_test_forecasts = filter(forecast -> forecast.run_hour == 0, other_test_forecasts);
+# length(other_test_forecasts) # 796
+# other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, other_test_forecasts);
+# length(other_test_forecasts) # 694
+# other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) > training_data_end, other_test_forecasts);
+# length(other_test_forecasts) # 144
+#
+# test_forecasts = vcat(test_forecasts, other_test_forecasts);
+# length(test_forecasts) # 260
 
 compute_forecast_labels(spc_forecast) = begin
   # Annoying that we have to recalculate this.
