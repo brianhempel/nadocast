@@ -403,6 +403,9 @@ end
 
 
 function success_ratio(ŷ, y, weights, threshold)
+  @assert length(y) == length(weights)
+  @assert length(y) == length(ŷ)
+
   thread_painted_weights, thread_true_pos_weights = parallel_iterate(length(y)) do thread_range
     painted_weight  = 0.0
     true_pos_weight = 0.0
@@ -423,11 +426,14 @@ function success_ratio(ŷ, y, weights, threshold)
 end
 
 function probability_of_detection(ŷ, y, weights, threshold)
+  @assert length(y) == length(weights)
+  @assert length(y) == length(ŷ)
+
   thread_pos_weights, thread_true_pos_weights = parallel_iterate(length(y)) do thread_range
     pos_weight      = 0.0
     true_pos_weight = 0.0
 
-    for i in 1:length(y)
+    @inbounds for i in thread_range
       if y[i] > 0.5f0
         pos_weight += Float64(weights[i])
         if ŷ[i] >= threshold
@@ -440,6 +446,27 @@ function probability_of_detection(ŷ, y, weights, threshold)
   end
 
   sum(thread_true_pos_weights) / sum(thread_pos_weights)
+end
+
+# assumes weights is proportional to gridpoint area
+function warning_ratio(ŷ, weights, threshold)
+  @assert length(ŷ) == length(weights)
+
+  thread_total_weight, thread_warned_weight = parallel_iterate(length(ŷ)) do thread_range
+    total_weight  = 0.0
+    warned_weight = 0.0
+
+    @inbounds for i in thread_range
+      total_weight += Float64(weights[i])
+      if ŷ[i] >= threshold
+        warned_weight += Float64(weights[i])
+      end
+    end
+
+    total_weight, warned_weight
+  end
+
+  sum(thread_warned_weight) / sum(thread_total_weight)
 end
 
 end # module Metrics

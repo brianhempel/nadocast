@@ -250,6 +250,8 @@ stats_for_run_hours([6,13,16])
 # sig_hail    0.1       8.3311636e9 1.860448e7    1.6623312e6         4.1848615e6          0.08935113    0.28429562  0.002233119
 
 
+# Copy from the above table to the below
+
 target_success_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
   "tornado" => [
     (0.02, 0.050700042),
@@ -302,7 +304,7 @@ target_PODs = Dict{String,Vector{Tuple{Float64,Float64}}}(
   "sig_hail"    => [(0.1, 0.28429562)],
 )
 
-target_warning_ratio = Dict{String,Vector{Tuple{Float64,Float64}}}(
+target_warning_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
   "tornado" => [
     (0.02, 0.019616714),
     (0.05, 0.005190068),
