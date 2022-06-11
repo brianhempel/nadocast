@@ -401,7 +401,7 @@ function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_co
 end
 
 function optimize_png(base_path; wait = true)
-  run(`oxipng --strip safe $(path * ".png")`; wait = wait)
+  run(`oxipng --strip safe $(base_path * ".png")`; wait = wait)
 end
 
 end # module PlotMap
