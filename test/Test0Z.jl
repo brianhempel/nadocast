@@ -145,12 +145,19 @@ open((@__DIR__) * "/test_0z.csv", "w") do csv
 
     row = [Forecasts.yyyymmdd(spc_forecast), Forecasts.time_title(spc_forecast), Forecasts.time_title(test_forecast)]
 
+    spc_data        = Forecasts.data(spc_forecast)
+    ForecastCombinators.turn_forecast_caching_on()
+    test_data       = Forecasts.data(test_forecast)
+    ForecastCombinators.clear_cached_forecasts()
+
     for event_name in event_names
+      spc_event_i  = findfirst(m -> m[1] == event_name, SPCOutlooks.models)
+      test_event_i = findfirst(m -> m[1] == event_name, CombinedHREFSREF.models)
+
+      spc_event_probs  = @view spc_data[:, spc_event_i]
+      test_event_probs = @view test_data[:, test_event_i]
+
       forecast_labels = compute_forecast_labels(event_name, spc_forecast) .> 0.5
-      spc_data        = Forecasts.data(spc_forecast)
-      ForecastCombinators.turn_forecast_caching_on()
-      test_data       = Forecasts.data(test_forecast)
-      ForecastCombinators.clear_cached_forecasts()
 
       map_root = ((@__DIR__) * "/maps/$(Forecasts.yyyymmdd(spc_forecast))")
       mkpath(map_root)
@@ -163,12 +170,12 @@ open((@__DIR__) * "/test_0z.csv", "w") do csv
         PlotMap.optimize_png(path; wait = false)
       end
 
-      make_plot("spc_day_1_$(event_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_data)
-      make_plot("nadocast_$(event_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_data)
+      make_plot("spc_day_1_$(event_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_event_probs)
+      make_plot("nadocast_$(event_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_event_probs)
 
       for threshold in event_name_to_thresholds[event_name]
-        (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area)  = forecast_stats(spc_data,  forecast_labels, threshold)
-        (test_painted_area, test_true_positive_area, test_false_negative_area) = forecast_stats(test_data, forecast_labels, threshold)
+        (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area)  = forecast_stats(spc_event_probs,  forecast_labels, threshold)
+        (test_painted_area, test_true_positive_area, test_false_negative_area) = forecast_stats(test_event_probs, forecast_labels, threshold)
 
         row = vcat(row, [spc_painted_area,  spc_true_positive_area,  spc_false_negative_area])
         row = vcat(row, [test_painted_area, test_true_positive_area, test_false_negative_area])

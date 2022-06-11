@@ -17,6 +17,9 @@ import PredictionForecasts
 MINUTE = 60
 HOUR   = 60*MINUTE
 
+# Note the SPC outlooks are on the HREF 5km grid for precision during objective verification, etc.
+
+
 # Forecast run time is always the newer forecast.
 
 _forecasts_day_0600 = []
