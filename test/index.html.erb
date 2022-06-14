@@ -6,6 +6,7 @@
     body { margin: 0 }
     .hidden { display: none }
     *:not(h1) { font-size: 24px; font-weight: bold; color: darkblue; }
+    label, select option { font-weight: normal }
     label { cursor: pointer }
     td { position: relative; }
     td > a > span { position: absolute; top: 5px; left: 35%; width: 30%; text-align: center; background: white; }
@@ -41,6 +42,9 @@
       <% HAZARDS.each do |hazard_name, hazard_title| %>
         <label><input type="checkbox" name="hazard" value="<%= hazard_name %>"><%= hazard_title %></label>
       <% end %>
+      &nbsp;&nbsp;&nbsp;Calibration:
+      <label><input type="radio" name="calibration" value="spc-like" checked>SPC-like</label>
+      <label><input type="radio" name="calibration" value="absolute">Absolute</label>
     </p>
     <script>
       function updateVisibility() {
@@ -54,6 +58,13 @@
           }
         });
         sort();
+      }
+      function updateCalibration() {
+        const absolutely_calibrated = document.querySelector('input[name="calibration"][value="absolute"]').checked;
+        const prefix = absolutely_calibrated ? "/nadocast_absolutely_calibrated_" : "/nadocast_";
+        document.querySelectorAll('img').forEach(img => {
+          img.src = img.src.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix)
+        });
       }
       function sort() {
         const order = document.querySelector("[name=sort_by]").value;
@@ -92,21 +103,27 @@
       document.querySelectorAll('[name=sort_by]').forEach(select => {
         select.onchange = sort;
       })
+      document.querySelectorAll('[name=calibration]').forEach(radio => {
+        radio.onchange = updateCalibration;
+      })
     </script>
   </div>
   <table style="margin: 12em 0.5em">
     <%
       def predictor(map)
-        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 1]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 1]
+      end
+      def absolutely_calibrated?(map)
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 2] == "_absolutely_calibrated"
       end
       def hazard(map)
-        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 2]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 3]
       end
       def yyyymmdd(map)
-        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 3]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 4]
       end
       def run_hour(map)
-        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 4]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 5]
       end
       def severity(map)
         return 0 unless map
