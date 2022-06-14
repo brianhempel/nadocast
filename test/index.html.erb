@@ -65,6 +65,9 @@
         document.querySelectorAll('img').forEach(img => {
           img.src = img.src.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix)
         });
+        document.querySelectorAll('td a').forEach(a => {
+          a.href = a.href.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix)
+        });
       }
       function sort() {
         const order = document.querySelector("[name=sort_by]").value;
@@ -154,7 +157,7 @@
         <td rowspan="2"><%= date_str %></td>
         <td>Nadocast</td>
         <% HAZARDS.each do |hazard_name, hazard_title|
-          nadocast_0z = maps_by_day[day].find { |map| predictor(map) == "nadocast" && hazard(map) == hazard_name && run_hour(map) == "00" }
+          nadocast_0z = maps_by_day[day].find { |map| predictor(map) == "nadocast" && hazard(map) == hazard_name && run_hour(map) == "00" && !absolutely_calibrated?(map) }
         %>
           <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(nadocast_0z) %>"><%= map_img(nadocast_0z, "#{date_str} Nadocast #{hazard_title} 0Z") %></td>
         <% end %>
