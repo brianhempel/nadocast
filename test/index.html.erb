@@ -1,71 +1,165 @@
 <html>
 
 <head>
-  <title>Nadocast compared to SPC</title>
+  <title>Nadocast compared to SPC Outlooks</title>
   <style>
+    body { margin: 0 }
+    .hidden { display: none }
     *:not(h1) { font-size: 24px; font-weight: bold; color: darkblue; }
+    label { cursor: pointer }
     td { position: relative; }
-    td > span { position: absolute; top: 5px; left: 35%; width: 30%; text-align: center; background: white; }
+    td > a > span { position: absolute; top: 5px; left: 35%; width: 30%; text-align: center; background: white; }
     img { min-height: 100px; } /* lazy load fewer images at once */
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
+<%
+  require "chunky_png"
+
+  HAZARDS = [
+    ["tornado",     "Tor"],
+    ["wind",        "Wind"],
+    ["hail",        "Hail"],
+    ["sig_tornado", "Sigtor"],
+    ["sig_wind",    "Sigwind"],
+    ["sig_hail",    "Sighail"],
+  ]
+%>
+
 <body>
-  <table>
-    <h1>Nadocast compared to SPC, Subjective</h1>
-    <p>Dates below are not in the training data.</p>
-    <p>You may want to zoom out.</p>
-    <table>
-      <%
-        def predictor(map)
-          map[/(\w+)_(\d{8})_t(\d+)z.png$/, 1]
-        end
-        def yyyymmdd(map)
-          map[/(\w+)_(\d{8})_t(\d+)z.png$/, 2]
-        end
-        def run_hour(map)
-          map[/(\w+)_(\d{8})_t(\d+)z.png$/, 3]
-        end
-        def map_img(map, label)
-          map && "<span>#{label}</span><img loading=\"lazy\" src=\"#{map}\">"
-        end
-        maps = Dir.glob("maps/*/*.png")
-        maps_by_day = {}
-        maps.each do |map|
-          maps_by_day[yyyymmdd(map)] ||= []
-          maps_by_day[yyyymmdd(map)] << map
-        end
-        maps_by_day.keys.sort.each do |day|
-          date_str     = [day[0...4], day[4...6], day[6...8]].join("-")
-          nadocast_0z  = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "00" }
-          nadocast_10z = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "10" }
-          nadocast_14z = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "14" }
-          spc_6z       = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "06" }
-          spc_13z      = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "13" }
-          spc_1630z    = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "16" }
-      %>
-        <tr>
-          <td rowspan="2"><%= date_str %></td>
-          <td>Nadocast</td>
-          <td><%= map_img(nadocast_0z,  "#{date_str} Nadocast 0Z") %></td>
-          <td><%= map_img(nadocast_10z, "#{date_str} Nadocast 10Z") %></td>
-          <td><%= map_img(nadocast_14z, "#{date_str} Nadocast 14Z") %></td>
-        </tr>
-        <tr>
-          <td>SPC</td>
-          <td><%= map_img(spc_6z,    "#{date_str} SPC 0600") %></td>
-          <td><%= map_img(spc_13z,   "#{date_str} SPC 1300") %></td>
-          <td><%= map_img(spc_1630z, "#{date_str} SPC 1630") %></td>
-        </tr>
-        <tr>
-          <td colspan="5"><hr></td>
-        </tr>
-      <%
-        end
-      %>
-    </table>
+  <div style="position:fixed; top:0; width: 100%; z-index: 1; background: white; border-bottom: solid 3px black; padding: 0.5em">
+    <h1>Nadocast "2021 Models" compared to SPC Outlooks, Subjective</h1>
+    <p>Dates below are not in the training data. You may want to zoom out.</p>
+    <p>
+      Sort by:
+      <select name="sort_by">
+        <option value="severity">Severity</option>
+        <option value="date">Date</option>
+      </select>
+      &nbsp;&nbsp;&nbsp;Filter:
+      <% HAZARDS.each do |hazard_name, hazard_title| %>
+        <label><input type="checkbox" name="hazard" value="<%= hazard_name %>"><%= hazard_title %></label>
+      <% end %>
+    </p>
+    <script>
+      function updateVisibility() {
+        const thingsToShow = Array.from(document.querySelectorAll('input[name="hazard"]')).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+        // console.log(thingsToShow);
+        document.querySelectorAll('[data-hazard-name]').forEach(elem => {
+          if( thingsToShow.length === 0 || thingsToShow.includes(elem.dataset.hazardName) ) {
+            elem.classList.remove("hidden")
+          } else {
+            elem.classList.add("hidden")
+          }
+        });
+        sort();
+      }
+      function sort() {
+        const order = document.querySelector("[name=sort_by]").value;
+        const tbody = document.querySelector("table > tbody");
+        // the rows are in chunks of 3
+        let row_chunks = []
+        for(let i = 0; i < tbody.children.length; i += 3) {
+          row_chunks.push([tbody.children[i], tbody.children[i+1], tbody.children[i+2]])
+        }
+        const row_chunks_sorted  = row_chunks.sort((chunk1, chunk2) => {
+          if (order === "severity") {
+            const visibleCells1 = Array.from(chunk1[0].children).concat(Array.from(chunk1[1].children)).filter(td => !td.classList.contains("hidden"));
+            const visibleCells2 = Array.from(chunk2[0].children).concat(Array.from(chunk2[1].children)).filter(td => !td.classList.contains("hidden"));
+            const severity1 = visibleCells1.map(td => td.dataset.severity || 0).reduce((a,b) => a + b);
+            const severity2 = visibleCells2.map(td => td.dataset.severity || 0).reduce((a,b) => a + b);
+            return severity2 - severity1;
+          } else { // Sort by date
+            const date1_str = chunk1[0].children[0].innerText;
+            const date2_str = chunk2[0].children[0].innerText;
+            return date1_str.localeCompare(date2_str)
+          }
+        });
+        row_chunks_sorted.forEach(chunk => {
+          chunk[0].remove()
+          chunk[1].remove()
+          chunk[2].remove()
+          tbody.appendChild(chunk[0]);
+          tbody.appendChild(chunk[1]);
+          tbody.appendChild(chunk[2]);
+        });
+        console.log(rows_sorted);
+      }
+      document.querySelectorAll('input[name="hazard"]').forEach(checkbox => {
+        checkbox.onchange = updateVisibility;
+      })
+      document.querySelectorAll('[name=sort_by]').forEach(select => {
+        select.onchange = sort;
+      })
+    </script>
+  </div>
+  <table style="margin: 12em 0.5em">
+    <%
+      def predictor(map)
+        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 1]
+      end
+      def hazard(map)
+        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 2]
+      end
+      def yyyymmdd(map)
+        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 3]
+      end
+      def run_hour(map)
+        map[/(nadocast|spc_day_1)_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 4]
+      end
+      def severity(map)
+        return 0 unless map
+        # Use file size to estimate severity (fast)
+        # File.size(map)
+        # Count the number of perfectly black pixels (from event shading) to estimate severity (slow)
+        ChunkyPNG::Image.from_file(map).pixels.count { |pixel| ChunkyPNG::Color.to_truecolor_alpha_bytes(pixel) == [0,0,0,255] }
+      end
+      def map_img(map, label)
+        map && "<a href=\"#{map}\" target=\"_blank\"><span>#{label}</span><img loading=\"lazy\" src=\"#{map}\"></a>"
+      end
+      maps = Dir.glob("maps/*/*.png")
+      maps_by_day = {}
+      maps.each do |map|
+        maps_by_day[yyyymmdd(map)] ||= []
+        maps_by_day[yyyymmdd(map)] << map
+      end
+      maps_by_day.keys.sort.each do |day|
+        date_str     = [day[0...4], day[4...6], day[6...8]].join("-")
+        # nadocast_0z  = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "00" }
+        # nadocast_10z = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "10" }
+        # nadocast_14z = maps_by_day[day].find { |map| predictor(map) == "nadocast"  && run_hour(map) == "14" }
+        # spc_6z       = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "06" }
+        # spc_13z      = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "13" }
+        # spc_1630z    = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && run_hour(map) == "16" }
+    %>
+      <tr>
+        <td rowspan="2"><%= date_str %></td>
+        <td>Nadocast</td>
+        <% HAZARDS.each do |hazard_name, hazard_title|
+          nadocast_0z = maps_by_day[day].find { |map| predictor(map) == "nadocast" && hazard(map) == hazard_name && run_hour(map) == "00" }
+        %>
+          <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(nadocast_0z) %>"><%= map_img(nadocast_0z, "#{date_str} Nadocast #{hazard_title} 0Z") %></td>
+        <% end %>
+      </tr>
+      <tr>
+        <td>SPC</td>
+        <% HAZARDS.each do |hazard_name, hazard_title|
+          spc_6z = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && hazard(map) == hazard_name && run_hour(map) == "06" }
+        %>
+          <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(spc_6z) %>"><%= map_img(spc_6z, "#{date_str} SPC #{hazard_title} 0600") %></td>
+        <% end %>
+      </tr>
+      <tr>
+        <td colspan="8"><hr></td>
+      </tr>
+    <%
+      end
+    %>
   </table>
+  <script>
+  sort();
+  </script>
 </body>
 
 </html>
