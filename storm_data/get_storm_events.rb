@@ -57,8 +57,8 @@ LAT_LON_HEADERS = %w[
   end_lon
 ]
 
-tornadoes_file.print   (BEGIN_END_TIMES_HEADERS + %w[f_scale] + LAT_LON_HEADERS).to_csv
-wind_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind speed speed_type] + LAT_LON_HEADERS).to_csv
+tornadoes_file.print   (BEGIN_END_TIMES_HEADERS + %w[f_scale length width] + LAT_LON_HEADERS).to_csv
+wind_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind speed speed_type source] + LAT_LON_HEADERS).to_csv
 hail_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind inches] + LAT_LON_HEADERS).to_csv
 
 # Event types:
@@ -213,7 +213,7 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
   hail_rows    = rows.select { |row| row["EVENT_TYPE"].strip == "Hail" }
 
   STDERR.puts "#{tornado_rows.count} tornado path pieces in #{year}"
-  STDERR.puts "#{wind_rows.count} high wind events in #{year}"
+  STDERR.puts "#{wind_rows.count} thunderstorm wind events in #{year}"
   STDERR.puts "#{hail_rows.count} hail events in #{year}"
 
   tornado_rows.select! { |row| perhaps_repair_latlons!(row); valid_lat_lon?(row) }
@@ -223,8 +223,8 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
     row_to_begin_end_time_cells(row) +
     [
       row["TOR_F_SCALE"][/\d+/], # f_scale
-      # row["TOR_LENGTH"].to_f,
-      # row["TOR_WIDTH"].to_i,
+      row["TOR_LENGTH"].to_f,
+      row["TOR_WIDTH"].to_i,
     ] +
     row_to_lat_lon_cells(row)
   end
@@ -237,10 +237,17 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
     "MS" => "sustained",
   }
 
+  wind_source = {
+    "EG" => "estimated",
+    "MG" => "measured",
+    "ES" => "estimated",
+    "MS" => "measured",
+  }
+
   # Although we might use wind hours without geocodes for negative data, we aren't yet.
-  # We don't want "sustained" winds.
   wind_rows.select! { |row| perhaps_repair_latlons!(row); valid_lat_lon?(row) }
-  wind_rows.select! { |row| (wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"]) != "sustained" }
+  # There are so few "sustained" thunderstorm winds events, and they all look like short events so no reason to worry about including or excluding them.
+  # wind_rows.select! { |row| (wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"]) != "sustained" }
   wind_rows.map! do |row|
     last_storm_events_database_event_time = [begin_end_times(row)[1], last_storm_events_database_event_time].max
 
@@ -249,6 +256,7 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
       row["EVENT_TYPE"], # kind
       (row["MAGNITUDE"].to_s)[/[\d\.]+/] || "-1", # speed
       wind_type[row["MAGNITUDE_TYPE"]] || row["MAGNITUDE_TYPE"], # speed_type
+      wind_source[row["MAGNITUDE_TYPE"]]
     ] +
     row_to_lat_lon_cells(row)
   end
@@ -344,8 +352,9 @@ if ARGV[3] == "--add_spc_storm_reports"
       begin_end_time_cells(time, time) +
       [
         "Thunderstorm Wind", # kind
-        (row["Speed"] == "UNK" ? "-1" : row["Speed"]), # speed
+        (row["Speed"] == "UNK" ? "-1" : "%0.1f" % (row["Speed"].to_f * 0.868976)), # speed, convert to knots
         "gust", # speed_type
+        (row["Comments"] =~ /\b(AWOS|ASOS|MESONET|\w*(weather|wx)\w* station|recorded|measured|anemometer)\b/i ? "measured" : "estimated"), # source
       ] +
       row_to_lat_lon_cells(row)
     end
