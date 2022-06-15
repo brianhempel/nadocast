@@ -192,7 +192,7 @@ println(event_to_bins)
 
 
 
-# 4. combine bin-pairs (overlapping, 9 bins total)
+# 4. combine bin-pairs (overlapping, 5 bins total)
 # 5. train a logistic regression for each bin, σ(a1*logit(HREF) + a2*logit(SREF) + b)
 # For the 2020 models, adding more terms resulted in dangerously large coefficients
 # There's more data this year...try interaction terms this time? nah
