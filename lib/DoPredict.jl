@@ -111,8 +111,8 @@ function do_forecast(forecast)
   plotting_paths = []
   daily_paths_to_perhaps_tweet = []
 
-  out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
-  rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))"
+  out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+  rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
   changelog_file = (@__DIR__) * "/../forecasts/CHANGELOG.txt)"
   mkpath(out_dir)
 
