@@ -7,7 +7,8 @@ require 'date'
 
 # NOTE: I had to manually fix day1otlk_20200409_1300_wind.shp and day1otlk_20200407_1630_wind.shp and day1otlk_20200409_1630_wind.shp with the "Fix Geometries" tool in the "Processing Toolbox" pane in QGIS.
 
-DATES = (Date.new(2019,1,7)..Date.new(2021,12,31)).to_a
+DATES = (Date.new(2019,1,7)..Date.new(2022,2,22)).to_a
+DATES = (Date.new(2021,12,31)..Date.new(2022,2,22)).to_a
 HOURS_TO_GET = %w[1200 1300 1630] # 0600Z 1300Z and 1630Z SPC outlooks, corresponding to 0Z 10Z and 14Z Nadocast forecasts.
 
 class Date
