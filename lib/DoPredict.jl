@@ -87,8 +87,8 @@ nadocast_run_hour          = newest_forecast.run_hour
 paths = []
 daily_paths_to_perhaps_tweet = []
 
-out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
-rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))"
+out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
 mkpath(out_dir)
 out_path_prefix = out_dir * "nadocast_2020_models_conus_tornado_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
 period_path = out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
