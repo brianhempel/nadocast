@@ -31,7 +31,7 @@
 <body>
   <div style="position:fixed; top:0; width: 100%; z-index: 1; background: white; border-bottom: solid 3px black; padding: 0.5em">
     <h1>Nadocast "2021 Models" compared to SPC Outlooks, Subjective</h1>
-    <p>Dates below are not in the training data. You may want to zoom out.</p>
+    <p>Dates below are not in the training data. You may want to zoom out. Sometimes Chrome displays the wrong map: if you suspect this because the image is a duplicate of its neighbor and the reports are in the wrong place, click the offending map and then close the new tab. Or use Firefox.</p>
     <p>
       Sort by:
       <select name="sort_by">
@@ -98,7 +98,6 @@
           tbody.appendChild(chunk[1]);
           tbody.appendChild(chunk[2]);
         });
-        console.log(rows_sorted);
       }
       document.querySelectorAll('input[name="hazard"]').forEach(checkbox => {
         checkbox.onchange = updateVisibility;

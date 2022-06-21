@@ -229,7 +229,7 @@ end
 
 # More cache misses, less allocation. Slightly slower on my machine
 function roc_auc_less_mem(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
-  # tpr = true_pos/total_pos
+  # tpr = true_pos/total_pos = POD = recall
   # fpr = false_pos/total_neg
   # ROC is tpr vs fpr
 
