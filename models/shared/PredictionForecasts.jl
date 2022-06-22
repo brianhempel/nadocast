@@ -228,7 +228,7 @@ function added_gated_predictions(base_forecasts, orig_models, gated_models; mode
     feature_count = length(orig_models) + length(gated_models)
     out = Array{Float32}(undef, (data_count, feature_count))
 
-    Threads.@threads @inbounds for i in 1:length(base_data)
+    @inbounds Threads.@threads for i in 1:length(base_data)
       out[i] = base_data[i]
     end
 
