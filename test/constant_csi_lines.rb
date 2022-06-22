@@ -1,10 +1,17 @@
 require "csv"
 
-csis = (0.1..0.9).step(0.1)
+csi_step = 0.1
+sr_step  = 0.0025
 
-puts (["sr"] + csis.map {|csi| "pod_for_csi_%.1f" % csi}).to_csv
+csis = (csi_step..1-csi_step).step(csi_step)
 
-(0.01..0.99).step(0.01).each do |sr|
+puts csis.flat_map {|csi| ["sr", "pod_for_csi_%.2f" % csi]}.to_csv
+
+def format_pod(pod)
+  pod >= 0 ? ("%.4f" % pod) : nil
+end
+
+(sr_step..1-sr_step).step(sr_step).each do |sr|
   # CSI = tp / (painted + fn)
   # SR  = tp / painted
   # POD = tp / (tp + fn)
@@ -18,5 +25,5 @@ puts (["sr"] + csis.map {|csi| "pod_for_csi_%.1f" % csi}).to_csv
     pod = 1.0 / (1.0/csi - 1.0/sr + 1.0)
   end
 
-  puts (["%.2f" % sr] + pods_for_csis.map {|x| "%.4f" % x}).to_csv
+  puts pods_for_csis.flat_map {|pod| ["%.4f" % sr, format_pod(pod)]}.to_csv
 end
