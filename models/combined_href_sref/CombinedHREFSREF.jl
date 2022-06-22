@@ -366,7 +366,7 @@ function reload_forecasts()
 
   # _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_sref_newer")
   _forecasts_sref_newer_combined = Forecasts.Forecast[]
-  _forecasts_href_newer_combined_with_sig_gated = Forecasts.Forecast[]
+  _forecasts_sref_newer_combined_with_sig_gated = Forecasts.Forecast[]
 
 
   # Day forecasts
