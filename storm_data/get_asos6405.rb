@@ -60,7 +60,7 @@ end
 puts "What's your email address?"
 EMAIL = gets.strip
 
-exit(1) unless email =~ /\S+@\S+\.\S+/
+exit(1) unless EMAIL =~ /\S+@\S+\.\S+/
 
 def connect_and_do(year, cmd)
   out = nil
