@@ -35,13 +35,17 @@ _forecasts_href_newer = [] # Output is a 2-feature forecast: layer 1 is the HREF
 _forecasts_sref_newer = [] # Output is a 2-feature forecast: layer 1 is the HREF-based prediction, layer 2 is the SREF-based prediction
 _forecasts_href_newer_combined = []
 _forecasts_sref_newer_combined = []
+_forecasts_href_newer_combined_with_sig_gated = []
+_forecasts_sref_newer_combined_with_sig_gated = []
 
 # For day, allow 0Z to 21Z runs
 _forecasts_day_accumulators   = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 _forecasts_day                = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_with_sig_gated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 # _forecasts_day_with_blurs_and_forecast_hour = [] # For Train.jl
 # _forecasts_day_blurred = []
 _forecasts_day_spc_calibrated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_spc_calibrated_with_sig_gated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 
 # SREF 3 hours behind HREF
 function forecasts_href_newer()
@@ -83,6 +87,26 @@ function forecasts_sref_newer_combined()
   end
 end
 
+# SREF 3 hours behind HREF
+function forecasts_href_newer_combined_with_sig_gated()
+  if isempty(_forecasts_href_newer_combined_with_sig_gated)
+    reload_forecasts()
+    _forecasts_href_newer_combined_with_sig_gated
+  else
+    _forecasts_href_newer_combined_with_sig_gated
+  end
+end
+
+# HREF 3 hours behind SREF
+function forecasts_sref_newer_combined_with_sig_gated()
+  if isempty(_forecasts_sref_newer_combined_with_sig_gated)
+    reload_forecasts()
+    _forecasts_sref_newer_combined_with_sig_gated
+  else
+    _forecasts_sref_newer_combined_with_sig_gated
+  end
+end
+
 function forecasts_day_accumulators()
   if isempty(_forecasts_day_accumulators)
     reload_forecasts()
@@ -98,6 +122,15 @@ function forecasts_day()
     _forecasts_day
   else
     _forecasts_day
+  end
+end
+
+function forecasts_day_with_sig_gated()
+  if isempty(_forecasts_day_with_sig_gated)
+    reload_forecasts()
+    _forecasts_day_with_sig_gated
+  else
+    _forecasts_day_with_sig_gated
   end
 end
 
@@ -128,6 +161,15 @@ function forecasts_day_spc_calibrated()
   end
 end
 
+function forecasts_day_spc_calibrated_with_sig_gated()
+  if isempty(_forecasts_day_spc_calibrated_with_sig_gated)
+    reload_forecasts()
+    _forecasts_day_spc_calibrated_with_sig_gated
+  else
+    _forecasts_day_spc_calibrated_with_sig_gated
+  end
+end
+
 function example_forecast()
   forecasts()[1]
 end
@@ -138,9 +180,27 @@ end
 
 @assert length(HREFPrediction.models)     == length(SREFPrediction.models)
 @assert map(first, HREFPrediction.models) == map(first, SREFPrediction.models) # Same event names
-# array of (event_name, grib2_var_name)
-models = map(((event_name, grib2_var_name, _, _, _),) -> (event_name, grib2_var_name), HREFPrediction.models)
+# array of (event_name, grib2_var_name, model_name)
+models = map(((event_name, grib2_var_name, _, _, _),) -> (event_name, grib2_var_name, event_name), HREFPrediction.models)
 event_types_count = length(models)
+
+# (gated_event_name, original_event_name, gate_event_name)
+gated_models =
+  [
+    ("sig_tornado_gated_by_tornado", "sig_tornado", "tornado"),
+    ("sig_wind_gated_by_wind",       "sig_wing",    "wind"),
+    ("sig_hail_gated_by_hail",       "sig_hail",    "hail"),
+  ]
+
+# (event_name, grib2_var_name, model_name)
+models_with_gated =
+  [ models;
+    [ ("sig_tornado", "STORPRO",  "sig_tornado_gated_by_tornado")
+    , ("sig_wind",    "SWINDPRO", "sig_wind_gated_by_wind")
+    , ("sig_hail",    "SHAILPRO", "sig_hail_gated_by_hail")
+    ]
+  ]
+models_with_gated_count = length(models_with_gated)
 
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
@@ -157,11 +217,15 @@ function reload_forecasts()
   global _forecasts_sref_newer
   global _forecasts_href_newer_combined
   global _forecasts_sref_newer_combined
+  global _forecasts_href_newer_combined_with_sig_gated
+  global _forecasts_sref_newer_combined_with_sig_gated
   global _forecasts_day_accumulators
   global _forecasts_day
+  global _forecasts_day_with_sig_gated
   # global _forecasts_day_with_blurs_and_forecast_hour
   # global _forecasts_day_blurred
   global _forecasts_day_spc_calibrated
+  global _forecasts_day_spc_calibrated_with_sig_gated
 
   _forecasts_href_newer = []
   _forecasts_sref_newer = []
@@ -247,7 +311,7 @@ function reload_forecasts()
     ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
     map(1:event_types_count) do model_i
-      event_name, var_name = models[model_i]
+      _, var_name, model_name = models[model_i] # event_name == model_name here
 
       predict(forecasts, data) = begin
         href_ŷs = @view data[:,model_i]
@@ -255,8 +319,8 @@ function reload_forecasts()
 
         out = Array{Float32}(undef, length(href_ŷs))
 
-        bin_maxes            = event_to_bins[event_name]
-        bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
+        bin_maxes            = event_to_bins[model_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
 
         @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
@@ -298,8 +362,11 @@ function reload_forecasts()
   href_newer_hour_models = make_models(href_newer_event_to_bins, href_newer_event_to_bins_logistic_coeffs)
 
   _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer")
+  _forecasts_href_newer_combined_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_href_newer_combined, models, gated_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer_with_sig_gated")
+
   # _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_sref_newer")
   _forecasts_sref_newer_combined = Forecasts.Forecast[]
+  _forecasts_href_newer_combined_with_sig_gated = Forecasts.Forecast[]
 
 
   # Day forecasts
@@ -358,7 +425,7 @@ function reload_forecasts()
   day_inventory_transformer(base_forecast, base_inventory) = begin
     out = Inventories.InventoryLine[]
     for model_i in 1:event_types_count
-      event_name, var_name = models[model_i]
+      event_name, var_name, model_name = models[model_i] # event_name == model_name here
       push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(var_name)", "calculated", "day fcst", "", ""))
       push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(var_name)", "calculated", "day fcst", "", ""))
     end
@@ -418,7 +485,7 @@ function reload_forecasts()
     ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
     map(1:event_types_count) do model_i
-      event_name, var_name = models[model_i]
+      event_name, var_name, model_name = models[model_i] # event_name == model_name here
 
       predict(forecasts, data) = begin
         total_prob_ŷs = @view data[:, model_i*2 - 1]
@@ -426,8 +493,8 @@ function reload_forecasts()
 
         out = Array{Float32}(undef, length(total_prob_ŷs))
 
-        bin_maxes            = event_to_day_bins[event_name]
-        bins_logistic_coeffs = event_to_day_bins_logistic_coeffs[event_name]
+        bin_maxes            = event_to_day_bins[model_name]
+        bins_logistic_coeffs = event_to_day_bins_logistic_coeffs[model_name]
 
         @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
@@ -466,6 +533,7 @@ function reload_forecasts()
   # We only ever use the 0Z forecasts (normally) but here we are using the 0Z calibration non-0Z runs too
   day_models = make_day_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
+  _forecasts_day_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day, models, gated_models; model_name = "CombinedHREFSREF_day_severe_probabilities_with_sig_gated")
 
   # _forecasts_day_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts_day, blur_radii)
 
@@ -497,11 +565,12 @@ function reload_forecasts()
 
   # ensure ordered the same as the features in the data
   calibrations =
-    map(models) do (event_name, _)
-      spc_calibrations[event_name]
+    map(models) do (_, _, model_name)  # event_name == model_name here
+      spc_calibrations[model_name]
     end
 
   _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "CombinedHREFSREF_day_severe_probabilities_calibrated_to_SPC_thresholds")
+  _forecasts_day_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day_spc_calibrated, models, gated_models; model_name = "CombinedHREFSREF_day_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
 
   ()
 end

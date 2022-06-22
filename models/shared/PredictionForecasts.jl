@@ -200,5 +200,52 @@ function blurred(prediction_forecasts, forecast_hour_range, blur_grid_is; model_
   ForecastCombinators.map_forecasts(prediction_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer, model_name = model_name)
 end
 
+# "models" here is list of (event_name, var_name, ...) tuples
+# "gated_models" here is list of (gated_event_name, orig_event_name, gate_event_name) tuples
+# adds the gated predictions to the end
+function added_gated_predictions(base_forecasts, orig_models, gated_models; model_name = nothing)
+
+  inventory_transformer(base_forecast, base_inventory) = begin
+    gated_inventory = map(gated_models) do (gated_event_name, orig_event_name, gate_event_name)
+      _, var_name = filter(m -> m[1] == orig_event_name, orig_models)[1]
+      Inventories.InventoryLine(
+        "",                                         # message_dot_submessage :: String # "3" or "3.2"
+        "",                                         # position_str           :: String # "956328"
+        base_inventory[1].date_str,                 # date_str               :: String # "d=2018062900"
+        var_name,                                   # abbrev                 :: String # "CAPE"
+        "calculated",                               # level                  :: String # "180-0 mb above ground"
+        "$(base_forecast.forecast_hour) hour fcst", # forecast_hour_str      :: String # "7 hour fcst" or "6-hour acc fcst" or "11-12 hour acc fcst" or "11-12 hour ave fcst"  or "11-12 hour max fcst"
+        "calculated_prob",                          # misc                   :: String # "wt ens mean" or "prob >2.54"
+        "gated by $gate_event_name"                 # feature_engineering    :: String # "" or "25mi mean" or "100mi forward grad" etc
+      )
+    end
+
+    [base_inventory; gated_inventory]
+  end
+
+  data_transformer(base_forecast, base_data) = begin
+    data_count    = size(base_data, 1)
+    feature_count = length(orig_models) + length(gated_models)
+    out = Array{Float32}(undef, (data_count, feature_count))
+
+    Threads.@threads @inbounds for i in 1:length(base_data)
+      out[i] = base_data[i]
+    end
+
+    Threads.@threads for j in 1:length(gated_models)
+      gated_event_name, orig_event_name, gate_event_name = gated_models[j]
+      orig_model_i = findfirst(m -> m[1] == orig_event_name, orig_models)
+      gate_model_i = findfirst(m -> m[1] == gate_event_name, orig_models)
+
+      out[:, length(orig_models) + j] .= min.((@view out[:, orig_model_i]), (@view out[:, gate_model_i]))
+    end
+
+    out
+  end
+
+  ForecastCombinators.map_forecasts(base_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer, model_name = model_name)
+end
+
+
 
 end # module PredictionForecasts

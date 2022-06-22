@@ -321,6 +321,8 @@ println(event_to_bins_logistic_coeffs)
 # 7. predictions should thereby be calibrated (check)
 
 
+
+
 # CHECKING CALIBRATION
 
 import Dates
@@ -339,7 +341,7 @@ import Forecasts
 import Inventories
 
 
-(_, combined_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_combined(); just_hours_near_storm_events = false);
+(_, combined_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated(); just_hours_near_storm_events = false);
 
 length(combined_validation_forecasts)
 
@@ -354,7 +356,7 @@ Forecasts.data(combined_validation_forecasts[100])
 
 # rm("combined_validation_forecasts_href_newer"; recursive=true)
 
-X, Ys, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "combined_validation_forecasts_href_newer");
+X, Ys, weights = TrainingShared.get_data_labels_weights(combined_validation_forecasts; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "combined_validation_forecasts_href_newer_with_sig_gated");
 
 event_types_count = length(CombinedHREFSREF.models)
 
@@ -366,11 +368,11 @@ function test_predictive_power(forecasts, X, Ys, weights)
 
   for feature_i in 1:length(inventory)
     prediction_i = 1 + (feature_i - 1) % event_types_count
-    (event_name, _) = CombinedHREFSREF.models[prediction_i]
+    (event_name, _, model_name) = CombinedHREFSREF.models_with_gated[prediction_i]
     y = Ys[event_name]
     x = @view X[:,feature_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
-    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+    println("$model_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
 test_predictive_power(combined_validation_forecasts, X, Ys, weights)
@@ -392,7 +394,7 @@ function test_calibration(forecasts, X, Ys, weights)
   println("event_name\tmean_y\tmean_ŷ\tΣweight\tbin_max")
   for feature_i in 1:length(inventory)
     prediction_i = 1 + (feature_i - 1) % event_types_count
-    (event_name, _) = CombinedHREFSREF.models[prediction_i]
+    (event_name, _, model_name) = CombinedHREFSREF.models_with_gated[prediction_i]
     y = Ys[event_name]
     ŷ = @view X[:, feature_i]
 
@@ -433,7 +435,7 @@ function test_calibration(forecasts, X, Ys, weights)
       mean_ŷ = Σŷ / Σweight
       mean_y = Σy / Σweight
 
-      println("$event_name\t$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
+      println("$model_name\t$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
     end
   end
 end
