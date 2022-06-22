@@ -311,7 +311,7 @@ function reload_forecasts()
     ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
     map(1:event_types_count) do model_i
-      _, var_name, model_name = models[model_i] # event_name == model_name here
+      event_name, var_name, model_name = models[model_i] # event_name == model_name here
 
       predict(forecasts, data) = begin
         href_ŷs = @view data[:,model_i]
