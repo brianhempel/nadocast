@@ -433,13 +433,9 @@ paths.each do |path|
         end
 
         # Disambiguate upper air and radar stations.
-        if valid_stations.size >= 2 && valid_stations.count { |station| station["OBS_ENV"] == "LANDSFC" } >= 1
-          valid_stations.select! { |station| station["OBS_ENV"] == "LANDSFC" }
+        if valid_stations.size >= 2 && valid_stations.count { |station| station["OBS_ENV"].include?("LANDSFC") } >= 1
+          valid_stations.select! { |station| station["OBS_ENV"].include?("LANDSFC") }
         end
-        # Change the above to the following if we redo the data download:
-        # if valid_stations.size >= 2 && valid_stations.count { |station| station["OBS_ENV"].include?("LANDSFC") } >= 1
-        #   valid_stations.select! { |station| station["OBS_ENV"].include?("LANDSFC") }
-        # end
         if valid_stations.size >= 2 && valid_stations.count { |station| station["PLATFORM"].include?("ASOS") } >= 1
           valid_stations.select! { |station| station["PLATFORM"].include?("ASOS") }
         end
