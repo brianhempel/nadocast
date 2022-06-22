@@ -188,7 +188,7 @@ event_types_count = length(models)
 gated_models =
   [
     ("sig_tornado_gated_by_tornado", "sig_tornado", "tornado"),
-    ("sig_wind_gated_by_wind",       "sig_wing",    "wind"),
+    ("sig_wind_gated_by_wind",       "sig_wind",    "wind"),
     ("sig_hail_gated_by_hail",       "sig_hail",    "hail"),
   ]
 
