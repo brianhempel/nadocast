@@ -353,9 +353,38 @@ end
 
 # CSI = hits / (hits + false alarms + misses)
 #     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)
+#     = true_pos_weight / (painted_weight + false_negative_weight)
 #     = 1 / (1/POD + 1/(1-FAR) - 1)
 
-function csi(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort), total_weight = sum(Float64.(weights)), positive_weight = sum(y .* Float64.(weights)))
+function csi(ŷ, y, weights, threshold)
+
+  @assert length(y) == length(weights)
+  @assert length(y) == length(ŷ)
+
+  thread_painted_weights, thread_true_pos_weights, thread_false_neg_weights = parallel_iterate(length(y)) do thread_range
+    painted_weight   = 0.0
+    true_pos_weight  = 0.0
+    false_neg_weight = 0.0
+
+    @inbounds for i in thread_range
+      if ŷ[i] >= threshold
+        painted_weight += Float64(weights[i])
+        if y[i] > 0.5f0
+          true_pos_weight += Float64(weights[i])
+        else
+          false_neg_weight += Float64(weights[i])
+        end
+      end
+    end
+
+    painted_weight, true_pos_weight, false_neg_weight
+  end
+
+  sum(thread_true_pos_weights) / (sum(thread_painted_weights) +  sum(thread_false_neg_weights))
+end
+
+
+function multiple_csis(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort), total_weight = sum(Float64.(weights)), positive_weight = sum(y .* Float64.(weights)))
   y       = y[sort_perm]
   ŷ       = ŷ[sort_perm]
   weights = Float64.(weights[sort_perm])
@@ -395,7 +424,7 @@ function csi(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.MergeSort)
 end
 
 function mean_csi(ŷ, y, weights)
-  csis = csi(ŷ, y, weights)
+  csis = multiple_csis(ŷ, y, weights)
   Float32(sum(csis) / length(csis))
 end
 
