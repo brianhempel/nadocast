@@ -70,29 +70,38 @@ function do_it(forecasts; suffix)
   # test_forecasts = vcat(test_forecasts, other_test_forecasts);
   # length(test_forecasts) # 186
 
-  event_name_to_events = Dict(
-    "tornado"     => StormEvents.conus_tornado_events(),
-    "wind"        => StormEvents.conus_severe_wind_events(),
-    "hail"        => StormEvents.conus_severe_hail_events(),
-    "sig_tornado" => StormEvents.conus_sig_tornado_events(),
-    "sig_wind"    => StormEvents.conus_sig_wind_events(),
-    "sig_hail"    => StormEvents.conus_sig_hail_events(),
+  model_name_to_events = Dict(
+    "tornado"                      => StormEvents.conus_tornado_events(),
+    "wind"                         => StormEvents.conus_severe_wind_events(),
+    "hail"                         => StormEvents.conus_severe_hail_events(),
+    "sig_tornado"                  => StormEvents.conus_sig_tornado_events(),
+    "sig_wind"                     => StormEvents.conus_sig_wind_events(),
+    "sig_hail"                     => StormEvents.conus_sig_hail_events(),
+    "sig_tornado_gated_by_tornado" => StormEvents.conus_sig_tornado_events(),
+    "sig_wind_gated_by_wind"       => StormEvents.conus_sig_wind_events(),
+    "sig_hail_gated_by_hail"       => StormEvents.conus_sig_hail_events(),
   )
 
-  event_name_to_thresholds = Dict(
-    "tornado"     => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
-    "wind"        => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
-    "hail"        => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
-    "sig_tornado" => [0.1],
-    "sig_wind"    => [0.1],
-    "sig_hail"    => [0.1],
+  model_name_to_thresholds = Dict(
+    "tornado"                      => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
+    "wind"                         => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
+    "hail"                         => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
+    "sig_tornado"                  => [0.1],
+    "sig_wind"                     => [0.1],
+    "sig_hail"                     => [0.1],
+    "sig_tornado_gated_by_tornado" => [0.1],
+    "sig_wind_gated_by_wind"       => [0.1],
+    "sig_hail_gated_by_hail"       => [0.1],
   )
+
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "")
 
   # Want this sorted for niceness
-  event_names = map(first, SPCOutlooks.models)
+  # event_names = map(first, SPCOutlooks.models)
+  model_names = map(first, CombinedHREFSREF.models_with_gated)
 
-  compute_forecast_labels(event_name, spc_forecast) = begin
-    events = event_name_to_events[event_name]
+  compute_forecast_labels(model_name, spc_forecast) = begin
+    events = model_name_to_events[model_name]
     # Annoying that we have to recalculate this.
     start_seconds =
       if spc_forecast.run_hour == 6
@@ -112,14 +121,14 @@ function do_it(forecasts; suffix)
     StormEvents.grid_to_event_neighborhoods(events, spc_forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
   end
 
-  spc_threshold_painted_areas         = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  test_threshold_painted_areas        = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  spc_threshold_true_positive_areas   = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  test_threshold_true_positive_areas  = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  spc_threshold_false_negative_areas  = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  test_threshold_false_negative_areas = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  spc_threshold_true_negative_areas   = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
-  test_threshold_true_negative_areas  = Dict(map(event_name -> event_name => map(_ -> Float64[], event_name_to_thresholds[event_name]), event_names))
+  spc_threshold_painted_areas         = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  test_threshold_painted_areas        = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  spc_threshold_true_positive_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  test_threshold_true_positive_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  spc_threshold_false_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  test_threshold_false_negative_areas = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  spc_threshold_true_negative_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  test_threshold_true_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
 
   function forecast_stats(data, labels, threshold)
     painted   = ((@view data[:,1]) .>= threshold*0.9999) .* CONUS_MASK
@@ -132,15 +141,15 @@ function do_it(forecasts; suffix)
     (painted_area, true_positive_area, false_negative_area, true_negative_area)
   end
 
-  # event_name_to_thresholds plus another threshold at 1.0
-  bin_maxes = Dict(map(event_names) do event_name
-    event_name => [event_name_to_thresholds[event_name]; 1.0]
+  # model_name_to_thresholds plus another threshold at 1.0
+  bin_maxes = Dict(map(model_names) do model_name
+    model_name => [model_name_to_thresholds[model_name]; 1.0]
   end)
 
-  spc_bin_painted_areas        = Dict(map(event_name -> event_name => map(_ -> Float64[], bin_maxes[event_name]), event_names))
-  test_bin_painted_areas       = Dict(map(event_name -> event_name => map(_ -> Float64[], bin_maxes[event_name]), event_names))
-  spc_bin_true_positive_areas  = Dict(map(event_name -> event_name => map(_ -> Float64[], bin_maxes[event_name]), event_names))
-  test_bin_true_positive_areas = Dict(map(event_name -> event_name => map(_ -> Float64[], bin_maxes[event_name]), event_names))
+  spc_bin_painted_areas        = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
+  test_bin_painted_areas       = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
+  spc_bin_true_positive_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
+  test_bin_true_positive_areas = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
 
   function reliability_stats(data, labels, threshold_lo, threshold_hi)
     painted             = ((@view data[:,1]) .>= threshold_lo*0.9999) .* ((@view data[:,1]) .< threshold_hi*0.9999) .* CONUS_MASK
@@ -153,10 +162,12 @@ function do_it(forecasts; suffix)
 
     headers = ["yymmdd", "spc", "nadocast"]
 
-    for event_name in event_names
-      for threshold in event_name_to_thresholds[event_name]
-        headers = vcat(headers, ["$(event_name)_spc_painted_sq_mi_$threshold",      "$(event_name)_spc_true_positive_sq_mi_$threshold",      "$(event_name)_spc_false_negative_sq_mi_$threshold",      "$(event_name)_spc_true_negative_sq_mi_$threshold"])
-        headers = vcat(headers, ["$(event_name)_nadocast_painted_sq_mi_$threshold", "$(event_name)_nadocast_true_positive_sq_mi_$threshold", "$(event_name)_nadocast_false_negative_sq_mi_$threshold", "$(event_name)_nadocast_true_negative_sq_mi_$threshold"])
+    for model_name in model_names
+      for threshold in model_name_to_thresholds[model_name]
+        if !occursin("_gated_by_", model_name)
+          headers = vcat(headers, ["$(model_name)_spc_painted_sq_mi_$threshold",      "$(model_name)_spc_true_positive_sq_mi_$threshold",      "$(model_name)_spc_false_negative_sq_mi_$threshold",      "$(model_name)_spc_true_negative_sq_mi_$threshold"])
+        end
+        headers   = vcat(headers, ["$(model_name)_nadocast_painted_sq_mi_$threshold", "$(model_name)_nadocast_true_positive_sq_mi_$threshold", "$(model_name)_nadocast_false_negative_sq_mi_$threshold", "$(model_name)_nadocast_true_negative_sq_mi_$threshold"])
       end
     end
 
@@ -177,14 +188,16 @@ function do_it(forecasts; suffix)
       test_data = Forecasts.data(test_forecast)
       ForecastCombinators.clear_cached_forecasts()
 
-      for event_name in event_names
-        spc_event_i  = findfirst(m -> m[1] == event_name, SPCOutlooks.models)
-        test_event_i = findfirst(m -> m[1] == event_name, CombinedHREFSREF.models)
+      for model_name in model_names
+        spc_event_i  = findfirst(m -> m[1] == model_name, SPCOutlooks.models)
+        test_event_i = findfirst(m -> m[3] == model_name, CombinedHREFSREF.models_with_gated)
 
-        spc_event_probs  = @view spc_data[:, spc_event_i]
+        if !isnothing(spc_event_i)
+          spc_event_probs  = @view spc_data[:, spc_event_i]
+        end
         test_event_probs = @view test_data[:, test_event_i]
 
-        forecast_labels = compute_forecast_labels(event_name, spc_forecast) .> 0.5
+        forecast_labels = compute_forecast_labels(model_name, spc_forecast) .> 0.5
 
         map_root = ((@__DIR__) * "/maps/$(Forecasts.yyyymmdd(spc_forecast))")
         mkpath(map_root)
@@ -193,43 +206,53 @@ function do_it(forecasts; suffix)
 
         make_plot(file_name, data) = begin
           path = map_root * "/" * file_name
-          PlotMap.plot_fast(path, GRID, data .* CONUS_MASK; val_to_color=PlotMap.event_name_to_colorer[event_name], post_process=post_process)
+          PlotMap.plot_fast(path, GRID, data .* CONUS_MASK; val_to_color=PlotMap.event_name_to_colorer[model_name_to_event_name(model_name)], post_process=post_process)
           PlotMap.optimize_png(path; wait = false)
         end
 
-        make_plot("spc_day_1_$(event_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_event_probs)
-        make_plot("nadocast$(suffix)_$(event_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_event_probs)
+        if !isnothing(spc_event_i)
+          make_plot("spc_day_1_$(model_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_event_probs)
+        end
+        make_plot("nadocast$(suffix)_$(model_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_event_probs)
 
-        for threshold_i in 1:length(event_name_to_thresholds[event_name])
-          threshold = event_name_to_thresholds[event_name][threshold_i]
+        for threshold_i in 1:length(model_name_to_thresholds[model_name])
+          threshold = model_name_to_thresholds[model_name][threshold_i]
 
-          (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area)  = forecast_stats(spc_event_probs,  forecast_labels, threshold)
+          if !isnothing(spc_event_i)
+            (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area)  = forecast_stats(spc_event_probs,  forecast_labels, threshold)
+          end
           (test_painted_area, test_true_positive_area, test_false_negative_area, test_true_negative_area) = forecast_stats(test_event_probs, forecast_labels, threshold)
 
-          row = vcat(row, [spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area])
+          if !isnothing(spc_event_i)
+            row = vcat(row, [spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area])
+          end
           row = vcat(row, [test_painted_area, test_true_positive_area, test_false_negative_area, test_true_negative_area])
 
-          push!(spc_threshold_painted_areas[event_name][threshold_i],         spc_painted_area)
-          push!(test_threshold_painted_areas[event_name][threshold_i],        test_painted_area)
-          push!(spc_threshold_true_positive_areas[event_name][threshold_i],   spc_true_positive_area)
-          push!(test_threshold_true_positive_areas[event_name][threshold_i],  test_true_positive_area)
-          push!(spc_threshold_false_negative_areas[event_name][threshold_i],  spc_false_negative_area)
-          push!(test_threshold_false_negative_areas[event_name][threshold_i], test_false_negative_area)
-          push!(spc_threshold_true_negative_areas[event_name][threshold_i],   spc_true_negative_area)
-          push!(test_threshold_true_negative_areas[event_name][threshold_i],  test_true_negative_area)
+          if !isnothing(spc_event_i)
+            push!(spc_threshold_painted_areas[model_name][threshold_i],         spc_painted_area)
+            push!(spc_threshold_true_positive_areas[model_name][threshold_i],   spc_true_positive_area)
+            push!(spc_threshold_false_negative_areas[model_name][threshold_i],  spc_false_negative_area)
+            push!(spc_threshold_true_negative_areas[model_name][threshold_i],   spc_true_negative_area)
+          end
+          push!(test_threshold_painted_areas[model_name][threshold_i],        test_painted_area)
+          push!(test_threshold_true_positive_areas[model_name][threshold_i],  test_true_positive_area)
+          push!(test_threshold_false_negative_areas[model_name][threshold_i], test_false_negative_area)
+          push!(test_threshold_true_negative_areas[model_name][threshold_i],  test_true_negative_area)
         end
 
         bin_lo = 0.0
-        for bin_i in 1:length(bin_maxes[event_name])
-          bin_hi = bin_maxes[event_name][bin_i]
+        for bin_i in 1:length(bin_maxes[model_name])
+          bin_hi = bin_maxes[model_name][bin_i]
 
-          (spc_painted_area,  spc_true_positive_area)  = reliability_stats(spc_event_probs,  forecast_labels, bin_lo, bin_hi)
+          if !isnothing(spc_event_i)
+            (spc_painted_area,  spc_true_positive_area)  = reliability_stats(spc_event_probs,  forecast_labels, bin_lo, bin_hi)
+            push!(spc_bin_painted_areas[model_name][bin_i],        spc_painted_area)
+            push!(spc_bin_true_positive_areas[model_name][bin_i],  spc_true_positive_area)
+          end
+
           (test_painted_area, test_true_positive_area) = reliability_stats(test_event_probs, forecast_labels, bin_lo, bin_hi)
-
-          push!(spc_bin_painted_areas[event_name][bin_i],        spc_painted_area)
-          push!(test_bin_painted_areas[event_name][bin_i],       test_painted_area)
-          push!(spc_bin_true_positive_areas[event_name][bin_i],  spc_true_positive_area)
-          push!(test_bin_true_positive_areas[event_name][bin_i], test_true_positive_area)
+          push!(test_bin_painted_areas[model_name][bin_i],       test_painted_area)
+          push!(test_bin_true_positive_areas[model_name][bin_i], test_true_positive_area)
 
           bin_lo = bin_hi
         end
@@ -249,42 +272,44 @@ function do_it(forecasts; suffix)
       println(join(stats_headers, ","))
       println(stats_csv, join(stats_headers, ","))
 
-      for event_name in event_names
-        for threshold_i in 1:length(event_name_to_thresholds[event_name])
-          threshold = event_name_to_thresholds[event_name][threshold_i]
+      for model_name in model_names
+        for threshold_i in 1:length(model_name_to_thresholds[model_name])
+          threshold = model_name_to_thresholds[model_name][threshold_i]
 
-          total_days_count = length(spc_threshold_painted_areas[event_name][threshold_i])
-          spc_threshold_days_count  = count(spc_threshold_painted_areas[event_name][threshold_i] .> 0)
-          test_threshold_days_count = count(test_threshold_painted_areas[event_name][threshold_i] .> 0)
+          spc_valid_for_model = model_name == model_name_to_event_name(model_name)
 
-          spc_painted_area         = sum(spc_threshold_painted_areas[event_name][threshold_i])
-          test_painted_area        = sum(test_threshold_painted_areas[event_name][threshold_i])
-          spc_true_positive_area   = sum(spc_threshold_true_positive_areas[event_name][threshold_i])
-          test_true_positive_area  = sum(test_threshold_true_positive_areas[event_name][threshold_i])
-          spc_false_negative_area  = sum(spc_threshold_false_negative_areas[event_name][threshold_i])
-          test_false_negative_area = sum(test_threshold_false_negative_areas[event_name][threshold_i])
-          spc_true_negative_area   = sum(spc_threshold_true_negative_areas[event_name][threshold_i])
-          test_true_negative_area  = sum(test_threshold_true_negative_areas[event_name][threshold_i])
+          total_days_count = length(spc_threshold_painted_areas[model_name][threshold_i])
+          spc_threshold_days_count  = count(spc_threshold_painted_areas[model_name][threshold_i] .> 0)
+          test_threshold_days_count = count(test_threshold_painted_areas[model_name][threshold_i] .> 0)
+
+          spc_painted_area         = sum(spc_threshold_painted_areas[model_name][threshold_i])
+          test_painted_area        = sum(test_threshold_painted_areas[model_name][threshold_i])
+          spc_true_positive_area   = sum(spc_threshold_true_positive_areas[model_name][threshold_i])
+          test_true_positive_area  = sum(test_threshold_true_positive_areas[model_name][threshold_i])
+          spc_false_negative_area  = sum(spc_threshold_false_negative_areas[model_name][threshold_i])
+          test_false_negative_area = sum(test_threshold_false_negative_areas[model_name][threshold_i])
+          spc_true_negative_area   = sum(spc_threshold_true_negative_areas[model_name][threshold_i])
+          test_true_negative_area  = sum(test_threshold_true_negative_areas[model_name][threshold_i])
 
           spc_false_positive_area  = spc_painted_area - spc_true_positive_area
           spc_negative_area        = spc_false_positive_area + spc_true_negative_area
           test_false_positive_area = test_painted_area - test_true_positive_area
           test_negative_area       = test_false_positive_area + test_true_negative_area
 
-          spc_sr_bootstraps = map(1:1_000_000) do _
+          spc_sr_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area = Float32(sum(view(spc_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            painted_area  = Float32(sum(view(spc_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
+            true_pos_area = Float32(sum(view(spc_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            painted_area  = Float32(sum(view(spc_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
 
             true_pos_area / (painted_area + ϵ)
           end
 
-          spc_pod_bootstraps = map(1:1_000_000) do _
+          spc_pod_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
+            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
 
             true_pos_area / (true_pos_area + false_neg_area + ϵ)
           end
@@ -292,8 +317,8 @@ function do_it(forecasts; suffix)
           test_sr_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area = Float32(sum(view(test_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            painted_area  = Float32(sum(view(test_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
+            true_pos_area = Float32(sum(view(test_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            painted_area  = Float32(sum(view(test_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
 
             true_pos_area / (painted_area + ϵ)
           end
@@ -301,18 +326,18 @@ function do_it(forecasts; suffix)
           test_pod_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area  = Float32(sum(view(test_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            false_neg_area = Float32(sum(view(test_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
+            true_pos_area  = Float32(sum(view(test_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            false_neg_area = Float32(sum(view(test_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
 
             true_pos_area / (true_pos_area + false_neg_area + ϵ)
           end
 
-          spc_csi_bootstraps = map(1:1_000_000) do _
+          spc_csi_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            painted_area   = Float32(sum(view(spc_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
-            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
+            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            painted_area   = Float32(sum(view(spc_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
+            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
 
             # CSI = tp / (tp + fp + fn)
             true_pos_area / (painted_area  + false_neg_area + ϵ)
@@ -321,9 +346,9 @@ function do_it(forecasts; suffix)
           test_csi_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area  = Float32(sum(view(test_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            painted_area   = Float32(sum(view(test_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
-            false_neg_area = Float32(sum(view(test_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
+            true_pos_area  = Float32(sum(view(test_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            painted_area   = Float32(sum(view(test_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
+            false_neg_area = Float32(sum(view(test_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
 
             # CSI = tp / (tp + fp + fn)
             true_pos_area / (painted_area  + false_neg_area + ϵ)
@@ -332,13 +357,15 @@ function do_it(forecasts; suffix)
           csi_diff_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
+            event_name = model_name_to_event_name(model_name)
+
             spc_true_pos  = Float32(sum(view(spc_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
             spc_painted   = Float32(sum(view(spc_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
             spc_false_neg = Float32(sum(view(spc_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
 
-            test_true_pos  = Float32(sum(view(test_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            test_painted   = Float32(sum(view(test_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
-            test_false_neg = Float32(sum(view(test_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
+            test_true_pos  = Float32(sum(view(test_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
+            test_painted   = Float32(sum(view(test_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
+            test_false_neg = Float32(sum(view(test_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
 
             # CSI = tp / (tp + fp + fn)
 
@@ -349,23 +376,23 @@ function do_it(forecasts; suffix)
           end
 
           row = [
-            event_name,
+            model_name,
             total_days_count,
             Float32(threshold),
-            spc_threshold_days_count,
+            spc_valid_for_model && spc_threshold_days_count,
             test_threshold_days_count,
-            Float32(spc_true_positive_area  / spc_painted_area), # sr
-            Float32(spc_true_positive_area  / (spc_true_positive_area + spc_false_negative_area)), # pod
-            Float32(spc_false_positive_area / spc_negative_area), # fpr
+            spc_valid_for_model && Float32(spc_true_positive_area  / spc_painted_area), # sr
+            spc_valid_for_model && Float32(spc_true_positive_area  / (spc_true_positive_area + spc_false_negative_area)), # pod
+            spc_valid_for_model && Float32(spc_false_positive_area / spc_negative_area), # fpr
             Float32(test_true_positive_area / test_painted_area), # sr
             Float32(test_true_positive_area / (test_true_positive_area + test_false_negative_area)), # pod
             Float32(test_false_positive_area / test_negative_area), # fpr
-            Statistics.quantile(spc_sr_bootstraps, 0.025),
-            Statistics.quantile(spc_sr_bootstraps, 0.975),
-            Statistics.quantile(spc_pod_bootstraps, 0.025),
-            Statistics.quantile(spc_pod_bootstraps, 0.975),
-            Statistics.quantile(spc_csi_bootstraps, 0.025),
-            Statistics.quantile(spc_csi_bootstraps, 0.975),
+            spc_valid_for_model && Statistics.quantile(spc_sr_bootstraps, 0.025),
+            spc_valid_for_model && Statistics.quantile(spc_sr_bootstraps, 0.975),
+            spc_valid_for_model && Statistics.quantile(spc_pod_bootstraps, 0.025),
+            spc_valid_for_model && Statistics.quantile(spc_pod_bootstraps, 0.975),
+            spc_valid_for_model && Statistics.quantile(spc_csi_bootstraps, 0.025),
+            spc_valid_for_model && Statistics.quantile(spc_csi_bootstraps, 0.975),
             Statistics.quantile(test_sr_bootstraps, 0.025),
             Statistics.quantile(test_sr_bootstraps, 0.975),
             Statistics.quantile(test_pod_bootstraps, 0.025),
@@ -387,20 +414,22 @@ function do_it(forecasts; suffix)
       println(join(reliability_headers, ","))
       println(reliability_csv, join(reliability_headers, ","))
 
-      for event_name in event_names
+      for model_name in model_names
+        spc_valid_for_model = model_name == model_name_to_event_name(model_name)
+
         bin_lo = 0.0
-        for bin_i in 1:length(bin_maxes[event_name])
-          bin_hi = bin_maxes[event_name][bin_i]
+        for bin_i in 1:length(bin_maxes[model_name])
+          bin_hi = bin_maxes[model_name][bin_i]
 
-          total_days_count    = length(spc_bin_painted_areas[event_name][bin_i])
-          spc_bin_days_count  = count(spc_bin_painted_areas[event_name][bin_i] .> 0)
-          test_bin_days_count = count(test_bin_painted_areas[event_name][bin_i] .> 0)
+          total_days_count    = length(spc_bin_painted_areas[model_name][bin_i])
+          spc_bin_days_count  = count(spc_bin_painted_areas[model_name][bin_i] .> 0)
+          test_bin_days_count = count(test_bin_painted_areas[model_name][bin_i] .> 0)
 
-          spc_bootstraps = map(1:1_000_000) do _
+          spc_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area = Float32(sum(view(spc_bin_true_positive_areas[event_name][bin_i], bootstrap_is)))
-            painted_area  = Float32(sum(view(spc_bin_painted_areas[event_name][bin_i], bootstrap_is)))
+            true_pos_area = Float32(sum(view(spc_bin_true_positive_areas[model_name][bin_i], bootstrap_is)))
+            painted_area  = Float32(sum(view(spc_bin_painted_areas[model_name][bin_i], bootstrap_is)))
 
             true_pos_area / (painted_area + ϵ)
           end
@@ -408,23 +437,23 @@ function do_it(forecasts; suffix)
           test_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area = Float32(sum(view(test_bin_true_positive_areas[event_name][bin_i], bootstrap_is)))
-            painted_area  = Float32(sum(view(test_bin_painted_areas[event_name][bin_i], bootstrap_is)))
+            true_pos_area = Float32(sum(view(test_bin_true_positive_areas[model_name][bin_i], bootstrap_is)))
+            painted_area  = Float32(sum(view(test_bin_painted_areas[model_name][bin_i], bootstrap_is)))
 
             true_pos_area / (painted_area + ϵ)
           end
 
           row = [
-            event_name,
+            model_name,
             total_days_count,
             Float32(bin_lo),
             Float32(bin_hi),
-            spc_bin_days_count,
+            spc_valid_for_model && spc_bin_days_count,
             test_bin_days_count,
-            Float32(sum(spc_bin_true_positive_areas[event_name][bin_i])  / sum(spc_bin_painted_areas[event_name][bin_i])),
-            Float32(sum(test_bin_true_positive_areas[event_name][bin_i]) / sum(test_bin_painted_areas[event_name][bin_i])),
-            Statistics.quantile(spc_bootstraps, 0.025),
-            Statistics.quantile(spc_bootstraps, 0.975),
+            spc_valid_for_model && Float32(sum(spc_bin_true_positive_areas[model_name][bin_i])  / sum(spc_bin_painted_areas[model_name][bin_i])),
+            Float32(sum(test_bin_true_positive_areas[model_name][bin_i]) / sum(test_bin_painted_areas[model_name][bin_i])),
+            spc_valid_for_model && Statistics.quantile(spc_bootstraps, 0.025),
+            spc_valid_for_model && Statistics.quantile(spc_bootstraps, 0.975),
             Statistics.quantile(test_bootstraps, 0.025),
             Statistics.quantile(test_bootstraps, 0.975),
           ]
@@ -439,7 +468,7 @@ function do_it(forecasts; suffix)
   end
 end
 
-do_it(CombinedHREFSREF.forecasts_day_spc_calibrated(); suffix = "")
+do_it(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); suffix = "")
 # 1143 SPC forecasts available
 # 627 unfiltered test forecasts
 # 157 0z test forecasts
@@ -447,7 +476,7 @@ do_it(CombinedHREFSREF.forecasts_day_spc_calibrated(); suffix = "")
 
 
 # Do the same, but without the final SPC-like prob rescaling
-do_it(CombinedHREFSREF.forecasts_day(); suffix = "_absolutely_calibrated")
+do_it(CombinedHREFSREF.forecasts_day_sig_gated(); suffix = "_absolutely_calibrated")
 
 
 
