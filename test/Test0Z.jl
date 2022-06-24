@@ -19,7 +19,6 @@ import PlotMap
 import StormEvents
 import ForecastCombinators
 
-
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
@@ -98,7 +97,7 @@ function do_it(forecasts; suffix)
 
   # Want this sorted for niceness
   # event_names = map(first, SPCOutlooks.models)
-  model_names = map(first, CombinedHREFSREF.models_with_gated)
+  model_names = map(last, CombinedHREFSREF.models_with_gated)
 
   compute_forecast_labels(model_name, spc_forecast) = begin
     events = model_name_to_events[model_name]
@@ -278,7 +277,7 @@ function do_it(forecasts; suffix)
 
           spc_valid_for_model = model_name == model_name_to_event_name(model_name)
 
-          total_days_count = length(spc_threshold_painted_areas[model_name][threshold_i])
+          total_days_count = length(test_threshold_painted_areas[model_name][threshold_i])
           spc_threshold_days_count  = count(spc_threshold_painted_areas[model_name][threshold_i] .> 0)
           test_threshold_days_count = count(test_threshold_painted_areas[model_name][threshold_i] .> 0)
 
@@ -421,7 +420,7 @@ function do_it(forecasts; suffix)
         for bin_i in 1:length(bin_maxes[model_name])
           bin_hi = bin_maxes[model_name][bin_i]
 
-          total_days_count    = length(spc_bin_painted_areas[model_name][bin_i])
+          total_days_count    = length(test_bin_painted_areas[model_name][bin_i])
           spc_bin_days_count  = count(spc_bin_painted_areas[model_name][bin_i] .> 0)
           test_bin_days_count = count(test_bin_painted_areas[model_name][bin_i] .> 0)
 
@@ -470,8 +469,8 @@ end
 
 do_it(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); suffix = "")
 # 1143 SPC forecasts available
-# 627 unfiltered test forecasts
-# 157 0z test forecasts
+# 631 unfiltered test forecasts
+# 158 0z test forecasts
 # 133 0z test forecasts before the event data cutoff date
 
 
