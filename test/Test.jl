@@ -32,9 +32,7 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid();
 
 const ϵ = eps(1f0)
 
-function do_it(forecasts; suffix)
-
-  spc_forecasts = SPCOutlooks.forecasts_day_0600();
+function do_it(spc_forecasts, forecasts; run_hour, suffix)
 
   println("$(length(spc_forecasts)) SPC forecasts available") #
 
@@ -45,21 +43,21 @@ function do_it(forecasts; suffix)
     );
 
   println("$(length(test_forecasts)) unfiltered test forecasts") # 627
-  test_forecasts = filter(forecast -> forecast.run_hour == 0, test_forecasts);
-  println("$(length(test_forecasts)) 0z test forecasts") # 157
+  test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts") # 157
 
   # We don't have storm events past this time.
   cutoff = Dates.DateTime(2022, 1, 1, 0)
 
   test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-  println("$(length(test_forecasts)) 0z test forecasts before the event data cutoff date") #
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
 
   # If you want to augment the test set with all the days after training
 
   # training_data_end = Dates.DateTime(2022, 1, 1, 0)
   # other_test_forecasts = vcat(train_forecasts, validation_forecasts);
   # length(other_test_forecasts) # 3754
-  # other_test_forecasts = filter(forecast -> forecast.run_hour == 0, other_test_forecasts);
+  # other_test_forecasts = filter(forecast -> forecast.run_hour == run_hour, other_test_forecasts);
   # length(other_test_forecasts) # 939
   # other_test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, other_test_forecasts);
   # length(other_test_forecasts) # 841
@@ -157,7 +155,7 @@ function do_it(forecasts; suffix)
     (painted_area, true_positive_area)
   end
 
-  open((@__DIR__) * "/test_0z$(suffix).csv", "w") do csv
+  open((@__DIR__) * "/test_$(run_hour)z$(suffix).csv", "w") do csv
 
     headers = ["yymmdd", "spc", "nadocast"]
 
@@ -261,7 +259,7 @@ function do_it(forecasts; suffix)
       println(csv, join(row, ","))
     end
 
-    open((@__DIR__) * "/stats_0z$(suffix).csv", "w") do stats_csv
+    open((@__DIR__) * "/stats_$(run_hour)z$(suffix).csv", "w") do stats_csv
       stats_headers = ["event", "days_count", "threshold", "spc_threshold_days", "nadocast_threshold_days", "spc_success_ratio", "spc_pod", "spc_false_positive_rate", "nadocast_success_ratio", "nadocast_pod", "nadocast_false_positive_rate"]
 
       stats_headers = vcat(stats_headers, ["spc_success_ratio_0.025_bootstrap",      "spc_success_ratio_0.975_bootstrap",      "spc_pod_0.025_bootstrap",      "spc_pod_0.975_bootstrap",      "spc_csi_0.025_bootstrap",      "spc_csi_0.975_bootstrap"])
@@ -407,7 +405,7 @@ function do_it(forecasts; suffix)
       end
     end
 
-    open((@__DIR__) * "/test_reliability_0z$(suffix).csv", "w") do reliability_csv
+    open((@__DIR__) * "/test_reliability_$(run_hour)z$(suffix).csv", "w") do reliability_csv
       reliability_headers = ["event", "days_count", "bin_low", "bin_high_exclusive", "spc_bin_days", "nadocast_bin_days", "spc_observed_rate", "nadocast_observed_rate", "spc_observed_rate_0.025_bootstrap", "spc_observed_rate_0.975_bootstrap", "nadocast_observed_rate_0.025_bootstrap", "nadocast_observed_rate_0.975_bootstrap"]
 
       println(join(reliability_headers, ","))
@@ -467,7 +465,7 @@ function do_it(forecasts; suffix)
   end
 end
 
-do_it(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); suffix = "")
+do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); run_hour = 0, suffix = "")
 # 1143 SPC forecasts available
 # 631 unfiltered test forecasts
 # 158 0z test forecasts
@@ -475,8 +473,16 @@ do_it(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); suffix = "
 
 
 # Do the same, but without the final SPC-like prob rescaling
-do_it(CombinedHREFSREF.forecasts_day_sig_gated(); suffix = "_absolutely_calibrated")
+do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(); run_hour = 0, suffix = "_absolutely_calibrated")
 
+
+do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); run_hour = 12, suffix = "")
+# 1143 SPC forecasts available
+# 631 unfiltered test forecasts
+# 158 12z test forecasts
+# 133 12z test forecasts before the event data cutoff date
+
+do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(); run_hour = 12, suffix = "_absolutely_calibrated")
 
 
 # scp -r nadocaster:/home/brian/nadocast_dev/test/ ./

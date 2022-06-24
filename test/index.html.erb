@@ -42,9 +42,15 @@
       <% HAZARDS.each do |hazard_name, hazard_title| %>
         <label><input type="checkbox" name="hazard" value="<%= hazard_name %>"><%= hazard_title %></label>
       <% end %>
+      &nbsp;&nbsp;&nbsp;Time:
+      <label><input type="radio" name="run_time" value="0z" checked>0Z vs 0600</label>
+      <label><input type="radio" name="run_time" value="12z">12Z vs 1630</label>
       &nbsp;&nbsp;&nbsp;Calibration:
       <label><input type="radio" name="calibration" value="spc-like" checked>SPC-like</label>
       <label><input type="radio" name="calibration" value="absolute">Absolute</label>
+      &nbsp;&nbsp;&nbsp;Sig models:
+      <label><input type="radio" name="sig_type" value="bounded" checked>Bounded by non-sig</label>
+      <label><input type="radio" name="sig_type" value="naive">Independent of non-sig</label>
     </p>
     <script>
       function updateVisibility() {
@@ -59,14 +65,51 @@
         });
         sort();
       }
+      function updateRunTime() {
+        const is12z = document.querySelector('input[name="run_time"][value="12z"]').checked;
+        const time_suffix_nc  = is12z ? "_t12z.png" : "_t00z.png";
+        const time_suffix_spc = is12z ? "_t16z.png" : "_t06z.png";
+        const time_str_nc  = is12z ? "12Z"  : "0Z";
+        const time_str_spc = is12z ? "1630" : "0600";
+        document.querySelectorAll('img').forEach(img => {
+          if(img.src.includes("/nadocast_")) {
+            img.src = img.src.replace(/_t\d+z\.png/, time_suffix_nc);
+          } else if (img.src.includes("/spc_day_1_")) {
+            img.src = img.src.replace(/_t\d+z\.png/, time_suffix_spc);
+          }
+        });
+        document.querySelectorAll('td a').forEach(a => {
+          if(a.href.includes("/nadocast_")) {
+            a.href = a.href.replace(/_t\d+z\.png/, time_suffix_nc);
+          } else if (a.href.includes("/spc_day_1_")) {
+            a.href = a.href.replace(/_t\d+z\.png/, time_suffix_spc);
+          }
+        });
+        document.querySelectorAll('.nc_run_time').forEach(elem => { elem.innerText = time_str_nc; });
+        document.querySelectorAll('.spc_outlook_time').forEach(elem => { elem.innerText = time_str_spc; });
+      }
       function updateCalibration() {
         const absolutely_calibrated = document.querySelector('input[name="calibration"][value="absolute"]').checked;
         const prefix = absolutely_calibrated ? "/nadocast_absolutely_calibrated_" : "/nadocast_";
         document.querySelectorAll('img').forEach(img => {
-          img.src = img.src.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix)
+          img.src = img.src.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix);
         });
         document.querySelectorAll('td a').forEach(a => {
-          a.href = a.href.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix)
+          a.href = a.href.replace(/\/nadocast(_absolutely_calibrated)?_/, prefix);
+        });
+      }
+      function updateSigType() {
+        const bounded = document.querySelector('input[name="sig_type"][value="bounded"]').checked;
+        const suffix = bounded ? "_sig_$1_gated_by_$1" : "_sig_$1";
+        document.querySelectorAll('img').forEach(img => {
+          if(img.src.includes("/nadocast_")) {
+            img.src = img.src.replace(/_sig_([a-z]+)(_gated_by_[a-z]+)?/, suffix);
+          }
+        });
+        document.querySelectorAll('td a').forEach(a => {
+          if(a.href.includes("/nadocast_")) {
+            a.href = a.href.replace(/_sig_([a-z]+)(_gated_by_[a-z]+)?/, suffix);
+          }
         });
       }
       function sort() {
@@ -105,27 +148,39 @@
       document.querySelectorAll('[name=sort_by]').forEach(select => {
         select.onchange = sort;
       })
+      document.querySelectorAll('[name=run_time]').forEach(radio => {
+        radio.onchange = updateRunTime;
+      })
       document.querySelectorAll('[name=calibration]').forEach(radio => {
         radio.onchange = updateCalibration;
+      })
+      document.querySelectorAll('[name=sig_type]').forEach(radio => {
+        radio.onchange = updateSigType;
       })
     </script>
   </div>
   <table style="margin: 12em 0.5em">
     <%
       def predictor(map)
-        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 1]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)(_gated_by_[a-z]+)?_(\d{8})_t(\d+)z.png$/, 1]
       end
       def absolutely_calibrated?(map)
-        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 2] == "_absolutely_calibrated"
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)(_gated_by_[a-z]+)?_(\d{8})_t(\d+)z.png$/, 2] == "_absolutely_calibrated"
       end
       def hazard(map)
-        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 3]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)(_gated_by_[a-z]+)?_(\d{8})_t(\d+)z.png$/, 3]
+      end
+      def bounded?(map)
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)(_gated_by_[a-z]+)?_(\d{8})_t(\d+)z.png$/, 4]
       end
       def yyyymmdd(map)
-        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 4]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)(_gated_by_[a-z]+)?_(\d{8})_t(\d+)z.png$/, 5]
       end
       def run_hour(map)
-        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)_(\d{8})_t(\d+)z.png$/, 5]
+        map[/(nadocast|spc_day_1)(_absolutely_calibrated)?_(tornado|wind|hail|sig_tornado|sig_wind|sig_hail)(_gated_by_[a-z]+)?_(\d{8})_t(\d+)z.png$/, 6]
+      end
+      def sig?(map)
+        hazard(map) =~ /sig/
       end
       def severity(map)
         return 0 unless map
@@ -156,9 +211,9 @@
         <td rowspan="2"><%= date_str %></td>
         <td>Nadocast</td>
         <% HAZARDS.each do |hazard_name, hazard_title|
-          nadocast_0z = maps_by_day[day].find { |map| predictor(map) == "nadocast" && hazard(map) == hazard_name && run_hour(map) == "00" && !absolutely_calibrated?(map) }
+          nadocast_0z = maps_by_day[day].find { |map| predictor(map) == "nadocast" && hazard(map) == hazard_name && run_hour(map) == "00" && !absolutely_calibrated?(map) && (bounded?(map) || !sig?(map)) }
         %>
-          <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(nadocast_0z) %>"><%= map_img(nadocast_0z, "#{date_str} Nadocast #{hazard_title} 0Z") %></td>
+          <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(nadocast_0z) %>"><%= map_img(nadocast_0z, "#{date_str} Nadocast #{hazard_title} <span class=\"nc_run_time\">0Z</span>") %></td>
         <% end %>
       </tr>
       <tr>
@@ -166,7 +221,7 @@
         <% HAZARDS.each do |hazard_name, hazard_title|
           spc_6z = maps_by_day[day].find { |map| predictor(map) == "spc_day_1" && hazard(map) == hazard_name && run_hour(map) == "06" }
         %>
-          <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(spc_6z) %>"><%= map_img(spc_6z, "#{date_str} SPC #{hazard_title} 0600") %></td>
+          <td data-hazard-name="<%= hazard_name %>" data-severity="<%= severity(spc_6z) %>"><%= map_img(spc_6z, "#{date_str} SPC #{hazard_title} <span class=\"spc_outlook_time\">0600</span>") %></td>
         <% end %>
       </tr>
       <tr>
@@ -177,7 +232,10 @@
     %>
   </table>
   <script>
-  sort();
+    updateVisibility(); // this will also sort
+    updateRunTime();
+    updateCalibration();
+    updateSigType();
   </script>
 </body>
 
