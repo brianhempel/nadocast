@@ -29,16 +29,14 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-href_srefs          = CombinedHREFSREF.forecasts_day_spc_calibrated();
-hrrr_rap_href_srefs =
+forecasts =
   if get(ENV, "HRRR_RAP", "true") == "false"
-    []
+    CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated()
   else
-    CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()
+    Forecasts.Forecast[]
+    # [CombinedHREFSREF.forecasts_day_spc_calibrated(); CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()]
   end;
 
-all_forecasts = vcat(href_srefs, hrrr_rap_href_srefs);
-forecasts = all_forecasts
 if haskey(ENV, "FORECAST_DATE")
   year, month, day = map(str -> parse(Int64, str), split(ENV["FORECAST_DATE"], "-"))
   filter!(forecasts) do forecast
@@ -116,18 +114,19 @@ function do_forecast(forecast)
   changelog_file = (@__DIR__) * "/../forecasts/CHANGELOG.txt)"
   mkpath(out_dir)
 
-  non_sig_model_count = div(length(CombinedHREFSREF.models), 2)
+  non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
   for model_i in 1:non_sig_model_count
-    event_name, _     = CombinedHREFSREF.models[model_i]
-    sig_event_name, _ = CombinedHREFSREF.models[model_i + non_sig_model_count]
+    event_name, _, _     = CombinedHREFSREF.models[model_i]
+    sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
+    sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
     println("ploting $event_name...")
-    out_path_prefix     = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-    sig_out_path_prefix = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-    period_path         = out_path_prefix     * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
-    sig_period_path     = sig_out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
+    out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+    sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+    period_path          = out_path_prefix     * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
+    sig_period_path      = sig_out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
     # write(period_path * ".float16.bin", Float16.(prediction))
-    prediction     = @view predictions[:, model_i]
-    sig_prediction = @view predictions[:, model_i + non_sig_model_count]
+    prediction           = @view predictions[:, model_i]
+    sig_prediction       = @view predictions[:, sig_model_i]
 
     Grib2.write_15km_HREF_probs_grib2(
       prediction;
