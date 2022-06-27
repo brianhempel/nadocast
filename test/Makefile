@@ -11,5 +11,5 @@ index.html: index.html.erb maps/*/*.png
 	erb index.html.erb > index.html
 
 publish: index.html
-	cp -r maps *.html ../../test.nadocast.com/
+	cp -r maps *.html 2021_models_objective_plots.pdf ../../test.nadocast.com/2021_models/
 	cd ../../test.nadocast.com && git add .; git commit -m "Update"; git pull --rebase && git push
