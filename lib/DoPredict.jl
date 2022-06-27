@@ -111,7 +111,7 @@ function do_forecast(forecast)
 
   out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
   rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
-  changelog_file = (@__DIR__) * "/../forecasts/CHANGELOG.txt)"
+  changelog_file = (@__DIR__) * "/../forecasts/CHANGELOG.txt"
   mkpath(out_dir)
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
