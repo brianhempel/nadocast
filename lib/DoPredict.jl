@@ -1,5 +1,3 @@
-import MemoryConstrainedTreeBoosting
-
 # To predict the past, set FORECAST_DATE and RUN_HOUR in the environment:
 #
 # $ FORECAST_DATE=2019-4-7 RUN_HOUR=10 TWEET=true FORECASTS_ROOT=$(pwd)/test_grib2s make forecast
@@ -71,7 +69,7 @@ sort!(forecasts, alg=MergeSort, by=Forecasts.run_utc_datetime);
 
 if !haskey(ENV, "FORECAST_DATES")
   forecasts = [last(forecasts)]
-end
+end;
 
 
 if forecasts == []
@@ -79,119 +77,153 @@ if forecasts == []
 end
 
 function do_forecast(forecast)
-  # Follows Forecasts.based_on to return a list of forecasts with the given model_name
-  function model_parts(forecast, model_name)
-    if forecast.model_name == model_name
-      [forecast]
-    else
-      vcat(map(forecast -> model_parts(forecast, model_name), forecast.based_on)...)
-    end
-  end
-
-  hrrr_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HRRR")))
-  rap_run_hours  = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "RAP")))
-  href_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HREF")))
-  sref_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "SREF")))
-
-
-  ForecastCombinators.turn_forecast_caching_on()
-  # ForecastCombinators.turn_forecast_gc_circumvention_on()
-  predictions = Forecasts.data(forecast);
-  ForecastCombinators.clear_cached_forecasts()
-
-
-  period_stop_forecast_hour  = forecast.forecast_hour
-  period_start_forecast_hour = max(2, period_stop_forecast_hour - 23)
-  nadocast_run_time_utc      = Forecasts.run_utc_datetime(forecast)
-  nadocast_run_hour          = forecast.run_hour
-
 
   plotting_paths = []
   daily_paths_to_perhaps_tweet = []
+  rsync_dirs = []
 
-  out_dir   = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
-  rsync_dir = (@__DIR__) * "/../forecasts/$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
-  changelog_file = (@__DIR__) * "/../forecasts/CHANGELOG.txt"
-  mkpath(out_dir)
+  forecasts_dir = (@__DIR__) * "/../forecasts"
+  changelog_file = "$forecasts_dir/CHANGELOG.txt"
+
+  nadocast_run_time_utc      = Forecasts.run_utc_datetime(forecast)
+  nadocast_run_hour          = forecast.run_hour
+
+  out_dir_daily  = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+  out_dir_hourly = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/hourly/"
+
+  rsync_dir = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
+  push!(rsync_dirs, rsync_dir)
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
-  for model_i in 1:non_sig_model_count
-    event_name, _, _     = CombinedHREFSREF.models[model_i]
-    sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
-    sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
-    println("ploting $event_name...")
-    out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-    sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-    period_path          = out_path_prefix     * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
-    sig_period_path      = sig_out_path_prefix * "_f$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
-    # write(period_path * ".float16.bin", Float16.(prediction))
-    prediction           = @view predictions[:, model_i]
-    sig_prediction       = @view predictions[:, sig_model_i]
 
-    Grib2.write_15km_HREF_probs_grib2(
-      prediction;
-      run_time = Forecasts.run_utc_datetime(forecast),
-      forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
-      event_type = event_name,
-      out_name = period_path * ".grib2",
-    )
-    Grib2.write_15km_HREF_probs_grib2(
-      sig_prediction;
-      run_time = Forecasts.run_utc_datetime(forecast),
-      forecast_hour = (period_start_forecast_hour, period_stop_forecast_hour),
-      event_type = sig_event_name,
-      out_name = sig_period_path * ".grib2",
-    )
+  function plot_forecast(forecast; is_hourly)
 
-    PlotMap.plot_map(
-      period_path,
-      forecast.grid,
-      prediction;
-      sig_vals = sig_prediction,
-      event_title = Dict("tornado" => "Tor", "wind" => "Wind", "hail" => "Hail")[event_name],
-      run_time_utc = nadocast_run_time_utc,
-      forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
-      hrrr_run_hours = hrrr_run_hours,
-      rap_run_hours  = rap_run_hours,
-      href_run_hours = href_run_hours,
-      sref_run_hours = sref_run_hours
-    )
-    push!(plotting_paths, period_path)
-    PlotMap.plot_map(
-      sig_period_path,
-      forecast.grid,
-      sig_prediction;
-      event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_hail" => "Sighail")[sig_event_name],
-      run_time_utc = nadocast_run_time_utc,
-      forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
-      hrrr_run_hours = hrrr_run_hours,
-      rap_run_hours  = rap_run_hours,
-      href_run_hours = href_run_hours,
-      sref_run_hours = sref_run_hours
-    )
-    push!(plotting_paths, sig_period_path)
-
-    if event_name == "tornado"
-      push!(daily_paths_to_perhaps_tweet, period_path)
+    # Follows Forecasts.based_on to return a list of forecasts with the given model_name
+    function model_parts(forecast, model_name)
+      if forecast.model_name == model_name
+        [forecast]
+      else
+        vcat(map(forecast -> model_parts(forecast, model_name), forecast.based_on)...)
+      end
     end
+
+    hrrr_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HRRR")))
+    rap_run_hours  = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "RAP")))
+    href_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HREF")))
+    sref_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "SREF")))
+
+    ForecastCombinators.turn_forecast_caching_on()
+    # ForecastCombinators.turn_forecast_gc_circumvention_on()
+    predictions = Forecasts.data(forecast);
+    ForecastCombinators.clear_cached_forecasts()
+
+    period_stop_forecast_hour  = forecast.forecast_hour
+    period_start_forecast_hour = is_hourly ? forecast.forecast_hour : max(2, period_stop_forecast_hour - 23)
+    f_str = is_hourly ? (@sprintf "%02d" forecast.forecast_hour) : "$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
+
+    out_dir = is_hourly ? out_dir_hourly : out_dir_daily
+    mkpath(out_dir)
+
+    for model_i in 1:non_sig_model_count
+      event_name, _, _     = CombinedHREFSREF.models[model_i]
+      sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
+      sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
+      println("ploting $event_name for f$(f_str)...")
+      out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+      sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+      period_path          = out_path_prefix     * "_f$(f_str)"
+      sig_period_path      = sig_out_path_prefix * "_f$(f_str)"
+      # write(period_path * ".float16.bin", Float16.(prediction))
+      prediction           = @view predictions[:, model_i]
+      sig_prediction       = @view predictions[:, sig_model_i]
+
+      Grib2.write_15km_HREF_probs_grib2(
+        prediction;
+        run_time = Forecasts.run_utc_datetime(forecast),
+        forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
+        event_type = event_name,
+        out_name = period_path * ".grib2",
+      )
+      Grib2.write_15km_HREF_probs_grib2(
+        sig_prediction;
+        run_time = Forecasts.run_utc_datetime(forecast),
+        forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
+        event_type = sig_event_name,
+        out_name = sig_period_path * ".grib2",
+      )
+
+      PlotMap.plot_map(
+        period_path,
+        forecast.grid,
+        prediction;
+        sig_vals = sig_prediction,
+        event_title = Dict("tornado" => "Tor", "wind" => "Wind", "hail" => "Hail")[event_name],
+        run_time_utc = nadocast_run_time_utc,
+        forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+        hrrr_run_hours = hrrr_run_hours,
+        rap_run_hours  = rap_run_hours,
+        href_run_hours = href_run_hours,
+        sref_run_hours = sref_run_hours,
+        pdf = !is_hourly
+      )
+      push!(plotting_paths, period_path)
+      PlotMap.plot_map(
+        sig_period_path,
+        forecast.grid,
+        sig_prediction;
+        event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_hail" => "Sighail")[sig_event_name],
+        run_time_utc = nadocast_run_time_utc,
+        forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+        hrrr_run_hours = hrrr_run_hours,
+        rap_run_hours  = rap_run_hours,
+        href_run_hours = href_run_hours,
+        sref_run_hours = sref_run_hours,
+        pdf = !is_hourly
+      )
+      push!(plotting_paths, sig_period_path)
+
+      if event_name == "tornado" && is_hourly == false
+        push!(daily_paths_to_perhaps_tweet, period_path)
+      end
+    end
+  end
+
+  plot_forecast(forecast; is_hourly = false)
+
+  if get(ENV, "HRRR_RAP", "true") == "false"
+    hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
+      hourly_forecast.run_year  == forecast.run_year  &&
+      hourly_forecast.run_month == forecast.run_month &&
+      hourly_forecast.run_day   == forecast.run_day   &&
+      hourly_forecast.run_hour  == forecast.run_hour
+    end
+    hourly_forecasts = sort(hourly_forecasts; by=(f -> f.forecast_hour))
+    for hourly_forecast in hourly_forecasts
+      plot_forecast(hourly_forecast; is_hourly = true)
+    end
+    animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
+      out_dir_hourly * "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
+    end
+  else
+    animation_glob_paths = []
   end
 
   # @sync doesn't seem to work; poll until subprocesses are done.
   for path in plotting_paths
-    while !isfile(path * ".pdf") || isfile(path * ".sh")
+    while !isfile(path * ".png") || isfile(path * ".sh")
       sleep(1)
     end
   end
 
-  # if !isnothing(animation_glob_path)
-  #   println("Making hourlies movie out of $(animation_glob_path)...")
-  #   hourlies_movie_path = out_path_prefix * "_hourlies"
-  #   run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourlies_movie_path.mp4`)
-  # end
+  for animation_glob_path in animation_glob_paths
+    println("Making hourlies movie out of $(animation_glob_path)...")
+    hourly_movie_path = replace(animation_glob_path, "_f%02d.png" => "_hourly.mp4", out_dir_hourly => out_dir_daily)
+    run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourly_movie_path`)
+  end
 
   should_publish = get(ENV, "PUBLISH", "false") == "true"
   if should_publish
-    rsync_process = run(`rsync -r --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false)
+    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
   end
 
   if get(ENV, "TWEET", "false") == "true"
@@ -215,7 +247,7 @@ function do_forecast(forecast)
     # end
   end
 
-  should_publish && wait(rsync_process)
+  should_publish && map(wait, rsync_processes)
 end
 
 for forecast in forecasts
