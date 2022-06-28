@@ -154,6 +154,8 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       "Sighail" => wind_hail_colors_path,
     )[event_title]
 
+    dark_colors_path = replace(colors_path, ".cpt" => "-dark.cpt")
+
     hazard_str = Dict(
       "Tor"     => "a tornado",
       "Wind"    => "50+ knot t-storm wind",
@@ -182,7 +184,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
     println(f, "gmt coast \$region \$projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
     println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$colors_path  # draw the predictions using the projection")
 
-    println(f, "gmt contour $base_path.xyz \$region \$projection -An -W0.4p -C$colors_path-dark # draw outlines around each contour")
+    println(f, "gmt contour $base_path.xyz \$region \$projection -An -W0.4p+cl -C$dark_colors_path # draw outlines around each contour")
 
     # I would use the following dump contour/draw poly method for all plotting because it's fast and pretty, but it doesn't work fill correctly when there are holes in the region.
     if !isnothing(sig_vals)
