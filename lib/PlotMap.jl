@@ -93,7 +93,7 @@ end
 # Requires GMT >=6
 #
 # For daily forecast, provide a multi-hour range for forecast_hour_range
-function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing, forecast_hour_range=nothing, hrrr_run_hours=Int64[], rap_run_hours=Int64[], href_run_hours=Int64[], sref_run_hours=Int64[], event_title="Tor")
+function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_utc=nothing, forecast_hour_range=nothing, hrrr_run_hours=Int64[], rap_run_hours=Int64[], href_run_hours=Int64[], sref_run_hours=Int64[], event_title="Tor")
   open(base_path * ".xyz", "w") do f
     # lon lat val
     DelimitedFiles.writedlm(f, map(i -> (grid.latlons[i][2], grid.latlons[i][1], vals[i]), 1:length(vals)), '\t')
@@ -256,7 +256,8 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
     println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
 
     # reduce png size
-    println(f, "which oxipng && oxipng --strip safe $base_path.png")
+    println(f, "which pngquant && pngquant 64 --nofs --ext -quantized.png $base_path.png && rm $base_path.png && mv $base_path-quantized.png $base_path.png")
+    println(f, "which oxipng && oxipng  -o max --strip safe --libdeflater $base_path.png")
 
     println(f, "rm $base_path.nc")
     println(f, "rm $base_path.xyz")
@@ -264,6 +265,9 @@ function plot_map(base_path, grid, vals; sig_vals=nothing, run_time_utc=nothing,
       println(f, "rm $base_path-sig.nc")
       println(f, "rm $base_path-sig.xyz")
       println(f, "rm $base_path-sig_contour.xy")
+    end
+    if !pdf
+      println(f, "rm $base_path.pdf")
     end
   end
 
@@ -400,8 +404,12 @@ function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_co
   PNGFiles.save("$base_path.png", post_process(val_to_color.(vals)); compression_level = 9)
 end
 
-function optimize_png(base_path; wait = true)
-  run(`oxipng --strip safe $(base_path * ".png")`; wait = wait)
+function optimize_png(base_path; wait = true, quantization_levels = nothing)
+  if isnothing(quantization_levels)
+    run(`oxipng -o max --strip safe --libdeflater $(base_path * ".png")`; wait = wait)
+  else
+    run(`sh -c "pngquant $quantization_levels --nofs --ext -quantized.png $base_path.png && rm $base_path.png && mv $base_path-quantized.png $base_path.png && oxipng -o max --strip safe --libdeflater $(base_path * ".png")"`; wait = wait)
+  end
 end
 
 end # module PlotMap
