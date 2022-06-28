@@ -9,7 +9,17 @@
 require "fileutils"
 require "csv"
 
+year_months             = (ENV["ONLY_YEAR_MONTHS"] || "").split(",").map { |year_month_str| year_month_str.split("-").map(&:to_i) }
 start_year, start_month = (ENV["START_YEAR_MONTH"] || "2000-1").split("-").map(&:to_i)
+
+if year_months == []
+  year_months = (2000..Time.now.year).to_a.product((1..12).to_a)
+end
+
+year_months.select! do |year, month|
+  ([year, month] <=> [start_year, start_month]) >= 0 && ([year, month] <=> [Time.now.year, Time.now.month]) < 0
+end
+
 
 HERE           = File.expand_path("..", __FILE__)
 PROCESS_SCRIPT = File.expand_path("../process_asos6405.rb", __FILE__)
@@ -75,12 +85,12 @@ def connect_and_do(year, cmd)
   out
 end
 
-File.write(UNDOWNLOADABLE, "") unless ENV["START_YEAR_MONTH"] # clear the file
+File.write(UNDOWNLOADABLE, "") unless ENV["START_YEAR_MONTH"] || ENV["ONLY_YEAR_MONTHS"] # clear the file
 
 process_thread = nil
-(2000..2022).each do |year|
-  next if year < start_year
 
+years = year_months.map(&:first).uniq.sort
+years.each do |year|
   year_listing = connect_and_do(year, "ls")
 
   year_files_to_get_and_size =
@@ -99,8 +109,7 @@ process_thread = nil
       end
   end
 
-  (1..12).each do |month|
-    next if ([year, month] <=> [start_year, start_month]) < 0
+  year_months.select { |y, _| y == year }.sort.each do |_, month|
 
     puts "#{year}-#{month}"
 
