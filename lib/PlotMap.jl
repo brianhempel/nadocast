@@ -120,7 +120,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
     # projection=-Jl-100/35/33/45/0.3
     # region=-R-120.7/22.8/-63.7/47.7+r # +r makes the map square rather than weird shaped
     #
-    # gmt sphinterpolate href_20190602_t18z_w0.75_sref15z_20190602_19z-11z.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -Ghref_20190602_t18z_w0.75_sref15z_20190602_19z-11z.nc # interpolate the xyz coordinates to a grid covering roughly the HRRR's area
+    # gmt sphinterpolate href_20190602_t18z_w0.75_sref15z_20190602_19z-11z.xyz -R-134/-61/21.2/52.5 -I2k -Q0 -Ghref_20190602_t18z_w0.75_sref15z_20190602_19z-11z.nc # interpolate the xyz coordinates to a grid covering roughly the HRRR's area
     #
     # gmt begin href_20190602_t18z_w0.75_sref15z_20190602_19z-11z pdf
     #
@@ -175,22 +175,21 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
     println(f, "projection=-Jl-100/35/33/45/0.3")
     println(f, "region=-R-120.7/22.8/-63.7/47.7+r # +r makes the map square rather than weird shaped")
 
-    println(f, "gmt sphinterpolate $base_path.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
-
-    if !isnothing(sig_vals)
-      println(f, "gmt sphinterpolate $base_path-sig.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -G$base_path-sig.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
-    end
+    println(f, "gmt sphinterpolate $base_path.xyz -R-134/-61/21.2/52.5 -I2k -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
 
     println(f, "gmt begin $base_path pdf")
 
     println(f, "gmt coast \$region \$projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
     println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$colors_path  # draw the predictions using the projection")
 
+    println(f, "gmt contour $base_path.xyz \$region \$projection -An -W0.4p -C$colors_path-dark # draw outlines around each contour")
+
+    # I would use the following dump contour/draw poly method for all plotting because it's fast and pretty, but it doesn't work fill correctly when there are holes in the region.
     if !isnothing(sig_vals)
       println(f, "# Dump contour to file, then draw it as a polygon")
       println(f, "gmt contour $base_path-sig.xyz \$region \$projection -C$sig_colors_path -D$base_path-sig_contour.xy")
       println(f, "gmt psxy $base_path-sig_contour.xy \$region \$projection -Gp26+b-+r800 # pattern fill")
-      println(f, "gmt psxy $base_path-sig_contour.xy \$region \$projection -W0.4p # pen, width 0.4pt")
+      println(f, "gmt psxy $base_path-sig_contour.xy \$region \$projection -W0.5p # pen, width 0.5pt")
     end
 
     println(f, "gmt coast -Q # stop clipping")
@@ -262,7 +261,6 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
     println(f, "rm $base_path.nc")
     println(f, "rm $base_path.xyz")
     if !isnothing(sig_vals)
-      println(f, "rm $base_path-sig.nc")
       println(f, "rm $base_path-sig.xyz")
       println(f, "rm $base_path-sig_contour.xy")
     end
@@ -279,7 +277,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
   @async plot()
 
   # try
-  #   run(`gmt sphinterpolate $(base_path * ".xyz") -R-139/-58/17/58 -I1M -Q0 -G$(base_path * ".nc")`)
+  #   run(`gmt sphinterpolate $(base_path * ".xyz") -R-139/-58/17/58 -I2k -Q0 -G$(base_path * ".nc")`)
   #   # GMT sets internal working directory based on parent pid, so this is fine to run in parallel (by process).
   #   run(`gmt begin $base_path.pdf pdf`)
   #   run(`gmt grdimage $(base_path * ".nc") -nn -Jl-100/35/33/45/0.3 -C$(colors_path)`)
