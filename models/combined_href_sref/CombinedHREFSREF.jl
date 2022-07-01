@@ -39,13 +39,14 @@ _forecasts_href_newer_combined_with_sig_gated = []
 _forecasts_sref_newer_combined_with_sig_gated = []
 
 # For day, allow 0Z to 21Z runs
-_forecasts_day_accumulators   = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
-_forecasts_day                = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
-_forecasts_day_with_sig_gated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_accumulators                   = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21
+_forecasts_fourhourly_accumulators            = []
+_forecasts_day                                = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_with_sig_gated                 = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 # _forecasts_day_with_blurs_and_forecast_hour = [] # For Train.jl
-# _forecasts_day_blurred = []
-_forecasts_day_spc_calibrated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
-_forecasts_day_spc_calibrated_with_sig_gated = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+# _forecasts_day_blurred                      = []
+_forecasts_day_spc_calibrated                 = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
+_forecasts_day_spc_calibrated_with_sig_gated  = [] # HREF newer for 0Z 6Z 12Z 18Z, SREF newer for 3Z 9Z 15Z 21Z
 
 # SREF 3 hours behind HREF
 function forecasts_href_newer()
