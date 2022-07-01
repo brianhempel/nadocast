@@ -135,7 +135,7 @@ function do_forecast(forecast)
       event_name, _, _     = CombinedHREFSREF.models[model_i]
       sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
       sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
-      calibration_blurb    = is_absolutely_calibrated ? "_absolutely_calibrated" : ""
+      calibration_blurb    = is_absolutely_calibrated ? "_abs_calib" : ""
       println("ploting $(event_name)$(calibration_blurb) for f$(f_str)...")
       out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
@@ -211,7 +211,7 @@ function do_forecast(forecast)
       plot_forecast(hourly_forecast; is_hourly = true, is_absolutely_calibrated = true, pdf = false)
     end
     animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
-      out_dir_hourly * "nadocast_conus_$(event_name)_absolutely_calibrated_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
+      out_dir_hourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
     end
   else
     animation_glob_paths = []
