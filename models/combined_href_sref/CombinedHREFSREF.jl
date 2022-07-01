@@ -116,6 +116,15 @@ function forecasts_day_accumulators()
   end
 end
 
+function forecasts_fourhourly_accumulators()
+  if isempty(_forecasts_fourhourly_accumulators)
+    reload_forecasts()
+    _forecasts_fourhourly_accumulators
+  else
+    _forecasts_fourhourly_accumulators
+  end
+end
+
 function forecasts_day()
   if isempty(_forecasts_day)
     reload_forecasts()
@@ -220,6 +229,7 @@ function reload_forecasts()
   global _forecasts_href_newer_combined_with_sig_gated
   global _forecasts_sref_newer_combined_with_sig_gated
   global _forecasts_day_accumulators
+  global _forecasts_fourhourly_accumulators
   global _forecasts_day
   global _forecasts_day_with_sig_gated
   # global _forecasts_day_with_blurs_and_forecast_hour
@@ -374,7 +384,8 @@ function reload_forecasts()
   run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined))
 
   run_date = Dates.Date(2019, 1, 9)
-  associated_forecasts = []
+  associated_fourhourly_forecasts = []
+  associated_forecasts_in_day = []
   while run_date <= Dates.Date(Dates.now(Dates.UTC))
     run_year  = Dates.year(run_date)
     run_month = Dates.month(run_date)
@@ -385,12 +396,18 @@ function reload_forecasts()
 
       forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
 
+      for forecast_hour in 3:47 # never more than 35 in practice...
+        forecast_hours_in_fourhourly_period = forecast_hour-3 : forecast_hour
+        forecasts_for_fourhourly_period = filter(forecast -> forecast.forecast_hour in forecast_hours_in_fourhourly_period, forecasts_for_run_time)
+        if length(forecasts_for_fourhourly_period) == 4
+          push!(associated_fourhourly_forecasts, forecasts_for_fourhourly_period)
+        end
+      end
+
       forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
-
       forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
-
-      if (length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day))
-        push!(associated_forecasts, forecasts_for_convective_day)
+      if length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day)
+        push!(associated_forecasts_in_day, forecasts_for_convective_day)
       end
 
       # 1. Try both independent events total prob and max hourly prob as the main descriminator
@@ -410,9 +427,9 @@ function reload_forecasts()
 
   # Which run time and forecast hour to use for the set.
   # Namely: latest run time, then longest forecast hour
-  choose_canonical_forecast(day_hourlies) = begin
-    canonical = day_hourlies[1]
-    for forecast in day_hourlies
+  choose_canonical_forecast(associated_hourlies) = begin
+    canonical = associated_hourlies[1]
+    for forecast in associated_hourlies
       if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
         canonical = forecast
       end
@@ -420,9 +437,10 @@ function reload_forecasts()
     canonical
   end
 
-  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts_in_day,     forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  fourhourly_predictions = ForecastCombinators.concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
-  day_inventory_transformer(base_forecast, base_inventory) = begin
+  hourlies_to_accs_inventory_transformer(base_forecast, base_inventory) = begin
     out = Inventories.InventoryLine[]
     for model_i in 1:event_types_count
       event_name, var_name, model_name = models[model_i] # event_name == model_name here
@@ -432,7 +450,7 @@ function reload_forecasts()
     out
   end
 
-  day_data_transformer(base_forecast, base_data) = begin
+  hourlies_to_accs_data_transformer(base_forecast, base_data) = begin
     point_count, base_feature_count = size(base_data)
     hours_count = div(base_feature_count, event_types_count)
 
@@ -461,7 +479,8 @@ function reload_forecasts()
 
   # Caching barely helps load times, so we don't do it
 
-  _forecasts_day_accumulators = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = day_inventory_transformer, data_transformer = day_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
+  _forecasts_day_accumulators        = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer, data_transformer = hourlies_to_accs_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
+  _forecasts_fourhourly_accumulators = ForecastCombinators.map_forecasts(fourhourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer, data_transformer = hourlies_to_accs_data_transformer, model_name = "Four-hourly_severe_probability_accumulators_from_CombinedHREFSREF_hours")
 
   event_to_0z_day_bins = Dict{String, Vector{Float32}}(
     "tornado"     => [0.018898962, 0.061602164, 0.13501288, 1.0],
