@@ -93,7 +93,7 @@ end
 # Requires GMT >=6
 #
 # For daily forecast, provide a multi-hour range for forecast_hour_range
-function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_utc=nothing, forecast_hour_range=nothing, hrrr_run_hours=Int64[], rap_run_hours=Int64[], href_run_hours=Int64[], sref_run_hours=Int64[], event_title="Tor")
+function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_utc=nothing, forecast_hour_range=nothing, hrrr_run_hours=Int64[], rap_run_hours=Int64[], href_run_hours=Int64[], sref_run_hours=Int64[], event_title="Tor", models_str="2021 Models")
   open(base_path * ".xyz", "w") do f
     # lon lat val
     DelimitedFiles.writedlm(f, map(i -> (grid.latlons[i][2], grid.latlons[i][1], vals[i]), 1:length(vals)), '\t')
@@ -242,7 +242,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
         end
         println(f, "L 4pt,Helvetica C $sources_str")
       end
-      println(f, "L 4pt,Helvetica C 2021 Models")
+      println(f, "L 4pt,Helvetica C $models_str")
       println(f, "L 4pt,Helvetica,gray C @_nadocast.com@_")
       println(f, "EOF")
     end

@@ -167,6 +167,7 @@ function do_forecast(forecast)
           prediction;
           sig_vals = sig_prediction,
           event_title = Dict("tornado" => "Tor", "wind" => "Wind", "hail" => "Hail")[event_name],
+          models_str = "2021 Models$(is_absolutely_calibrated ? ", Absolutely Calibrated" : "")",
           run_time_utc = nadocast_run_time_utc,
           forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
           hrrr_run_hours = hrrr_run_hours,
@@ -181,6 +182,7 @@ function do_forecast(forecast)
           forecast.grid,
           sig_prediction;
           event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_hail" => "Sighail")[sig_event_name],
+          models_str = "2021 Models$(is_absolutely_calibrated ? ", Absolutely Calibrated" : "")",
           run_time_utc = nadocast_run_time_utc,
           forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
           hrrr_run_hours = hrrr_run_hours,
