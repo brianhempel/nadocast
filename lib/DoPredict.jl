@@ -201,7 +201,7 @@ function do_forecast(forecast)
   end
 
   plot_forecast(forecast; is_hourly = false)
-  plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_absolutely_calibrated = true, draw = true)
+  plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
   if get(ENV, "HRRR_RAP", "true") == "false"
     run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
