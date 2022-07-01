@@ -26,6 +26,23 @@ struct Forecast
   preload_paths  :: Vector{String}                                    # For warming up disk caches etc.
 end
 
+function run_year_month_day_hour(forecast :: Forecast) :: Tuple{Int64, Int64, Int64, Int64}
+  ( forecast.run_year
+  , forecast.run_month
+  , forecast.run_day
+  , forecast.run_hour
+  )
+end
+
+function run_year_month_day_hour_forecast_hour(forecast :: Forecast) :: Tuple{Int64, Int64, Int64, Int64, Int64}
+  ( forecast.run_year
+  , forecast.run_month
+  , forecast.run_day
+  , forecast.run_hour
+  , forecast.forecast_hour
+  )
+end
+
 function time_in_seconds_since_epoch_utc(run_year :: Int64, run_month :: Int64, run_day :: Int64, run_hour :: Int64, forecast_hour = 0) :: Int64
   Int64(Dates.datetime2unix(Dates.DateTime(run_year, run_month, run_day, run_hour))) + forecast_hour*HOUR
 end

@@ -27,13 +27,15 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-forecasts =
+forecasts, absolutely_calibrated_forecasts =
   if get(ENV, "HRRR_RAP", "true") == "false"
-    CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated()
+    (CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated())
   else
-    Forecasts.Forecast[]
+    (Forecasts.Forecast[], Forecasts.Forecast[])
     # [CombinedHREFSREF.forecasts_day_spc_calibrated(); CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()]
   end;
+
+
 
 if haskey(ENV, "FORECAST_DATE")
   year, month, day = map(str -> parse(Int64, str), split(ENV["FORECAST_DATE"], "-"))
@@ -78,6 +80,11 @@ end
 
 function do_forecast(forecast)
 
+  run_year_month_day_hour_forecast_hour = Forecasts.run_year_month_day_hour_forecast_hour(forecast)
+  absolutely_calibrated_forecast = filter(absolutely_calibrated_forecasts) do f
+    Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
+  end[1]
+
   plotting_paths = []
   daily_paths_to_perhaps_tweet = []
   rsync_dirs = []
@@ -96,7 +103,7 @@ function do_forecast(forecast)
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
 
-  function plot_forecast(forecast; is_hourly)
+  function plot_forecast(forecast; is_hourly, is_absolutely_calibrated = false, draw = true, pdf = true)
 
     # Follows Forecasts.based_on to return a list of forecasts with the given model_name
     function model_parts(forecast, model_name)
@@ -128,9 +135,10 @@ function do_forecast(forecast)
       event_name, _, _     = CombinedHREFSREF.models[model_i]
       sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
       sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
-      println("ploting $event_name for f$(f_str)...")
-      out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-      sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+      calibration_blurb    = is_absolutely_calibrated ? "_absolutely_calibrated" : ""
+      println("ploting $(event_name)$(calibration_blurb) for f$(f_str)...")
+      out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+      sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       period_path          = out_path_prefix     * "_f$(f_str)"
       sig_period_path      = sig_out_path_prefix * "_f$(f_str)"
       # write(period_path * ".float16.bin", Float16.(prediction))
@@ -152,57 +160,58 @@ function do_forecast(forecast)
         out_name = sig_period_path * ".grib2",
       )
 
-      PlotMap.plot_map(
-        period_path,
-        forecast.grid,
-        prediction;
-        sig_vals = sig_prediction,
-        event_title = Dict("tornado" => "Tor", "wind" => "Wind", "hail" => "Hail")[event_name],
-        run_time_utc = nadocast_run_time_utc,
-        forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
-        hrrr_run_hours = hrrr_run_hours,
-        rap_run_hours  = rap_run_hours,
-        href_run_hours = href_run_hours,
-        sref_run_hours = sref_run_hours,
-        pdf = !is_hourly
-      )
-      push!(plotting_paths, period_path)
-      PlotMap.plot_map(
-        sig_period_path,
-        forecast.grid,
-        sig_prediction;
-        event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_hail" => "Sighail")[sig_event_name],
-        run_time_utc = nadocast_run_time_utc,
-        forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
-        hrrr_run_hours = hrrr_run_hours,
-        rap_run_hours  = rap_run_hours,
-        href_run_hours = href_run_hours,
-        sref_run_hours = sref_run_hours,
-        pdf = !is_hourly
-      )
-      push!(plotting_paths, sig_period_path)
+      if draw
+        PlotMap.plot_map(
+          period_path,
+          forecast.grid,
+          prediction;
+          sig_vals = sig_prediction,
+          event_title = Dict("tornado" => "Tor", "wind" => "Wind", "hail" => "Hail")[event_name],
+          run_time_utc = nadocast_run_time_utc,
+          forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+          hrrr_run_hours = hrrr_run_hours,
+          rap_run_hours  = rap_run_hours,
+          href_run_hours = href_run_hours,
+          sref_run_hours = sref_run_hours,
+          pdf = pdf
+        )
+        push!(plotting_paths, period_path)
+        PlotMap.plot_map(
+          sig_period_path,
+          forecast.grid,
+          sig_prediction;
+          event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_hail" => "Sighail")[sig_event_name],
+          run_time_utc = nadocast_run_time_utc,
+          forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
+          hrrr_run_hours = hrrr_run_hours,
+          rap_run_hours  = rap_run_hours,
+          href_run_hours = href_run_hours,
+          sref_run_hours = sref_run_hours,
+          pdf = pdf
+        )
+        push!(plotting_paths, sig_period_path)
+      end
 
-      if event_name == "tornado" && is_hourly == false
+      if event_name == "tornado" && !is_hourly && !is_absolutely_calibrated
         push!(daily_paths_to_perhaps_tweet, period_path)
       end
     end
   end
 
   plot_forecast(forecast; is_hourly = false)
+  plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_absolutely_calibrated = true, draw = true)
 
   if get(ENV, "HRRR_RAP", "true") == "false"
+    run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
     hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
-      hourly_forecast.run_year  == forecast.run_year  &&
-      hourly_forecast.run_month == forecast.run_month &&
-      hourly_forecast.run_day   == forecast.run_day   &&
-      hourly_forecast.run_hour  == forecast.run_hour
+      Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour
     end
     hourly_forecasts = sort(hourly_forecasts; by=(f -> f.forecast_hour))
     for hourly_forecast in hourly_forecasts
-      plot_forecast(hourly_forecast; is_hourly = true)
+      plot_forecast(hourly_forecast; is_hourly = true, is_absolutely_calibrated = true, pdf = false)
     end
     animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
-      out_dir_hourly * "nadocast_conus_$(event_name)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
+      out_dir_hourly * "nadocast_conus_$(event_name)_absolutely_calibrated_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
     end
   else
     animation_glob_paths = []
