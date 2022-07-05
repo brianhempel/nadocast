@@ -463,7 +463,7 @@ event_name_to_day_labeler = Dict(
   "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
 )
 
-# rm("day_validation_forecasts_0z"; recursive = true)
+# rm("day_validation_forecasts_0z_with_sig_gated"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
@@ -476,7 +476,6 @@ X, Ys, weights =
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  # Feature order is all HREF severe probs then all SREF severe probs
   for feature_i in 1:length(inventory)
     prediction_i = feature_i
     (event_name, _, model_name) = CombinedHREFSREF.models_with_gated[prediction_i]
@@ -517,6 +516,81 @@ test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
 # sig_tornado_gated_by_tornado (1138.0)  feature 7 STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.08848865823430829 (not worse)
 # sig_wind_gated_by_wind       (7555.0)  feature 8 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind    AU-PR-curve: 0.08279453700032868
 # sig_hail_gated_by_hail       (3887.0)  feature 9 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail    AU-PR-curve: 0.07167567544365759
+
+
+function test_predictive_power_all(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
+
+  event_names = unique(map(first, CombinedHREFSREF.models_with_gated))
+
+  # Feature order is all HREF severe probs then all SREF severe probs
+  for event_name in event_names
+    for feature_i in 1:length(inventory)
+      prediction_i = feature_i
+      (_, _, model_name) = CombinedHREFSREF.models_with_gated[prediction_i]
+      x = @view X[:,feature_i]
+      y = Ys[event_name]
+      au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+      println("$event_name ($(round(sum(y)))) feature $feature_i $model_name $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+    end
+  end
+end
+test_predictive_power_all(day_validation_forecasts_0z, X, Ys, weights)
+
+# tornado (8326.0)     feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.1282209032860132
+# tornado (8326.0)     feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.04732475800518112
+# tornado (8326.0)     feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.0339861586064038
+# tornado (8326.0)     feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.11354375124612497
+# tornado (8326.0)     feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.04459240364825072
+# tornado (8326.0)     feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.034606936188546086
+# tornado (8326.0)     feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.11493414538242039
+# tornado (8326.0)     feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.04460273433204098
+# tornado (8326.0)     feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.03462280395968384
+# wind (63336.0)       feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.22089828570139206
+# wind (63336.0)       feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.40661148740938
+# wind (63336.0)       feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.15709995382179076
+# wind (63336.0)       feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.2041958973994816
+# wind (63336.0)       feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.30328126499935354
+# wind (63336.0)       feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.1235252528946495
+# wind (63336.0)       feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.20551911780837648
+# wind (63336.0)       feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.30337063802019065
+# wind (63336.0)       feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.12360930749052748
+# hail (28152.0)       feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.09398262996782632
+# hail (28152.0)       feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.09154321042267055
+# hail (28152.0)       feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.2418397986132723
+# hail (28152.0)       feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.08277889336965975
+# hail (28152.0)       feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.09804952096183232
+# hail (28152.0)       feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.18950324759485923
+# hail (28152.0)       feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.08293647789688759
+# hail (28152.0)       feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.09808661640778452
+# hail (28152.0)       feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.18967656144171155
+# sig_tornado (1138.0) feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.06041743003588988
+# sig_tornado (1138.0) feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.013325360966308942
+# sig_tornado (1138.0) feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.00533633718947968
+# sig_tornado (1138.0) feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.08536426405725345
+# sig_tornado (1138.0) feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.010622012320281402
+# sig_tornado (1138.0) feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.005855293276099606
+# sig_tornado (1138.0) feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.08848865823430829
+# sig_tornado (1138.0) feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.010622744401640164
+# sig_tornado (1138.0) feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.005861561543487743
+# sig_wind (7555.0)    feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.03874712794642739
+# sig_wind (7555.0)    feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.0547703704664618
+# sig_wind (7555.0)    feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.03027950059212661
+# sig_wind (7555.0)    feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.03517850327738662
+# sig_wind (7555.0)    feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.0827883454964689
+# sig_wind (7555.0)    feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.026815068269763223
+# sig_wind (7555.0)    feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.03541232905664782
+# sig_wind (7555.0)    feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.08279453700032868
+# sig_wind (7555.0)    feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.026840688278534006
+# sig_hail (3887.0)    feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.01878808917978697
+# sig_hail (3887.0)    feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.01229898477844842
+# sig_hail (3887.0)    feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.0767373527800814 (nice, the hail predictor is better at predicting sig_hail)
+# sig_hail (3887.0)    feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.015452677450187456
+# sig_hail (3887.0)    feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.01806388715156955
+# sig_hail (3887.0)    feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.07163298981221203
+# sig_hail (3887.0)    feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.015517669027858151
+# sig_hail (3887.0)    feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.018068098872738927
+# sig_hail (3887.0)    feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.07167567544365759
 
 
 # rm("day_accumulators_validation_forecasts_0z"; recursive = true)
@@ -1228,7 +1302,6 @@ X, Ys, weights =
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  # Feature order is all HREF severe probs then all SREF severe probs
   for feature_i in 1:length(inventory)
     prediction_i = feature_i
     (event_name, _, model_name) = CombinedHREFSREF.models_with_gated[prediction_i]
