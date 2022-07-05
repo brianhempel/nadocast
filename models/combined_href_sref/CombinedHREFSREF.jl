@@ -144,6 +144,24 @@ function forecasts_day_with_sig_gated()
   end
 end
 
+function forecasts_fourhourly()
+  if isempty(_forecasts_fourhourly)
+    reload_forecasts()
+    _forecasts_fourhourly
+  else
+    _forecasts_fourhourly
+  end
+end
+
+function forecasts_fourhourly_with_sig_gated()
+  if isempty(_forecasts_fourhourly_with_sig_gated)
+    reload_forecasts()
+    _forecasts_fourhourly_with_sig_gated
+  else
+    _forecasts_fourhourly_with_sig_gated
+  end
+end
+
 # function forecasts_day_with_blurs_and_forecast_hour()
 #   if isempty(_forecasts_day_with_blurs_and_forecast_hour)
 #     reload_forecasts()
@@ -233,6 +251,8 @@ function reload_forecasts()
   global _forecasts_fourhourly_accumulators
   global _forecasts_day
   global _forecasts_day_with_sig_gated
+  global _forecasts_fourhourly
+  global _forecasts_fourhourly_with_sig_gated
   # global _forecasts_day_with_blurs_and_forecast_hour
   # global _forecasts_day_blurred
   global _forecasts_day_spc_calibrated
@@ -441,12 +461,12 @@ function reload_forecasts()
   day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts_in_day,     forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
   fourhourly_predictions = ForecastCombinators.concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
-  hourlies_to_accs_inventory_transformer(base_forecast, base_inventory) = begin
+  hourlies_to_accs_inventory_transformer(day_or_four_hour_str) = (base_forecast, base_inventory) -> begin
     out = Inventories.InventoryLine[]
     for model_i in 1:event_types_count
       event_name, var_name, model_name = models[model_i] # event_name == model_name here
-      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(var_name)", "calculated", "day fcst", "", ""))
-      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(var_name)", "calculated", "day fcst", "", ""))
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(var_name)", "calculated", "$day_or_four_hour_str fcst", "", ""))
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(var_name)",           "calculated", "$day_or_four_hour_str fcst", "", ""))
     end
     out
   end
@@ -480,8 +500,8 @@ function reload_forecasts()
 
   # Caching barely helps load times, so we don't do it
 
-  _forecasts_day_accumulators        = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer, data_transformer = hourlies_to_accs_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
-  _forecasts_fourhourly_accumulators = ForecastCombinators.map_forecasts(fourhourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer, data_transformer = hourlies_to_accs_data_transformer, model_name = "Four-hourly_severe_probability_accumulators_from_CombinedHREFSREF_hours")
+  _forecasts_day_accumulators        = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("day"),    data_transformer = hourlies_to_accs_data_transformer, model_name = "Day_severe_probability_accumulators_from_CombinedHREFSREF_hours")
+  _forecasts_fourhourly_accumulators = ForecastCombinators.map_forecasts(fourhourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("4 hour"), data_transformer = hourlies_to_accs_data_transformer, model_name = "Four-hourly_severe_probability_accumulators_from_CombinedHREFSREF_hours")
 
   event_to_0z_day_bins = Dict{String, Vector{Float32}}(
     "tornado"     => [0.018898962, 0.061602164, 0.13501288, 1.0],
@@ -500,8 +520,25 @@ function reload_forecasts()
     "sig_hail"    => [[1.9733405,  -0.7847382,  -0.51065785], [1.3154331,   -0.7666408,  -2.8496652],  [1.3292868,  -0.31144178, -0.6903727]],
   )
 
+  event_to_fourhourly_bins = Dict{String, Vector{Float32}}(
+    "tornado"     => [0.00753908,  0.030358605, 0.08693349, 1.0],
+    "wind"        => [0.043117322, 0.12710203,  0.2744185,  1.0],
+    "hail"        => [0.020449053, 0.0625404,   0.15308933, 1.0],
+    "sig_tornado" => [0.00470224,  0.022806743, 0.08246323, 1.0],
+    "sig_wind"    => [0.00543831,  0.021594528, 0.05260824, 1.0],
+    "sig_hail"    => [0.006030224, 0.016691525, 0.04071429, 1.0],
+  )
+  event_to_fourhourly_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"     => [[1.1338079,  -0.12365579, -0.21844162], [1.2712703,  -0.23105474,  -0.21188106], [0.88705343, 0.104377,     -0.08031504]],
+    "wind"        => [[0.94788873, 0.04973387,  -0.11124777], [1.0852667,  -0.08753359,  -0.23767674], [1.080012,   -0.108289875, -0.3081989]],
+    "hail"        => [[0.9889517,  0.015257805, -0.10187187], [1.1896296,  -0.2049748,   -0.39164874], [1.1730652,  -0.2797999,   -0.66866827]],
+    "sig_tornado" => [[1.5224317,  -0.49362254, -0.39044833], [0.96165395, -0.110244565, -0.8577433],  [0.94144565, 0.13474676,   0.0427606]],
+    "sig_wind"    => [[0.9259525,  0.06745399,  -0.08790273], [0.97327083, 0.05183811,   0.023566378], [0.9228902,  0.17639892,   0.3989572]],
+    "sig_hail"    => [[1.326802,   -0.31069145, -0.27217078], [1.4527221,  -0.5298689,   -0.9338967],  [1.1630019,  -0.154732,    -0.25065106]],
+  )
+
   # Returns array of (event_name, var_name, predict)
-  function make_day_models(event_to_day_bins, event_to_day_bins_logistic_coeffs)
+  function make_acc_models(event_to_bins, event_to_bins_logistic_coeffs)
     ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
     map(1:event_types_count) do model_i
@@ -513,8 +550,8 @@ function reload_forecasts()
 
         out = Array{Float32}(undef, length(total_prob_ŷs))
 
-        bin_maxes            = event_to_day_bins[model_name]
-        bins_logistic_coeffs = event_to_day_bins_logistic_coeffs[model_name]
+        bin_maxes            = event_to_bins[model_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
 
         @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
@@ -527,7 +564,7 @@ function reload_forecasts()
             # Bin 1-2 predictor only
             ŷ = predict_one(bins_logistic_coeffs[1], total_prob_ŷ, max_hourly_ŷ)
           elseif total_prob_ŷ > bin_maxes[length(bin_maxes) - 1]
-            # Bin 5-6 predictor only
+            # Bin 3-4 predictor only
             ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], total_prob_ŷ, max_hourly_ŷ)
           else
             # Overlapping bins
@@ -551,9 +588,13 @@ function reload_forecasts()
   end
 
   # We only ever use the 0Z forecasts (normally) but here we are using the 0Z calibration non-0Z runs too
-  day_models = make_day_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
+  day_models = make_acc_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
   _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
   _forecasts_day_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day, models, gated_models; model_name = "CombinedHREFSREF_day_severe_probabilities_with_sig_gated")
+
+  fourhourly_models = make_acc_models(event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs)
+  _forecasts_fourhourly = PredictionForecasts.simple_prediction_forecasts(_forecasts_fourhourly_accumulators, fourhourly_models; model_name = "CombinedHREFSREF_four-hourly_severe_probabilities")
+  _forecasts_fourhourly_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "CombinedHREFSREF_four-hourly_severe_probabilities_with_sig_gated")
 
   # _forecasts_day_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts_day, blur_radii)
 
