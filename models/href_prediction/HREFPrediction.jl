@@ -27,6 +27,10 @@ _forecasts_calibrated = []
 _forecasts_calibrated_with_sig_gated = []
 
 
+σ(x) = 1.0f0 / (1.0f0 + exp(-x))
+
+logit(p) = log(p / (one(p) - p))
+
 blur_radii = [15, 25, 35, 50, 70, 100]
 
 
