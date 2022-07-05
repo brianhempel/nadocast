@@ -23,12 +23,12 @@ import HREF
 _forecasts = [] # Raw, unblurred predictions
 _forecasts_with_blurs_and_forecast_hour = [] # For Train.jl
 _forecasts_blurred = [] # For downstream combination with other forecasts
+_forecasts_calibrated = []
+_forecasts_calibrated_with_sig_gated = []
+
 
 blur_radii = [15, 25, 35, 50, 70, 100]
 
-# # Determined in Train.jl
-blur_radius_f2  = 1
-blur_radius_f35 = 1
 
 function forecasts()
   if isempty(_forecasts)
@@ -65,6 +65,24 @@ function forecasts_blurred()
   end
 end
 
+function forecasts_calibrated()
+  if isempty(_forecasts_calibrated)
+    reload_forecasts()
+    _forecasts_calibrated
+  else
+    _forecasts_calibrated
+  end
+end
+
+function forecasts_calibrated_with_sig_gated()
+  if isempty(_forecasts_calibrated_with_sig_gated)
+    reload_forecasts()
+    _forecasts_calibrated_with_sig_gated
+  else
+    _forecasts_calibrated_with_sig_gated
+  end
+end
+
 
 # (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f13_to_f24, gbdt_f24_to_f35)
 models = [
@@ -94,10 +112,22 @@ models = [
   ),
 ]
 
+# (gated_event_name, original_event_name, gate_event_name)
+gated_models =
+  [
+    ("sig_tornado_gated_by_tornado", "sig_tornado", "tornado"),
+    ("sig_wind_gated_by_wind",       "sig_wind",    "wind"),
+    ("sig_hail_gated_by_hail",       "sig_hail",    "hail"),
+  ]
+
+
 function reload_forecasts()
   global _forecasts
   global _forecasts_with_blurs_and_forecast_hour
   global _forecasts_blurred
+  global _forecasts_calibrated
+  global _forecasts_calibrated_with_sig_gated
+
 
   _forecasts = []
 
@@ -163,6 +193,81 @@ function reload_forecasts()
   ]
 
   _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:35, blur_grid_is)
+
+
+  # Calibrating hourly predictions to validation data so we can make HREF-only day 2 forecasts.
+
+  event_to_bins = Dict{String, Vector{Float32}}(
+    "tornado"     => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+    "wind"        => [0.007293307,   0.019115837,  0.036141146,  0.06361171,  0.11529552,  1.0],
+    "hail"        => [0.0032933427,  0.00916807,   0.019258574,  0.03614172,  0.07324672,  1.0],
+    "sig_tornado" => [0.00064585934, 0.0025964007, 0.005882601,  0.011497159, 0.023939667, 1.0],
+    "sig_wind"    => [0.0007026063,  0.002175051,  0.0047103437, 0.008226235, 0.014878796, 1.0],
+    "sig_hail"    => [0.00071826525, 0.0020554834, 0.004203511,  0.008379867, 0.01785916,  1.0],
+  )
+  event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"     => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+    "wind"        => [[1.0835536,  0.3302101],   [1.1271127, 0.5125384],    [1.0838023,  0.35807598],   [1.0530577,  0.26911345], [0.9993558, 0.12850402]],
+    "hail"        => [[1.0387952,  0.27688286],  [0.9819013, -0.041472256], [1.1090772,  0.4985385],    [0.98798597, 0.05851983], [1.0764973, 0.31471553]],
+    "sig_tornado" => [[0.92174333, -0.7631738],  [1.226332,  1.2883613],    [1.3703138,  2.0596972],    [1.2036767,  1.2354493],  [1.2170192, 1.2941704]],
+    "sig_wind"    => [[1.0980748,  0.74092144],  [1.0278105, 0.2092408],    [1.3354824,  1.9728225],    [1.0461866,  0.5070991],  [0.8209114, -0.47899055]],
+    "sig_hail"    => [[1.1735471,  1.4033803],   [1.0141681, 0.25384367],   [0.83706397, -0.7718604],   [0.9086216,  -0.3855668], [0.8945266, -0.3957873]],
+  )
+
+  # Returns array of (event_name, var_name, predict)
+  function make_models(event_to_bins, event_to_bins_logistic_coeffs)
+    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+
+    map(1:length(models)) do model_i
+      event_name, var_name, model_name = models[model_i] # event_name == model_name here
+
+      predict(forecasts, data) = begin
+        href_ŷs = @view data[:,model_i]
+
+        out = Array{Float32}(undef, length(href_ŷs))
+
+        bin_maxes            = event_to_bins[model_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
+
+        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+
+        predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
+
+        Threads.@threads for i in 1:length(href_ŷs)
+          href_ŷ = href_ŷs[i]
+          if href_ŷ <= bin_maxes[1]
+            # Bin 1-2 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
+          elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
+            # Bin 5-6 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
+          else
+            # Overlapping bins
+            higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
+            lower_bin_i  = higher_bin_i - 1
+            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+
+            # Bin 1-2 and 2-3 predictors
+            ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+            ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
+          end
+          out[i] = ŷ
+        end
+
+        out
+      end
+
+      (event_name, var_name, predict)
+    end
+  end
+
+  hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
+
+  _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_severe_probabilities")
+  _forecasts_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_calibrated, models, gated_models; model_name = "HREF_hour_severe_probabilities_with_sig_gated")
+
+
 
   ()
 end

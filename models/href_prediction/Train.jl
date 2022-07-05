@@ -1483,7 +1483,7 @@ println()
 # Now go back to HREFPrediction.jl and put those numbers in
 
 
-# CHECKING that the blurred forecasts are corrected
+# CHECKING that the blurred forecasts are correct
 
 # Run this file in a Julia REPL bit by bit.
 #
@@ -1549,3 +1549,334 @@ test_predictive_power(validation_forecasts_blurred, X, Ys, weights)
 # sig_hail (30597.0)   feature 6 SHAILPRO:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.015588201
 
 # Yay!
+
+
+
+
+# To make HREF-only day 2 predictions, we need to calibrate the hourlies
+
+const bin_count = 6
+
+function find_ŷ_bin_splits(event_name, prediction_i, X, Ys, weights)
+  y = Ys[event_name]
+
+  total_positive_weight = sum(Float64.(y .* weights))
+  per_bin_pos_weight = total_positive_weight / bin_count
+
+  ŷ              = @view X[:,prediction_i]; # HREF prediction for event_name
+  sort_perm      = Metrics.parallel_sort_perm(ŷ);
+  y_sorted       = Metrics.parallel_apply_sort_perm(y, sort_perm);
+  ŷ_sorted       = Metrics.parallel_apply_sort_perm(ŷ, sort_perm);
+  weights_sorted = Metrics.parallel_apply_sort_perm(weights, sort_perm);
+
+  bins_Σŷ      = zeros(Float64, bin_count)
+  bins_Σy      = zeros(Float64, bin_count)
+  bins_Σweight = zeros(Float64, bin_count)
+  bins_max     = ones(Float32, bin_count)
+
+  bin_i = 1
+  for i in 1:length(y_sorted)
+    if ŷ_sorted[i] > bins_max[bin_i]
+      bin_i += 1
+    end
+
+    bins_Σŷ[bin_i]      += Float64(ŷ_sorted[i] * weights_sorted[i])
+    bins_Σy[bin_i]      += Float64(y_sorted[i] * weights_sorted[i])
+    bins_Σweight[bin_i] += Float64(weights_sorted[i])
+
+    if bins_Σy[bin_i] >= per_bin_pos_weight
+      bins_max[bin_i] = ŷ_sorted[i]
+    end
+  end
+
+  println("event_name\tmean_y\tmean_ŷ\tΣweight\tbin_max")
+  for bin_i in 1:bin_count
+    Σŷ      = bins_Σŷ[bin_i]
+    Σy      = bins_Σy[bin_i]
+    Σweight = bins_Σweight[bin_i]
+
+    mean_ŷ = Σŷ / Σweight
+    mean_y = Σy / Σweight
+
+    println("$event_name\t$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
+  end
+
+  bins_max
+end
+
+event_to_bins = Dict{String,Vector{Float32}}()
+for prediction_i in 1:length(HREFPrediction.models)
+  (event_name, _, _, _, _) = HREFPrediction.models[prediction_i]
+
+  event_to_bins[event_name] = find_ŷ_bin_splits(event_name, prediction_i, X, Ys, weights)
+
+  # println("event_to_bins[\"$event_name\"] = $(event_to_bins[event_name])")
+end
+
+# event_name  mean_y                 mean_ŷ                 Σweight              bin_max
+# tornado     1.529606123529999e-5   1.4148039907265803e-5  6.973074100372117e8  0.0009693373
+# tornado     0.0018216224618967571  0.0019498115061567457  5.8549051383398175e6 0.003943406
+# tornado     0.00568073556699246    0.006123562364300988   1.8775200630750656e6 0.009779687
+# tornado     0.01318227137856676    0.014068343842865035   809092.026733458     0.021067958
+# tornado     0.02940509128244388    0.02939055385222918    362711.1334466934    0.04314823
+# tornado     0.07456508720599171    0.06506041208349338    143007.95882487297   1.0
+# wind        0.00012590116795742026 0.00015252209584833615 6.924477708026028e8  0.007293307
+# wind        0.011309064551886225   0.011832892523891256   7.7088925327656865e6 0.019115837
+# wind        0.027523318115127964   0.026062746069332173   3.1674831753054857e6 0.036141146
+# wind        0.05239926109230082    0.04730908940138771    1.663765046367824e6  0.06361171
+# wind        0.09553100258326357    0.08368232783656926    912586.2284119129    0.11529552
+# wind        0.19195656196864078    0.17572405890161805    454148.5604224205    1.0
+# hail        5.455856829572775e-5   5.38953508157325e-5    6.947669272917984e8  0.0032933427
+# hail        0.005850972375548683   0.005511708615476839   6.478618584934175e6  0.00916807
+# hail        0.013514867701920667   0.013147210460493839   2.804765588622153e6  0.019258574
+# hail        0.028805758077871106   0.025951271127335626   1.3159078453031182e6 0.03614172
+# hail        0.054098382334513286   0.049773531285174734   700688.3589830399    0.07324672
+# hail        0.13172348234093761    0.1143075361693153     287738.6857646704    1.0
+# sig_tornado 2.0793742105664814e-6  2.2139589759300784e-6  7.043884747808976e8  0.00064585934
+# sig_tornado 0.0010718664930749002  0.0012829256036335735  1.3670102717869878e6 0.0025964007
+# sig_tornado 0.0039006527533272956  0.003821656631232155   375477.0924088359    0.005882601
+# sig_tornado 0.010550654775277396   0.00801411081504029    138817.35471099615   0.011497159
+# sig_tornado 0.023014612104714758   0.01584936109599417    63638.565164387226   0.023939667
+# sig_tornado 0.06891064626011477    0.0379987235956591     21228.28565776348    1.0
+# sig_wind    1.2794419283396139e-5  1.3774982586939223e-5  6.946559299164902e8  0.0007026063
+# sig_wind    0.0012679894529567756  0.001236753060875541   7.008705636615396e6  0.002175051
+# sig_wind    0.0033220323538792527  0.0031620202598151613  2.675361352635026e6  0.0047103437
+# sig_wind    0.008096499223348373   0.006150974523453701   1.097703709167838e6  0.008226235
+# sig_wind    0.01444389469749182    0.010793573909811303   615320.4450896978    0.014878796
+# sig_wind    0.02945443889145807    0.02412952268810448    301625.2910477519    1.0
+# sig_hail    6.76781241931757e-6    7.11150700002389e-6    7.003515833429558e8  0.00071826525
+# sig_hail    0.001425119899308227   0.0012175292279273196  3.3260057993766665e6 0.0020554834
+# sig_hail    0.0034634791264424344  0.0029141941909888456  1.3684366065796614e6 0.004203511
+# sig_hail    0.0062328488670805315  0.005841556421350675   760383.5147241354    0.008379867
+# sig_hail    0.01221663751689759    0.011808751415596546   387974.286046505     0.01785916
+# sig_hail    0.029554956639004617   0.029523741209696606   160262.80071800947   1.0
+
+println(event_to_bins)
+# Dict{String, Vector{Float32}}("sig_hail" => [0.00071826525, 0.0020554834, 0.004203511, 0.008379867, 0.01785916, 1.0], "hail" => [0.0032933427, 0.00916807, 0.019258574, 0.03614172, 0.07324672, 1.0], "tornado" => [0.0009693373, 0.003943406, 0.009779687, 0.021067958, 0.04314823, 1.0], "sig_tornado" => [0.00064585934, 0.0025964007, 0.005882601, 0.011497159, 0.023939667, 1.0], "sig_wind" => [0.0007026063, 0.002175051, 0.0047103437, 0.008226235, 0.014878796, 1.0], "wind" => [0.007293307, 0.019115837, 0.036141146, 0.06361171, 0.11529552, 1.0])
+
+
+# 4. combine bin-pairs (overlapping, 5 bins total)
+# 5. train a logistic regression for each bin, σ(a1*logit(HREF) + b)
+
+import LogisticRegression
+
+const ε = 1f-7 # Smallest Float32 power of 10 you can add to 1.0 and not round off to 1.0
+logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
+
+σ(x) = 1.0f0 / (1.0f0 + exp(-x))
+
+logit(p) = log(p / (one(p) - p))
+
+function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
+  y = Ys[event_name]
+  ŷ = @view X[:,prediction_i]; # HREF prediction for event_name
+
+  bins_max = event_to_bins[event_name]
+  bins_logistic_coeffs = []
+
+  # Paired, overlapping bins
+  for bin_i in 1:(bin_count - 1)
+    bin_min = bin_i >= 2 ? bins_max[bin_i-1] : -1f0
+    bin_max = bins_max[bin_i+1]
+
+    bin_members = (ŷ .> bin_min) .* (ŷ .<= bin_max)
+
+    bin_href_x  = X[bin_members, prediction_i]
+    # bin_ŷ       = ŷ[bin_members]
+    bin_y       = y[bin_members]
+    bin_weights = weights[bin_members]
+    bin_weight  = sum(bin_weights)
+
+    # logit(HREF), logit(SREF)
+    bin_X_features = Array{Float32}(undef, (length(bin_y), 1))
+
+    Threads.@threads for i in 1:length(bin_y)
+      logit_href = logit(bin_href_x[i])
+
+      bin_X_features[i,1] = logit_href
+      # bin_X_features[i,3] = bin_X[i,1]*bin_X[i,2]
+      # bin_X_features[i,3] = logit(bin_X[i,1]*bin_X[i,2])
+      # bin_X_features[i,4] = logit(bin_X[i,1]*bin_X[i,2])
+      # bin_X_features[i,5] = max(logit_href, logit_sref)
+      # bin_X_features[i,6] = min(logit_href, logit_sref)
+    end
+
+    coeffs = LogisticRegression.fit(bin_X_features, bin_y, bin_weights; iteration_count = 300)
+
+    # println("Fit logistic coefficients: $(coeffs)")
+
+    logistic_ŷ = LogisticRegression.predict(bin_X_features, coeffs)
+
+    stuff = [
+      ("event_name", event_name),
+      ("bin", "$bin_i-$(bin_i+1)"),
+      ("HREF_ŷ_min", bin_min),
+      ("HREF_ŷ_max", bin_max),
+      ("count", length(bin_y)),
+      ("pos_count", sum(bin_y)),
+      ("weight", bin_weight),
+      ("mean_HREF_ŷ", sum(bin_href_x .* bin_weights) / bin_weight),
+      ("mean_y", sum(bin_y .* bin_weights) / bin_weight),
+      ("HREF_logloss", sum(logloss.(bin_y, bin_href_x) .* bin_weights) / bin_weight),
+      ("HREF_au_pr", Metrics.area_under_pr_curve(bin_href_x, bin_y, bin_weights)),
+      ("mean_logistic_ŷ", sum(logistic_ŷ .* bin_weights) / bin_weight),
+      ("logistic_logloss", sum(logloss.(bin_y, logistic_ŷ) .* bin_weights) / bin_weight),
+      ("logistic_au_pr", Metrics.area_under_pr_curve(logistic_ŷ, bin_y, bin_weights)),
+      ("logistic_coeffs", coeffs)
+    ]
+
+    headers = map(first, stuff)
+    row     = map(last, stuff)
+
+    bin_i == 1 && println(join(headers, "\t"))
+    println(join(row, "\t"))
+
+    push!(bins_logistic_coeffs, coeffs)
+  end
+
+  bins_logistic_coeffs
+end
+
+event_to_bins_logistic_coeffs = Dict{String,Vector{Vector{Float32}}}()
+for prediction_i in 1:length(HREFPrediction.models)
+  (event_name, _, _, _, _) = HREFPrediction.models[prediction_i]
+
+  event_to_bins_logistic_coeffs[event_name] = find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
+end
+
+# event_name  bin HREF_ŷ_min    HREF_ŷ_max   count     pos_count weight      mean_HREF_ŷ   mean_y        HREF_logloss  HREF_au_pr            mean_logistic_ŷ logistic_logloss logistic_au_pr        logistic_coeffs
+# tornado     1-2 -1.0          0.003943406  768580069 23015.0   7.031623e8  3.0265412e-5  3.0336501e-5  0.00026088595 0.0018272604432091135 3.03365e-5      0.0002607281     0.0018132768233895585 Float32[0.9410416,  -0.43989772]
+# tornado     2-3 0.0009693373  0.009779687  8279143   22771.0   7.732425e6  0.0029632454  0.0027586587  0.018463962   0.005573121102516215  0.0027586583    0.018456165      0.005573121200265879  Float32[0.9696831,  -0.2419776]
+# tornado     3-4 0.003943406   0.021067958  2851135   22641.0   2.686612e6  0.008516189   0.007939876   0.045417007   0.01359600740689414   0.007939874     0.045396835      0.013596007697703711  Float32[0.9994333,  -0.073430814]
+# tornado     4-5 0.009779687   0.04314823   1232921   22614.0   1.1718032e6 0.018811064   0.01820376    0.08901149    0.030113523453788656  0.018203758     0.08898648       0.030113511859822965  Float32[1.094306,   0.3302174]
+# tornado     5-6 0.021067958   1.0          528376    22478.0   505719.12   0.039477322   0.042175498   0.1684217     0.08418477705356607   0.042175494     0.168238         0.08418477701104629   Float32[1.1247456,  0.4527394]
+# wind        1-2 -1.0          0.019115837  765289028 187584.0  7.001567e8  0.00028112577 0.00024903048 0.0016073652  0.011146547407329555  0.00024903056   0.0016036514     0.011146540215301246  Float32[1.0835536,  0.3302101]
+# wind        2-3 0.007293307   0.036141146  11692832  187875.0  1.0876376e7 0.015976995   0.016031075   0.08006723    0.02740987237452326   0.016031077     0.080040686      0.02740987083511612   Float32[1.1271127,  0.5125384]
+# wind        3-4 0.019115837   0.06361171   5198267   188131.0  4.831248e6  0.033379473   0.036089994   0.15287088    0.05317369660639551   0.036089994     0.15274402       0.05317357267282812   Float32[1.0838023,  0.35807598]
+# wind        4-5 0.036141146   0.11529552   2774714   187896.0  2.5763512e6 0.0601931     0.06767724    0.24379614    0.09598473286184864   0.06767724      0.2433045        0.0959834031628096    Float32[1.0530577,  0.26911345]
+# wind        5-6 0.06361171    1.0          1472285   187151.0  1.3667349e6 0.11426662    0.12757197    0.36758074    0.22774408096398865   0.12757199      0.3667041        0.22774408003422644   Float32[0.9993558,  0.12850402]
+# hail        1-2 -1.0          0.00916807   766414551 82204.0   7.012456e8  0.00010431862 0.00010811006 0.00077062927 0.00562086417355665   0.00010811002   0.0007703596     0.005620862883802084  Float32[1.0387952,  0.27688286]
+# hail        2-3 0.0032933427  0.019258574  10049511  81840.0   9.283384e6  0.007818604   0.008166446   0.04641192    0.013883571722057253  0.0081664445    0.04640389       0.013883574039793154  Float32[0.9819013,  -0.041472256]
+# hail        3-4 0.00916807    0.03614172   4471349   81964.0   4.1206735e6 0.017236097   0.018397905   0.090045005   0.02910102256089555   0.018397907     0.08998896       0.02910101982705813   Float32[1.1090772,  0.4985385]
+# hail        4-5 0.019258574   0.07324672   2192057   82469.0   2.0165962e6 0.03422858    0.037593953   0.15771052    0.055836359977871126  0.037593953     0.15754303       0.0558363645977709    Float32[0.98798597, 0.05851983]
+# hail        5-6 0.03614172    1.0          1073680   82521.0   988427.0    0.06855988    0.07669564    0.25909775    0.1559476060797505    0.07669566      0.25851932       0.15594760280019088   Float32[1.0764973,  0.31471553]
+# sig_tornado 1-2 -1.0          0.0025964007 771336077 3130.0    7.057555e8  4.6946284e-6  4.1514936e-6  3.9215014e-5  0.0013324690374889518 4.1514927e-6    3.918973e-5      0.0013305201167142498 Float32[0.92174333, -0.7631738]
+# sig_tornado 2-3 0.00064585934 0.005882601  1834683   3051.0    1.7424874e6 0.0018299798  0.001681423   0.011962341   0.004599673664678605  0.0016814225    0.011940232      0.004599679410779465  Float32[1.226332,   1.2883613]
+# sig_tornado 3-4 0.0025964007  0.011497159  535895    3030.0    514294.47   0.004953276   0.005695608   0.03428813    0.010599822095757315  0.005695608     0.034164835      0.010599770193332915  Float32[1.3703138,  2.0596972]
+# sig_tornado 4-5 0.005882601   0.023939667  209844    3025.0    202455.92   0.010476989   0.014468487   0.07475995    0.025499862871274884  0.014468485     0.074024156      0.02549986168962322   Float32[1.2036767,  1.2354493]
+# sig_tornado 5-6 0.011497159   1.0          87608     3022.0    84866.85    0.021389721   0.03449488    0.14647296    0.0769724855892172    0.034494873     0.1427091        0.076972482541521     Float32[1.2170192,  1.2941704]
+# sig_wind    1-2 -1.0          0.002175051  766897086 19193.0   7.0166464e8 2.5990927e-5  2.5332163e-5  0.00022042012 0.0012700716249063712 2.5332158e-5    0.0002200686     0.001270103871160812  Float32[1.0980748,  0.74092144]
+# sig_wind    2-3 0.0007026063  0.0047103437 10436303  19208.0   9.684068e6  0.0017686352  0.0018354479  0.0131185865  0.0033881630588428664 0.0018354482    0.013117139      0.0033811746452988966 Float32[1.0278105,  0.2092408]
+# sig_wind    3-4 0.002175051   0.008226235  4070047   19274.0   3.773065e6  0.0040316014  0.0047110757  0.02942888    0.008283840539270558  0.004711076     0.029336378      0.008266362999770032  Float32[1.3354824,  1.9728225]
+# sig_wind    4-5 0.0047103437  0.014878796  1849307   19261.0   1.7130241e6 0.007818602   0.010376492   0.05750749    0.014353149856674716  0.010376492     0.05712362       0.014353180859650769  Float32[1.0461866,  0.5070991]
+# sig_wind    5-6 0.008226235   1.0          992447    19234.0   916945.75   0.0151803745  0.019381547   0.09460407    0.03153562723926698   0.019381545     0.09396499       0.031535627430103234  Float32[0.8209114,  -0.47899055]
+# sig_hail    1-2 -1.0          0.0020554834 769058501 10189.0   7.036776e8  1.2832674e-5  1.3471802e-5  0.00011470124 0.0014578486110732047 1.3471806e-5    0.00011414103    0.001457837872468933  Float32[1.1735471,  1.4033803]
+# sig_hail    2-3 0.00071826525 0.004203511  5085831   10191.0   4.6944425e6 0.0017121094  0.0020193043  0.01431179    0.0034794615114734934 0.0020193039    0.014285652      0.0034552337734657847 Float32[1.0141681,  0.25384367]
+# sig_hail    3-4 0.0020554834  0.008379867  2309480   10234.0   2.12882e6   0.0039598052  0.004452658   0.028338917   0.006272377809412836  0.0044526574    0.028299749      0.006240622524798311  Float32[0.83706397, -0.7718604]
+# sig_hail    4-5 0.004203511   0.01785916   1245358   10223.0   1.1483578e6 0.0078575825  0.008254481   0.04726873    0.012339396262257456  0.0082544815    0.04725294       0.012339396759446288  Float32[0.9086216,  -0.3855668]
+# sig_hail    5-6 0.008379867   1.0          591599    10174.0   548237.1    0.016987264   0.01728504    0.08513529    0.03157749232532621   0.017285042     0.085097656      0.03157749170120359   Float32[0.8945266,  -0.3957873]
+
+print("event_to_bins_logistic_coeffs = $event_to_bins_logistic_coeffs")
+# event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("sig_hail" => [[1.1735471, 1.4033803], [1.0141681, 0.25384367], [0.83706397, -0.7718604], [0.9086216, -0.3855668], [0.8945266, -0.3957873]], "hail" => [[1.0387952, 0.27688286], [0.9819013, -0.041472256], [1.1090772, 0.4985385], [0.98798597, 0.05851983], [1.0764973, 0.31471553]], "tornado" => [[0.9410416, -0.43989772], [0.9696831, -0.2419776], [0.9994333, -0.073430814], [1.094306, 0.3302174], [1.1247456, 0.4527394]], "sig_tornado" => [[0.92174333, -0.7631738], [1.226332, 1.2883613], [1.3703138, 2.0596972], [1.2036767, 1.2354493], [1.2170192, 1.2941704]], "sig_wind" => [[1.0980748, 0.74092144], [1.0278105, 0.2092408], [1.3354824, 1.9728225], [1.0461866, 0.5070991], [0.8209114, -0.47899055]], "wind" => [[1.0835536, 0.3302101], [1.1271127, 0.5125384], [1.0838023, 0.35807598], [1.0530577, 0.26911345], [0.9993558, 0.12850402]])
+
+
+# 6. prediction is weighted mean of the two overlapping logistic models
+# 7. predictions should thereby be calibrated (check)
+
+
+
+
+
+
+import Dates
+
+push!(LOAD_PATH, (@__DIR__) * "/../shared")
+import TrainingShared
+import Metrics
+
+push!(LOAD_PATH, @__DIR__)
+import HREFPrediction
+
+push!(LOAD_PATH, (@__DIR__) * "/../../lib")
+import Forecasts
+import Inventories
+
+(_, validation_forecasts_calibrated_with_sig_gated, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_calibrated_with_sig_gated(); just_hours_near_storm_events = false);
+
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2022, 1, 1, 0)
+validation_forecasts_calibrated_with_sig_gated = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_calibrated_with_sig_gated);
+
+# Make sure a forecast loads
+Forecasts.data(validation_forecasts_calibrated_with_sig_gated[100]);
+
+# rm("validation_forecasts_calibrated_with_sig_gated"; recursive=true)
+
+X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_calibrated_with_sig_gated; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "validation_forecasts_calibrated_with_sig_gated");
+
+function test_predictive_power(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
+
+  for prediction_i in 1:length(HREFPrediction.models)
+    (event_name, _, _) = HREFPrediction.models[prediction_i]
+    y = Ys[event_name]
+    x = @view X[:,prediction_i]
+    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+    println("$event_name ($(round(sum(y)))) feature $prediction_i $(Inventories.inventory_line_description(inventory[prediction_i]))\tAU-PR-curve: $(Float32(au_pr_curve))")
+  end
+end
+test_predictive_power(validation_forecasts_calibrated_with_sig_gated, X, Ys, weights)
+
+
+function test_calibration(forecasts, X, Ys, weights)
+  inventory = Forecasts.inventory(forecasts[1])
+
+  println("event_name\tmean_y\tmean_ŷ\tΣweight\tbin_max")
+  for feature_i in 1:length(inventory)
+    prediction_i = 1 + (feature_i - 1) % CombinedHREFSREF.models_with_gated_count
+    (event_name, _, model_name) = CombinedHREFSREF.models_with_gated[prediction_i]
+    y = Ys[event_name]
+    ŷ = @view X[:, feature_i]
+
+    sort_perm      = Metrics.parallel_sort_perm(ŷ);
+    y_sorted       = Metrics.parallel_apply_sort_perm(y, sort_perm);
+    ŷ_sorted       = Metrics.parallel_apply_sort_perm(ŷ, sort_perm);
+    weights_sorted = Metrics.parallel_apply_sort_perm(weights, sort_perm);
+
+    bin_count = 20
+    per_bin_pos_weight = Float64(sum(y .* weights)) / bin_count
+
+    # bins = map(_ -> Int64[], 1:bin_count)
+    bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
+    bins_Σy      = map(_ -> 0.0, 1:bin_count)
+    bins_Σweight = map(_ -> 0.0, 1:bin_count)
+    bins_max     = map(_ -> 1.0f0, 1:bin_count)
+
+    bin_i = 1
+    for i in 1:length(y_sorted)
+      if ŷ_sorted[i] > bins_max[bin_i]
+        bin_i += 1
+      end
+
+      bins_Σŷ[bin_i]      += Float64(ŷ_sorted[i] * weights_sorted[i])
+      bins_Σy[bin_i]      += Float64(y_sorted[i] * weights_sorted[i])
+      bins_Σweight[bin_i] += Float64(weights_sorted[i])
+
+      if bins_Σy[bin_i] >= per_bin_pos_weight
+        bins_max[bin_i] = ŷ_sorted[i]
+      end
+    end
+
+    for bin_i in 1:bin_count
+      Σŷ      = bins_Σŷ[bin_i]
+      Σy      = bins_Σy[bin_i]
+      Σweight = bins_Σweight[bin_i]
+
+      mean_ŷ = Σŷ / Σweight
+      mean_y = Σy / Σweight
+
+      println("$model_name\t$mean_y\t$mean_ŷ\t$Σweight\t$(bins_max[bin_i])")
+    end
+  end
+end
+test_calibration(validation_forecasts_calibrated_with_sig_gated, X, Ys, weights)
