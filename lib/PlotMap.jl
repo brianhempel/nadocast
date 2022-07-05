@@ -216,7 +216,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
         forecast_hour = forecast_hour_range.start
         valid_time    = valid_start
 
-        println(f, "L 7pt,Helvetica-Bold C Nadocast $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$forecast_hour")
+        println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$forecast_hour")
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_time, "yyyy-m-d H:MM")) UTC")
 
         valid_pt = TimeZones.ZonedDateTime(valid_time, TimeZones.tz"America/Los_Angeles", from_utc = true)
