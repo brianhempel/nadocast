@@ -219,15 +219,15 @@ function reload_forecasts()
     ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
     map(1:length(models)) do model_i
-      event_name, var_name, model_name = models[model_i] # event_name == model_name here
+      event_name, var_name, _, _, _ = models[model_i] # event_name == model_name here
 
       predict(forecasts, data) = begin
         href_ŷs = @view data[:,model_i]
 
         out = Array{Float32}(undef, length(href_ŷs))
 
-        bin_maxes            = event_to_bins[model_name]
-        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
+        bin_maxes            = event_to_bins[event_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
 
         @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
