@@ -3,16 +3,20 @@ module PlotMap
 import Dates
 import TimeZones
 import DelimitedFiles
+import Statistics
 
 import PNGFiles
 import PNGFiles.ImageCore.ColorTypes
 
 push!(LOAD_PATH, @__DIR__)
 import Grids
+import GeoUtils
 
 tornado_colors_path   = (@__DIR__) * "/tornado_colors.cpt"
 wind_hail_colors_path = (@__DIR__) * "/wind_hail_colors.cpt"
 sig_colors_path       = (@__DIR__) * "/sig_colors.cpt"
+sig_tornado_more_colors_path   = (@__DIR__) * "/sig_tornado_more_colors.cpt" # 10% contour is blackened
+sig_wind_hail_more_colors_path = (@__DIR__) * "/sig_wind_hail_more_colors.cpt" # adds a 10% contour
 
 HOUR = 60*60
 
@@ -24,14 +28,49 @@ function hour_12_hour_ampm_str(datetime)
   "$(twelve_hour)$(ampm_str)"
 end
 
+function writeout_medians(latlons, vals, out_path; miles=150)
+  resolution = 0.5 # degrees
+  radius     = miles*GeoUtils.METERS_PER_MILE  # miles
+  lats = map(latlon -> latlon[1], latlons)
+  lons = map(latlon -> latlon[2], latlons)
+  lat_range = round(minimum(lats)/resolution, RoundDown)*resolution : resolution : round(maximum(lats)/resolution, RoundUp)*resolution
+  lon_range = round(minimum(lons)/resolution, RoundDown)*resolution : resolution : round(maximum(lons)/resolution, RoundUp)*resolution
 
-# Plots the vals using a default color scheme
-function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals), zhigh=maximum(vals), steps=10)
-  color_scheme = "tofino" # Choices: http://gmt.soest.hawaii.edu/doc/latest/GMT_Docs.html#built-in-color-palette-tables-cpt
+  out_rows = []
 
+  for lat in lat_range
+    for lon in lon_range
+      latlon = (lat, lon)
+      is = findall(latlons) do val_latlon
+        GeoUtils.instantish_distance(val_latlon, latlon) <= radius
+      end
+
+      if length(is) >= 1
+        median = Statistics.median(vals[is])
+        push!(out_rows, (lon, lat, median))
+      end
+    end
+  end
+
+  open(out_path, "w") do f
+    # lon lat val
+    DelimitedFiles.writedlm(f, out_rows, '\t')
+  end
+
+  ()
+end
+
+
+function plot_debug_map(base_path, grid, vals; args...)
+  plot_debug_map_latlons(base_path, grid.latlons, vals; args...)
+end
+
+# Plots the vals
+# Color scheme choices: http://gmt.soest.hawaii.edu/doc/latest/GMT_Docs.html#built-in-color-palette-tables-cpt
+function plot_debug_map_latlons(base_path, latlons, vals; title=nothing, zlow=minimum(vals), zhigh=maximum(vals), steps=10, sparse=false, miles=150, color_scheme="tofino")
   open(base_path * ".xyz", "w") do f
     # lon lat val
-    DelimitedFiles.writedlm(f, map(i -> (grid.latlons[i][2], grid.latlons[i][1], vals[i]), 1:length(vals)), '\t')
+    DelimitedFiles.writedlm(f, map(i -> (latlons[i][2], latlons[i][1], vals[i]), 1:length(vals)), '\t')
   end
 
   # GMT sets internal working directory based on parent pid, so run in sh so each has a diff parent pid.
@@ -40,7 +79,13 @@ function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals)
     println(f, "projection=-Jl-100/35/33/45/0.3")
     println(f, "region=-R-120.7/22.8/-63.7/47.7+r # +r makes the map square rather than weird shaped")
 
-    println(f, "gmt sphinterpolate $base_path.xyz -R-134/-61/21.2/52.5 -I1M -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
+    if !sparse
+      println(f, "gmt sphinterpolate $base_path.xyz -R-134/-61/21.2/52.5 -I2k -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
+    else
+      # Compute 150mi radius medians
+      writeout_medians(latlons, vals, "$(base_path)_medians.xyz", miles = miles)
+      println(f, "gmt sphinterpolate $(base_path)_medians.xyz -R-134/-61/21.2/52.5 -I2k -Q0 -G$base_path.nc  # interpolate the xyz coordinates to a grid covering roughly the HRRR's area")
+    end
 
     range     = zhigh - zlow
     step_size = range / steps
@@ -51,7 +96,17 @@ function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals)
     println(f, "gmt begin $base_path pdf")
 
     println(f, "gmt coast \$region \$projection -B+g240/245/255+n -ENA -Gc # Use the color of water for the background and begin clipping to north america")
+
     println(f, "gmt grdimage $base_path.nc -nn \$region \$projection -C$base_path.cpt # draw the numbers using the projection")
+
+    # println(f, "gmt sphtriangulate $base_path.xyz -Qv > triangulated")
+    # println(f, "gmt triangulate $base_path.xyz -M -Qn \$region \$projection > triangulated")
+    # println(f, "gmt plot triangulated \$region \$projection -L -C$base_path.cpt")
+
+    if sparse
+      # Plot individual obs
+      println(f, "gmt plot $base_path.xyz -Sc0.07 -W0.25p \$region \$projection -C$base_path.cpt")
+    end
     println(f, "gmt coast -Q # stop clipping")
 
     println(f, "gmt coast \$region \$projection -A500 -N2/thinnest -t65 # draw state borders 65% transparent")
@@ -72,9 +127,13 @@ function plot_debug_map(base_path, grid, vals; title=nothing, zlow=minimum(vals)
 
     # println(f, "pdftoppm $base_path.pdf $base_path -png -r 300 -singlefile")
     # # reduce png size
-    # println(f, "which oxipng && oxipng --strip safe $base_path.png")
+    # println(f, "which pngquant && pngquant 64 --nofs --ext -quantized.png $base_path.png && rm $base_path.png && mv $base_path-quantized.png $base_path.png")
+    # println(f, "which oxipng && oxipng  -o max --strip safe --libdeflater $base_path.png")
 
     println(f, "rm $base_path.nc")
+    if sparse
+      println(f, "rm $(base_path)_medians.xyz")
+    end
     println(f, "rm $base_path.xyz")
     println(f, "rm $base_path.cpt")
   end
@@ -149,9 +208,9 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       "Tor"     => tornado_colors_path,
       "Wind"    => wind_hail_colors_path,
       "Hail"    => wind_hail_colors_path,
-      "Sigtor"  => tornado_colors_path,
-      "Sigwind" => wind_hail_colors_path,
-      "Sighail" => wind_hail_colors_path,
+      "Sigtor"  => sig_tornado_more_colors_path,
+      "Sigwind" => sig_wind_hail_more_colors_path,
+      "Sighail" => sig_wind_hail_more_colors_path,
     )[event_title]
 
     dark_colors_path = replace(colors_path, ".cpt" => "-dark.cpt")
