@@ -23,7 +23,7 @@ THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "2")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.product(HOURS_OF_DAY).flat_map do |ymd, run_hour|
   run_hour_str = "%02d" % [run_hour]
-  remote_files = `curl https://#{DOMAIN}/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/`.scan(/\bsref\.t[\.0-9a-z_]+/).grep(/pgrb212.*grib2$/)
+  remote_files = `curl -s https://#{DOMAIN}/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/`.scan(/\bsref\.t[\.0-9a-z_]+/).grep(/pgrb212.*grib2$/)
   remote_files.map { |name| "https://#{DOMAIN}/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/#{name}" }
 end.to_set
 
