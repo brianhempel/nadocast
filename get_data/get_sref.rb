@@ -11,8 +11,10 @@ require "set"
 # 1hrly files contain hours 1-38 not divisible by 3
 # 3hrly files contain hours anl,3-87 divisible by 3
 
+DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "nomads.ncep.noaa.gov/pub" : "ftpprd.ncep.noaa.gov"
+
 TYPES          = ["mean_1hrly", "mean_3hrly", "prob_1hrly", "prob_3hrly"]
-YMDS           = `curl -s https://ftpprd.ncep.noaa.gov/data/nccf/com/sref/prod/`.scan(/\bsref\.(\d{8})\//).flatten.uniq
+YMDS           = `curl -s https://#{DOMAIN}/data/nccf/com/sref/prod/`.scan(/\bsref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [3, 9, 15, 21]
 BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/sref"
 BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/sref"
@@ -21,8 +23,8 @@ THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "2")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.product(HOURS_OF_DAY).flat_map do |ymd, run_hour|
   run_hour_str = "%02d" % [run_hour]
-  remote_files = `curl -s https://ftpprd.ncep.noaa.gov/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/`.scan(/\bsref\.t[\.0-9a-z_]+/).grep(/pgrb212.*grib2$/)
-  remote_files.map { |name| "https://ftpprd.ncep.noaa.gov/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/#{name}" }
+  remote_files = `curl https://#{DOMAIN}/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/`.scan(/\bsref\.t[\.0-9a-z_]+/).grep(/pgrb212.*grib2$/)
+  remote_files.map { |name| "https://#{DOMAIN}/data/nccf/com/sref/prod/sref.#{ymd}/#{run_hour_str}/ensprod/#{name}" }
 end.to_set
 
 def alt_location(directory)
@@ -45,7 +47,7 @@ threads = THREAD_COUNT.times.map do
       run_hour_str = "%02d" % [run_hour]
 
       file_name    = "sref_#{year_month_day}_t#{run_hour_str}z_#{type}.grib2"
-      url_to_get   = "https://ftpprd.ncep.noaa.gov/data/nccf/com/sref/prod/sref.#{year_month_day}/#{run_hour_str}/ensprod/sref.t#{run_hour_str}z.pgrb212.#{type}.grib2"
+      url_to_get   = "https://#{DOMAIN}/data/nccf/com/sref/prod/sref.#{year_month_day}/#{run_hour_str}/ensprod/sref.t#{run_hour_str}z.pgrb212.#{type}.grib2"
       if AVAILABLE_FOR_DOWNLOAD.include?(url_to_get)
         base_directory    = year_month[0...4].to_i < 2021 ? BASE_DIRECTORY_1 : BASE_DIRECTORY_2
         directory         = "#{base_directory}/#{year_month}/#{year_month_day}"
