@@ -84,17 +84,17 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
     "wind"                         => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
     "hail"                         => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
     "sig_tornado"                  => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
-    "sig_wind"                     => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
-    "sig_hail"                     => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
+    "sig_wind"                     => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
+    "sig_hail"                     => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
     "sig_tornado_gated_by_tornado" => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
-    "sig_wind_gated_by_wind"       => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
-    "sig_hail_gated_by_hail"       => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
+    "sig_wind_gated_by_wind"       => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
+    "sig_hail_gated_by_hail"       => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
   )
 
   model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "")
 
   # Use non-sig colors (i.e. not just 10%)
-  model_name_to_colorer(model_name)    = PlotMap.event_name_to_colorer_more_sig_colors[model_name_to_event_name(model_name)]
+  model_name_to_colorer(model_name)  = PlotMap.event_name_to_colorer_more_sig_colors[model_name_to_event_name(model_name)]
 
   # Want this sorted for niceness
   # event_names = map(first, SPCOutlooks.models)
