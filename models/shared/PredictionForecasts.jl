@@ -200,6 +200,108 @@ function blurred(prediction_forecasts, forecast_hour_range, blur_grid_is; model_
   ForecastCombinators.map_forecasts(prediction_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer, model_name = model_name)
 end
 
+
+# models is array of (_, var_name, ...) tuples
+function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name)
+  event_types_count = length(models)
+
+  run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(hourly_prediction_forecasts)
+
+  run_ymdhs = sort(unique(map(Forecasts.run_year_month_day_hour, hourly_prediction_forecasts)), alg=MergeSort)
+
+  associated_fourhourly_forecasts = []
+  associated_forecasts_in_day = []
+  for (run_year, run_month, run_day, run_hour) in run_ymdhs
+    run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+
+    forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
+
+    forecast_hours = map(f -> f.forecast_hour, forecasts_for_run_time)
+    min_forecast_hour = minimum(forecast_hours)
+    max_forecast_hour = maximum(forecast_hours)
+    for forecast_hour in (min_forecast_hour+3):max_forecast_hour
+      forecast_hours_in_fourhourly_period = forecast_hour-3 : forecast_hour
+      forecasts_for_fourhourly_period = filter(forecast -> forecast.forecast_hour in forecast_hours_in_fourhourly_period, forecasts_for_run_time)
+      if length(forecasts_for_fourhourly_period) == 4
+        push!(associated_fourhourly_forecasts, forecasts_for_fourhourly_period)
+      end
+    end
+
+    forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
+    forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
+    if length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day)
+      push!(associated_forecasts_in_day, forecasts_for_convective_day)
+    end
+  end
+
+  # Which run time and forecast hour to use for the set.
+  # Namely: latest run time, then longest forecast hour
+  choose_canonical_forecast(associated_hourlies) = begin
+    canonical = associated_hourlies[1]
+    for forecast in associated_hourlies
+      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
+        canonical = forecast
+      end
+    end
+    canonical
+  end
+
+  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts_in_day,     forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  fourhourly_predictions = ForecastCombinators.concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+
+  hourlies_to_accs_inventory_transformer(day_or_four_hour_str) = (base_forecast, base_inventory) -> begin
+    out = Inventories.InventoryLine[]
+    for model_i in 1:event_types_count
+      _, var_name = models[model_i]
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "independent events total $(var_name)", "calculated", "$day_or_four_hour_str fcst", "", ""))
+      push!(out, Inventories.InventoryLine("", "", base_inventory[1].date_str, "highest hourly $(var_name)",           "calculated", "$day_or_four_hour_str fcst", "", ""))
+    end
+    out
+  end
+
+  hourlies_to_accs_data_transformer(base_forecast, base_data) = begin
+    point_count, base_feature_count = size(base_data)
+    hours_count = div(base_feature_count, event_types_count)
+
+    out = Array{Float32}(undef, (point_count, 2 * event_types_count))
+
+    Threads.@threads for i in 1:point_count
+      for event_i in 1:event_types_count
+        prob_no_tor = 1.0
+        for hour_i in 1:hours_count
+          prob_no_tor *= 1.0 - Float64((@view base_data[i, event_i:event_types_count:base_feature_count])[hour_i])
+        end
+        out[i, event_i*2 - 1] = Float32(1.0 - prob_no_tor)
+        out[i, event_i*2    ] = maximum(@view base_data[i, event_i:event_types_count:base_feature_count])
+
+        # sorted_probs = sort((@view base_data[i, event_i:event_types_count:base_feature_count]); rev = true)
+        # out[i,2] = sorted_probs[1]
+        # out[i,3] = sorted_probs[2]
+        # out[i,4] = sorted_probs[3]
+        # out[i,5] = sorted_probs[4]
+        # out[i,6] = sorted_probs[5]
+        # out[i,7] = sorted_probs[6]
+      end
+    end
+    out
+  end
+
+  # Caching barely helps load times, so we don't do it
+
+  forecasts_day_accumulators        = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("day"),    data_transformer = hourlies_to_accs_data_transformer, model_name = "Day_severe_probability_accumulators_from_$(module_name)_hours")
+  forecasts_fourhourly_accumulators = ForecastCombinators.map_forecasts(fourhourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("4 hour"), data_transformer = hourlies_to_accs_data_transformer, model_name = "Four-hourly_severe_probability_accumulators_from_$(module_name)_hours")
+
+  (forecasts_day_accumulators, forecasts_fourhourly_accumulators)
+end
+
+
+
+
+
+
+
+
+
 # "models" here is list of (event_name, var_name, ...) tuples
 # "gated_models" here is list of (gated_event_name, orig_event_name, gate_event_name) tuples
 # adds the gated predictions to the end
