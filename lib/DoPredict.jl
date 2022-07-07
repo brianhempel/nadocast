@@ -315,7 +315,7 @@ function do_forecast(forecast)
       plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, pdf = false)
     end
     animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
-      out_dir_fourhourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
+      out_dir_fourhourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f*-*.png"
     end
   else
     animation_glob_paths = []
@@ -330,8 +330,8 @@ function do_forecast(forecast)
 
   for animation_glob_path in animation_glob_paths
     println("Making four-hourlies movie out of $(animation_glob_path)...")
-    fourhourly_movie_path = replace(animation_glob_path, "_f%02d.png" => "_four-hourly.mp4", out_dir_fourhourly => out_dir_daily)
-    run(`ffmpeg -y -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $fourhourly_movie_path`)
+    fourhourly_movie_path = replace(animation_glob_path, "_f*-*.png" => "_four-hourly.mp4", out_dir_fourhourly => out_dir_daily)
+    run(`ffmpeg -y -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $fourhourly_movie_path`)
   end
 
   if should_publish
