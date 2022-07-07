@@ -260,7 +260,9 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
 
     # Draw legend box.
     if !isnothing(run_time_utc) && !isnothing(forecast_hour_range)
-      is_day_forecast = forecast_hour_range.start != forecast_hour_range.stop
+      is_hourly_forecast     = forecast_hour_range.start == forecast_hour_range.stop
+      is_fourhourly_forecast = forecast_hour_range.start + 3 == forecast_hour_range.stop
+      is_day_forecast        = !is_hourly_forecast && !is_fourhourly_forecast
 
       println(f, "gmt legend -Dx0.04i/0.04i+w1.7i+l1.3 -C0.03i/0.03i -F+gwhite+pthin << EOF")
 
@@ -268,7 +270,18 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       valid_stop  = run_time_utc + Dates.Hour(forecast_hour_range.stop)
 
       if is_day_forecast
+        # because we train ±30min to each hour...
+        valid_start -= Dates.minute(30)
+        valid_stop  += Dates.minute(30)
+
         println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
+        println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
+        println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
+      if is_fourhourly_forecast
+        valid_start -= Dates.minute(30)
+        valid_stop  += Dates.minute(30)
+
+        println(f, "L 6pt,Helvetica-Bold C Nadocast $(event_title) $(Dates.format(run_time_utc, "H"))Z +$(forecast_hour_range.start)-$(forecast_hour_range.stop) ending $(Dates.format(valid_stop, "yyyy-m-d H:MM"))Z")
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
         println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
       else
