@@ -226,7 +226,43 @@ function do_forecast(forecast)
   plot_forecast(forecast; is_hourly = false, is_fourhourly = false)
   plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
-  # Make grib2s for the hourlies/four-hourlies but don't draw yet because that is slow.
+  # @sync doesn't seem to work; poll until subprocesses are done.
+  for path in plotting_paths
+    while !isfile(path * ".png") || isfile(path * ".sh")
+      sleep(1)
+    end
+  end
+
+  should_publish = get(ENV, "PUBLISH", "false") == "true"
+  if should_publish
+    rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+  end
+
+  if get(ENV, "TWEET", "false") == "true"
+    tweet_script_path = (@__DIR__) * "/tweet.rb"
+
+    tweet_str =
+      if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
+        "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast (New 2021 Models)"
+      else
+        "$(nadocast_run_hour)Z Day Tornado Forecast (New 2021 Models)"
+      end
+
+    for path in daily_paths_to_perhaps_tweet
+      println("Tweeting daily $(path)...")
+      run(`ruby $tweet_script_path "$(tweet_str)" $path.png`)
+    end
+
+    # if !isnothing(animation_glob_path)
+    #   println("Tweeting hourlies $(hourlies_movie_path)...")
+    #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
+    # end
+  end
+
+  should_publish && map(wait, rsync_processes)
+
+
+  # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
 
   run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
 
@@ -256,41 +292,11 @@ function do_forecast(forecast)
     plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
   end
 
-
-  # @sync doesn't seem to work; poll until subprocesses are done.
-  for path in plotting_paths
-    while !isfile(path * ".png") || isfile(path * ".sh")
-      sleep(1)
-    end
-  end
-
-  should_publish = get(ENV, "PUBLISH", "false") == "true"
   if should_publish
     rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+    map(wait, rsync_processes)
   end
 
-  if get(ENV, "TWEET", "false") == "true"
-    tweet_script_path = (@__DIR__) * "/tweet.rb"
-
-    tweet_str =
-      if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
-        "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast"
-      else
-        "$(nadocast_run_hour)Z Day Tornado Forecast (New 2021 Models)"
-      end
-
-    for path in daily_paths_to_perhaps_tweet
-      println("Tweeting daily $(path)...")
-      run(`ruby $tweet_script_path "$(tweet_str)" $path.png`)
-    end
-
-    # if !isnothing(animation_glob_path)
-    #   println("Tweeting hourlies $(hourlies_movie_path)...")
-    #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
-    # end
-  end
-
-  should_publish && map(wait, rsync_processes)
 
   # Now draw the hourlies & four-hourlies
 
