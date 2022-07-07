@@ -303,7 +303,7 @@ function do_forecast(forecast)
 
   if get(ENV, "HRRR_RAP", "true") == "false"
     run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
-    fourhourly_forecasts = filter(CombinedHREFSREF.forecasts_fourfourhourly_with_sig_gated()) do fourhourly_forecast
+    fourhourly_forecasts = filter(CombinedHREFSREF.forecasts_fourhourly_with_sig_gated()) do fourhourly_forecast
       Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour
     end
     fourhourly_forecasts = sort(fourhourly_forecasts; by=(f -> f.forecast_hour))
