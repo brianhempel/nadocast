@@ -233,7 +233,7 @@ function do_forecast(forecast)
 
   should_publish = get(ENV, "PUBLISH", "false") == "true"
   if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+    rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
   end
 
   if get(ENV, "TWEET", "false") == "true"
@@ -291,7 +291,7 @@ function do_forecast(forecast)
   end
 
   if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --update --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
   end
 
   # if get(ENV, "TWEET", "false") == "true"
@@ -335,7 +335,7 @@ function do_forecast(forecast)
   end
 
   if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --update --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
   end
 
   # if get(ENV, "TWEET", "false") == "true"
