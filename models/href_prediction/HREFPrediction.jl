@@ -26,6 +26,16 @@ _forecasts_blurred = [] # For downstream combination with other forecasts
 _forecasts_calibrated = []
 _forecasts_calibrated_with_sig_gated = []
 
+_forecasts_day_accumulators                  = []
+_forecasts_fourhourly_accumulators           = []
+_forecasts_day                               = []
+_forecasts_day_with_sig_gated                = []
+_forecasts_fourhourly                        = []
+_forecasts_fourhourly_with_sig_gated         = []
+_forecasts_day_spc_calibrated                = []
+_forecasts_day_spc_calibrated_with_sig_gated = []
+
+
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
 
@@ -87,6 +97,78 @@ function forecasts_calibrated_with_sig_gated()
   end
 end
 
+function forecasts_day_accumulators()
+  if isempty(_forecasts_day_accumulators)
+    reload_forecasts()
+    _forecasts_day_accumulators
+  else
+    _forecasts_day_accumulators
+  end
+end
+
+function forecasts_fourhourly_accumulators()
+  if isempty(_forecasts_fourhourly_accumulators)
+    reload_forecasts()
+    _forecasts_fourhourly_accumulators
+  else
+    _forecasts_fourhourly_accumulators
+  end
+end
+
+function forecasts_day()
+  if isempty(_forecasts_day)
+    reload_forecasts()
+    _forecasts_day
+  else
+    _forecasts_day
+  end
+end
+
+function forecasts_day_with_sig_gated()
+  if isempty(_forecasts_day_with_sig_gated)
+    reload_forecasts()
+    _forecasts_day_with_sig_gated
+  else
+    _forecasts_day_with_sig_gated
+  end
+end
+
+function forecasts_fourhourly()
+  if isempty(_forecasts_fourhourly)
+    reload_forecasts()
+    _forecasts_fourhourly
+  else
+    _forecasts_fourhourly
+  end
+end
+
+function forecasts_fourhourly_with_sig_gated()
+  if isempty(_forecasts_fourhourly_with_sig_gated)
+    reload_forecasts()
+    _forecasts_fourhourly_with_sig_gated
+  else
+    _forecasts_fourhourly_with_sig_gated
+  end
+end
+
+function forecasts_day_spc_calibrated()
+  if isempty(_forecasts_day_spc_calibrated)
+    reload_forecasts()
+    _forecasts_day_spc_calibrated
+  else
+    _forecasts_day_spc_calibrated
+  end
+end
+
+function forecasts_day_spc_calibrated_with_sig_gated()
+  if isempty(_forecasts_day_spc_calibrated_with_sig_gated)
+    reload_forecasts()
+    _forecasts_day_spc_calibrated_with_sig_gated
+  else
+    _forecasts_day_spc_calibrated_with_sig_gated
+  end
+end
+
 
 # (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f13_to_f24, gbdt_f24_to_f35)
 models = [
@@ -132,6 +214,14 @@ function reload_forecasts()
   global _forecasts_calibrated
   global _forecasts_calibrated_with_sig_gated
 
+  global _forecasts_day_accumulators
+  global _forecasts_fourhourly_accumulators
+  global _forecasts_day
+  global _forecasts_day_with_sig_gated
+  global _forecasts_fourhourly
+  global _forecasts_fourhourly_with_sig_gated
+  global _forecasts_day_spc_calibrated
+  global _forecasts_day_spc_calibrated_with_sig_gated
 
   _forecasts = []
 
@@ -270,6 +360,22 @@ function reload_forecasts()
 
   _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_severe_probabilities")
   _forecasts_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_calibrated, models, gated_models; model_name = "HREF_hour_severe_probabilities_with_sig_gated")
+
+
+  # Day & Four-hourly forecasts
+
+  # 1. Try both independent events total prob and max hourly prob as the main descriminator
+  # 2. bin predictions into 10 bins of equal weight of positive labels
+  # 3. combine bin-pairs (overlapping, 9 bins total)
+  # 4. train a logistic regression for each bin,
+  #   σ(a1*logit(independent events total prob) +
+  #     a2*logit(max hourly prob) +
+  #     b)
+  # 5. prediction is weighted mean of the two overlapping logistic models
+  # 6. should thereby be absolutely calibrated (check)
+  # 7. calibrate to SPC thresholds (linear interpolation)
+
+  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "CombinedHREFSREF")
 
 
 
