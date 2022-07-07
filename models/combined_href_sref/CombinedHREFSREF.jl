@@ -417,7 +417,7 @@ function reload_forecasts()
 
   hourly_prediction_forecasts = vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined)
 
-  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name)
+  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name = "CombinedHREFSREF")
 
 
   event_to_0z_day_bins = Dict{String, Vector{Float32}}(
