@@ -78,6 +78,8 @@ if forecasts == []
   exit(1)
 end
 
+this_file_dir = @__DIR__
+
 function do_forecast(forecast)
 
   run_year_month_day_hour_forecast_hour = Forecasts.run_year_month_day_hour_forecast_hour(forecast)
@@ -89,17 +91,19 @@ function do_forecast(forecast)
   daily_paths_to_perhaps_tweet = []
   rsync_dirs = []
 
-  forecasts_dir = (@__DIR__) * "/../forecasts"
-  changelog_file = "$forecasts_dir/CHANGELOG.txt"
+  forecasts_dir = "$this_file_dir/../forecasts"
+  # absolute file paths are too long for GMT, make them shorter by cd-ing
+  cd(forecasts_dir)
+  changelog_file = "CHANGELOG.txt"
 
   nadocast_run_time_utc      = Forecasts.run_utc_datetime(forecast)
   nadocast_run_hour          = forecast.run_hour
 
-  out_dir_daily      = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
-  out_dir_hourly     = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/hourly/"
-  out_dir_fourhourly = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/four-hourly/"
+  out_dir_daily      = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
+  out_dir_hourly     = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/hourly/"
+  out_dir_fourhourly = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/four-hourly/"
 
-  rsync_dir = "$forecasts_dir/$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
+  rsync_dir = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
   push!(rsync_dirs, rsync_dir)
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
@@ -283,7 +287,7 @@ function do_forecast(forecast)
   for animation_glob_path in animation_glob_paths
     println("Making hourlies movie out of $(animation_glob_path)...")
     hourly_movie_path = replace(animation_glob_path, "_f%02d.png" => "_hourly.mp4", out_dir_hourly => out_dir_daily)
-    run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourly_movie_path`)
+    run(`ffmpeg -y -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourly_movie_path`)
   end
 
   if should_publish
@@ -327,7 +331,7 @@ function do_forecast(forecast)
   for animation_glob_path in animation_glob_paths
     println("Making four-hourlies movie out of $(animation_glob_path)...")
     fourhourly_movie_path = replace(animation_glob_path, "_f%02d.png" => "_four-hourly.mp4", out_dir_fourhourly => out_dir_daily)
-    run(`ffmpeg -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $fourhourly_movie_path`)
+    run(`ffmpeg -y -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $fourhourly_movie_path`)
   end
 
   if should_publish
