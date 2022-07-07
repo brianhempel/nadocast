@@ -277,7 +277,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
         println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
         println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
-      if is_fourhourly_forecast
+      elseif is_fourhourly_forecast
         valid_start -= Dates.minute(30)
         valid_stop  += Dates.minute(30)
 
