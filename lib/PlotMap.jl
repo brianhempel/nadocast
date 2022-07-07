@@ -271,15 +271,15 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
 
       if is_day_forecast
         # because we train ±30min to each hour...
-        valid_start -= Dates.minute(30)
-        valid_stop  += Dates.minute(30)
+        valid_start -= Dates.Minute(30)
+        valid_stop  += Dates.Minute(30)
 
         println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
         println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
       elseif is_fourhourly_forecast
-        valid_start -= Dates.minute(30)
-        valid_stop  += Dates.minute(30)
+        valid_start -= Dates.Minute(30)
+        valid_stop  += Dates.Minute(30)
 
         println(f, "L 6pt,Helvetica-Bold C Nadocast $(event_title) $(Dates.format(run_time_utc, "H"))Z +$(forecast_hour_range.start)-$(forecast_hour_range.stop) ending $(Dates.format(valid_stop, "yyyy-m-d H:MM"))Z")
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
