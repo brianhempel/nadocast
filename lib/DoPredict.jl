@@ -108,7 +108,7 @@ function do_forecast(forecast)
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
 
-  function plot_forecast(forecast; is_hourly, is_fourhourly, is_absolutely_calibrated = false, draw = true, pdf = true)
+  function plot_forecast(forecast; is_hourly, is_fourhourly, is_absolutely_calibrated = false, grib2 = true, draw = true, pdf = true)
 
     @assert !(is_hourly && is_fourhourly)
 
@@ -157,7 +157,7 @@ function do_forecast(forecast)
       sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
       sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
       calibration_blurb    = is_absolutely_calibrated ? "_abs_calib" : ""
-      println("ploting $(event_name)$(calibration_blurb) for f$(f_str)...")
+      println("plotting$(grib2 ? " grib2" : "")$(draw ? " png" : "")$(draw && pdf ? " pdf" : "") for (sig_)$(event_name)$(calibration_blurb) f$(f_str)...")
       out_path_prefix      = out_dir *     "nadocast_conus_$(event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       sig_out_path_prefix  = out_dir * "nadocast_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       period_path          = out_path_prefix     * "_f$(f_str)"
@@ -166,20 +166,22 @@ function do_forecast(forecast)
       prediction           = @view predictions[:, model_i]
       sig_prediction       = @view predictions[:, sig_model_i]
 
-      Grib2.write_15km_HREF_probs_grib2(
-        prediction;
-        run_time = Forecasts.run_utc_datetime(forecast),
-        forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
-        event_type = event_name,
-        out_name = period_path * ".grib2",
-      )
-      Grib2.write_15km_HREF_probs_grib2(
-        sig_prediction;
-        run_time = Forecasts.run_utc_datetime(forecast),
-        forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
-        event_type = sig_event_name,
-        out_name = sig_period_path * ".grib2",
-      )
+      if grib2
+        Grib2.write_15km_HREF_probs_grib2(
+          prediction;
+          run_time = Forecasts.run_utc_datetime(forecast),
+          forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
+          event_type = event_name,
+          out_name = period_path * ".grib2",
+        )
+        Grib2.write_15km_HREF_probs_grib2(
+          sig_prediction;
+          run_time = Forecasts.run_utc_datetime(forecast),
+          forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
+          event_type = sig_event_name,
+          out_name = sig_period_path * ".grib2",
+        )
+      end
 
       if draw
         PlotMap.plot_map(
@@ -224,6 +226,37 @@ function do_forecast(forecast)
   plot_forecast(forecast; is_hourly = false, is_fourhourly = false)
   plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
+  # Make grib2s for the hourlies/four-hourlies but don't draw yet because that is slow.
+
+  run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
+
+  if get(ENV, "HRRR_RAP", "true") == "false"
+    hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
+      Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour
+    end
+    hourly_forecasts = sort(hourly_forecasts; by=(f -> f.forecast_hour))
+  else
+    hourly_forecasts = []
+  end
+
+  for hourly_forecast in hourly_forecasts
+    plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
+  end
+
+  if get(ENV, "HRRR_RAP", "true") == "false"
+    fourhourly_forecasts = filter(CombinedHREFSREF.forecasts_fourhourly_with_sig_gated()) do fourhourly_forecast
+      Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour
+    end
+    fourhourly_forecasts = sort(fourhourly_forecasts; by=(f -> f.forecast_hour))
+  else
+    fourhourly_forecasts = []
+  end
+
+  for fourhourly_forecast in fourhourly_forecasts
+    plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
+  end
+
+
   # @sync doesn't seem to work; poll until subprocesses are done.
   for path in plotting_paths
     while !isfile(path * ".png") || isfile(path * ".sh")
@@ -259,17 +292,13 @@ function do_forecast(forecast)
 
   should_publish && map(wait, rsync_processes)
 
-  # Now plot the hourlies
+  # Now draw the hourlies & four-hourlies
 
-  if get(ENV, "HRRR_RAP", "true") == "false"
-    run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
-    hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
-      Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour
-    end
-    hourly_forecasts = sort(hourly_forecasts; by=(f -> f.forecast_hour))
-    for hourly_forecast in hourly_forecasts
-      plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, pdf = false)
-    end
+  for hourly_forecast in hourly_forecasts
+    plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, grib2 = false, pdf = false)
+  end
+
+  if hourly_forecasts != []
     animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
       out_dir_hourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
     end
@@ -290,10 +319,6 @@ function do_forecast(forecast)
     run(`ffmpeg -y -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourly_movie_path`)
   end
 
-  if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --update --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
-  end
-
   # if get(ENV, "TWEET", "false") == "true"
   #   if !isnothing(animation_glob_path)
   #     println("Tweeting hourlies $(hourlies_movie_path)...")
@@ -301,19 +326,11 @@ function do_forecast(forecast)
   #   end
   # end
 
-  should_publish && map(wait, rsync_processes)
+  for fourhourly_forecast in fourhourly_forecasts
+    plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = false, pdf = false)
+  end
 
-  # Now plot the four-hourlies
-
-  if get(ENV, "HRRR_RAP", "true") == "false"
-    run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
-    fourhourly_forecasts = filter(CombinedHREFSREF.forecasts_fourhourly_with_sig_gated()) do fourhourly_forecast
-      Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour
-    end
-    fourhourly_forecasts = sort(fourhourly_forecasts; by=(f -> f.forecast_hour))
-    for fourhourly_forecast in fourhourly_forecasts
-      plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, pdf = false)
-    end
+  if fourhourly_forecasts != []
     animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
       out_dir_fourhourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f*-*.png"
     end
