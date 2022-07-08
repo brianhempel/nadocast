@@ -26,14 +26,19 @@ _forecasts_blurred = [] # For downstream combination with other forecasts
 _forecasts_calibrated = []
 _forecasts_calibrated_with_sig_gated = []
 
-_forecasts_day_accumulators                  = []
-_forecasts_fourhourly_accumulators           = []
-_forecasts_day                               = []
-_forecasts_day_with_sig_gated                = []
-_forecasts_fourhourly                        = []
-_forecasts_fourhourly_with_sig_gated         = []
-_forecasts_day_spc_calibrated                = []
-_forecasts_day_spc_calibrated_with_sig_gated = []
+_forecasts_day_accumulators                   = []
+_forecasts_day2_accumulators                  = []
+_forecasts_fourhourly_accumulators            = []
+_forecasts_day                                = []
+_forecasts_day_with_sig_gated                 = []
+_forecasts_day2                               = []
+_forecasts_day2_with_sig_gated                = []
+_forecasts_fourhourly                         = []
+_forecasts_fourhourly_with_sig_gated          = []
+_forecasts_day_spc_calibrated                 = []
+_forecasts_day_spc_calibrated_with_sig_gated  = []
+_forecasts_day2_spc_calibrated                = []
+_forecasts_day2_spc_calibrated_with_sig_gated = []
 
 
 
@@ -110,6 +115,15 @@ function forecasts_day_accumulators()
   end
 end
 
+function forecasts_day2_accumulators()
+  if isempty(_forecasts_day2_accumulators)
+    reload_forecasts()
+    _forecasts_day2_accumulators
+  else
+    _forecasts_day2_accumulators
+  end
+end
+
 function forecasts_fourhourly_accumulators()
   if isempty(_forecasts_fourhourly_accumulators)
     reload_forecasts()
@@ -134,6 +148,24 @@ function forecasts_day_with_sig_gated()
     _forecasts_day_with_sig_gated
   else
     _forecasts_day_with_sig_gated
+  end
+end
+
+function forecasts_day2()
+  if isempty(_forecasts_day2)
+    reload_forecasts()
+    _forecasts_day2
+  else
+    _forecasts_day2
+  end
+end
+
+function forecasts_day2_with_sig_gated()
+  if isempty(_forecasts_day2_with_sig_gated)
+    reload_forecasts()
+    _forecasts_day2_with_sig_gated
+  else
+    _forecasts_day2_with_sig_gated
   end
 end
 
@@ -170,6 +202,24 @@ function forecasts_day_spc_calibrated_with_sig_gated()
     _forecasts_day_spc_calibrated_with_sig_gated
   else
     _forecasts_day_spc_calibrated_with_sig_gated
+  end
+end
+
+function forecasts_day2_spc_calibrated()
+  if isempty(_forecasts_day2_spc_calibrated)
+    reload_forecasts()
+    _forecasts_day2_spc_calibrated
+  else
+    _forecasts_day2_spc_calibrated
+  end
+end
+
+function forecasts_day2_spc_calibrated_with_sig_gated()
+  if isempty(_forecasts_day2_spc_calibrated_with_sig_gated)
+    reload_forecasts()
+    _forecasts_day2_spc_calibrated_with_sig_gated
+  else
+    _forecasts_day2_spc_calibrated_with_sig_gated
   end
 end
 
@@ -233,13 +283,18 @@ function reload_forecasts()
   global _forecasts_calibrated_with_sig_gated
 
   global _forecasts_day_accumulators
+  global _forecasts_day2_accumulators
   global _forecasts_fourhourly_accumulators
   global _forecasts_day
   global _forecasts_day_with_sig_gated
+  global _forecasts_day2
+  global _forecasts_day2_with_sig_gated
   global _forecasts_fourhourly
   global _forecasts_fourhourly_with_sig_gated
   global _forecasts_day_spc_calibrated
   global _forecasts_day_spc_calibrated_with_sig_gated
+  global _forecasts_day2_spc_calibrated
+  global _forecasts_day2_spc_calibrated_with_sig_gated
 
   _forecasts = []
 
