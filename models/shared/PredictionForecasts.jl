@@ -301,6 +301,10 @@ function period_forecasts_from_accumulators(forecasts_period_accumulators, event
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
+  σ(x) = 1.0f0 / (1.0f0 + exp(-x))
+
+  logit(p) = log(p / (one(p) - p))
+
   # array of (event_name, var_name, predict)
   period_models = map(1:length(models)) do model_i
     event_name, var_name = models[model_i]
