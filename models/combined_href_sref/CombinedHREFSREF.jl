@@ -223,6 +223,7 @@ gated_models =
   ]
 
 # (event_name, grib2_var_name, model_name)
+# I don't think the grib2_var_name is ever used.
 models_with_gated =
   [ models;
     [ ("sig_tornado", "STORPRO",  "sig_tornado_gated_by_tornado")
@@ -417,7 +418,7 @@ function reload_forecasts()
 
   hourly_prediction_forecasts = vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined)
 
-  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name = "CombinedHREFSREF")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators_unused, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name = "CombinedHREFSREF")
 
 
   event_to_0z_day_bins = Dict{String, Vector{Float32}}(
@@ -454,63 +455,11 @@ function reload_forecasts()
     "sig_hail"    => [[1.326802,   -0.31069145, -0.27217078], [1.4527221,  -0.5298689,   -0.9338967],  [1.1630019,  -0.154732,    -0.25065106]],
   )
 
-  # Returns array of (event_name, var_name, predict)
-  function make_acc_models(event_to_bins, event_to_bins_logistic_coeffs)
-    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
-
-    map(1:event_types_count) do model_i
-      event_name, var_name, model_name = models[model_i] # event_name == model_name here
-
-      predict(forecasts, data) = begin
-        total_prob_ŷs = @view data[:, model_i*2 - 1]
-        max_hourly_ŷs = @view data[:, model_i*2]
-
-        out = Array{Float32}(undef, length(total_prob_ŷs))
-
-        bin_maxes            = event_to_bins[model_name]
-        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
-
-        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
-
-        predict_one(coeffs, total_prob_ŷ, max_hourly_ŷ) = σ(coeffs[1]*logit(total_prob_ŷ) + coeffs[2]*logit(max_hourly_ŷ) + coeffs[3])
-
-        Threads.@threads for i in 1:length(total_prob_ŷs)
-          total_prob_ŷ = total_prob_ŷs[i]
-          max_hourly_ŷ = max_hourly_ŷs[i]
-          if total_prob_ŷ <= bin_maxes[1]
-            # Bin 1-2 predictor only
-            ŷ = predict_one(bins_logistic_coeffs[1], total_prob_ŷ, max_hourly_ŷ)
-          elseif total_prob_ŷ > bin_maxes[length(bin_maxes) - 1]
-            # Bin 3-4 predictor only
-            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], total_prob_ŷ, max_hourly_ŷ)
-          else
-            # Overlapping bins
-            higher_bin_i = findfirst(bin_max -> total_prob_ŷ <= bin_max, bin_maxes)
-            lower_bin_i  = higher_bin_i - 1
-            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
-            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
-
-            # Bin 1-2 and 2-3 predictors
-            ratio = ratio_between(total_prob_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
-            ŷ = ratio*predict_one(coeffs_higher_bin, total_prob_ŷ, max_hourly_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, total_prob_ŷ, max_hourly_ŷ)
-          end
-          out[i] = ŷ
-        end
-
-        out
-      end
-
-      (event_name, var_name, predict)
-    end
-  end
-
-  # We only ever use the 0Z forecasts (normally) but here we are using the 0Z calibration non-0Z runs too
-  day_models = make_acc_models(event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs)
-  _forecasts_day = PredictionForecasts.simple_prediction_forecasts(_forecasts_day_accumulators, day_models; model_name = "CombinedHREFSREF_day_severe_probabilities")
+  # We only ever use the 0Z forecasts (normally) but here we are using the 0Z calibration on non-0Z runs too
+  _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "CombinedHREFSREF", period_name = "day")
   _forecasts_day_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day, models, gated_models; model_name = "CombinedHREFSREF_day_severe_probabilities_with_sig_gated")
 
-  fourhourly_models = make_acc_models(event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs)
-  _forecasts_fourhourly = PredictionForecasts.simple_prediction_forecasts(_forecasts_fourhourly_accumulators, fourhourly_models; model_name = "CombinedHREFSREF_four-hourly_severe_probabilities")
+  _forecasts_fourhourly = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_fourhourly_accumulators, event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs, models; module_name = "CombinedHREFSREF", period_name = "four-hourly")
   _forecasts_fourhourly_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "CombinedHREFSREF_four-hourly_severe_probabilities_with_sig_gated")
 
   # _forecasts_day_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts_day, blur_radii)

@@ -44,6 +44,10 @@ logit(p) = log(p / (one(p) - p))
 blur_radii = [15, 25, 35, 50, 70, 100]
 
 
+# we only trained out to f35, but with some assumptions we can try to go out to f47 even though I don't have an HREF archive out to f48 to train against
+regular_forecasts(forecasts)  = filter(f -> f.forecast_hour in 2:35,  forecasts)
+extended_forecasts(forecasts) = filter(f -> f.forecast_hour in 36:47,  forecasts)
+
 function forecasts()
   if isempty(_forecasts)
     reload_forecasts()
@@ -247,7 +251,7 @@ function reload_forecasts()
     predict_f24_to_f35 = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/../href_mid_2018_forward/" * gbdt_f24_to_f35)
 
     predict(forecast, data) = begin
-      if forecast.forecast_hour in 25:35
+      if forecast.forecast_hour in 25:47 # For f36-f47, use the f24-f35 GBDT, but we will blur more below
         predict_f24_to_f35(data)
       elseif forecast.forecast_hour == 24
         0.5f0 .* (predict_f24_to_f35(data) .+ predict_f13_to_f24(data))
@@ -258,7 +262,7 @@ function reload_forecasts()
       elseif forecast.forecast_hour in 2:12
         predict_f2_to_f13(data)
       else
-        error("HREF forecast hour $(forecast.forecast_hour) not in 2:35")
+        error("HREF forecast hour $(forecast.forecast_hour) not in 2:47")
       end
     end
 
@@ -269,11 +273,12 @@ function reload_forecasts()
   # rm -r lib/computation_cache/cached_forecasts/href_prediction_raw_2021_models
   _forecasts =
     ForecastCombinators.disk_cache_forecasts(
-      PredictionForecasts.simple_prediction_forecasts(href_forecasts, predictors),
+      PredictionForecasts.simple_prediction_forecasts(href_forecasts,  predictors),
       "href_prediction_raw_2021_models_$(hash(models))"
     )
 
-  _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(_forecasts, blur_radii)
+  # Only used incidentally to determine best blur radii
+  _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(regular_forecasts(_forecasts), blur_radii)
 
   grid = _forecasts[1].grid
 
@@ -300,7 +305,23 @@ function reload_forecasts()
     (blur_15mi_grid_is, blur_25mi_grid_is), # sig_hail
   ]
 
-  _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:35, blur_grid_is)
+  blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
+
+  extended_forecasts_blur_grid_is = [
+    (blur_15mi_grid_is, blur_50mi_grid_is), # tornado
+    (blur_25mi_grid_is, blur_50mi_grid_is), # wind
+    (blur_25mi_grid_is, blur_50mi_grid_is), # hail
+    (blur_35mi_grid_is, blur_50mi_grid_is), # sig_tornado
+    (blur_35mi_grid_is, blur_50mi_grid_is), # sig_wind
+    (blur_25mi_grid_is, blur_50mi_grid_is), # sig_hail
+  ]
+
+  _forecasts_blurred =
+    vcat(
+      PredictionForecasts.blurred(regular_forecasts(_forecasts),  2:35,  blur_grid_is),
+      PredictionForecasts.blurred(extended_forecasts(_forecasts), 35:47, extended_forecasts_blur_grid_is), # Yes, 35:47 is correct so that f36 uses a bit of the larger radii blur
+    )
+
 
 
   # Calibrating hourly predictions to validation data so we can make HREF-only day 2 forecasts.
@@ -389,7 +410,7 @@ function reload_forecasts()
   # 6. should thereby be absolutely calibrated (check)
   # 7. calibrate to SPC thresholds (linear interpolation)
 
-  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPrediction")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPrediction")
 
   # The following was computed in TrainDay.jl
 
@@ -413,9 +434,48 @@ function reload_forecasts()
   _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day")
   _forecasts_day_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_with_sig_gated")
 
+  _forecasts_day2 = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day2_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day2")
+  _forecasts_day2_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_with_sig_gated")
+
   _forecasts_fourhourly = [] # PredictionForecasts.period_forecasts_from_accumulators(_forecasts_fourhourly_accumulators, event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "four-hourly")
   _forecasts_fourhourly_with_sig_gated = [] # PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "HREFPrediction_four-hourly_severe_probabilities_with_sig_gated")
 
+  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
+    "tornado" => [
+      (0.02, 0.017892838),
+      (0.05, 0.07787514),
+      (0.1,  0.17152214),
+      (0.15, 0.2814541),
+      (0.3,  0.3905239),
+      (0.45, 0.6009083)
+    ],
+    "wind" => [
+      (0.05, 0.051660538),
+      (0.15, 0.21513557),
+      (0.3,  0.49578285),
+      (0.45, 0.78172493)
+    ],
+    "hail" => [
+      (0.05, 0.030927658),
+      (0.15, 0.12172127),
+      (0.3,  0.33656883),
+      (0.45, 0.61953926)
+    ],
+    "sig_tornado" => [(0.1, 0.063589096)],
+    "sig_wind"    => [(0.1, 0.11205864)],
+    "sig_hail"    => [(0.1, 0.057775497)],
+  )
+
+  # ensure ordered the same as the features in the data
+  calibrations = map(m -> spc_calibrations[m[1]], models)
+
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds")
+  _forecasts_day_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
+
+  _forecasts_day2_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day2, calibrations; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds")
+  _forecasts_day2_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
+
+  # start here: see if these actually work lol
 
   ()
 end

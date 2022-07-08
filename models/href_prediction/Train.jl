@@ -1505,7 +1505,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
-(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_blurred(); just_hours_near_storm_events = false);
+(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.regular_forecasts(HREFPrediction.forecasts_blurred()); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 1, 1, 0)
@@ -1801,7 +1801,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
-(_, validation_forecasts_calibrated_with_sig_gated, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_calibrated_with_sig_gated(); just_hours_near_storm_events = false);
+(_, validation_forecasts_calibrated_with_sig_gated, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.regular_forecasts(HREFPrediction.forecasts_calibrated_with_sig_gated()); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 1, 1, 0)

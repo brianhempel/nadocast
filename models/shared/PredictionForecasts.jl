@@ -210,7 +210,8 @@ function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; 
   run_ymdhs = sort(unique(map(Forecasts.run_year_month_day_hour, hourly_prediction_forecasts)), alg=MergeSort)
 
   associated_fourhourly_forecasts = []
-  associated_forecasts_in_day = []
+  associated_forecasts_in_day  = []
+  associated_forecasts_in_day2 = []
   for (run_year, run_month, run_day, run_hour) in run_ymdhs
     run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
 
@@ -227,10 +228,16 @@ function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; 
       end
     end
 
-    forecast_hours_in_convective_day = max(12-run_hour,2):clamp(23+12-run_hour,2,35)
+    forecast_hours_in_convective_day  = max(12-run_hour,2) : 35-run_hour
+    forecast_hours_in_convective_day2 = forecast_hours_in_convective_day.stop+1 : forecast_hours_in_convective_day.stop+24
+
     forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
     if length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day)
       push!(associated_forecasts_in_day, forecasts_for_convective_day)
+    end
+    forecasts_for_convective_day2 = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day2, forecasts_for_run_time)
+    if length(forecast_hours_in_convective_day2) == length(forecasts_for_convective_day2)
+      push!(associated_forecasts_in_day2, forecasts_for_convective_day2)
     end
   end
 
@@ -246,8 +253,9 @@ function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; 
     canonical
   end
 
-  day_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts_in_day,     forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
-  fourhourly_predictions = ForecastCombinators.concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day_hourly_predictions  = ForecastCombinators.concat_forecasts(associated_forecasts_in_day,     forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day2_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts_in_day2,    forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  fourhourly_predictions  = ForecastCombinators.concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
 
   hourlies_to_accs_inventory_transformer(day_or_four_hour_str) = (base_forecast, base_inventory) -> begin
     out = Inventories.InventoryLine[]
@@ -288,10 +296,11 @@ function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; 
 
   # Caching barely helps load times, so we don't do it
 
-  forecasts_day_accumulators        = ForecastCombinators.map_forecasts(day_hourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("day"),    data_transformer = hourlies_to_accs_data_transformer, model_name = "Day_severe_probability_accumulators_from_$(module_name)_hours")
-  forecasts_fourhourly_accumulators = ForecastCombinators.map_forecasts(fourhourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("4 hour"), data_transformer = hourlies_to_accs_data_transformer, model_name = "Four-hourly_severe_probability_accumulators_from_$(module_name)_hours")
+  forecasts_day_accumulators        = ForecastCombinators.map_forecasts(day_hourly_predictions;  inventory_transformer = hourlies_to_accs_inventory_transformer("day"),    data_transformer = hourlies_to_accs_data_transformer, model_name = "Day_severe_probability_accumulators_from_$(module_name)_hours")
+  forecasts_day2_accumulators       = ForecastCombinators.map_forecasts(day2_hourly_predictions; inventory_transformer = hourlies_to_accs_inventory_transformer("day"),    data_transformer = hourlies_to_accs_data_transformer, model_name = "Day2_severe_probability_accumulators_from_$(module_name)_hours")
+  forecasts_fourhourly_accumulators = ForecastCombinators.map_forecasts(fourhourly_predictions;  inventory_transformer = hourlies_to_accs_inventory_transformer("4 hour"), data_transformer = hourlies_to_accs_data_transformer, model_name = "Four-hourly_severe_probability_accumulators_from_$(module_name)_hours")
 
-  (forecasts_day_accumulators, forecasts_fourhourly_accumulators)
+  (forecasts_day_accumulators, forecasts_day2_accumulators, forecasts_fourhourly_accumulators)
 end
 
 # Turn the total and max period (day or four-hourly) probs into a combined calibrated prob, based on bins and logistic regression across overlapping bin-pairs
