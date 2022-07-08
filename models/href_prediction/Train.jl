@@ -1837,25 +1837,13 @@ test_predictive_power(validation_forecasts_calibrated_with_sig_gated, X, Ys, wei
 
 
 
-models_with_gated =
-  [ ("tornado",     "TORPROB",  "tornado")
-  , ("wind",        "WINDPROB", "wind")
-  , ("hail",        "HAILPROB", "hail")
-  , ("sig_tornado", "STORPRO",  "sig_tornado")
-  , ("sig_wind",    "SWINDPRO", "sig_wind")
-  , ("sig_hail",    "SHAILPRO", "sig_hail")
-  , ("sig_tornado", "STORPRO",  "sig_tornado_gated_by_tornado")
-  , ("sig_wind",    "SWINDPRO", "sig_wind_gated_by_wind")
-  , ("sig_hail",    "SHAILPRO", "sig_hail_gated_by_hail")
-  ]
-
 function test_calibration(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
   println("model_name\tmean_y\tmean_ŷ\tΣweight\tbin_max")
   for feature_i in 1:length(inventory)
     prediction_i = feature_i
-    (event_name, _, model_name) = models_with_gated[prediction_i]
+    (event_name, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
     y = Ys[event_name]
     ŷ = @view X[:, feature_i]
 

@@ -374,7 +374,7 @@ length(day_validation_forecasts)
 @time Forecasts.data(day_validation_forecasts[10])
 
 day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
-length(day_validation_forecasts_0z) # Expected:
+length(day_validation_forecasts_0z) # Expected: 157
 #
 
 compute_day_labels(events, forecast) = begin

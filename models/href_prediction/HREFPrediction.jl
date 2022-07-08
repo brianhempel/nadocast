@@ -206,6 +206,20 @@ gated_models =
     ("sig_hail_gated_by_hail",       "sig_hail",    "hail"),
   ]
 
+# (event_name, grib2_var_name, model_name)
+# I don't think the middle value here is ever used.
+models_with_gated =
+  [ ("tornado",     "TORPROB",  "tornado")
+  , ("wind",        "WINDPROB", "wind")
+  , ("hail",        "HAILPROB", "hail")
+  , ("sig_tornado", "STORPRO",  "sig_tornado")
+  , ("sig_wind",    "SWINDPRO", "sig_wind")
+  , ("sig_hail",    "SHAILPRO", "sig_hail")
+  , ("sig_tornado", "STORPRO",  "sig_tornado_gated_by_tornado")
+  , ("sig_wind",    "SWINDPRO", "sig_wind_gated_by_wind")
+  , ("sig_hail",    "SHAILPRO", "sig_hail_gated_by_hail")
+  ]
+
 
 function reload_forecasts()
   global _forecasts
