@@ -311,8 +311,8 @@ function period_forecasts_from_accumulators(forecasts_period_accumulators, event
 
       out = Array{Float32}(undef, length(total_prob_ŷs))
 
-      bin_maxes            = event_to_bins[model_name]
-      bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
+      bin_maxes            = event_to_bins[event_name]
+      bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
 
       @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
