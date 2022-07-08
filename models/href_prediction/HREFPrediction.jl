@@ -375,8 +375,32 @@ function reload_forecasts()
   # 6. should thereby be absolutely calibrated (check)
   # 7. calibrate to SPC thresholds (linear interpolation)
 
-  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "CombinedHREFSREF")
+  _forecasts_day_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPrediction")
 
+  # The following was computed in TrainDay.jl
+
+  event_to_0z_day_bins = Dict{String, Vector{Float32}}(
+    "tornado"     => [0.017401028, 0.057005595, 0.13199422,  1.0],
+    "wind"        => [0.105925485, 0.24237353,  0.41793627,  1.0],
+    "hail"        => [0.057583164, 0.13694991,  0.26336262,  1.0],
+    "sig_tornado" => [0.00944276,  0.03155332,  0.1166033,   1.0],
+    "sig_wind"    => [0.014537211, 0.044868514, 0.080929644, 1.0],
+    "sig_hail"    => [0.017137118, 0.032750417, 0.06910927,  1.0],
+  )
+  event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"     => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+    "wind"        => [[0.9533327,  0.08198542, -0.049861502], [1.1315389,    -0.06399821,  -0.22480214], [0.9192797, 0.07381143,  -0.066281155]],
+    "hail"        => [[0.78442734, 0.27793196, 0.407107],     [1.0553415,    -0.1081846,   -0.47820166], [1.2830826, -0.47052482, -1.2408078]],
+    "sig_tornado" => [[0.5930697,  0.4203289,  0.43342784],   [-0.032218266, 0.8780866,    0.3627351],   [0.6223907, 0.6945181,   1.4135333]],
+    "sig_wind"    => [[0.53879964, 0.4059111,  0.116683125],  [1.0535268,    0.2508744,    1.1575938],   [0.619009,  0.59856415,  1.4483397]],
+    "sig_hail"    => [[1.7509274,  -0.6264722, -0.59064865],  [1.5742372,    -0.7514552,   -1.8797148],  [1.4796587, -0.48270363, -0.9502378]],
+  )
+
+  _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day")
+  _forecasts_day_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_with_sig_gated")
+
+  _forecasts_fourhourly = [] # PredictionForecasts.period_forecasts_from_accumulators(_forecasts_fourhourly_accumulators, event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "four-hourly")
+  _forecasts_fourhourly_with_sig_gated = [] # PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "HREFPrediction_four-hourly_severe_probabilities_with_sig_gated")
 
 
   ()

@@ -294,6 +294,62 @@ function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; 
   (forecasts_day_accumulators, forecasts_fourhourly_accumulators)
 end
 
+# Turn the total and max period (day or four-hourly) probs into a combined calibrated prob, based on bins and logistic regression across overlapping bin-pairs
+#
+# models is array of (event_name, var_name, ...) tuples
+function period_forecasts_from_accumulators(forecasts_period_accumulators, event_to_bins, event_to_bins_logistic_coeffs, models; module_name, period_name)
+
+  ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+
+  # array of (event_name, var_name, predict)
+  period_models = map(1:length(models)) do model_i
+    event_name, var_name = models[model_i]
+
+    predict(forecast, data) = begin
+      total_prob_ŷs = @view data[:, model_i*2 - 1]
+      max_hourly_ŷs = @view data[:, model_i*2]
+
+      out = Array{Float32}(undef, length(total_prob_ŷs))
+
+      bin_maxes            = event_to_bins[model_name]
+      bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
+
+      @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+
+      predict_one(coeffs, total_prob_ŷ, max_hourly_ŷ) = σ(coeffs[1]*logit(total_prob_ŷ) + coeffs[2]*logit(max_hourly_ŷ) + coeffs[3])
+
+      Threads.@threads for i in 1:length(total_prob_ŷs)
+        total_prob_ŷ = total_prob_ŷs[i]
+        max_hourly_ŷ = max_hourly_ŷs[i]
+        if total_prob_ŷ <= bin_maxes[1]
+          # Bin 1-2 predictor only
+          ŷ = predict_one(bins_logistic_coeffs[1], total_prob_ŷ, max_hourly_ŷ)
+        elseif total_prob_ŷ > bin_maxes[length(bin_maxes) - 1]
+          # Bin 3-4 predictor only
+          ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], total_prob_ŷ, max_hourly_ŷ)
+        else
+          # Overlapping bins
+          higher_bin_i = findfirst(bin_max -> total_prob_ŷ <= bin_max, bin_maxes)
+          lower_bin_i  = higher_bin_i - 1
+          coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+          coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+
+          # Bin 1-2 and 2-3 predictors
+          ratio = ratio_between(total_prob_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+          ŷ = ratio*predict_one(coeffs_higher_bin, total_prob_ŷ, max_hourly_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, total_prob_ŷ, max_hourly_ŷ)
+        end
+        out[i] = ŷ
+      end
+
+      out
+    end
+
+    (event_name, var_name, predict)
+  end
+
+  PredictionForecasts.simple_prediction_forecasts(forecasts_period_accumulators, period_models; model_name = "$(module_name)_$(period_name)_severe_probabilities")
+end
+
 
 
 
