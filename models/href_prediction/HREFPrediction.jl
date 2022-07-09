@@ -328,7 +328,7 @@ function reload_forecasts()
   # rm -r lib/computation_cache/cached_forecasts/href_prediction_raw_2021_models
   _forecasts =
     ForecastCombinators.disk_cache_forecasts(
-      PredictionForecasts.simple_prediction_forecasts(href_forecasts,  predictors),
+      PredictionForecasts.simple_prediction_forecasts(href_forecasts, predictors),
       "href_prediction_raw_2021_models_$(hash(models))"
     )
 
@@ -529,8 +529,6 @@ function reload_forecasts()
 
   _forecasts_day2_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day2, calibrations; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds")
   _forecasts_day2_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
-
-  # start here: see if these actually work lol
 
   ()
 end

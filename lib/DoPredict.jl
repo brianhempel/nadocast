@@ -21,15 +21,18 @@ import Grids
 import Grib2
 import PlotMap
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction")
+import HREFPrediction
+
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
 import CombinedHREFSREF
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-forecasts, absolutely_calibrated_forecasts =
+forecasts, absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_calibrated_forecasts =
   if get(ENV, "HRRR_RAP", "true") == "false"
-    (CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated())
+    (CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day2_with_sig_gated())
   else
     (Forecasts.Forecast[], Forecasts.Forecast[])
     # [CombinedHREFSREF.forecasts_day_spc_calibrated(); CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()]
@@ -80,12 +83,24 @@ end
 
 this_file_dir = @__DIR__
 
+function find(pred, arr)
+  i = findfirst(pred, arr)
+  isnothing(i) ? nothing : arr[i]
+end
+
 function do_forecast(forecast)
 
   run_year_month_day_hour_forecast_hour = Forecasts.run_year_month_day_hour_forecast_hour(forecast)
-  absolutely_calibrated_forecast = filter(absolutely_calibrated_forecasts) do f
+  absolutely_calibrated_forecast = find(absolutely_calibrated_forecasts) do f
     Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
-  end[1]
+  end
+
+  day2_forecast = find(day2_forecasts) do f
+    Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
+  end
+  day2_absolutely_calibrated_forecast = find(day2_absolutely_calibrated_forecasts) do f
+    Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
+  end
 
   plotting_paths = []
   daily_paths_to_perhaps_tweet = []
@@ -261,7 +276,6 @@ function do_forecast(forecast)
 
   should_publish && map(wait, rsync_processes)
 
-
   # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
 
   run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
@@ -297,6 +311,44 @@ function do_forecast(forecast)
     map(wait, rsync_processes)
   end
 
+  # Plot day 2 forecasts
+
+  !isnothing(day2_forecast)                       && plot_forecast(day2_forecast;                       is_hourly = false, is_fourhourly = false)
+  !isnothing(day2_absolutely_calibrated_forecast) && plot_forecast(day2_absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false)
+
+  # @sync doesn't seem to work; poll until subprocesses are done.
+  for path in plotting_paths
+    while !isfile(path * ".png") || isfile(path * ".sh")
+      sleep(1)
+    end
+  end
+
+  if should_publish
+    rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+  end
+
+  # if get(ENV, "TWEET", "false") == "true"
+  #   tweet_script_path = (@__DIR__) * "/tweet.rb"
+
+  #   tweet_str =
+  #     if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
+  #       "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast (New 2021 Models)"
+  #     else
+  #       "$(nadocast_run_hour)Z Day Tornado Forecast (New 2021 Models)"
+  #     end
+
+  #   for path in daily_paths_to_perhaps_tweet
+  #     println("Tweeting daily $(path)...")
+  #     run(`ruby $tweet_script_path "$(tweet_str)" $path.png`)
+  #   end
+
+  #   # if !isnothing(animation_glob_path)
+  #   #   println("Tweeting hourlies $(hourlies_movie_path)...")
+  #   #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
+  #   # end
+  # end
+
+  should_publish && map(wait, rsync_processes)
 
   # Now draw the hourlies & four-hourlies
 
