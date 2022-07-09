@@ -34,7 +34,7 @@ forecasts, absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_cali
   if get(ENV, "HRRR_RAP", "true") == "false"
     (CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day2_with_sig_gated())
   else
-    (Forecasts.Forecast[], Forecasts.Forecast[])
+    (Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[])
     # [CombinedHREFSREF.forecasts_day_spc_calibrated(); CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()]
   end;
 
@@ -90,17 +90,18 @@ end
 
 function do_forecast(forecast)
 
+  run_year_month_day_hour               = Forecasts.run_year_month_day_hour(forecast)
   run_year_month_day_hour_forecast_hour = Forecasts.run_year_month_day_hour_forecast_hour(forecast)
   absolutely_calibrated_forecast = find(absolutely_calibrated_forecasts) do f
     Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
-  end
+  end;
 
   day2_forecast = find(day2_forecasts) do f
-    Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
-  end
+    Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
+  end;
   day2_absolutely_calibrated_forecast = find(day2_absolutely_calibrated_forecasts) do f
-    Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
-  end
+    Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
+  end;
 
   plotting_paths = []
   daily_paths_to_perhaps_tweet = []
@@ -277,8 +278,6 @@ function do_forecast(forecast)
   should_publish && map(wait, rsync_processes)
 
   # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
-
-  run_year_month_day_hour = Forecasts.run_year_month_day_hour(forecast)
 
   if get(ENV, "HRRR_RAP", "true") == "false"
     hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
