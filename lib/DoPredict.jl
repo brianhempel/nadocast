@@ -233,13 +233,13 @@ function do_forecast(forecast)
         push!(plotting_paths, sig_period_path)
       end
 
-      if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated
+      if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated && period_start_forecast_hour <= 12
         push!(daily_paths_to_perhaps_tweet, period_path)
       end
     end
   end
 
-  plot_forecast(forecast; is_hourly = false, is_fourhourly = false)
+  plot_forecast(forecast;                       is_hourly = false, is_fourhourly = false)
   plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
   # @sync doesn't seem to work; poll until subprocesses are done.
@@ -248,6 +248,7 @@ function do_forecast(forecast)
       sleep(1)
     end
   end
+  plotting_paths = []
 
   should_publish = get(ENV, "PUBLISH", "false") == "true"
   if should_publish
@@ -313,7 +314,7 @@ function do_forecast(forecast)
   # Plot day 2 forecasts
 
   !isnothing(day2_forecast)                       && plot_forecast(day2_forecast;                       is_hourly = false, is_fourhourly = false)
-  !isnothing(day2_absolutely_calibrated_forecast) && plot_forecast(day2_absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false)
+  !isnothing(day2_absolutely_calibrated_forecast) && plot_forecast(day2_absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
   # @sync doesn't seem to work; poll until subprocesses are done.
   for path in plotting_paths
@@ -321,6 +322,7 @@ function do_forecast(forecast)
       sleep(1)
     end
   end
+  plotting_paths = []
 
   if should_publish
     rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
@@ -369,6 +371,7 @@ function do_forecast(forecast)
       sleep(1)
     end
   end
+  plotting_paths = []
 
   for animation_glob_path in animation_glob_paths
     println("Making hourlies movie out of $(animation_glob_path)...")
@@ -401,6 +404,7 @@ function do_forecast(forecast)
       sleep(1)
     end
   end
+  plotting_paths = []
 
   for animation_glob_path in animation_glob_paths
     println("Making four-hourlies movie out of $(animation_glob_path)...")
