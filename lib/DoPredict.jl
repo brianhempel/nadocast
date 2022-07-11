@@ -287,6 +287,7 @@ function do_forecast(forecast)
 
   should_publish && map(wait, rsync_processes)
 
+  is_day1 = forecast.forecast_hour <= 35
   if is_day1
     # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
 
