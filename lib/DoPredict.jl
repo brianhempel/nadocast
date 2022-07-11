@@ -1,14 +1,14 @@
-# To predict the past, set FORECAST_DATE and RUN_HOUR in the environment:
+# To predict the past, set RUN_DATE and RUN_HOUR in the environment:
 #
-# $ FORECAST_DATE=2019-4-7 RUN_HOUR=10 TWEET=true FORECASTS_ROOT=$(pwd)/test_grib2s make forecast
+# $ RUN_DATE=2019-4-7 RUN_HOUR=10 TWEET=true FORECASTS_ROOT=$(pwd)/test_grib2s make forecast
 #
 # Using data on remote machine:
 # Make sure ~/.ssh/config doesn't use screen
 # $ mkdir ~/nadocaster2
 # $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
-# $ FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_DATE=2019-4-7 RUN_HOUR=0 HRRR_RAP=false make forecast
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ RUN_DATE=2019-4-7 RUN_HOUR=0 HRRR_RAP=false make forecast
 
-# FORECASTS_ROOT=/home/brian/nadocaster2/ FORECAST_DATE=2022-4-5 RUN_HOUR=0 HRRR_RAP=false JULIA_NUM_THREADS=$CORE_COUNT FORECAST_DISK_PREFETCH=false julia --project=. lib/DoPredict.jl
+# FORECASTS_ROOT=/home/brian/nadocaster2/ RUN_DATE=2022-4-5 RUN_HOUR=0 HRRR_RAP=false JULIA_NUM_THREADS=$CORE_COUNT FORECAST_DISK_PREFETCH=false julia --project=. lib/DoPredict.jl
 
 
 import Dates
@@ -30,7 +30,7 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-forecasts, absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_calibrated_forecasts =
+day1_forecasts, day1_absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_calibrated_forecasts =
   if get(ENV, "HRRR_RAP", "true") == "false"
     (CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day2_with_sig_gated())
   else
@@ -38,17 +38,24 @@ forecasts, absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_cali
     # [CombinedHREFSREF.forecasts_day_spc_calibrated(); CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()]
   end;
 
+if get(ENV, "DAY1OR2", "1") == "1"
+  forecasts, absolutely_calibrated_forecasts = day1_forecasts, day1_absolutely_calibrated_forecasts
+elseif get(ENV, "DAY1OR2", "1") == "2"
+  forecasts, absolutely_calibrated_forecasts = day2_forecasts, day2_absolutely_calibrated_forecasts
+else
+  println("DAY1OR2 should be 1 or 2!")
+  exit(1)
+end
 
-
-if haskey(ENV, "FORECAST_DATE")
-  year, month, day = map(str -> parse(Int64, str), split(ENV["FORECAST_DATE"], "-"))
+if haskey(ENV, "RUN_DATE")
+  year, month, day = map(str -> parse(Int64, str), split(ENV["RUN_DATE"], "-"))
   filter!(forecasts) do forecast
     forecast.run_year == year && forecast.run_month == month && forecast.run_day == day
   end
 end;
-if haskey(ENV, "FORECAST_DATES")
+if haskey(ENV, "RUN_DATES")
   ymds =
-    map(split(ENV["FORECAST_DATES"],",")) do date_str
+    map(split(ENV["RUN_DATES"],",")) do date_str
       year, month, day = map(str -> parse(Int64, str), split(date_str, "-"))
       (year, month, day)
     end
@@ -72,7 +79,7 @@ if haskey(ENV, "RUN_HOURS")
 end;
 sort!(forecasts, alg=MergeSort, by=Forecasts.run_utc_datetime);
 
-if !haskey(ENV, "FORECAST_DATES")
+if !haskey(ENV, "RUN_DATES")
   forecasts = [last(forecasts)]
 end;
 
@@ -96,12 +103,12 @@ function do_forecast(forecast)
     Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
   end;
 
-  day2_forecast = find(day2_forecasts) do f
-    Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
-  end;
-  day2_absolutely_calibrated_forecast = find(day2_absolutely_calibrated_forecasts) do f
-    Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
-  end;
+  # day2_forecast = find(day2_forecasts) do f
+  #   Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
+  # end;
+  # day2_absolutely_calibrated_forecast = find(day2_absolutely_calibrated_forecasts) do f
+  #   Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
+  # end;
 
   plotting_paths = []
   daily_paths_to_perhaps_tweet = []
@@ -157,6 +164,8 @@ function do_forecast(forecast)
         max(2, period_stop_forecast_hour - 23)
       end
     f_str = is_hourly ? (@sprintf "%02d" forecast.forecast_hour) : "$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
+
+    is_day1 = period_start_forecast_hour <= 12
 
     out_dir =
       if is_hourly
@@ -233,7 +242,7 @@ function do_forecast(forecast)
         push!(plotting_paths, sig_period_path)
       end
 
-      if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated && period_start_forecast_hour <= 12
+      if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated && is_day1
         push!(daily_paths_to_perhaps_tweet, period_path)
       end
     end
@@ -278,152 +287,114 @@ function do_forecast(forecast)
 
   should_publish && map(wait, rsync_processes)
 
-  # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
+  if is_day1
+    # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
 
-  if get(ENV, "HRRR_RAP", "true") == "false"
-    hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
-      Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour
+    if get(ENV, "HRRR_RAP", "true") == "false"
+      hourly_forecasts = filter(CombinedHREFSREF.forecasts_href_newer_combined_with_sig_gated()) do hourly_forecast
+        Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour
+      end
+      hourly_forecasts = sort(hourly_forecasts; by=(f -> f.forecast_hour))
+    else
+      hourly_forecasts = []
     end
-    hourly_forecasts = sort(hourly_forecasts; by=(f -> f.forecast_hour))
-  else
-    hourly_forecasts = []
-  end
 
-  for hourly_forecast in hourly_forecasts
-    plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
-  end
-
-  if get(ENV, "HRRR_RAP", "true") == "false"
-    fourhourly_forecasts = filter(CombinedHREFSREF.forecasts_fourhourly_with_sig_gated()) do fourhourly_forecast
-      Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour
+    for hourly_forecast in hourly_forecasts
+      plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
     end
-    fourhourly_forecasts = sort(fourhourly_forecasts; by=(f -> f.forecast_hour))
-  else
-    fourhourly_forecasts = []
-  end
 
-  for fourhourly_forecast in fourhourly_forecasts
-    plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
-  end
-
-  if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
-    map(wait, rsync_processes)
-  end
-
-  # Plot day 2 forecasts
-
-  !isnothing(day2_forecast)                       && plot_forecast(day2_forecast;                       is_hourly = false, is_fourhourly = false)
-  !isnothing(day2_absolutely_calibrated_forecast) && plot_forecast(day2_absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
-
-  # @sync doesn't seem to work; poll until subprocesses are done.
-  for path in plotting_paths
-    while !isfile(path * ".png") || isfile(path * ".sh")
-      sleep(1)
+    if get(ENV, "HRRR_RAP", "true") == "false"
+      fourhourly_forecasts = filter(CombinedHREFSREF.forecasts_fourhourly_with_sig_gated()) do fourhourly_forecast
+        Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour
+      end
+      fourhourly_forecasts = sort(fourhourly_forecasts; by=(f -> f.forecast_hour))
+    else
+      fourhourly_forecasts = []
     end
-  end
-  plotting_paths = []
 
-  if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
-  end
-
-  # if get(ENV, "TWEET", "false") == "true"
-  #   tweet_script_path = (@__DIR__) * "/tweet.rb"
-
-  #   tweet_str =
-  #     if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
-  #       "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast (New 2021 Models)"
-  #     else
-  #       "$(nadocast_run_hour)Z Day Tornado Forecast (New 2021 Models)"
-  #     end
-
-  #   for path in daily_paths_to_perhaps_tweet
-  #     println("Tweeting daily $(path)...")
-  #     run(`ruby $tweet_script_path "$(tweet_str)" $path.png`)
-  #   end
-
-  #   # if !isnothing(animation_glob_path)
-  #   #   println("Tweeting hourlies $(hourlies_movie_path)...")
-  #   #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
-  #   # end
-  # end
-
-  should_publish && map(wait, rsync_processes)
-
-  # Now draw the hourlies & four-hourlies
-
-  for hourly_forecast in hourly_forecasts
-    plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, grib2 = false, pdf = false)
-  end
-
-  if hourly_forecasts != []
-    animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
-      out_dir_hourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
+    for fourhourly_forecast in fourhourly_forecasts
+      plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = true, draw = false, pdf = false)
     end
-  else
-    animation_glob_paths = []
-  end
 
-  # @sync doesn't seem to work; poll until subprocesses are done.
-  for path in plotting_paths
-    while !isfile(path * ".png") || isfile(path * ".sh")
-      sleep(1)
+    if should_publish
+      rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+      map(wait, rsync_processes)
     end
-  end
-  plotting_paths = []
 
-  for animation_glob_path in animation_glob_paths
-    println("Making hourlies movie out of $(animation_glob_path)...")
-    hourly_movie_path = replace(animation_glob_path, "_f%02d.png" => "_hourly.mp4", out_dir_hourly => out_dir_daily)
-    run(`ffmpeg -y -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourly_movie_path`)
-  end
+    # Now draw the hourlies & four-hourlies
 
-  # if get(ENV, "TWEET", "false") == "true"
-  #   if !isnothing(animation_glob_path)
-  #     println("Tweeting hourlies $(hourlies_movie_path)...")
-  #     run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
-  #   end
-  # end
-
-  for fourhourly_forecast in fourhourly_forecasts
-    plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = false, pdf = false)
-  end
-
-  if fourhourly_forecasts != []
-    animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
-      out_dir_fourhourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f*-*.png"
+    for hourly_forecast in hourly_forecasts
+      plot_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true, grib2 = false, pdf = false)
     end
-  else
-    animation_glob_paths = []
-  end
 
-  # @sync doesn't seem to work; poll until subprocesses are done.
-  for path in plotting_paths
-    while !isfile(path * ".png") || isfile(path * ".sh")
-      sleep(1)
+    if hourly_forecasts != []
+      animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
+        out_dir_hourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f%02d.png"
+      end
+    else
+      animation_glob_paths = []
     end
+
+    # @sync doesn't seem to work; poll until subprocesses are done.
+    for path in plotting_paths
+      while !isfile(path * ".png") || isfile(path * ".sh")
+        sleep(1)
+      end
+    end
+    plotting_paths = []
+
+    for animation_glob_path in animation_glob_paths
+      println("Making hourlies movie out of $(animation_glob_path)...")
+      hourly_movie_path = replace(animation_glob_path, "_f%02d.png" => "_hourly.mp4", out_dir_hourly => out_dir_daily)
+      run(`ffmpeg -y -framerate 2 -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $hourly_movie_path`)
+    end
+
+    # if get(ENV, "TWEET", "false") == "true"
+    #   if !isnothing(animation_glob_path)
+    #     println("Tweeting hourlies $(hourlies_movie_path)...")
+    #     run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
+    #   end
+    # end
+
+    for fourhourly_forecast in fourhourly_forecasts
+      plot_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true, grib2 = false, pdf = false)
+    end
+
+    if fourhourly_forecasts != []
+      animation_glob_paths = map(CombinedHREFSREF.models) do (event_name, _, _)
+        out_dir_fourhourly * "nadocast_conus_$(event_name)_abs_calib_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z_f*-*.png"
+      end
+    else
+      animation_glob_paths = []
+    end
+
+    # @sync doesn't seem to work; poll until subprocesses are done.
+    for path in plotting_paths
+      while !isfile(path * ".png") || isfile(path * ".sh")
+        sleep(1)
+      end
+    end
+    plotting_paths = []
+
+    for animation_glob_path in animation_glob_paths
+      println("Making four-hourlies movie out of $(animation_glob_path)...")
+      fourhourly_movie_path = replace(animation_glob_path, "_f*-*.png" => "_four-hourly.mp4", out_dir_fourhourly => out_dir_daily)
+      run(`ffmpeg -y -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $fourhourly_movie_path`)
+    end
+
+    if should_publish
+      rsync_processes = map(rsync_dir -> run(`rsync -r --perms --update --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
+    end
+
+    # if get(ENV, "TWEET", "false") == "true"
+    #   if !isnothing(animation_glob_path)
+    #     println("Tweeting hourlies $(hourlies_movie_path)...")
+    #     run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
+    #   end
+    # end
+
+    should_publish && map(wait, rsync_processes)
   end
-  plotting_paths = []
-
-  for animation_glob_path in animation_glob_paths
-    println("Making four-hourlies movie out of $(animation_glob_path)...")
-    fourhourly_movie_path = replace(animation_glob_path, "_f*-*.png" => "_four-hourly.mp4", out_dir_fourhourly => out_dir_daily)
-    run(`ffmpeg -y -framerate 2 -pattern_type glob -i "$(animation_glob_path)" -c:v libx264 -vf format=yuv420p,scale=1200:-1 $fourhourly_movie_path`)
-  end
-
-  if should_publish
-    rsync_processes = map(rsync_dir -> run(`rsync -r --perms --update --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
-  end
-
-  # if get(ENV, "TWEET", "false") == "true"
-  #   if !isnothing(animation_glob_path)
-  #     println("Tweeting hourlies $(hourlies_movie_path)...")
-  #     run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
-  #   end
-  # end
-
-  should_publish && map(wait, rsync_processes)
 end
 
 for forecast in forecasts
