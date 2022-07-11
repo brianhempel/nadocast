@@ -1,0 +1,36 @@
+<% require 'date' %>
+<html>
+  <head>
+    <style>
+      img { height: 408px; } /* height of SPC LSR images */
+    </style>
+  </head>
+  <body>
+    <p>
+    <% %w[tornado wind hail sig_tornado sig_wind sig_hail].each do |hazard| %>
+      <a href="#<%= hazard %>"><%= hazard %></a>
+    <% end %>
+    </p>
+    <% %w[tornado wind hail sig_tornado sig_wind sig_hail].each do |hazard| %>
+    <h2 id="<%= hazard %>"><%= hazard %></h2>
+      <table>
+        <tr><th>12Z Day 2</th><th>12Z Day 1</th><th>LSRs</th></tr>
+        <%
+          (Date.new(2022,6,13)..(Date.today - 1)).each do |day2_run_date|
+            day1_run_date = day2_run_date + 1
+            day2_yyyymmdd = day2_run_date.strftime("%Y%m%d")
+            day2_yyyymm   = day2_run_date.strftime("%Y%m")
+            day1_yyyymmdd = day1_run_date.strftime("%Y%m%d")
+            day1_yyyymm   = day1_run_date.strftime("%Y%m")
+            day1_yymmdd   = day1_run_date.strftime("%y%m%d")
+        %>
+        <tr>
+          <td><img src="http://data.nadocast.com/<%= day2_yyyymm %>/<%= day2_yyyymmdd %>/t12z/nadocast_conus_<%= hazard %>_<%= day2_yyyymmdd %>_t12z_f24-47.png"></td>
+          <td><img src="http://data.nadocast.com/<%= day1_yyyymm %>/<%= day1_yyyymmdd %>/t12z/nadocast_conus_<%= hazard %>_<%= day1_yyyymmdd %>_t12z_f02-23.png"></td>
+          <td><img src="https://www.spc.noaa.gov/climo/reports/<%= day1_yymmdd %>_rpts_filtered.gif"></td>
+        </tr>
+        <% end %>
+      </table>
+    <% end %>
+  </body>
+</html>
