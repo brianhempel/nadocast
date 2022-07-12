@@ -39,8 +39,7 @@ storm_events_for_climatology:
 
 get_measured_wind_gusts:
 	ruby storm_data/get_asos6405.rb
-	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/gusts-20*.csv > storm_data/gusts_deduped.csv
-	ruby storm_data/quality_control_asos6405.rb storm_data/gusts_deduped.csv > storm_data/gusts_deduped_qced.csv
+	ruby storm_data/deduplicate_sort_merge_csvs.rb storm_data/gusts-20*.csv > storm_data/gusts.csv
 
 # EMAIL=asdf@example.com make get_reflectivity_analysis
 get_reflectivity_analysis:
