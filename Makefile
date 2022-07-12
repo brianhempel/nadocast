@@ -1,12 +1,3 @@
-# # Doesn't have start and end times: don't use.
-# storm_data/1950-2016_all_tornadoes.csv:
-# 	# Field descriptions here: http://www.spc.noaa.gov/wcm/data/SPC_severe_database_description.pdf
-# 	curl http://www.spc.noaa.gov/wcm/data/1950-2016_all_tornadoes.csv > storm_data/1950-2016_all_tornadoes.csv
-#
-# # Start end times and start end lat lons. Example file. Use `make tornadoes` below for real.
-# StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz:
-# 	curl https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz > StormEvents_details-ftp_v1.0_d2017_c20171218.csv.gz
-
 default:
 	cat Makefile
 
@@ -61,36 +52,30 @@ crontab:
 lib/href_one_field_for_grid.grib2:
 	wgrib2 test_grib2s/href.t00z.conus.mean.f07.grib2 -end -grib lib/href_one_field_for_grid.grib2
 
-# Might use this in the future for archiving predictions
 lib/href_one_field_for_grid_cropped_3x_downsampled.grib2: lib/href_one_field_for_grid.grib2
 	wgrib2 lib/href_one_field_for_grid.grib2 -new_grid_winds grid -new_grid lambert:265.000000:25.000000:25.000000:25.000000 234.906000:387:15237.000000 19.858000:226:15237.000000 lib/href_one_field_for_grid_cropped_3x_downsampled.grib2
 
-evaluate:
-	# Acquire all needed NWS forecasts for Saturday
-	# Predict for Saturdays
-	# Acquire and rasterize SPC Outlooks for Saturday
-	# Calculate SPC regions' POD (on Saturdays)
-	# Set Nadocast probability thresholds to match SPC regions' POD
-	# When happy with the models, then predict and eval on Sunday.
+training_setup_schooner:
+	mkdir ~/bin
 
-evaluation/roc:
-
-evaluation/reliability_diagram:
-
-evaluation/performance_diagram:
-
-# on the supercomputer
-training_setup:
 	cd ~
 	curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
 	ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+
+	curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
+	cd grib2/
+	CC=gcc FC=gfortran make
+	ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
+
+	cd ~
+	git clone https://github.com/brianhempel/nadocast.git nadocast_dev
 	cd nadocast_dev
+
 	module load zlib
 	module load PROJ
 	module load OpenMPI
 	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.instantiate()'
-	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.build("MPI"; verbose=true)'
-	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.update("MemoryConstrainedTreeBoosting")'
+	# julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.update("MemoryConstrainedTreeBoosting")'
 
 setup_data_webserver:
 	ssh -i ~/.ssh/id_rsa root@data.nadocast.com
@@ -137,18 +122,26 @@ setup:
 	#
 	# sudo apt update
 	# sudo apt install openssh-server
-	# sudo apt install vim
+	# sudo apt install vim ifstat
 	# vim ~/.ssh/authorized_keys
 	# sudo apt install screen
 	# sudo apt install exfat-fuse exfat-utils
 	# sudo apt install ruby
 
+	# cd /media/brian/ssd
+	# sudo fallocate -l 20g swapfile
+	# sudo chmod 600 swapfile
+	# sudo mkswap swapfile
+	# sudo swapon swapfile
+	# echo '/media/brian/ssd/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+
 	# Apparently you need to be logged in graphically in order for the HDs to automount
 
 	# sudo ln -s /media/brian /Volumes
-	# sudo apt install git
+	# sudo apt install -y git
 	# ssh-keygen
 	# cat ~/.ssh/id_rsa.pub (upload to https://github.com/settings/keys)
+	# cat ~/.ssh/id_rsa.pub >> authorized_keys # so we can log in to ourselves
 	# git clone git@github.com:brianhempel/nadocast.git nadocast_dev
 	# git clone git@github.com:brianhempel/nadocast.git nadocast_operational
 	# cd nadocast_dev
@@ -156,27 +149,30 @@ setup:
 	# crontab crontab.cron
 	#
 	# curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
-	# sudo apt install gcc
-	# sudo apt install make
-	# sudo apt install gfortran
+	# sudo apt install -y gcc make gfortran
 	# cd grib2/
-	# CC=gcc FC=gfortran make  # CC=gcc-10 FC=gfortran-10 make on my Mac
+	# CC=gcc FC=gfortran make # CC=gcc-10 FC=gfortran-10 make on my Mac
 	# mkdir ~/bin
 	# ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
-	# echo 'shell -$SHELL' >> ~/.screenrc
+	# echo 'shell -\$SHELL' >> ~/.screenrc
 	# echo 'export PATH=$HOME/bin:$PATH' >> ~/.bash_profile
 	# echo 'PS1="\e[1;30m\h\e[m \e[1;36m\W\e[m\e[0;33m\$(__git_ps1) \$\e[m "' >> ~/.bash_profile
+  # # make **/*.png globs work as expected
+	# echo 'shopt -s globstar' >> ~/.bash_profile
 	# source ~/.bash_profile
 	# wgrib2 -config
 	#
 	# cd ~
-	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.4-linux-x86_64.tar.gz | tar -xvz
-	# ln -s $(pwd)/julia-1.5.4/bin/julia ~/bin/julia
-	#
+	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
+	# ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+
+	# sudo apt install inetutils-ftp
+	# ln -s `which inetutils-ftp` ~/bin/ftp
+
 	# cd ~/nadocast_dev
 	# git pull --rebase
-	# sudo apt install libtool
-	# echo 'import Pkg; Pkg.instantiate()' | julia --project=.
+	# sudo apt install -y libtool mpich
+	# echo 'ENV["JULIA_MPI_BINARY"]="system"; import Pkg; Pkg.instantiate()' | julia --project=.
 	# echo 'export CORE_COUNT=16' >> ~/.bash_profile
 	# source ~/.bash_profile
 
@@ -185,6 +181,7 @@ setup:
 
 	# cd ~/nadocast_dev/models/href_mid_2018_forward/
 	# make train_gradient_boosted_decision_trees
+	# JULIA_MPI_BINARY=system DISTRIBUTED=true JULIA_NUM_THREADS=$CORE_COUNT EVENT_TYPES=tornado,wind,hail,sig_tornado,sig_wind,sig_hail MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.26 time mpirun -n 2 -wdir $(pwd) -hosts 192.168.1.112:1,192.168.1.121:1 -bind-to none julia --compiled-modules=no --project=/home/brian/nadocast_dev /home/brian/nadocast_dev/models/sref_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl
 
 	# cd ~
 	# git clone https://github.com/GenericMappingTools/gmt.git
@@ -204,12 +201,14 @@ setup:
 
 	# sudo apt install ruby-dev
 	# sudo gem install twurl
+	# sudo gem install chunky_png
 	# twurl authorize --consumer-key key --consumer-secret secret
 	# scp ~/.twurlrc nadocaster:~/.twurlrc # if authorization done on foreign machine
 
 	# curl -L https://github.com/shssoichiro/oxipng/releases/download/v5.0.1/oxipng-5.0.1-x86_64-unknown-linux-musl.tar.gz | tar -xvz
 	# mv oxipng-5.0.1-x86_64-unknown-linux-musl/oxipng ~/bin/
 	# rm -r oxipng-5.0.1-x86_64-unknown-linux-musl
+	# sudo apt install pngquant
 
 	# sudo apt install ffmpeg
 
