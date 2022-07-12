@@ -87,7 +87,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     prior_predictor = nothing,
     bin_split_forecast_sample_count = 100, # If not evenly divisible by the number of label types, a bit fewer might be used
 
-    bin_splits_calc_inclusion_probabilities = (forecast, label_layers) -> max.(0.01f0, label_layers...),
+    bin_splits_calc_inclusion_probabilities = (forecast, label_layers) -> max.(0.01f0, map(y -> y .> 0f0, label_layers)...),
     max_iterations_without_improvement = 20,
     save_dir,
     climatology_amount, # "none", "minimal", "some", "all"
@@ -187,12 +187,12 @@ function train_with_coordinate_descent_hyperparameter_search(
     end
 
 
-  # Probability of 1 if any labeler considers it a positive gridpoint
+  # Probability of 1 if any labeler considers it a non-zero gridpoint
   # Probability of near_storm_ratio if within 100mi or 90min of a storm event
   # Probability of data_subset_ratio otherwise
   calc_inclusion_probabilities(forecast, label_layers) = begin
     is_near_storm_event_layer = TrainingShared.compute_is_near_storm_event(forecast)
-    max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event_layer, label_layers...)
+    max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event_layer, map(y -> y .> 0f0, label_layers)...)
   end
 
   # Returns (X_binned, Ys, weights)
