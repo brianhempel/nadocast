@@ -1258,7 +1258,7 @@ day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forec
 length(day_validation_forecasts) # 528
 
 # Make sure a forecast loads
-@time Forecasts.data(day_validation_forecasts[10])
+@time Forecasts.data(day_validation_forecasts[10]);
 
 day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
 length(day_validation_forecasts_0z) # Expected: 132
@@ -1339,15 +1339,15 @@ function test_threshold(forecasts, X, Ys, weights, threshold)
 end
 test_threshold(day_validation_forecasts_0z, X, Ys, weights, 0.1)
 
-# tornado (8326.0)                      feature 1 TORPROB:calculated:hour fcst:calculated_prob:                  Threshold: 0.1  CSI: 0.14777220494980123
-# wind (63336.0)                        feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.18017789529844053
-# hail (28152.0)                        feature 3 HAILPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.09211837900458626
-# sig_tornado (1138.0)                  feature 4 STORPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.06998041167724371
-# sig_wind (7555.0)                     feature 5 SWINDPRO:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.09157420746655615
-# sig_hail (3887.0)                     feature 6 SHAILPRO:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.050785226245589996
-# sig_tornado_gated_by_tornado (1138.0) feature 7 STORPROB:calculated:hour fcst:calculated_prob:gated by tornado Threshold: 0.1  CSI: 0.08030945890779098
-# sig_wind_gated_by_wind (7555.0)       feature 8 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind    Threshold: 0.1  CSI: 0.09157420746655615
-# sig_hail_gated_by_hail (3887.0)       feature 9 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail    Threshold: 0.1  CSI: 0.05079589992910394
+# tornado (8326.0)                      feature 1 TORPROB:calculated:hour fcst:calculated_prob:                  Threshold: 0.1  CSI: 0.0999275885395187
+# wind (63336.0)                        feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.2621078607407563
+# hail (28152.0)                        feature 3 HAILPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.1533293040297049
+# sig_tornado (1138.0)                  feature 4 STORPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.1019263018731568
+# sig_wind (7555.0)                     feature 5 SWINDPRO:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.07713544881757496
+# sig_hail (3887.0)                     feature 6 SHAILPRO:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.07583280034351035
+# sig_tornado_gated_by_tornado (1138.0) feature 7 STORPROB:calculated:hour fcst:calculated_prob:gated by tornado Threshold: 0.1  CSI: 0.10237996019129936
+# sig_wind_gated_by_wind (7555.0)       feature 8 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind    Threshold: 0.1  CSI: 0.07713544881757496
+# sig_hail_gated_by_hail (3887.0)       feature 9 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail    Threshold: 0.1  CSI: 0.07584469907328449
 
 
 
