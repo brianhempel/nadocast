@@ -188,11 +188,8 @@ function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
       j                 = sort_perm[i]
       y_sorted[i]       = y[j]
       weights_sorted[i] = weights[j]
-      if y_sorted[i] > 0.5f0
-        pos_weight += Float64(weights_sorted[i])
-      else
-        neg_weight += Float64(weights_sorted[i])
-      end
+      pos_weight += Float64(weights_sorted[i] * y_sorted[i])
+      neg_weight += Float64(weights_sorted[i] * (1f0 - y_sorted[i]))
     end
     pos_weight, neg_weight
   end
@@ -208,11 +205,8 @@ function roc_auc(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
 
     last_fpr = false_pos_weight / total_neg_weight
     @inbounds for i in thread_range
-      if y_sorted[i] > 0.5f0
-        true_pos_weight -= Float64(weights_sorted[i])
-      else
-        false_pos_weight -= Float64(weights_sorted[i])
-      end
+      true_pos_weight  -= Float64(weights_sorted[i] * y_sorted[i])
+      false_pos_weight -= Float64(weights_sorted[i] * (1f0 - y_sorted[i]))
       fpr = false_pos_weight / total_neg_weight
       tpr = true_pos_weight  / total_pos_weight
       if fpr != last_fpr
@@ -238,11 +232,8 @@ function roc_auc_less_mem(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
     neg_weight = 0.0
     @inbounds for i in thread_range
       j = sort_perm[i]
-      if y[j] > 0.5f0
-        pos_weight += Float64(weights[j])
-      else
-        neg_weight += Float64(weights[j])
-      end
+      pos_weight += Float64(weights[j] * y[j])
+      neg_weight += Float64(weights[j] * (1f0 - y[j]))
     end
     pos_weight, neg_weight
   end
@@ -259,11 +250,8 @@ function roc_auc_less_mem(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
     last_fpr = false_pos_weight / total_neg_weight
     @inbounds for i in thread_range
       j = sort_perm[i]
-      if y[j] > 0.5f0
-        true_pos_weight -= Float64(weights[j])
-      else
-        false_pos_weight -= Float64(weights[j])
-      end
+      true_pos_weight  -= Float64(weights[j] * y[j])
+      false_pos_weight -= Float64(weights[j] * (1f0 - y[j]))
       fpr = false_pos_weight / total_neg_weight
       tpr = true_pos_weight  / total_pos_weight
       if fpr != last_fpr
@@ -297,9 +285,7 @@ function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, tot
   @inbounds while i <= length(y_sorted)
     thresh = ŷ_sorted[i]
     @inbounds while i <= length(y_sorted) && ŷ_sorted[i] == thresh
-      if y_sorted[i] > 0.5f0
-        true_pos_weight -= Float64(weights_sorted[i])
-      end
+      true_pos_weight -= Float64(weights_sorted[i] * y_sorted[i])
       predicted_pos_weight -= Float64(weights_sorted[i])
       i += 1
     end
@@ -334,11 +320,8 @@ function area_under_pr_curve(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
       y_sorted[i]       = y[j]
       ŷ_sorted[i]       = ŷ[j]
       weights_sorted[i] = weights[j]
-      if y_sorted[i] > 0.5f0
-        pos_weight += Float64(weights_sorted[i])
-      else
-        neg_weight += Float64(weights_sorted[i])
-      end
+      pos_weight += Float64(weights_sorted[i] * y_sorted[i])
+      neg_weight += Float64(weights_sorted[i] * (1f0 - y_sorted[i]))
     end
     pos_weight, neg_weight
   end
@@ -369,11 +352,9 @@ function csi(ŷ, y, weights, threshold)
     @inbounds for i in thread_range
       if ŷ[i] >= threshold
         painted_weight += Float64(weights[i])
-        if y[i] > 0.5f0
-          true_pos_weight += Float64(weights[i])
-        else
-          false_neg_weight += Float64(weights[i])
-        end
+        true_pos_weight += Float64(weights[i] * y[i])
+      else
+        false_neg_weight += Float64(weights[i] * y[i])
       end
     end
 
@@ -402,12 +383,9 @@ function multiple_csis(ŷ, y, weights; sort_perm = sortperm(ŷ; alg = Base.Sort.
   csis = Float64[true_pos_weight / (true_pos_weight + false_pos_weight + false_neg_weight)]
 
   for i in 1:length(y)
-    if y[i] > 0.5f0
-      true_pos_weight  -= weights[i]
-      false_neg_weight += weights[i]
-    else
-      false_pos_weight -= weights[i]
-    end
+    true_pos_weight  -= weights[i] * y[i]
+    false_neg_weight += weights[i] * y[i]
+    false_pos_weight -= weights[i] * (1f0 - y[i])
 
     pod = true_pos_weight / positive_weight
     csi = true_pos_weight / (true_pos_weight + false_pos_weight + false_neg_weight)
@@ -441,10 +419,8 @@ function success_ratio(ŷ, y, weights, threshold)
 
     @inbounds for i in thread_range
       if ŷ[i] >= threshold
-        painted_weight += Float64(weights[i])
-        if y[i] > 0.5f0
-          true_pos_weight += Float64(weights[i])
-        end
+        painted_weight  += Float64(weights[i])
+        true_pos_weight += Float64(weights[i] * y[i])
       end
     end
 
@@ -463,11 +439,9 @@ function probability_of_detection(ŷ, y, weights, threshold)
     true_pos_weight = 0.0
 
     @inbounds for i in thread_range
-      if y[i] > 0.5f0
-        pos_weight += Float64(weights[i])
-        if ŷ[i] >= threshold
-          true_pos_weight += Float64(weights[i])
-        end
+      pos_weight += Float64(weights[i] * y[i])
+      if ŷ[i] >= threshold
+        true_pos_weight += Float64(weights[i] * y[i])
       end
     end
 
@@ -516,3 +490,39 @@ end # module Metrics
 # weights = rand(10_000_000)
 # Metrics.area_under_pr_curve(ŷ, y, weights)
 # @time Metrics.area_under_pr_curve(ŷ, y, weights)
+
+
+# push!(LOAD_PATH, "models/shared")
+# import Metrics
+# import Random
+# Random.seed!(123)
+# y = Float32.(rand(10) .> 0.5)
+# ŷ = Float32.(rand(10))
+# weights = Float32.(0.3 .+ rand(10))
+
+# println(Metrics.roc_auc(ŷ, y, weights))
+# # 0.5465203558941252
+# println(Metrics.roc_auc_less_mem(ŷ, y, weights))
+# # 0.5465203558941252
+# println(Metrics.area_under_pr_curve(ŷ, y, weights))
+# # 0.6239406578120267
+
+# # example from "The Critical Success Index as an Indicator of Warning Skill" Schaeffer 1990
+# # CSI should be 0.228
+# y1 = vcat(ones(28), zeros(72), zeros(2680), ones(23))
+# ŷ1 = vcat(ones(28), ones(72), zeros(2680), zeros(23))
+# weights1 = ones(length(y1))
+# println(Metrics.csi(ŷ1, y1, weights1, 0.5))
+
+# println(Metrics.multiple_csis(ŷ, y, weights))
+# # [0.426800418229519, 0.426800418229519, 0.36645769907418074, 0.36645769907418074, 0.2810901274487399, 0.2810901274487399, 0.18663856431533987, 0.18663856431533987, 0.0]
+
+# println(Metrics.success_ratio(ŷ, y, weights, 0.5f0))
+# # 0.5708225878059436
+# println(Metrics.success_ratio(ŷ, y, weights, 0.7f0))
+# # 0.6555857340032812
+
+# println(Metrics.probability_of_detection(ŷ, y, weights, 0.5f0))
+# # 0.7631754079849923
+# println(Metrics.probability_of_detection(ŷ, y, weights, 0.7f0))
+# # 0.5767308993912318
