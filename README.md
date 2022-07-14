@@ -334,37 +334,37 @@ In total, the feature engineering steps above result in 17412 fields (predictors
 
 | Climatology Fields                                           | Variation |
 | ------------------------------------------------------------ | --------- |
-| $$p(severeDay)$$                                             | Spatial   |
-| $$p(tornadoDay)$$                                            | Spatial   |
-| $$p(windDay)$$                                               | Spatial   |
-| $$p(hailDay)$$                                               | Spatial   |
-| $$p(sigSevereDay)$$                                          | Spatial   |
-| $$p(sigTornadoDay)$$                                         | Spatial   |
-| $$p(sigWindDay)$$                                            | Spatial   |
-| $$p(sigHailDay)$$                                            | Spatial   |
-| $$p(tornadoDay | severeDay)$$                                | Spatial   |
-| $$p(windDay | severeDay)$$                                   | Spatial   |
-| $$p(hailDay | severeDay)$$                                   | Spatial   |
-| $$p(sigSevereDay | severeDay)$$                              | Spatial   |
-| $$p(sigTornadoDay | severeDay)$$                             | Spatial   |
-| $$p(sigWindDay | severeDay)$$                                | Spatial   |
-| $$p(sigHailDay | severeDay)$$                                | Spatial   |
-| $$geomean( p(severeDay), p(severeDay | severeDay) )$$        | Spatial   |
-| $$geomean( p(tornadoDay), p(tornadoDay | severeDay) )$$      | Spatial   |
-| $$geomean( p(windDay), p(windDay | severeDay) )$$            | Spatial   |
-| $$geomean( p(hailDay), p(hailDay | severeDay) )$$            | Spatial   |
-| $$geomean( p(sigSevereDay), p(sigSevereDay | severeDay) )$$  | Spatial   |
-| $$geomean( p(sigTornadoDay), p(sigTornadoDay | severeDay) )$$ | Spatial   |
-| $$geomean( p(sigWindDay), p(sigWindDay | severeDay) )$$      | Spatial   |
-| $$geomean( p(sigHailDay), p(sigHailDay | severeDay) )$$      | Spatial   |
-| $$p(severeHour | hourOfDay)$$                                | Time      |
-| $$p(severeDay | month)$$                                     | Time      |
-| $$p(tornadoDay | month)$$                                    | Time      |
-| $$p(windDay | month)$$                                       | Time      |
-| $$p(hailDay | month)$$                                       | Time      |
-| $$p(tornadoDay | severeDay, month)$$                         | Time      |
-| $$p(windDay | severeDay, month)$$                            | Time      |
-| $$p(hailDay | severeDay, month)$$                            | Time      |
+| $p(severeDay)$                                             | Spatial   |
+| $p(tornadoDay)$                                            | Spatial   |
+| $p(windDay)$                                               | Spatial   |
+| $p(hailDay)$                                               | Spatial   |
+| $p(sigSevereDay)$                                          | Spatial   |
+| $p(sigTornadoDay)$                                         | Spatial   |
+| $p(sigWindDay)$                                            | Spatial   |
+| $p(sigHailDay)$                                            | Spatial   |
+| $p(tornadoDay \mid severeDay)$                                | Spatial   |
+| $p(windDay \mid severeDay)$                                   | Spatial   |
+| $p(hailDay \mid severeDay)$                                   | Spatial   |
+| $p(sigSevereDay \mid severeDay)$                              | Spatial   |
+| $p(sigTornadoDay \mid severeDay)$                             | Spatial   |
+| $p(sigWindDay \mid severeDay)$                                | Spatial   |
+| $p(sigHailDay \mid severeDay)$                                | Spatial   |
+| $geomean( p(severeDay), p(severeDay \mid severeDay) )$        | Spatial   |
+| $geomean( p(tornadoDay), p(tornadoDay \mid severeDay) )$      | Spatial   |
+| $geomean( p(windDay), p(windDay \mid severeDay) )$            | Spatial   |
+| $geomean( p(hailDay), p(hailDay \mid severeDay) )$            | Spatial   |
+| $geomean( p(sigSevereDay), p(sigSevereDay \mid severeDay) )$  | Spatial   |
+| $geomean( p(sigTornadoDay), p(sigTornadoDay \mid severeDay) )$ | Spatial   |
+| $geomean( p(sigWindDay), p(sigWindDay \mid severeDay) )$      | Spatial   |
+| $geomean( p(sigHailDay), p(sigHailDay \mid severeDay) )$      | Spatial   |
+| $p(severeHour \mid hourOfDay)$                                | Time      |
+| $p(severeDay \mid month)$                                     | Time      |
+| $p(tornadoDay \mid month)$                                    | Time      |
+| $p(windDay \mid month)$                                       | Time      |
+| $p(hailDay \mid month)$                                       | Time      |
+| $p(tornadoDay \mid severeDay, month)$                         | Time      |
+| $p(windDay \mid severeDay, month)$                            | Time      |
+| $p(hailDay \mid severeDay, month)$                            | Time      |
 
 [^stpcalcircle]: Gallo et al. Incorporating UH Occurrence Time to Ensemble-Derived Tornado Probabilities. WAF 2019. https://journals.ametsoc.org/view/journals/wefo/34/1/waf-d-18-0108_1.xml
 [^srefsseo]: Jirak et al. Combining probabilistic ensemble information from the environment with simulated storm attributes to generate calibrated probabilities of severe weather hazards. SLS 2014. https://www.spc.noaa.gov/publications/jirak/calprob.pdf
