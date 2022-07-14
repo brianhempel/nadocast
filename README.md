@@ -59,17 +59,17 @@ From all initial and computed fields, spatial means are computed using radii 25,
 
 #### Spatial Gradients
 
-In hopes of allowing the model to tell whether storms are moving along or off a front, several spatial gradients are computed relative to the storm motion. Storm motion is not among the HREF ensemble mean fields, so storm motion is estimated as the mean wind below and including the 500mb level (non-pressure-weighted). which itself is an estimate of the advective-only component of Bunkers storm motion (0-6km mean wind, non-pressure weighted)[^bunkers]. As shown below, three kinds of gradients are computed, each by examining the $$r$$-mile mean at different points $$r$$ miles from the point of interest $x$.
+In hopes of allowing the model to tell whether storms are moving along or off a front, several spatial gradients are computed relative to the storm motion. Storm motion is not among the HREF ensemble mean fields, so storm motion is estimated as the mean wind below and including the 500mb level (non-pressure-weighted). which itself is an estimate of the advective-only component of Bunkers storm motion (0-6km mean wind, non-pressure weighted)[^bunkers]. As shown below, three kinds of gradients are computed, each by examining the $r$-mile mean at different points $r$ miles from the point of interest $x$.
 
 ![gradients](docs/gradients.png)
 
-Forward gradients are computed by taking the mean value ahead of the storm and subtracting the mean value behind. Leftward gradients take the mean value to the left of the storm and subtract the mean value to the right. Straddling gradients add the mean values ahead and behind the storm and subtract the mean values to the sides. Each gradient is calculated for $$r$$ = 25, 50, and 100 miles, utilizing the spatial means calculated in the prior step for efficiency.
+Forward gradients are computed by taking the mean value ahead of the storm and subtracting the mean value behind. Leftward gradients take the mean value to the left of the storm and subtract the mean value to the right. Straddling gradients add the mean values ahead and behind the storm and subtract the mean values to the sides. Each gradient is calculated for $r$ = 25, 50, and 100 miles, utilizing the spatial means calculated in the prior step for efficiency.
 
 For the HREF and SREF, these computed gradients total 1719 and 1854  fields for a total of 2483 and 2678 fields, respectively.
 
 #### Rotationally-Invariant Winds
 
-To allow the learning model to examine the hodograph in a rotationally invariant fashion, all wind fields are rotated relative to a shear vector over part of the hodograph. For the HREF, this shear vector is roughly the 900mb to 550mb shear, computed as follows: $$0.75\cdot{}wind_{925mb} + 0.25\cdot{}wind_{850mb}$$ to $$0.25\cdot{}wind_{700mb} + 0.25\cdot{}wind_{500mb}$$. All winds are rotated based on the angle of this vector such that this vector becomes eastward. This vector was chosen because it captures an interesting region of the hodograph and is similar to shear from the 0-0.5km mean wind to 5.5-6km mean wind used as part of the calculation of Bunkers storm motion[^bunkers]. After rotation, all wind fields are re-centered relative to the 0-500mb mean wind used for the gradient calculations previously.
+To allow the learning model to examine the hodograph in a rotationally invariant fashion, all wind fields are rotated relative to a shear vector over part of the hodograph. For the HREF, this shear vector is roughly the 900mb to 550mb shear, computed as follows: $0.75\cdot{}wind_{925mb} + 0.25\cdot{}wind_{850mb}$ for one end of the shear vector and $0.25\cdot{}wind_{700mb} + 0.75\cdot{}wind_{500mb}$ for the other. All winds are rotated such that this vector becomes eastward. This vector was chosen because it captures an interesting region of the hodograph and is similar to the shear from the 0-0.5km mean wind to 5.5-6km mean wind used as part of the calculation of Bunkers storm motion[^bunkers]. After rotation, all wind fields are re-centered relative to the 0-500mb mean wind used previously for the gradient calculations.
 
 #### Three Hour Windows
 
@@ -83,7 +83,7 @@ The chance of a severe weather report varies not only based on the weather itsel
 
 To give the model some insight into these regional biases and the climatological tendencies of different areas, we computed multiple background climatologies over 1998-2013: a time period solidly in the WSR-88D Doppler radar period while also preceding all of the training data (including the RAP and HRRR data used for training previous models). We computed at total of 31 climatologies, listed in [Table 5](#table-5). Each climatology is spatial-only or time-only. 
 
-Spatially, for each severe and significant severe hazard, we computed the mean day-long probability of a report within 25 miles. We did the same for any severe, and significant severe, hazard. Because the decision trees are going to focus on areas of severe weather, we also included the probability of each severe hazard given that there was any severe report that day, e.g. $$p(tornadoDay | severeDay) = \frac{p(tornadoDay)}{p(severeDay)}$$. And since during learning the most useful probability may be somewhere in between, we also add the geometric mean of the absolute and conditional probabilities.
+Spatially, for each severe and significant severe hazard, we computed the mean day-long probability of a report within 25 miles. We did the same for any severe, and significant severe, hazard. Because the decision trees are going to focus on areas of severe weather, we also included the probability of each severe hazard given that there was any severe report that day, e.g. $p(tornadoDay | severeDay) = \frac{p(tornadoDay)}{p(severeDay)}$. And since during learning the most useful probability may be somewhere in between, we also add the geometric mean of the absolute and conditional probabilities.
 
 Time-wise, we computed the mean probability of any severe report within 25 miles and ±30 minutes given only the hour of day, but agnostic to the position within the CONUS. These probabilities are low (between 0.02% and 0.17%), but capture the overall diurnal trend. The diurnal trends for the individual hazards are similar to each other, so only the overall severe trend is included.
 
@@ -120,7 +120,7 @@ In total, the feature engineering steps above result in 17412 fields (predictors
 | 2483 3hr min fields                                       |
 | 2483 3hr mean fields                                      |
 | 2483 3hr max fields                                       |
-| 2483 3hr delta fields: $$x_{+1h} - x_{-1h}$$              |
+| 2483 3hr delta fields: $x_{+1h} - x_{-1h}$              |
 | 31 climatology fields                                     |
 | **17412 fields total**                                    |
 
