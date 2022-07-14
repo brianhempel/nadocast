@@ -306,6 +306,21 @@ end
 
 # Area under the precison-recall curve (success ratio vs probability of detection)
 # = area to the left of the performance diagram curve
+#
+# Better than ROC-AUC when the classes are imbalanced
+#
+# The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets
+# Takaya Saito, Marc Rehmsmeier
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4349800/
+#
+# The area under the precision-recall curve as a performance metric for rare binary events
+# Helen R. Sofaer, Jennifer A. Hoeting, Catherine S. Jarnevich
+# https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13140#:~:text=Guo%2C%202013).-,The%20area%20under%20the%20precision%2Drecall%20curve%20(AUC%2DPR,Davis%20%26%20Goadrich%2C%202006).
+#
+# The B-ROC curve is also the same, with different axes orientations.
+# B-ROC Curves for the Assessment of Classifiers over Imbalanced Data Sets
+# Alvaro A. Cárdenas and John S. Baras
+#
 # This calc correctly handles when ŷ are not distinct
 function area_under_pr_curve(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
   ŷ_sorted       = Vector{eltype(ŷ)}(undef, length(ŷ))
@@ -526,3 +541,4 @@ end # module Metrics
 # # 0.7631754079849923
 # println(Metrics.probability_of_detection(ŷ, y, weights, 0.7f0))
 # # 0.5767308993912318
+

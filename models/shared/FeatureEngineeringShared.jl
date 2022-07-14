@@ -1423,7 +1423,7 @@ function make_data(
 
 
   # Make ~500m - ~5000m shear vector relative to which we will rotate the winds
-
+  # Actually the angle for Bunkers motion deviation is 0-500m mean wind (~250m) to 5.5-6km mean wind (~5750m).
 
   if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
     # SREF
