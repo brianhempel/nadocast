@@ -11,7 +11,7 @@ The below describes the "2021" models, but the feature engineering and overall s
 
 ## Background
 
-Nadocast began because I (Brian Hempel) wanted to go tornado chasing but knew nothing about meteorology. Back in 2018, the SPC did not produce day 2 tornado probabilities, so I had to stay up until 1am waiting for the day 1 outlook to know if it was worth storm chasing the next day. Additionally, weather forecasting was rarely utilizing state-of-the-art machine learning, but in many domains ML had met or exceeding human performance—why not tornado prediction?
+Nadocast began because I (Brian Hempel) wanted to go tornado chasing but knew nothing about meteorology. Back in 2018, the SPC did not produce day 2 tornado probabilities, so I had to stay up until 1am waiting for the day 1 outlook to know if it was worth storm chasing the next day. Additionally, weather forecasting was rarely utilizing state-of-the-art machine learning, but in many domains ML had met or exceeded human performance—why not tornado prediction?
 
 I also wanted hourly predictions so I could know when in the day to chase, so Nadocast was conceived as an hourly predictor.
 
@@ -89,15 +89,84 @@ Time-wise, we computed the mean probability of any severe report within 25 miles
 
 To capture seasonal variation, we computed the day-long probability of a report within 25 miles given only the month of year, agnostic to the position with the CONUS. These probabilities were computed for any  (non-significant) hazard. We also computed the conditional probability of each (non-significant) hazard given that there was a severe event that day, given the month.
 
-#### Summary
+#### Feature Engineering Summary
 
-In total, the feature engineering steps above result in 17412 fields (predictors) per point per hour for training on the HREF (summarized in [Table 1](#table 1)), and 18777 fields for training on the SREF. As we now discuss, from these predictors we train hourly models for the HREF and SREF separately, and then combine and calibrate their predictions.
+In total, the feature engineering steps above result in 17412 fields (features) per point per hour for training on the HREF (summarized in [Table 1](#table 1)), and 18777 fields for training on the SREF. As we now discuss, from these features we train hourly models for the HREF and SREF separately, and then combine and calibrate their predictions.
 
 ### Training, Calibrating, and Combining Hourly Models
 
-...
+For training we all the daily model runs (0Z, 6Z, 12Z, and 18Z for the HREF and 3Z, 9Z, 15Z, and 21Z for the SREF). The training set consists of all valid hours during weekdays (by convective day), with Saturdays reserved for validation and calibration, and Sundays reserved for final testing. The input files in the archive include forecast hours 1 through 36 for the HREF and 1 – 39 for the SREF, but because of the three-hour windows we can only produce forecast hours 2 through 35 (HREF) and 2 through 38 (SREF). As described previously, the training targets are each defined as at least one report ±30 min from the valid time (the center of the window).
+
+Uncertainty increases at longer lead times. To capture this, and to perhaps use different features that are more reliable at longer lead times, we trained three models each for the HREF and SREF. The three different HREF models cover forecast hours 2-13, 13-24, and 24-35, for the SREF the models cover hours 2-13, 12-23, and 21-38. These ranges are each a multiple of 6 in length so that, as forecast runs are 6 hours apart, each of the models sees an event the same number of times as other events. For example, an event at 5Z will be seen twice by the f2-13 model: as 0Z +5 and 18Z +11. All other events will also been seen twice. Were the ranges not a multiple of 6, some events would be over or underrepresented relative to other events. Finally, if a forecast hour is covered by two overlapping models (e.g. forecast hour 13 if covered by both the f2-13 and f13-24 models) then the mean output of the two models will be used for the final predictions.
+
+#### Gradient Boosted Decision Trees
+
+The learning algorithm for Nadocast is gradient boosted decision trees (GBDTs). GBDTs are strong learners for binary classification (predicting yes/no outcomes), and are often used in winning entries in machine learning contests[^xgboost1][^xgboost2]. GBDTs are an ensemble of decision trees where trees are learned in sequence: each tree is trained to reduce the loss *after* the prediction from the prior trees has been applied to the data. This scheme differs from random forests, in which trees are trained in parallel (on resamples of the data) rather than in series. By learning in series, later trees can compensate for the predictions of earlier trees. Both GBDTs and random forests produce an ensemble of decision trees that operate in exactly the same manner at prediction time.
+
+GDBT learning is also fast and therefore amenable to hyperparameter tuning to increase performance of the learned model. The caveat is that the entire dataset must fit into memory. Fast gradient boosting libraries such as LightGBM[^lightgbm] bin the input data down to a single byte per value, which both saves memory and speeds learning considerably. At the time of this project's inception, however, the popular gradient boosting libraries did not support loading data from a memory-efficient form on disk. Consequently, we wrote our own gradient boosting library[^mctb] which allows us to control data binning and data loading so that we can use all the machine-available memory without, e.g., doubling the needed memory while copying an array from the source to the learning library. Our library additionally supports parallelism through both multithreading and distributed computing.
+
+#### Data Binning
+
+Efficient tree learning requires transforming the input data from floating point down to single bytes. We use 255 bins per feature. For each model, bins are chosen based on a random sample of 300 forecasts that have severe reports, 50 forecasts for each of the 6 hazards. Because severe events are rare and may represent a rare portion of the parameter space, we would like to make sure this portion of the parameter space is well-represented in the bins. For each hazard, we randomly choose an equal number of positively labeled and negatively labeled points. Combining these samples, we define 255 bins for each feature based on the percentiles of the combined sample.
+
+#### Data Subsetting
+
+Even with the data values binned down to a single byte, the datasets are still too large to use all the data for learning. We take a random subsample of the datapoints, retaining more datapoints closer to storms as follows:
+
+- All points with 25 miles and ±30 minutes of any severe report are retained (i.e. all points that are positive for at least one of the hazards).
+- All points with 100 miles and ±90 minutes of any severe report are retained with a probability of 0.4 for the HREF models. (0.26 for SREF f2-13 and f12-23, 0.17 for SREF f21-38.)
+- All other points are retained with a probability of 0.026 for the HREF models. (0.26 for SREF f2-13 and f12-23, 0.17 for SREF f21-38.)
+
+We use weighted learning to compensate for the discarded points. Points are initially weighted based on the 2D area of their gridpoint (since gridpoint spacing is not precisely uniform). Retained points are re-weighted by the inverse of the probability with which they were retained: a point retained with probability 0.4 is re-weighted by a factor of $\frac{1}{0.4}$ = 2.5x, a point retained with probability 0.026 is re-weighted by a factor of $\frac{1}{0.026}$ ≈ 38x. Retained points thus serve to represent discarded points and the total weight of the entire dataset is effectively unchanged.
+
+Additionally, because all points with a positive label for any severe hazard are all retained, we can reuse the same dataset to train a different predictor for each hazard, by varying only the labelling.
+
+Feature engineering, binning, and data subsetting  was performed on two Dell T7600 workstations purchased via eBay, each with 2x 8-core Intel Xeon E5  v1 processors and 256GB of RAM. The dataset generation does not require so much RAM, as the binned and subsetted data is saved to disk after each individual forecast is processed.
+
+Over the period of the archive, the training set from each model is generated from ~18700 hourly forecasts and the validation set from ~3800 forecasts (~16000 training and ~3300 validation for SREF f2-13 and f12-23, and ~24000 training ~4900 validation for SREF f21-38), resulting in about ~28 million and ~5.8 million datapoints after subsetting, respectively (a little less for the SREF). The training data, validation data, and six hazard labels total about 0.5 terabytes for each of the forecast hour ranges, ~3TB in all.
+
+#### Training
+
+Logloss (also called binary cross-entropy) was used as the loss function. Training and hyperparameter search was performed on a supercomputer, with each job using 22-25 nodes with 32GB RAM and 20 cores each. Training utilized early stopping to avoid overfitting: for each candidate set of hyperparameters, training concluded once 20 consecutive trees were added to the ensemble without improving logloss on the validation set (those 20 trees are then removed from the ensemble). Hyperparameter search is initialized with 20 random hyperparameter sets, the best of which is refined by coordinate descent: for each hyperparameter, its neighboring candidate values are tried until a local minima for that parameter is reached, and then the next hyperparameter is handled similarly and so on. Coordinate descent will perform up to two full passes across all the hyperparameters.
+
+36 decision tree ensembles were trained (6 hazards * 3 lead times = 18 models ensembles for the HREF and SREF). The learning rate was set 0.063. Early stopping resulted in ensembles of between 158 and 754 trees (mean 350.0). Each of the ensembles ended up using a different set of hyperparameters, but in general, using fewer features was preferred (for learning each tree, only a random subset of features is considered—the size of the subset is a hyperparameter), and deeper trees were preferred (relative to the max depth of 8). The significant tornado ensembles are an exception: they were usually shallower trees.
+
+#### Blurring
+
+The ensembles at different lead times are combined into single predictor that picks the appropriate ensemble based on the forecast hour. If two ensembles apply the forecast hour (e.g. both f2-13 and f13-24 apply to forecast hour 13), then the mean of the two outputs is used. To spatially smooth the predictions, the outputs are blurred. For each hazard, two blur radii are chosen, one for the nearest forecast hour (f2), and one for the furthest (f35 HREF, f38 SREF). For hours in between, both blurs are applied separately and the results are linearly interpolated based on the forecast hour.
+
+The blur radii are chosen by grid search to maximize the area under the precision-recall curve (AU-PRC). AU-PRC is equivalent to the area to the left of the performance diagram curve[^perfdiagrams]. A more commonly used metric is area under the receiver operator curve (AU-ROC). Unlike AU-ROC, AU-PRC ignores correctly rejected negatives and may therefore be more appropriate for rare events[^auprc1][^auprc2], such as severe weather. Indeed, the tornado model trained here has worse AU-ROC than an earlier Nadocast experiment trained with ~1 year less data. For events as rare as severe weather, the AU-ROC metric is dominated by probability of detection (POD) at very low prediction thresholds (e.g. ≤1%) and is largely insensitive to precision improvements at higher thresholds (e.g. 15%). AU-PRC better captures the performance over the range of thresholds relevant to forecasting (and indeed the tornado model trained here has better AU-PRC than the earlier experiment).
+
+The best blur radii are shown below.
+
+| Model/Hazard      | Blur Radius f2 | Blur Radius f35 (f38 SREF) |
+| ----------------- | -------------- | -------------------------- |
+| HREF Tornado      | 15             | 15                         |
+| HREF Wind         | 25             | 25                         |
+| HREF Hail         | 15             | 25                         |
+| HREF Sig. Tornado | 25             | 35                         |
+| HREF Sig. Wind    | 15             | 35                         |
+| HREF Sig. Hail    | 15             | 25                         |
+| SREF Tornado      | 0              | 50                         |
+| SREF Wind         | 50             | 50                         |
+| SREF Hail         | 0              | 35                         |
+| SREF Sig. Tornado | 50             | 35                         |
+| SREF Sig. Wind    | 35             | 70                         |
+| SREF Sig. Hail    | 0              | 50                         |
+
+#### Hourly Combining and Calibrating
+
+Predictions that come out of a machine learning classifier may not necessarily be well-calibrated (e.g. a prediction of 1% might in face be closer to 0.5%). Additionally, we need to combine the HREF and SREF predictions. We perform both of these simultaneously. The process, described below, is somewhat involved, but it both calibrates and combines the predictions, as well as allows for some non-linearity (e.g. perhaps the HREF predictor is more reliable at higher probs and we want to take advantage of that), all while trying to minimize the number of learned parameters (compared to making a 2D lookup table of HREF prob (rows) SREF prob (columns) with output in the cells).
+
+First we verified that the HREF predictor is more performant than the SREF predictor by AU-PRC (it is), and we use the HREF prediction as a first guess for the output probability. From this first guess, we bin...
 
 
+
+## Acknowledgements
+
+Some of the computing for this project was performed at the OU Supercomputing Center for Education & Research (OSCER) at the University of Oklahoma (OU).
+
+Earlier versions of Nadocast that incorporated the [HRRR](https://rapidrefresh.noaa.gov/hrrr/) were trained on data from the Utah MesoWest HRRR Archive[^hrrrarchive].
 
 
 ## Tables
@@ -187,7 +256,7 @@ In total, the feature engineering steps above result in 17412 fields (predictors
 | VWSH:6000-0 m above ground     |
 | HGT:cloud ceiling              |
 
-## Table 3
+### Table 3
 
 | HREF Ensemble Probability Fields Used | Probability Threshold |
 | ---- | ---- |
@@ -330,7 +399,7 @@ In total, the feature engineering steps above result in 17412 fields (predictors
 | UpstreamCRAIN1hr                                          |
 | UpstreamCRAIN2hr                                          |
 
-## Table 5
+### Table 5
 
 | Climatology Fields                                           | Variation |
 | ------------------------------------------------------------ | --------- |
@@ -382,3 +451,15 @@ In total, the feature engineering steps above result in 17412 fields (predictors
 [^wendt]: Wendt and Jirak. An Hourly Climatology of Operational MRMS MESH-Diagnosed Severe and Significant Hail with Comparisons to Storm Data Hail Reports. WAF 2021.https://journals.ametsoc.org/downloadpdf/journals/wefo/36/2/WAF-D-20-0158.1.xml
 [^potvin]: Potvin et al. A Bayesian Hierarchical Modeling Framework for Correcting Reporting Bias in the U.S. Tornado Database. WAF 2019. https://journals.ametsoc.org/downloadpdf/journals/wefo/34/1/waf-d-18-0137_1.xml
 
+[^xgboost1]: Alexey Natekin. Topic 10 - Gradient Boosting. mlcourse.ai - Open Machine Learning Course.  Trans/ed. Olga Daykhovskaya, Yury Kashnitsky, Anastasia Manokhina, Egor Polusmak, and Yuanyuan Pao. 2018.  https://mlcourse.ai/book/topic10/topic10_gradient_boosting.html
+
+[^xgboost2]: David Martins. XGBoost: A Complete Guide to Fine-Tune and Optimize your Model. Towards Data Science 2021. https://towardsdatascience.com/xgboost-fine-tune-and-optimize-your-model-23d996fab663
+
+[^lightgbm]: Ke et al. LightGBM: A Highly Efficient Gradient Boosting Decision Tree. NeurIPS 2017. https://proceedings.neurips.cc/paper/2017/file/6449f44a102fde848669bdd9eb6b76fa-Paper.pdf
+[^mctb]: Brian Hempel. MemoryConstrainedTreeBoosting.jl. 2021. https://github.com/brianhempel/MemoryConstrainedTreeBoosting.jl
+[^hrrrarchive]: Blaylock et al. Cloud Archiving and Data Mining of High-Resolution Rapid Refresh Forecast Model Output. Computers & Geosciences 2017. https://doi.org/10.1016/j.cageo.2017.08.005
+[^perfdiagrams]: Paul J. Roebber. Visualizing Multiple Measures of Forecast Quality. WAF 2009. https://journals.ametsoc.org/downloadpdf/journals/wefo/24/2/2008waf2222159_1.xml
+
+[^auprc1]: Takaya and Rehmsmeier. The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets. PLoS ONE 2014. https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432
+
+[^auprc2]: Sofaer et al. The Area Under the Precision-Recall Curve as a Performance Metric for Rare Binary Events. Ecol Evol 2019. https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13140
