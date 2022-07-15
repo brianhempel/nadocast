@@ -23,7 +23,7 @@ function mean_prob_grib2s_to_forecast(
   run_day   = parse(Int64, day_str)
   run_hour  = parse(Int64, run_hour_str)
 
-  if forecast_hour == nothing
+  if isnothing(forecast_hour)
     forecast_hour_str, = match( r"_mean_f(\d+)\.grib2", mean_grib2_path).captures
     forecast_hour      = parse(Int64, forecast_hour_str)
   end

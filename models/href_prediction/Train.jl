@@ -156,7 +156,7 @@ sum(weights) # 7.063547f8
 #
 # The area under the precision-recall curve as a performance metric for rare binary events
 # Helen R. Sofaer, Jennifer A. Hoeting, Catherine S. Jarnevich
-# https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13140#:~:text=Guo%2C%202013).-,The%20area%20under%20the%20precision%2Drecall%20curve%20(AUC%2DPR,Davis%20%26%20Goadrich%2C%202006).
+# https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13140
 #
 # ...which is the same as the area to the left of the performance diagram curve (which is what we want to optimize for anyway).
 
@@ -798,7 +798,7 @@ for prediction_i in 1:length(HREFPrediction.models)
   y = Ys[event_name]
   prediction_i_base = (prediction_i - 1) * length(blur_radii) # 0-indexed
 
-  println("blur_radius_f2\tblur_radius_f38\tAU_PR_$event_name")
+  println("blur_radius_f2\tblur_radius_f35\tAU_PR_$event_name")
 
   best_blur_i_lo, best_blur_i_hi, best_au_pr = (0, 0, 0.0)
 
@@ -825,7 +825,7 @@ for prediction_i in 1:length(HREFPrediction.models)
   println()
 end
 
-# blur_radius_f2  blur_radius_f38 AU_PR_tornado
+# blur_radius_f2  blur_radius_f35 AU_PR_tornado
 # 0       0       0.03809342
 # 0       15      0.03833245
 # 0       25      0.038320392
@@ -877,7 +877,7 @@ end
 # 100     100     0.027195448
 # Best tornado: 15        15      0.038589306
 
-# blur_radius_f2  blur_radius_f38 AU_PR_wind
+# blur_radius_f2  blur_radius_f35 AU_PR_wind
 # 0       0       0.11425857
 # 0       15      0.11487553
 # 0       25      0.11506089
@@ -929,7 +929,7 @@ end
 # 100     100     0.09627795
 # Best wind: 25   25      0.11570608
 
-# blur_radius_f2  blur_radius_f38 AU_PR_hail
+# blur_radius_f2  blur_radius_f35 AU_PR_hail
 # 0       0       0.07318162
 # 0       15      0.07373512
 # 0       25      0.07381648
@@ -981,7 +981,7 @@ end
 # 100     100     0.054308724
 # Best hail: 15   25      0.07425418
 
-# blur_radius_f2  blur_radius_f38 AU_PR_sig_tornado
+# blur_radius_f2  blur_radius_f35 AU_PR_sig_tornado
 # 0       0       0.03237227
 # 0       15      0.032958195
 # 0       25      0.033152383
@@ -1033,7 +1033,7 @@ end
 # 100     100     0.023168413
 # Best sig_tornado: 25    35      0.03381999
 
-# blur_radius_f2  blur_radius_f38 AU_PR_sig_wind
+# blur_radius_f2  blur_radius_f35 AU_PR_sig_wind
 # 0       0       0.015982477
 # 0       15      0.016100902
 # 0       25      0.016143078
@@ -1085,7 +1085,7 @@ end
 # 100     100     0.013735235
 # Best sig_wind: 15       35      0.016239488
 
-# blur_radius_f2  blur_radius_f38 AU_PR_sig_hail
+# blur_radius_f2  blur_radius_f35 AU_PR_sig_hail
 # 0       0       0.015385461
 # 0       15      0.01551403
 # 0       25      0.015543372
@@ -1140,7 +1140,7 @@ end
 
 
 
-# blur_radius_f2  blur_radius_f38 AUC_tornado
+# blur_radius_f2  blur_radius_f35 AUC_tornado
 # 0       0       0.98403555
 # 0       15      0.98411876
 # 0       25      0.9841687
@@ -1192,7 +1192,7 @@ end
 # 100     100     0.9828251
 # Best tornado: 35        35      0.9843225
 
-# blur_radius_f2  blur_radius_f38 AUC_wind
+# blur_radius_f2  blur_radius_f35 AUC_wind
 # 0       0       0.9877189
 # 0       15      0.9877767
 # 0       25      0.9877994
@@ -1244,7 +1244,7 @@ end
 # 100     100     0.9860516
 # Best wind: 25   25      0.9878423
 
-# blur_radius_f2  blur_radius_f38 AUC_hail
+# blur_radius_f2  blur_radius_f35 AUC_hail
 # 0       0       0.98941755
 # 0       15      0.9894806
 # 0       25      0.9895114
@@ -1296,7 +1296,7 @@ end
 # 100     100     0.9880733
 # Best hail: 15   35      0.9895551
 
-# blur_radius_f2  blur_radius_f38 AUC_sig_tornado
+# blur_radius_f2  blur_radius_f35 AUC_sig_tornado
 # 0       0       0.976049
 # 0       15      0.9760343
 # 0       25      0.9760699
@@ -1348,7 +1348,7 @@ end
 # 100     100     0.9757399
 # Best sig_tornado: 50    0       0.9764661
 
-# blur_radius_f2  blur_radius_f38 AUC_sig_wind
+# blur_radius_f2  blur_radius_f35 AUC_sig_wind
 # 0       0       0.9893709
 # 0       15      0.9894301
 # 0       25      0.98944986
@@ -1400,7 +1400,7 @@ end
 # 100     100     0.9877318
 # Best sig_wind: 25       25      0.9894937
 
-# blur_radius_f2  blur_radius_f38 AUC_sig_hail
+# blur_radius_f2  blur_radius_f35 AUC_sig_hail
 # 0       0       0.99497664
 # 0       15      0.99502707
 # 0       25      0.9950619
@@ -1454,13 +1454,13 @@ end
 
 
 # waiting on this
-println("event_name\tbest_blur_radius_f2\tbest_blur_radius_f38\tAU_PR")
+println("event_name\tbest_blur_radius_f2\tbest_blur_radius_f35\tAU_PR")
 for (event_name, best_blur_i_lo, best_blur_i_hi, best_au_pr) in bests
   println("$event_name\t$(blur_radii[best_blur_i_lo])\t$(blur_radii[best_blur_i_hi])\t$(Float32(best_au_pr))")
 end
 println()
 
-# event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
+# event_name  best_blur_radius_f2 best_blur_radius_f35 AU_PR
 # tornado     15                  15                   0.038589306
 # wind        25                  25                   0.11570608
 # hail        15                  25                   0.07425418
@@ -1468,7 +1468,7 @@ println()
 # sig_wind    15                  35                   0.016239488
 # sig_hail    15                  25                   0.015588201
 
-# event_name      best_blur_radius_f2     best_blur_radius_f38    AUC
+# event_name      best_blur_radius_f2     best_blur_radius_f35    AUC
 # tornado         35      35      0.9843225
 # wind            25      25      0.9878423
 # hail            15      35      0.9895551
