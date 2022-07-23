@@ -11,7 +11,7 @@ require "set"
 # 1hrly files contain hours 1-38 not divisible by 3
 # 3hrly files contain hours anl,3-87 divisible by 3
 
-DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "nomads.ncep.noaa.gov/pub" : "ftpprd.ncep.noaa.gov"
+DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "ftpprd.ncep.noaa.gov" : "nomads.ncep.noaa.gov/pub"
 
 TYPES          = ["mean_1hrly", "mean_3hrly", "prob_1hrly", "prob_3hrly"]
 YMDS           = `curl -s https://#{DOMAIN}/data/nccf/com/sref/prod/`.scan(/\bsref\.(\d{8})\//).flatten.uniq
