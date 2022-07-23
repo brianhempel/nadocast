@@ -944,7 +944,7 @@ require "set"
 
 # Files available 2.5hrs after run time
 
-DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "nomads.ncep.noaa.gov/pub" : "ftpprd.ncep.noaa.gov"
+DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "ftpprd.ncep.noaa.gov" : "nomads.ncep.noaa.gov/pub"
 
 TYPES          = ["mean", "prob"]
 YMDS           = `curl -s https://#{DOMAIN}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
@@ -957,6 +957,7 @@ THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
   remote_files = `curl -s https://#{DOMAIN}/data/nccf/com/href/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
+  puts `curl -s https://#{DOMAIN}/data/nccf/com/href/prod/href.#{ymd}/ensprod/`
   remote_files.map { |name| "https://#{DOMAIN}/data/nccf/com/href/prod/href.#{ymd}/ensprod/#{name}" }
 end.to_set
 
@@ -971,6 +972,7 @@ loop { break if Dir.exists?("/Volumes/SREF_HREF_4/"); puts "Waiting for SREF_HRE
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/href/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2
 
 forecasts_to_get = YMDS.product(HOURS_OF_DAY, FORECAST_HOURS, TYPES)
+
 
 threads = THREAD_COUNT.times.map do
   Thread.new do
