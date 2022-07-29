@@ -166,11 +166,13 @@ First we verified that the HREF predictor is more performant than the SREF predi
 
 In each of the 5 bins we train a logistic regression against storm reports in the validation set. Each bin's logistic regression has the form
 
-$$\hat{y}_{bin} = \sigma\Big(\ a_1\sigma^{-1}(\hat{y}_{href}) + a_2\sigma^{-1}(\hat{y}_{sref}) + a_3\ \Big)$$
+$$
+\hat{y}_{bin} = \sigma\Big(\ a_1\sigma^{-1}(\hat{y}_{href}) + a_2\sigma^{-1}(\hat{y}_{sref}) + a_3\ \Big)
+$$
 
 where $\sigma$ is the [logistic function](https://en.wikipedia.org/wiki/Logistic_function), which transforms numbers in the range of $(-\infty,\infty)$ to the range $(0,1)$, $\sigma^{-1}$ is its inverse (i.e. the [logit function](https://en.wikipedia.org/wiki/Logit)), and $a_i$ are learned parameters, where $a_3$ is the constant offset.
 
-If the first guess $\hat{y}_{href}$ participates in two overlapping bins, the logistic regression of both bins are applied and the results linearly interpolated such that when $\hat{y}_{href}$ is in exactly the middle of a bin, only that bin's prediction is used, and on the edge of the bin only the other bin's prediction is used. Between the edge and the middle the two predictions are linearly interpolated. This weighting is illustrated by the light gray dashed lines in the figure above. This weighting scheme provides smoothness so there are no sharp jumps on bin boundaries.
+If the first guess $$\hat{y}_{href}$$ participates in two overlapping bins, the logistic regression of both bins are applied and the results linearly interpolated such that when $\hat{y}_{href}$ is in exactly the middle of a bin, only that bin's prediction is used, and on the edge of the bin only the other bin's prediction is used. Between the edge and the middle the two predictions are linearly interpolated. This weighting is illustrated by the light gray dashed lines in the figure above. This weighting scheme provides smoothness so there are no sharp jumps on bin boundaries.
 
 ...plot the 2d output of some of these calibration curves...
 
