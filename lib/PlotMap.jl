@@ -504,7 +504,7 @@ end
 
 function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_conus_lines_href_5k_native_proj_80_pct)
   # Awww yeah rotation.
-  vals = permutedims(reshape(vals, (grid.width, grid.height)))
+  vals = permutedims(reshape(vals, (grid.width, grid.height)))[:,:]
   # Now flip vertically
   for j in 1:(grid.height ÷ 2)
     row = vals[j,:]
