@@ -302,6 +302,7 @@
 0.698	CAPE
 0.682	cloud base
 0.673	9hrGated
+0.670	925mb
 0.669	SCP
 0.617	Convergence
 0.611	\bUpstream\w*2hr
@@ -313,6 +314,7 @@
 0.555	\bUpstream
 0.502	\bUpstreamCRAIN
 0.498	\bUpstream\w*1hr
+0.488	850mb
 0.479	\bUpstream\w*CAPE
 0.446	DifferentialDivergence
 0.432	Divergence

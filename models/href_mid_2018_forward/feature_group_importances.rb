@@ -48,6 +48,8 @@ group_tokens = [
   /Convergence/,
   /DifferentialDivergence/,
   /Divergence/,
+  /850mb/,
+  /925mb/,
   /REF/,
   /sqrt/,
   /Vorticity/,
