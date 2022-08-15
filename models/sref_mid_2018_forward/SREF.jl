@@ -20,7 +20,7 @@ crop = ((1+26):(185-12), (1+14):(129-28))
 # FORECASTS_ROOT="../../test_grib2s"
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
-layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
+layer_blocks_to_make = FeatureEngineeringShared.fewer_grad_blocks
 
 # Didn't realize the 1hrly file didn't have hours divisible by 3 and needed to grab the 3hrly files too.
 # 2019-1-9 is the first day with all hours.
@@ -142,7 +142,7 @@ function upstream_feature!(grid, get_layer, out, u_key, v_key, feature_key; hour
 end
 
 
-interaction_terms = [
+extra_features = [
   ("BWD0-500mb", (_, get_layer, out) -> compute_0_500mb_BWD!(get_layer, out)),
 
   # 0-3km EHI, roughly
@@ -219,8 +219,7 @@ function feature_engineered_forecasts()
     forecasts();
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
-    new_features_pre = interaction_terms,
-    use_2020_models_buggy_100mi_calc = true # OOPS forgot to turn this off
+    new_features_pre = extra_features
   )
 end
 

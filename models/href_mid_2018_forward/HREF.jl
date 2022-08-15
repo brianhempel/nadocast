@@ -38,7 +38,7 @@ crop = ((1+214):(1473 - 99), (1+119):(1025-228))
 
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
-layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
+layer_blocks_to_make = FeatureEngineeringShared.fewer_grad_blocks
 
 # layer_blocks_to_make = [
 #   FeatureEngineeringShared.raw_features_block,
@@ -137,7 +137,7 @@ end
 
 
 
-interaction_terms = [
+extra_features = [
   # 0-3km EHI, roughly
   (    "SBCAPE*HLCY3000-0m", (_, get_layer, out) -> out .=       get_layer(sbcape_key)  .* get_layer(helicity3km_key)),
   (    "MLCAPE*HLCY3000-0m", (_, get_layer, out) -> out .=       get_layer(mlcape_key)  .* get_layer(helicity3km_key)),
@@ -228,8 +228,7 @@ function feature_engineered_forecasts()
     forecasts();
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
-    new_features_pre = interaction_terms,
-    use_2020_models_buggy_100mi_calc = true # OOPS forgot to turn this off
+    new_features_pre = extra_features
   )
 end
 
