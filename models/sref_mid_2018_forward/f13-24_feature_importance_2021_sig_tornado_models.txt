@@ -1,0 +1,928 @@
+computing radius ranges...done
+231 trees
+Feature importance by appearance count:
+8	7662	TMP:300 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+7	7635	VGRD:600 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+6	18211	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr delta:100mi forward grad
+5	587	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:50mi mean
+5	7581	VWSH:0 sigma level:hour fcst:prob >20 +1hr:100mi forward grad
+4	5579	PRMSL:mean sea level:hour fcst:wt ens mean +1hr:25mi mean
+4	7836	UGRD:300 mb:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+4	13117	TPFI:350 mb:hour fcst:prob =1 3hr mean:100mi leftward grad
+4	7883	HGT:cloud top:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+3	16748	WIND:850 mb:hour fcst:wt ens mean 3hr delta:100mi mean
+3	18751	severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+3	4213	CIN:surface:hour fcst:prob <-100:50mi forward grad
+3	18168	TMP:300 mb:hour fcst:wt ens mean 3hr delta:100mi forward grad
+3	18190	WIND:850 mb:hour fcst:wt ens mean 3hr delta:100mi forward grad
+3	13229	TMP:2 m above ground:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+3	8487	DPT:850 mb:hour fcst:wt ens mean 3hr min:50mi mean
+3	18750	severe_day_climatological_spatial_prob:calculated:hour fcst::
+3	5808	TMP:300 mb:hour fcst:wt ens mean +1hr:50mi mean
+3	6818	HGT:700 mb:hour fcst:wt ens mean +1hr:50mi forward grad
+3	8826	SBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:100mi mean
+3	2064	UGRD:850 mb:hour fcst:wt ens mean -1hr:100mi forward grad
+3	18584	DPT:300 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+2	18374	TMP:300 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+2	10577	VWSH:0 sigma level:hour fcst:wt ens mean 3hr min:100mi linestraddling grad
+2	10402	VIS:surface:hour fcst:prob <8046 3hr min:100mi leftward grad
+2	9248	Divergence250mb*10^5:calculated:hour fcst: 3hr min:25mi leftward grad
+2	13593	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr max:
+2	17612	VIS:surface:hour fcst:prob <8046 3hr delta:50mi forward grad
+2	7873	TMP:2 m above ground:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+2	18359	ABSV:850 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+2	14212	UpstreamSurfaceLayerRH2hr:calculated:hour fcst: 3hr max:100mi mean
+2	14211	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr max:100mi mean
+2	15807	TPFI:200 mb:hour fcst:prob =1 3hr max:100mi leftward grad
+2	18304	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr delta:100mi forward grad
+2	2153	CIN:surface:hour fcst:prob <-100 -1hr:100mi forward grad
+2	10282	AbsVorticity10m*10^5:calculated:hour fcst: 3hr min:100mi forward grad
+2	5687	TIPD:725 mb:hour fcst:prob =1 +1hr:25mi mean
+2	2120	WIND:10 m above ground:hour fcst:wt ens mean -1hr:100mi forward grad
+2	1534	CIN:surface:hour fcst:prob <-50 -1hr:50mi forward grad
+2	5566	UGRD:850 mb:hour fcst:wt ens mean +1hr:25mi mean
+2	18542	VGRD:10 m above ground:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+2	16563	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr delta:50mi mean
+2	7532	COVTW:entire atmosphere:hour fcst:prob >5000 +1hr:100mi forward grad
+2	11043	TIPD:725 mb:hour fcst:prob =1 3hr mean:25mi mean
+2	12247	CIN:surface:hour fcst:prob <-100 3hr mean:50mi forward grad
+2	18764	tornado_day_climatological_spatial_prob:calculated:hour fcst::
+2	14044	RH:2 m above ground:hour fcst:wt ens mean 3hr max:100mi mean
+2	793	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:100mi mean
+2	6149	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: +1hr:100mi mean
+2	17937	VGRD:300 mb:hour fcst:wt ens mean 3hr delta:50mi linestraddling grad
+2	8303	WIND:700 mb:hour fcst:wt ens mean 3hr min:25mi mean
+2	462	PLI:30-0 mb above ground:hour fcst:wt ens mean -1hr:50mi mean
+2	5094	TPFI:225 mb:hour fcst:prob =3:100mi leftward grad
+2	7647	ABSV:850 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+2	13632	RH:2 m above ground:hour fcst:wt ens mean 3hr max:25mi mean
+2	5794	ABSV:700 mb:hour fcst:wt ens mean +1hr:50mi mean
+2	18773	month_climatological_hail_day_prob:calculated:hour fcst::
+2	13189	UGRD:700 mb:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+2	15674	HGT:1000 mb:hour fcst:wt ens mean 3hr max:100mi leftward grad
+2	18210	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr delta:100mi forward grad
+2	13255	VWSH:0 sigma level:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+2	11892	TPFI:225 mb:hour fcst:prob =3 3hr mean:25mi leftward grad
+2	7000	Upstream2mDPT2hr:calculated:hour fcst: +1hr:50mi forward grad
+2	13935	TPFI:450 mb:hour fcst:prob =1 3hr max:50mi mean
+2	6155	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: +1hr:100mi mean
+2	10336	RH:2 m above ground:hour fcst:wt ens mean 3hr min:100mi leftward grad
+2	13838	RH:2 m above ground:hour fcst:wt ens mean 3hr max:50mi mean
+2	5588	ABSV:700 mb:hour fcst:wt ens mean +1hr:25mi mean
+2	3414	COVTW:entire atmosphere:hour fcst:prob >10000:100mi mean
+2	15487	TMP:700 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+2	16692	UGRD:600 mb:hour fcst:wt ens mean 3hr delta:100mi mean
+2	7980	TPFI:200 mb:hour fcst:prob =2 +1hr:100mi linestraddling grad
+2	4369	DPT:500 mb:hour fcst:wt ens mean:50mi leftward grad
+2	18768	wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+2	16489	UGRD:250 mb:hour fcst:wt ens mean 3hr delta:50mi mean
+2	2402	TPFI:400 mb:hour fcst:prob =1 -1hr:100mi leftward grad
+2	11305	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr mean:50mi mean
+2	169	BWD0-500mb:calculated:hour fcst: -1hr:
+2	2152	CIN:surface:hour fcst:prob <-50 -1hr:100mi forward grad
+2	17913	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst: 3hr delta:50mi leftward grad
+2	13571	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr max:
+2	15034	Upstream2mDPT2hr:calculated:hour fcst: 3hr max:50mi forward grad
+2	5083	TPFI:350 mb:hour fcst:prob =1:100mi leftward grad
+2	18373	TMP:500 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+2	8424	Divergence250mb*10^5:calculated:hour fcst: 3hr min:25mi mean
+2	6963	VWSH:0 sigma level:hour fcst:prob >20 +1hr:50mi forward grad
+2	16768	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr delta:100mi mean
+1	13003	ABSV:850 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+1	10340	TMP:300 mb:hour fcst:wt ens mean 3hr min:100mi leftward grad
+1	8828	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr min:100mi mean
+1	8690	TMP:600 mb:hour fcst:wt ens mean 3hr min:100mi mean
+1	15489	TMP:500 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+1	16542	WIND:850 mb:hour fcst:wt ens mean 3hr delta:50mi mean
+1	12531	sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst: 3hr mean:50mi leftward grad
+1	3449	TPFI:200 mb:hour fcst:prob =3:100mi mean
+1	5418	WIND:850 mb:hour fcst:wt ens mean +1hr:
+1	67	WIND:250 mb:hour fcst:wt ens mean -1hr:
+1	14352	TPFI:400 mb:hour fcst:prob =3 3hr max:25mi forward grad
+1	10355	HGT:cloud top:hour fcst:wt ens mean 3hr min:100mi leftward grad
+1	16695	UGRD:250 mb:hour fcst:wt ens mean 3hr delta:100mi mean
+1	6036	WIND:850 mb:hour fcst:wt ens mean +1hr:100mi mean
+1	13569	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: 3hr max:
+1	1468	ABSV:700 mb:hour fcst:wt ens mean -1hr:50mi forward grad
+1	3820	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30:25mi leftward grad
+1	18379	TMP:2 m above ground:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+1	11515	DifferentialDivergence250-850mb*10^5:calculated:hour fcst: 3hr mean:100mi mean
+1	16954	WIND:850 mb:hour fcst:wt ens mean 3hr delta:25mi forward grad
+1	603	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: -1hr:50mi mean
+1	8427	ConvergenceOnly850mb*10^5:calculated:hour fcst: 3hr min:25mi mean
+1	11953	UGRD:700 mb:hour fcst:wt ens mean 3hr mean:25mi linestraddling grad
+1	7820	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: +1hr:100mi leftward grad
+1	2356	PLI:30-0 mb above ground:hour fcst:prob <-6 -1hr:100mi leftward grad
+1	8496	PLI:30-0 mb above ground:hour fcst:wt ens mean 3hr min:50mi mean
+1	5537	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: +1hr:
+1	13563	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr max:
+1	2487	VGRD:300 mb:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+1	8833	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr min:100mi mean
+1	3153	WIND:700 mb:hour fcst:wt ens mean:50mi mean
+1	10712	UpstreamCRAIN2hr:calculated:hour fcst: 3hr min:100mi linestraddling grad
+1	15436	StormUpstream10mConvergence9hrGatedBySCP:calculated:hour fcst: 3hr max:50mi linestraddling grad
+1	14870	TMP:600 mb:hour fcst:wt ens mean 3hr max:50mi forward grad
+1	3408	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30:100mi mean
+1	16336	WIND:850 mb:hour fcst:wt ens mean 3hr delta:25mi mean
+1	4962	HGT:1000 mb:hour fcst:wt ens mean:100mi leftward grad
+1	8830	SBCAPE*BWD0-500mb*HLCY3000-0m*10^-6:calculated:hour fcst: 3hr min:100mi mean
+1	172	SBCAPE*BWD0-500mb:calculated:hour fcst: -1hr:
+1	18209	CAPE:surface:hour fcst:prob >4000 3hr delta:100mi forward grad
+1	8764	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30 3hr min:100mi mean
+1	14199	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: 3hr max:100mi mean
+1	3271	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi mean
+1	10368	HGT:850-1000 mb:hour fcst:wt ens mean 3hr min:100mi leftward grad
+1	15831	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr max:100mi leftward grad
+1	6060	HLCY:3000-0 m above ground:hour fcst:prob >300 +1hr:100mi mean
+1	18159	RH:850 mb:hour fcst:wt ens mean 3hr delta:100mi forward grad
+1	10498	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr min:100mi leftward grad
+1	8867	UGRD:250 mb:hour fcst:wt ens mean 3hr min:25mi forward grad
+1	14204	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr max:100mi mean
+1	7729	HGT:cloud ceiling:hour fcst:prob <914.6 +1hr:100mi leftward grad
+1	15105	WIND:250 mb:hour fcst:wt ens mean 3hr max:50mi leftward grad
+1	3413	COVTW:entire atmosphere:hour fcst:prob >7000:100mi mean
+1	2920	RH:2 m above ground:hour fcst:wt ens mean:25mi mean
+1	18774	month_climatological_severe_day_prob:calculated:hour fcst::
+1	12781	UGRD:250 mb:hour fcst:wt ens mean 3hr mean:100mi forward grad
+1	12510	TPFI:225 mb:hour fcst:prob =3 3hr mean:50mi leftward grad
+1	4905	CWORK:0 m above ground:hour fcst:prob >0.036:100mi forward grad
+1	7735	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >40 +1hr:100mi leftward grad
+1	7558	TPFI:300 mb:hour fcst:prob =1 +1hr:100mi forward grad
+1	3363	WIND:250 mb:hour fcst:wt ens mean:100mi mean
+1	11326	Upstream2mDPT2hr:calculated:hour fcst: 3hr mean:50mi mean
+1	5991	PRMSL:mean sea level:hour fcst:wt ens mean +1hr:100mi mean
+1	10646	TPFI:350 mb:hour fcst:prob =2 3hr min:100mi linestraddling grad
+1	5760	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: +1hr:25mi mean
+1	7858	ABSV:250 mb:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+1	6171	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst: +1hr:100mi mean
+1	8445	UpstreamCRAIN1hr:calculated:hour fcst: 3hr min:25mi mean
+1	18214	HLCY:3000-0 m above ground:hour fcst:prob >300 3hr delta:100mi forward grad
+1	13160	Divergence10m*10^5:calculated:hour fcst: 3hr mean:100mi leftward grad
+1	11380	PLI:30-0 mb above ground:hour fcst:wt ens mean 3hr mean:100mi mean
+1	13214	ABSV:250 mb:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+1	381	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:25mi mean
+1	1652	UGRD:850 mb:hour fcst:wt ens mean -1hr:50mi leftward grad
+1	5425	HGT:500-1000 mb:hour fcst:wt ens mean +1hr:
+1	3230	TPFI:350 mb:hour fcst:prob =2:50mi mean
+1	15458	UGRD:300 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+1	10981	WIND:700 mb:hour fcst:wt ens mean 3hr mean:25mi mean
+1	8100	WIND:300 mb:hour fcst:wt ens mean 3hr min:
+1	238	RH:700 mb:hour fcst:wt ens mean -1hr:25mi mean
+1	5182	RH:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+1	11206	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr mean:50mi mean
+1	8769	COVTW:entire atmosphere:hour fcst:prob >7000 3hr min:100mi mean
+1	2218	WIND:10 m above ground:hour fcst:prob >12.89 -1hr:100mi forward grad
+1	15140	VIS:surface:hour fcst:prob <8046 3hr max:50mi leftward grad
+1	9832	TPFI:225 mb:hour fcst:prob =3 3hr min:50mi leftward grad
+1	10127	RH:600 mb:hour fcst:wt ens mean 3hr min:100mi forward grad
+1	16284	VGRD:1000 mb:hour fcst:wt ens mean 3hr delta:25mi mean
+1	529	COVTW:entire atmosphere:hour fcst:prob >7000 -1hr:50mi mean
+1	16307	RH:600 mb:hour fcst:wt ens mean 3hr delta:25mi mean
+1	1052	HGT:500 mb:hour fcst:wt ens mean -1hr:25mi leftward grad
+1	18628	PLI:30-0 mb above ground:hour fcst:prob <-2 3hr delta:100mi linestraddling grad
+1	5167	PRMSL:mean sea level:hour fcst:wt ens mean:100mi linestraddling grad
+1	7868	TMP:300 mb:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+1	4451	TIPD:725 mb:hour fcst:prob =1:50mi leftward grad
+1	11518	AbsVorticity10m*10^5:calculated:hour fcst: 3hr mean:100mi mean
+1	14169	VIS:cloud base:hour fcst:prob =1 3hr max:100mi mean
+1	18308	SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr delta:100mi forward grad
+1	8652	UpstreamCRAIN2hr:calculated:hour fcst: 3hr min:50mi mean
+1	40	TMP:300 mb:hour fcst:wt ens mean -1hr:
+1	10098	UGRD:850 mb:hour fcst:wt ens mean 3hr min:100mi forward grad
+1	4322	Upstream2mDPT2hr:calculated:hour fcst::50mi forward grad
+1	245	TMP:500 mb:hour fcst:wt ens mean -1hr:25mi mean
+1	18771	month_climatological_tornado_day_prob:calculated:hour fcst::
+1	4438	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30:50mi leftward grad
+1	18550	VGRD:1000 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+1	1906	PWAT:entire atmosphere:hour fcst:wt ens mean -1hr:50mi linestraddling grad
+1	7957	TIPD:400 mb:hour fcst:prob =1 +1hr:100mi linestraddling grad
+1	794	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: -1hr:100mi mean
+1	13002	HGT:250 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+1	9736	HGT:cloud ceiling:hour fcst:wt ens mean 3hr min:50mi leftward grad
+1	7697	TMP:850 mb:hour fcst:prob <273 +1hr:100mi leftward grad
+1	18339	UGRD:700 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+1	14024	VGRD:250 mb:hour fcst:wt ens mean 3hr max:100mi mean
+1	2741	WIND:700 mb:hour fcst:wt ens mean:
+1	7655	RH:600 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+1	3381	HLCY:3000-0 m above ground:hour fcst:prob >250:100mi mean
+1	7472	CRAIN:surface:hour fcst:wt ens mean +1hr:100mi forward grad
+1	6124	TPFI:225 mb:hour fcst:prob =3 +1hr:100mi mean
+1	758	TPFI:350 mb:hour fcst:prob =2 -1hr:100mi mean
+1	11303	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: 3hr mean:50mi mean
+1	8622	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr min:50mi mean
+1	2543	VWSH:0 sigma level:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+1	18777	month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::
+1	2345	CAPE:surface:hour fcst:prob >2000 -1hr:100mi leftward grad
+1	15711	HGT:cloud top:hour fcst:wt ens mean 3hr max:100mi leftward grad
+1	6164	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: +1hr:100mi mean
+1	1068	TMP:600 mb:hour fcst:wt ens mean -1hr:25mi leftward grad
+1	5854	HLCY:3000-0 m above ground:hour fcst:prob >300 +1hr:50mi mean
+1	5529	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: +1hr:
+1	5737	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: +1hr:25mi mean
+1	16130	WIND:850 mb:hour fcst:wt ens mean 3hr delta:
+1	451	TMP:500 mb:hour fcst:wt ens mean -1hr:50mi mean
+1	8256	VGRD:250 mb:hour fcst:wt ens mean 3hr min:25mi mean
+1	13927	TIPD:725 mb:hour fcst:prob =1 3hr max:50mi mean
+1	5624	WIND:850 mb:hour fcst:wt ens mean +1hr:25mi mean
+1	12956	Divergence250mb*10^5:calculated:hour fcst: 3hr mean:100mi forward grad
+1	18326	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr delta:100mi forward grad
+1	14454	RH:500 mb:hour fcst:wt ens mean 3hr max:25mi leftward grad
+1	7074	HGT:700-850 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+1	3493	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst::100mi mean
+1	13965	VIS:cloud base:hour fcst:prob =3 3hr max:50mi mean
+1	12319	VWSH:0 sigma level:hour fcst:prob >20 3hr mean:50mi forward grad
+1	1715	WIND:250 mb:hour fcst:wt ens mean -1hr:50mi leftward grad
+1	6090	COVTW:entire atmosphere:hour fcst:prob >5000 +1hr:100mi mean
+1	1982	TIPD:500 mb:hour fcst:prob =1 -1hr:50mi linestraddling grad
+1	14189	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr max:100mi mean
+1	10154	WIND:10 m above ground:hour fcst:wt ens mean 3hr min:100mi forward grad
+1	2110	PLI:30-0 mb above ground:hour fcst:wt ens mean -1hr:100mi forward grad
+1	5767	UpstreamCRAIN1hr:calculated:hour fcst: +1hr:25mi mean
+1	14453	RH:600 mb:hour fcst:wt ens mean 3hr max:25mi leftward grad
+1	13014	RH:2 m above ground:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+1	5180	ABSV:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+1	1717	HGT:500-1000 mb:hour fcst:wt ens mean -1hr:50mi leftward grad
+1	3475	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst::100mi mean
+1	8532	HLCY:3000-0 m above ground:hour fcst:prob >300 3hr min:50mi mean
+1	3130	TMP:300 mb:hour fcst:wt ens mean:50mi mean
+1	9664	AbsVorticity10m*10^5:calculated:hour fcst: 3hr min:50mi forward grad
+1	17754	TMP:600 mb:hour fcst:wt ens mean 3hr delta:50mi leftward grad
+1	6059	HLCY:3000-0 m above ground:hour fcst:prob >250 +1hr:100mi mean
+1	5421	WIND:500 mb:hour fcst:wt ens mean +1hr:
+1	7072	HGT:850-1000 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+1	15944	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr max:100mi linestraddling grad
+1	7510	CIN:surface:hour fcst:prob <-200 +1hr:100mi forward grad
+1	6996	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: +1hr:50mi forward grad
+1	13786	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:25mi mean
+1	18775	month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::
+1	13466	CAPE:surface:hour fcst:prob >250 3hr max:
+1	13603	UGRD:500 mb:hour fcst:wt ens mean 3hr max:25mi mean
+1	12488	TIPD:500 mb:hour fcst:prob =1 3hr mean:50mi leftward grad
+1	6147	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: +1hr:100mi mean
+1	13865	WIND:700 mb:hour fcst:wt ens mean 3hr max:50mi mean
+1	223	PRMSL:mean sea level:hour fcst:wt ens mean -1hr:25mi mean
+1	7012	UGRD:300 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+1	10902	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr mean:
+1	4945	UGRD:10 m above ground:hour fcst:wt ens mean:100mi leftward grad
+1	1933	CAPE:surface:hour fcst:prob >2000 -1hr:50mi linestraddling grad
+1	5779	VGRD:850 mb:hour fcst:wt ens mean +1hr:50mi mean
+1	8620	SBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:50mi mean
+1	756	TPFI:400 mb:hour fcst:prob =3 -1hr:100mi mean
+1	5785	PRMSL:mean sea level:hour fcst:wt ens mean +1hr:50mi mean
+1	13019	DPT:850 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+1	5069	TIPD:725 mb:hour fcst:prob =1:100mi leftward grad
+1	18558	HGT:1000 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+1	668	PLI:30-0 mb above ground:hour fcst:wt ens mean -1hr:100mi mean
+1	5034	PLI:30-0 mb above ground:hour fcst:prob <-6:100mi leftward grad
+1	11505	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr mean:100mi mean
+1	8074	TMP:300 mb:hour fcst:wt ens mean 3hr min:
+1	18766	tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+1	15697	DPT:850 mb:hour fcst:wt ens mean 3hr max:100mi leftward grad
+1	5407	CIN:surface:hour fcst:wt ens mean +1hr:
+1	552	TPFI:350 mb:hour fcst:prob =2 -1hr:50mi mean
+1	832	UGRD:300 mb:hour fcst:wt ens mean -1hr:25mi forward grad
+1	11394	WIND:600 mb:hour fcst:wt ens mean 3hr mean:100mi mean
+1	2102	DPT:700 mb:hour fcst:wt ens mean -1hr:100mi forward grad
+1	2281	VGRD:300 mb:hour fcst:wt ens mean -1hr:100mi leftward grad
+1	8669	PRMSL:mean sea level:hour fcst:wt ens mean 3hr min:100mi mean
+1	13445	HGT:cloud top:hour fcst:wt ens mean 3hr max:
+1	6167	StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst: +1hr:100mi mean
+1	13736	TPFI:350 mb:hour fcst:prob =2 3hr max:25mi mean
+1	11328	UpstreamSurfaceLayerRH2hr:calculated:hour fcst: 3hr mean:50mi mean
+1	6810	VGRD:700 mb:hour fcst:wt ens mean +1hr:50mi forward grad
+1	14411	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst: 3hr max:25mi forward grad
+1	14862	ABSV:250 mb:hour fcst:wt ens mean 3hr max:50mi forward grad
+1	3798	PLI:30-0 mb above ground:hour fcst:prob <-6:25mi leftward grad
+1	11509	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: 3hr mean:100mi mean
+1	11776	RH:500 mb:hour fcst:wt ens mean 3hr mean:25mi leftward grad
+1	5893	TIPD:725 mb:hour fcst:prob =1 +1hr:50mi mean
+1	15566	COVTW:entire atmosphere:hour fcst:prob >5000 3hr max:100mi forward grad
+1	8684	RH:700 mb:hour fcst:wt ens mean 3hr min:100mi mean
+1	10748	RH:2 m above ground:hour fcst:wt ens mean 3hr mean:
+1	4212	CIN:surface:hour fcst:prob <-50:50mi forward grad
+1	8464	HGT:1000 mb:hour fcst:wt ens mean 3hr min:50mi mean
+1	11431	VIS:surface:hour fcst:prob <4827 3hr mean:100mi mean
+1	15842	ConvergenceOnly10m*10^5:calculated:hour fcst: 3hr max:100mi leftward grad
+1	5941	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: +1hr:50mi mean
+1	8283	DPT:500 mb:hour fcst:wt ens mean 3hr min:25mi mean
+1	12901	TIPD:400 mb:hour fcst:prob =1 3hr mean:100mi forward grad
+1	3445	TPFI:225 mb:hour fcst:prob =2:100mi mean
+1	15792	TPFI:400 mb:hour fcst:prob =1 3hr max:100mi leftward grad
+1	7740	COVTW:entire atmosphere:hour fcst:prob >10000 +1hr:100mi leftward grad
+1	8837	DifferentialDivergence250-850mb*10^5:calculated:hour fcst: 3hr min:100mi mean
+1	8806	CRAIN:surface:hour fcst:prob =1 3hr min:100mi mean
+1	18175	DPT:2 m above ground:hour fcst:wt ens mean 3hr delta:100mi forward grad
+1	6127	TPFI:200 mb:hour fcst:prob =3 +1hr:100mi mean
+1	10504	UpstreamSurfaceLayerRH2hr:calculated:hour fcst: 3hr min:100mi leftward grad
+1	5155	UGRD:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+1	2385	TCDC:entire atmosphere:hour fcst:prob >=0 <20 -1hr:100mi leftward grad
+1	8619	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr min:50mi mean
+1	9999	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >20 3hr min:50mi linestraddling grad
+1	6025	CIN:surface:hour fcst:wt ens mean +1hr:100mi mean
+1	2477	UGRD:700 mb:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+1	7455	TMP:500 mb:hour fcst:wt ens mean +1hr:100mi forward grad
+1	11413	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr mean:100mi mean
+1	6153	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: +1hr:100mi mean
+1	3726	HGT:1000 mb:hour fcst:wt ens mean:25mi leftward grad
+1	7252	DPT:700 mb:hour fcst:wt ens mean +1hr:50mi linestraddling grad
+1	8563	COVTW:entire atmosphere:hour fcst:prob >7000 3hr min:50mi mean
+1	8436	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr min:25mi mean
+1	11257	TPFI:450 mb:hour fcst:prob =1 3hr mean:50mi mean
+1	13080	VIS:surface:hour fcst:prob <8046 3hr mean:100mi leftward grad
+1	2289	HGT:300 mb:hour fcst:wt ens mean -1hr:100mi leftward grad
+1	14071	WIND:700 mb:hour fcst:wt ens mean 3hr max:100mi mean
+1	13238	HGT:cloud ceiling:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+1	6144	SBCAPE*HLCY3000-0m:calculated:hour fcst: +1hr:100mi mean
+1	5420	WIND:600 mb:hour fcst:wt ens mean +1hr:
+1	213	UGRD:500 mb:hour fcst:wt ens mean -1hr:25mi mean
+1	3472	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi mean
+1	5396	TMP:300 mb:hour fcst:wt ens mean +1hr:
+1	16680	UpstreamSBCAPE2hr:calculated:hour fcst: 3hr delta:50mi mean
+1	17673	VIS:cloud base:hour fcst:prob =3 3hr delta:50mi forward grad
+1	6449	WIND:700 mb:hour fcst:wt ens mean +1hr:25mi leftward grad
+1	15030	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr max:50mi forward grad
+1	5958	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: +1hr:50mi mean
+1	13658	WIND:850 mb:hour fcst:wt ens mean 3hr max:25mi mean
+1	6068	CIN:surface:hour fcst:prob <-200 +1hr:100mi mean
+1	18769	wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+1	15577	TIPD:575 mb:hour fcst:prob =1 3hr max:100mi forward grad
+1	14412	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr max:25mi forward grad
+1	4788	PLI:30-0 mb above ground:hour fcst:wt ens mean:100mi forward grad
+1	7665	DPT:500 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+1	8693	DPT:850 mb:hour fcst:wt ens mean 3hr min:100mi mean
+1	5648	HLCY:3000-0 m above ground:hour fcst:prob >300 +1hr:25mi mean
+1	2121	WIND:1000 mb:hour fcst:wt ens mean -1hr:100mi forward grad
+1	6008	RH:500 mb:hour fcst:wt ens mean +1hr:100mi mean
+1	15454	UGRD:850 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+1	5647	HLCY:3000-0 m above ground:hour fcst:prob >250 +1hr:25mi mean
+1	1098	HGT:850-1000 mb:hour fcst:wt ens mean -1hr:25mi leftward grad
+1	15936	TMP:2 m above ground:hour fcst:prob >298.8 3hr max:100mi linestraddling grad
+1	5093	TPFI:225 mb:hour fcst:prob =2:100mi leftward grad
+1	7644	HGT:500 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+1	11297	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr mean:50mi mean
+1	5148	UpstreamSurfaceLayerRH2hr:calculated:hour fcst::100mi leftward grad
+1	15600	TPFI:225 mb:hour fcst:prob =3 3hr max:100mi forward grad
+1	593	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: -1hr:50mi mean
+1	11767	ABSV:850 mb:hour fcst:wt ens mean 3hr mean:25mi leftward grad
+1	8394	CRAIN:surface:hour fcst:prob =1 3hr min:25mi mean
+1	14201	StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:100mi mean
+1	12162	UGRD:300 mb:hour fcst:wt ens mean 3hr mean:50mi forward grad
+1	10106	VGRD:700 mb:hour fcst:wt ens mean 3hr min:100mi forward grad
+1	11108	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr mean:25mi mean
+1	11099	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr mean:25mi mean
+1	4830	CIN:surface:hour fcst:prob <-50:100mi forward grad
+1	11507	sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr mean:100mi mean
+1	9480	UGRD:850 mb:hour fcst:wt ens mean 3hr min:50mi forward grad
+1	13992	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:50mi mean
+1	2535	WIND:700 mb:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+1	586	SBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:50mi mean
+1	13834	RH:700 mb:hour fcst:wt ens mean 3hr max:50mi mean
+1	8484	TMP:600 mb:hour fcst:wt ens mean 3hr min:50mi mean
+1	11241	COVTW:entire atmosphere:hour fcst:prob >7000 3hr mean:50mi mean
+1	7431	VGRD:300 mb:hour fcst:wt ens mean +1hr:100mi forward grad
+1	5784	VGRD:250 mb:hour fcst:wt ens mean +1hr:50mi mean
+1	5317	CWORK:0 m above ground:hour fcst:prob >0.036:100mi linestraddling grad
+1	5944	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: +1hr:50mi mean
+1	196	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: -1hr:
+1	7481	WIND:500 mb:hour fcst:wt ens mean +1hr:100mi forward grad
+1	10788	CAPE:surface:hour fcst:prob >250 3hr mean:
+1	8621	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:50mi mean
+1	7418	VGRD:10 m above ground:hour fcst:wt ens mean +1hr:100mi forward grad
+1	13581	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: 3hr max:
+1	11526	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr mean:100mi mean
+1	18544	UGRD:850 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+1	7629	UGRD:500 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+1	7029	ABSV:850 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+1	191	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: -1hr:
+1	8753	VIS:surface:hour fcst:prob <4827 3hr min:100mi mean
+1	16055	StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:100mi linestraddling grad
+1	13685	PLI:30-0 mb above ground:hour fcst:prob <-4 3hr max:25mi mean
+1	8039	UGRD:700 mb:hour fcst:wt ens mean 3hr min:
+1	13181	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr mean:100mi leftward grad
+1	9911	HGT:300 mb:hour fcst:wt ens mean 3hr min:50mi linestraddling grad
+1	10506	UpstreamCRAIN2hr:calculated:hour fcst: 3hr min:100mi leftward grad
+1	848	HGT:250 mb:hour fcst:wt ens mean -1hr:25mi forward grad
+1	8306	WIND:300 mb:hour fcst:wt ens mean 3hr min:25mi mean
+1	9569	CIN:surface:hour fcst:prob <-100 3hr min:50mi forward grad
+1	6402	VGRD:250 mb:hour fcst:wt ens mean +1hr:25mi leftward grad
+1	5547	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: +1hr:
+1	11760	HGT:1000 mb:hour fcst:wt ens mean 3hr mean:25mi leftward grad
+1	6086	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30 +1hr:100mi mean
+1	3056	SBCAPE*BWD0-500mb:calculated:hour fcst::25mi mean
+1	3281	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst::50mi mean
+1	12900	TIPD:500 mb:hour fcst:prob =1 3hr mean:100mi forward grad
+1	5831	WIND:700 mb:hour fcst:wt ens mean +1hr:50mi mean
+1	12237	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr mean:50mi forward grad
+1	13799	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr max:25mi mean
+1	13044	WIND:300 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+1	8072	TMP:600 mb:hour fcst:wt ens mean 3hr min:
+1	3412	COVTW:entire atmosphere:hour fcst:prob >5000:100mi mean
+1	8209	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:
+1	6014	TMP:300 mb:hour fcst:wt ens mean +1hr:100mi mean
+1	291	HLCY:3000-0 m above ground:hour fcst:prob >250 -1hr:25mi mean
+1	14442	HGT:500 mb:hour fcst:wt ens mean 3hr max:25mi leftward grad
+1	10505	UpstreamCRAIN1hr:calculated:hour fcst: 3hr min:100mi leftward grad
+1	9967	CAPE:surface:hour fcst:prob >2000 3hr min:50mi linestraddling grad
+1	12356	Upstream2mDPT2hr:calculated:hour fcst: 3hr mean:50mi forward grad
+1	7585	BWD0-500mb:calculated:hour fcst: +1hr:100mi forward grad
+1	12700	TPFI:450 mb:hour fcst:prob =2 3hr mean:50mi linestraddling grad
+1	11167	DPT:500 mb:hour fcst:wt ens mean 3hr mean:50mi mean
+1	13714	COVTW:entire atmosphere:hour fcst:prob >10000 3hr max:25mi mean
+1	15452	VGRD:10 m above ground:hour fcst:wt ens mean 3hr max:100mi forward grad
+1	8263	HGT:300 mb:hour fcst:wt ens mean 3hr min:25mi mean
+1	379	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: -1hr:25mi mean
+1	14157	TPFI:225 mb:hour fcst:prob =2 3hr max:100mi mean
+1	15213	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr max:50mi leftward grad
+1	9737	HGT:cloud top:hour fcst:wt ens mean 3hr min:50mi leftward grad
+1	8207	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr min:
+1	14046	TMP:600 mb:hour fcst:wt ens mean 3hr max:100mi mean
+1	3418	TCDC:entire atmosphere:hour fcst:prob >=80 <100:100mi mean
+1	8782	TPFI:500 mb:hour fcst:prob =1 3hr min:100mi mean
+1	18767	wind_day_climatological_spatial_prob:calculated:hour fcst::
+1	11187	WIND:700 mb:hour fcst:wt ens mean 3hr mean:50mi mean
+1	15145	HGT:cloud ceiling:hour fcst:prob <914.6 3hr max:50mi leftward grad
+1	13586	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr max:
+1	6381	Upstream2mDPT1hr:calculated:hour fcst: +1hr:25mi forward grad
+1	12865	CIN:surface:hour fcst:prob <-100 3hr mean:100mi forward grad
+1	13454	WIND:600 mb:hour fcst:wt ens mean 3hr max:
+1	12342	AbsVorticity10m*10^5:calculated:hour fcst: 3hr mean:50mi forward grad
+1	8278	TMP:600 mb:hour fcst:wt ens mean 3hr min:25mi mean
+1	13247	WIND:700 mb:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+1	8281	DPT:850 mb:hour fcst:wt ens mean 3hr min:25mi mean
+1	8029	Upstream2mDPT1hr:calculated:hour fcst: +1hr:100mi linestraddling grad
+1	16107	TMP:500 mb:hour fcst:wt ens mean 3hr delta:
+1	2111	CIN:surface:hour fcst:wt ens mean -1hr:100mi forward grad
+1	10187	CIN:surface:hour fcst:prob <-100 3hr min:100mi forward grad
+1	7531	COVTW:entire atmosphere:hour fcst:prob >3000 +1hr:100mi forward grad
+1	8050	VGRD:250 mb:hour fcst:wt ens mean 3hr min:
+1	5623	WIND:1000 mb:hour fcst:wt ens mean +1hr:25mi mean
+1	4167	DPT:2 m above ground:hour fcst:wt ens mean:50mi forward grad
+1	65	WIND:500 mb:hour fcst:wt ens mean -1hr:
+1	504	CIN:surface:hour fcst:prob <-50 -1hr:50mi mean
+1	15460	VGRD:1000 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+1	3333	TMP:700 mb:hour fcst:wt ens mean:100mi mean
+1	7499	HLCY:3000-0 m above ground:hour fcst:prob >150 +1hr:100mi forward grad
+
+Feature importance by absolute Δscores in descendant leaves:
+0.7856714	7662	TMP:300 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.6821457	13117	TPFI:350 mb:hour fcst:prob =1 3hr mean:100mi leftward grad
+0.60257775	7635	VGRD:600 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.58528364	5579	PRMSL:mean sea level:hour fcst:wt ens mean +1hr:25mi mean
+0.47950858	587	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:50mi mean
+0.4497027	18751	severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+0.42138776	7581	VWSH:0 sigma level:hour fcst:prob >20 +1hr:100mi forward grad
+0.40144947	6149	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: +1hr:100mi mean
+0.39646214	7883	HGT:cloud top:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+0.3949374	14212	UpstreamSurfaceLayerRH2hr:calculated:hour fcst: 3hr max:100mi mean
+0.3905154	5808	TMP:300 mb:hour fcst:wt ens mean +1hr:50mi mean
+0.3818441	14044	RH:2 m above ground:hour fcst:wt ens mean 3hr max:100mi mean
+0.38003582	18750	severe_day_climatological_spatial_prob:calculated:hour fcst::
+0.37647122	11305	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr mean:50mi mean
+0.37055594	13571	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr max:
+0.36652476	6155	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: +1hr:100mi mean
+0.36417812	18773	month_climatological_hail_day_prob:calculated:hour fcst::
+0.36144906	18211	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr delta:100mi forward grad
+0.35906476	4213	CIN:surface:hour fcst:prob <-100:50mi forward grad
+0.34290084	7836	UGRD:300 mb:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+0.32759538	13632	RH:2 m above ground:hour fcst:wt ens mean 3hr max:25mi mean
+0.32444274	13838	RH:2 m above ground:hour fcst:wt ens mean 3hr max:50mi mean
+0.31716555	15487	TMP:700 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+0.31682783	8303	WIND:700 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.3153582	6818	HGT:700 mb:hour fcst:wt ens mean +1hr:50mi forward grad
+0.3150823	8826	SBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:100mi mean
+0.31387663	14211	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr max:100mi mean
+0.3136546	10336	RH:2 m above ground:hour fcst:wt ens mean 3hr min:100mi leftward grad
+0.304528	462	PLI:30-0 mb above ground:hour fcst:wt ens mean -1hr:50mi mean
+0.2963252	2064	UGRD:850 mb:hour fcst:wt ens mean -1hr:100mi forward grad
+0.28981173	5094	TPFI:225 mb:hour fcst:prob =3:100mi leftward grad
+0.2795333	13229	TMP:2 m above ground:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+0.27864814	15140	VIS:surface:hour fcst:prob <8046 3hr max:50mi leftward grad
+0.27860004	2152	CIN:surface:hour fcst:prob <-50 -1hr:100mi forward grad
+0.27479023	10402	VIS:surface:hour fcst:prob <8046 3hr min:100mi leftward grad
+0.27161878	16768	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr delta:100mi mean
+0.26846302	18764	tornado_day_climatological_spatial_prob:calculated:hour fcst::
+0.2675308	3408	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30:100mi mean
+0.26233664	11892	TPFI:225 mb:hour fcst:prob =3 3hr mean:25mi leftward grad
+0.25534695	18584	DPT:300 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+0.2502456	11413	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr mean:100mi mean
+0.24963263	17937	VGRD:300 mb:hour fcst:wt ens mean 3hr delta:50mi linestraddling grad
+0.24928077	10981	WIND:700 mb:hour fcst:wt ens mean 3hr mean:25mi mean
+0.2480375	14071	WIND:700 mb:hour fcst:wt ens mean 3hr max:100mi mean
+0.24599835	13593	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr max:
+0.24290547	10504	UpstreamSurfaceLayerRH2hr:calculated:hour fcst: 3hr min:100mi leftward grad
+0.24147698	18359	ABSV:850 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+0.23737407	13865	WIND:700 mb:hour fcst:wt ens mean 3hr max:50mi mean
+0.23721182	15807	TPFI:200 mb:hour fcst:prob =1 3hr max:100mi leftward grad
+0.23495021	7647	ABSV:850 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.23347913	11507	sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr mean:100mi mean
+0.23268121	7000	Upstream2mDPT2hr:calculated:hour fcst: +1hr:50mi forward grad
+0.22594705	6086	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30 +1hr:100mi mean
+0.22246045	5737	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: +1hr:25mi mean
+0.21841842	2153	CIN:surface:hour fcst:prob <-100 -1hr:100mi forward grad
+0.2161015	8306	WIND:300 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.21588936	18210	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr delta:100mi forward grad
+0.21542765	15674	HGT:1000 mb:hour fcst:wt ens mean 3hr max:100mi leftward grad
+0.21289566	3153	WIND:700 mb:hour fcst:wt ens mean:50mi mean
+0.21176197	4369	DPT:500 mb:hour fcst:wt ens mean:50mi leftward grad
+0.2077307	13658	WIND:850 mb:hour fcst:wt ens mean 3hr max:25mi mean
+0.20649843	7740	COVTW:entire atmosphere:hour fcst:prob >10000 +1hr:100mi leftward grad
+0.20642436	2741	WIND:700 mb:hour fcst:wt ens mean:
+0.2043213	5831	WIND:700 mb:hour fcst:wt ens mean +1hr:50mi mean
+0.20209748	5418	WIND:850 mb:hour fcst:wt ens mean +1hr:
+0.20011526	10282	AbsVorticity10m*10^5:calculated:hour fcst: 3hr min:100mi forward grad
+0.19994435	8619	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr min:50mi mean
+0.19937512	4438	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30:50mi leftward grad
+0.19714646	18374	TMP:300 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+0.19312155	16748	WIND:850 mb:hour fcst:wt ens mean 3hr delta:100mi mean
+0.19294932	11297	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr mean:50mi mean
+0.19259492	5624	WIND:850 mb:hour fcst:wt ens mean +1hr:25mi mean
+0.19236213	7980	TPFI:200 mb:hour fcst:prob =2 +1hr:100mi linestraddling grad
+0.19210501	13799	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr max:25mi mean
+0.19197667	3271	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi mean
+0.191244	5647	HLCY:3000-0 m above ground:hour fcst:prob >250 +1hr:25mi mean
+0.19121644	18775	month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::
+0.19110407	6036	WIND:850 mb:hour fcst:wt ens mean +1hr:100mi mean
+0.19088966	14189	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr max:100mi mean
+0.1908588	11187	WIND:700 mb:hour fcst:wt ens mean 3hr mean:50mi mean
+0.19060925	18190	WIND:850 mb:hour fcst:wt ens mean 3hr delta:100mi forward grad
+0.19023103	11099	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr mean:25mi mean
+0.19019935	213	UGRD:500 mb:hour fcst:wt ens mean -1hr:25mi mean
+0.18248816	12247	CIN:surface:hour fcst:prob <-100 3hr mean:50mi forward grad
+0.18189721	9832	TPFI:225 mb:hour fcst:prob =3 3hr min:50mi leftward grad
+0.17968056	8833	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr min:100mi mean
+0.17948164	6127	TPFI:200 mb:hour fcst:prob =3 +1hr:100mi mean
+0.17872274	2281	VGRD:300 mb:hour fcst:wt ens mean -1hr:100mi leftward grad
+0.17834905	8424	Divergence250mb*10^5:calculated:hour fcst: 3hr min:25mi mean
+0.17829552	5537	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: +1hr:
+0.17820236	6153	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: +1hr:100mi mean
+0.17781007	593	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: -1hr:50mi mean
+0.1763396	11509	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: 3hr mean:100mi mean
+0.17610575	11328	UpstreamSurfaceLayerRH2hr:calculated:hour fcst: 3hr mean:50mi mean
+0.17603597	12342	AbsVorticity10m*10^5:calculated:hour fcst: 3hr mean:50mi forward grad
+0.17600113	5396	TMP:300 mb:hour fcst:wt ens mean +1hr:
+0.17514578	3475	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst::100mi mean
+0.17511328	13569	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: 3hr max:
+0.1750809	11303	sqrtSBCAPE*BWD0-500mb*HLCY3000-0m:calculated:hour fcst: 3hr mean:50mi mean
+0.1741882	18768	wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+0.17407319	7532	COVTW:entire atmosphere:hour fcst:prob >5000 +1hr:100mi forward grad
+0.17350934	11380	PLI:30-0 mb above ground:hour fcst:wt ens mean 3hr mean:100mi mean
+0.17114708	13466	CAPE:surface:hour fcst:prob >250 3hr max:
+0.1710939	6060	HLCY:3000-0 m above ground:hour fcst:prob >300 +1hr:100mi mean
+0.16967772	8496	PLI:30-0 mb above ground:hour fcst:wt ens mean 3hr min:50mi mean
+0.16766179	18304	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr delta:100mi forward grad
+0.16571453	8669	PRMSL:mean sea level:hour fcst:wt ens mean 3hr min:100mi mean
+0.1651813	5991	PRMSL:mean sea level:hour fcst:wt ens mean +1hr:100mi mean
+0.1647085	169	BWD0-500mb:calculated:hour fcst: -1hr:
+0.16401984	1068	TMP:600 mb:hour fcst:wt ens mean -1hr:25mi leftward grad
+0.16398586	5767	UpstreamCRAIN1hr:calculated:hour fcst: +1hr:25mi mean
+0.16351806	3056	SBCAPE*BWD0-500mb:calculated:hour fcst::25mi mean
+0.16184163	11043	TIPD:725 mb:hour fcst:prob =1 3hr mean:25mi mean
+0.16135575	10788	CAPE:surface:hour fcst:prob >250 3hr mean:
+0.16101247	8445	UpstreamCRAIN1hr:calculated:hour fcst: 3hr min:25mi mean
+0.15906097	18777	month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::
+0.15892877	8782	TPFI:500 mb:hour fcst:prob =1 3hr min:100mi mean
+0.15865833	12956	Divergence250mb*10^5:calculated:hour fcst: 3hr mean:100mi forward grad
+0.15842614	668	PLI:30-0 mb above ground:hour fcst:wt ens mean -1hr:100mi mean
+0.15817088	793	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:100mi mean
+0.15801336	11394	WIND:600 mb:hour fcst:wt ens mean 3hr mean:100mi mean
+0.1578847	13080	VIS:surface:hour fcst:prob <8046 3hr mean:100mi leftward grad
+0.15643708	10368	HGT:850-1000 mb:hour fcst:wt ens mean 3hr min:100mi leftward grad
+0.1551643	1982	TIPD:500 mb:hour fcst:prob =1 -1hr:50mi linestraddling grad
+0.15455306	7072	HGT:850-1000 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+0.15359206	18373	TMP:500 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+0.15324304	9967	CAPE:surface:hour fcst:prob >2000 3hr min:50mi linestraddling grad
+0.15220366	5687	TIPD:725 mb:hour fcst:prob =1 +1hr:25mi mean
+0.15155566	10505	UpstreamCRAIN1hr:calculated:hour fcst: 3hr min:100mi leftward grad
+0.15120721	2402	TPFI:400 mb:hour fcst:prob =1 -1hr:100mi leftward grad
+0.15050162	5182	RH:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+0.15049261	12901	TIPD:400 mb:hour fcst:prob =1 3hr mean:100mi forward grad
+0.14994317	7665	DPT:500 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.149834	5069	TIPD:725 mb:hour fcst:prob =1:100mi leftward grad
+0.14960827	10506	UpstreamCRAIN2hr:calculated:hour fcst: 3hr min:100mi leftward grad
+0.14920856	3381	HLCY:3000-0 m above ground:hour fcst:prob >250:100mi mean
+0.14846176	5420	WIND:600 mb:hour fcst:wt ens mean +1hr:
+0.14792642	14870	TMP:600 mb:hour fcst:wt ens mean 3hr max:50mi forward grad
+0.14642504	291	HLCY:3000-0 m above ground:hour fcst:prob >250 -1hr:25mi mean
+0.14510769	3726	HGT:1000 mb:hour fcst:wt ens mean:25mi leftward grad
+0.14452264	2920	RH:2 m above ground:hour fcst:wt ens mean:25mi mean
+0.14354382	245	TMP:500 mb:hour fcst:wt ens mean -1hr:25mi mean
+0.14182584	5648	HLCY:3000-0 m above ground:hour fcst:prob >300 +1hr:25mi mean
+0.14079818	13454	WIND:600 mb:hour fcst:wt ens mean 3hr max:
+0.13928415	10748	RH:2 m above ground:hour fcst:wt ens mean 3hr mean:
+0.13831022	7431	VGRD:300 mb:hour fcst:wt ens mean +1hr:100mi forward grad
+0.13748728	8806	CRAIN:surface:hour fcst:prob =1 3hr min:100mi mean
+0.1372882	2487	VGRD:300 mb:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+0.1368456	10154	WIND:10 m above ground:hour fcst:wt ens mean 3hr min:100mi forward grad
+0.13664009	7873	TMP:2 m above ground:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+0.13567811	5779	VGRD:850 mb:hour fcst:wt ens mean +1hr:50mi mean
+0.13476983	13255	VWSH:0 sigma level:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+0.13465554	5425	HGT:500-1000 mb:hour fcst:wt ens mean +1hr:
+0.13436924	11257	TPFI:450 mb:hour fcst:prob =1 3hr mean:50mi mean
+0.13245793	5421	WIND:500 mb:hour fcst:wt ens mean +1hr:
+0.13213809	5854	HLCY:3000-0 m above ground:hour fcst:prob >300 +1hr:50mi mean
+0.13160968	16692	UGRD:600 mb:hour fcst:wt ens mean 3hr delta:100mi mean
+0.13061365	6059	HLCY:3000-0 m above ground:hour fcst:prob >250 +1hr:100mi mean
+0.12994105	8830	SBCAPE*BWD0-500mb*HLCY3000-0m*10^-6:calculated:hour fcst: 3hr min:100mi mean
+0.12979513	8652	UpstreamCRAIN2hr:calculated:hour fcst: 3hr min:50mi mean
+0.12965868	6124	TPFI:225 mb:hour fcst:prob =3 +1hr:100mi mean
+0.12802607	18766	tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+0.12693812	13563	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr max:
+0.1267326	11760	HGT:1000 mb:hour fcst:wt ens mean 3hr mean:25mi leftward grad
+0.12628537	2111	CIN:surface:hour fcst:wt ens mean -1hr:100mi forward grad
+0.12618753	8050	VGRD:250 mb:hour fcst:wt ens mean 3hr min:
+0.12518188	6963	VWSH:0 sigma level:hour fcst:prob >20 +1hr:50mi forward grad
+0.12460473	3445	TPFI:225 mb:hour fcst:prob =2:100mi mean
+0.12406461	8532	HLCY:3000-0 m above ground:hour fcst:prob >300 3hr min:50mi mean
+0.12404874	18168	TMP:300 mb:hour fcst:wt ens mean 3hr delta:100mi forward grad
+0.12397566	5785	PRMSL:mean sea level:hour fcst:wt ens mean +1hr:50mi mean
+0.12361259	5623	WIND:1000 mb:hour fcst:wt ens mean +1hr:25mi mean
+0.12238355	8394	CRAIN:surface:hour fcst:prob =1 3hr min:25mi mean
+0.12197658	17612	VIS:surface:hour fcst:prob <8046 3hr delta:50mi forward grad
+0.121856995	15034	Upstream2mDPT2hr:calculated:hour fcst: 3hr max:50mi forward grad
+0.12146401	7697	TMP:850 mb:hour fcst:prob <273 +1hr:100mi leftward grad
+0.121326044	10577	VWSH:0 sigma level:hour fcst:wt ens mean 3hr min:100mi linestraddling grad
+0.12084001	6402	VGRD:250 mb:hour fcst:wt ens mean +1hr:25mi leftward grad
+0.12075094	5588	ABSV:700 mb:hour fcst:wt ens mean +1hr:25mi mean
+0.12060361	9737	HGT:cloud top:hour fcst:wt ens mean 3hr min:50mi leftward grad
+0.12007913	13002	HGT:250 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+0.11855088	2120	WIND:10 m above ground:hour fcst:wt ens mean -1hr:100mi forward grad
+0.11822722	504	CIN:surface:hour fcst:prob <-50 -1hr:50mi mean
+0.11814983	18769	wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+0.11722519	16055	StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:100mi linestraddling grad
+0.11699103	1534	CIN:surface:hour fcst:prob <-50 -1hr:50mi forward grad
+0.116861165	9248	Divergence250mb*10^5:calculated:hour fcst: 3hr min:25mi leftward grad
+0.11644341	6381	Upstream2mDPT1hr:calculated:hour fcst: +1hr:25mi forward grad
+0.1151301	8464	HGT:1000 mb:hour fcst:wt ens mean 3hr min:50mi mean
+0.11490921	4830	CIN:surface:hour fcst:prob <-50:100mi forward grad
+0.114361726	758	TPFI:350 mb:hour fcst:prob =2 -1hr:100mi mean
+0.114334136	12865	CIN:surface:hour fcst:prob <-100 3hr mean:100mi forward grad
+0.11423877	5794	ABSV:700 mb:hour fcst:wt ens mean +1hr:50mi mean
+0.113110326	14157	TPFI:225 mb:hour fcst:prob =2 3hr max:100mi mean
+0.113100514	5941	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: +1hr:50mi mean
+0.112197414	7558	TPFI:300 mb:hour fcst:prob =1 +1hr:100mi forward grad
+0.11216286	4167	DPT:2 m above ground:hour fcst:wt ens mean:50mi forward grad
+0.11193593	7531	COVTW:entire atmosphere:hour fcst:prob >3000 +1hr:100mi forward grad
+0.10988487	10712	UpstreamCRAIN2hr:calculated:hour fcst: 3hr min:100mi linestraddling grad
+0.1096704	16563	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr delta:50mi mean
+0.109448954	5893	TIPD:725 mb:hour fcst:prob =1 +1hr:50mi mean
+0.10929266	7735	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >40 +1hr:100mi leftward grad
+0.1081745	12510	TPFI:225 mb:hour fcst:prob =3 3hr mean:50mi leftward grad
+0.10754019	5529	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: +1hr:
+0.107357204	13935	TPFI:450 mb:hour fcst:prob =1 3hr max:50mi mean
+0.10708913	13160	Divergence10m*10^5:calculated:hour fcst: 3hr mean:100mi leftward grad
+0.10525359	18774	month_climatological_severe_day_prob:calculated:hour fcst::
+0.104570374	10646	TPFI:350 mb:hour fcst:prob =2 3hr min:100mi linestraddling grad
+0.1026181	379	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: -1hr:25mi mean
+0.10204798	7655	RH:600 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.10126131	9736	HGT:cloud ceiling:hour fcst:wt ens mean 3hr min:50mi leftward grad
+0.10124453	3472	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi mean
+0.1010502	3414	COVTW:entire atmosphere:hour fcst:prob >10000:100mi mean
+0.09779906	16695	UGRD:250 mb:hour fcst:wt ens mean 3hr delta:100mi mean
+0.097163945	18767	wind_day_climatological_spatial_prob:calculated:hour fcst::
+0.0958205	552	TPFI:350 mb:hour fcst:prob =2 -1hr:50mi mean
+0.095818356	9480	UGRD:850 mb:hour fcst:wt ens mean 3hr min:50mi forward grad
+0.09572288	7029	ABSV:850 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+0.09488867	9911	HGT:300 mb:hour fcst:wt ens mean 3hr min:50mi linestraddling grad
+0.09454879	13927	TIPD:725 mb:hour fcst:prob =1 3hr max:50mi mean
+0.0943307	14201	StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:100mi mean
+0.09418429	7729	HGT:cloud ceiling:hour fcst:prob <914.6 +1hr:100mi leftward grad
+0.09381348	10127	RH:600 mb:hour fcst:wt ens mean 3hr min:100mi forward grad
+0.09348604	15145	HGT:cloud ceiling:hour fcst:prob <914.6 3hr max:50mi leftward grad
+0.09188505	14442	HGT:500 mb:hour fcst:wt ens mean 3hr max:25mi leftward grad
+0.09178595	4212	CIN:surface:hour fcst:prob <-50:50mi forward grad
+0.09170205	6147	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: +1hr:100mi mean
+0.09082121	8487	DPT:850 mb:hour fcst:wt ens mean 3hr min:50mi mean
+0.09005031	14862	ABSV:250 mb:hour fcst:wt ens mean 3hr max:50mi forward grad
+0.089816116	15452	VGRD:10 m above ground:hour fcst:wt ens mean 3hr max:100mi forward grad
+0.08937252	2218	WIND:10 m above ground:hour fcst:prob >12.89 -1hr:100mi forward grad
+0.08869747	6996	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: +1hr:50mi forward grad
+0.08800419	223	PRMSL:mean sea level:hour fcst:wt ens mean -1hr:25mi mean
+0.08702503	14412	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr max:25mi forward grad
+0.08625636	6068	CIN:surface:hour fcst:prob <-200 +1hr:100mi mean
+0.08616234	10340	TMP:300 mb:hour fcst:wt ens mean 3hr min:100mi leftward grad
+0.085699625	5566	UGRD:850 mb:hour fcst:wt ens mean +1hr:25mi mean
+0.085041896	8690	TMP:600 mb:hour fcst:wt ens mean 3hr min:100mi mean
+0.08457957	15936	TMP:2 m above ground:hour fcst:prob >298.8 3hr max:100mi linestraddling grad
+0.084216125	12162	UGRD:300 mb:hour fcst:wt ens mean 3hr mean:50mi forward grad
+0.08399589	14046	TMP:600 mb:hour fcst:wt ens mean 3hr max:100mi mean
+0.08385001	6449	WIND:700 mb:hour fcst:wt ens mean +1hr:25mi leftward grad
+0.0827158	1052	HGT:500 mb:hour fcst:wt ens mean -1hr:25mi leftward grad
+0.08193724	3418	TCDC:entire atmosphere:hour fcst:prob >=80 <100:100mi mean
+0.08187844	18542	VGRD:10 m above ground:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+0.081095085	6171	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst: +1hr:100mi mean
+0.08074784	2356	PLI:30-0 mb above ground:hour fcst:prob <-6 -1hr:100mi leftward grad
+0.080565065	16542	WIND:850 mb:hour fcst:wt ens mean 3hr delta:50mi mean
+0.08025668	8769	COVTW:entire atmosphere:hour fcst:prob >7000 3hr min:100mi mean
+0.08000088	603	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: -1hr:50mi mean
+0.07960925	191	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: -1hr:
+0.07954932	3820	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30:25mi leftward grad
+0.07947562	8039	UGRD:700 mb:hour fcst:wt ens mean 3hr min:
+0.079194926	8436	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr min:25mi mean
+0.07877291	8100	WIND:300 mb:hour fcst:wt ens mean 3hr min:
+0.07857668	15030	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr max:50mi forward grad
+0.07856011	13189	UGRD:700 mb:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+0.078261666	8484	TMP:600 mb:hour fcst:wt ens mean 3hr min:50mi mean
+0.07822685	15566	COVTW:entire atmosphere:hour fcst:prob >5000 3hr max:100mi forward grad
+0.077844	8837	DifferentialDivergence250-850mb*10^5:calculated:hour fcst: 3hr min:100mi mean
+0.07781644	8622	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr min:50mi mean
+0.07775776	16107	TMP:500 mb:hour fcst:wt ens mean 3hr delta:
+0.07770407	6167	StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst: +1hr:100mi mean
+0.07748966	5547	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: +1hr:
+0.0774588	8563	COVTW:entire atmosphere:hour fcst:prob >7000 3hr min:50mi mean
+0.07739858	8263	HGT:300 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.077008985	15711	HGT:cloud top:hour fcst:wt ens mean 3hr max:100mi leftward grad
+0.076832086	10355	HGT:cloud top:hour fcst:wt ens mean 3hr min:100mi leftward grad
+0.07683102	14411	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst: 3hr max:25mi forward grad
+0.07679675	1717	HGT:500-1000 mb:hour fcst:wt ens mean -1hr:50mi leftward grad
+0.07588662	11767	ABSV:850 mb:hour fcst:wt ens mean 3hr mean:25mi leftward grad
+0.0758107	6090	COVTW:entire atmosphere:hour fcst:prob >5000 +1hr:100mi mean
+0.07577142	11526	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr mean:100mi mean
+0.07554736	4905	CWORK:0 m above ground:hour fcst:prob >0.036:100mi forward grad
+0.075514	17913	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst: 3hr delta:50mi leftward grad
+0.07435212	6014	TMP:300 mb:hour fcst:wt ens mean +1hr:100mi mean
+0.07411794	13965	VIS:cloud base:hour fcst:prob =3 3hr max:50mi mean
+0.07402759	5083	TPFI:350 mb:hour fcst:prob =1:100mi leftward grad
+0.073998705	11326	Upstream2mDPT2hr:calculated:hour fcst: 3hr mean:50mi mean
+0.073628515	12900	TIPD:500 mb:hour fcst:prob =1 3hr mean:100mi forward grad
+0.07338821	3493	StormUpstreamDifferentialDivergence250-850mb6hrGatedBySCP:calculated:hour fcst::100mi mean
+0.07317121	7629	UGRD:500 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.07284054	14199	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: 3hr max:100mi mean
+0.072566964	15600	TPFI:225 mb:hour fcst:prob =3 3hr max:100mi forward grad
+0.072118506	15213	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr max:50mi leftward grad
+0.07141461	3281	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst::50mi mean
+0.071132466	5944	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: +1hr:50mi mean
+0.071124166	2289	HGT:300 mb:hour fcst:wt ens mean -1hr:100mi leftward grad
+0.07091541	5958	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: +1hr:50mi mean
+0.07056756	7252	DPT:700 mb:hour fcst:wt ens mean +1hr:50mi linestraddling grad
+0.06978217	18379	TMP:2 m above ground:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+0.06967036	3413	COVTW:entire atmosphere:hour fcst:prob >7000:100mi mean
+0.06962127	7585	BWD0-500mb:calculated:hour fcst: +1hr:100mi forward grad
+0.06947982	15831	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr max:100mi leftward grad
+0.06867931	11431	VIS:surface:hour fcst:prob <4827 3hr mean:100mi mean
+0.06849721	8207	sqrtSBCAPE*BWD0-500mb:calculated:hour fcst: 3hr min:
+0.068285055	5148	UpstreamSurfaceLayerRH2hr:calculated:hour fcst::100mi leftward grad
+0.06810819	196	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: -1hr:
+0.067815796	13445	HGT:cloud top:hour fcst:wt ens mean 3hr max:
+0.067009166	14454	RH:500 mb:hour fcst:wt ens mean 3hr max:25mi leftward grad
+0.06632693	13247	WIND:700 mb:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+0.06628056	13992	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:50mi mean
+0.06624568	8828	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr min:100mi mean
+0.06583327	1933	CAPE:surface:hour fcst:prob >2000 -1hr:50mi linestraddling grad
+0.06528486	4451	TIPD:725 mb:hour fcst:prob =1:50mi leftward grad
+0.065222844	7868	TMP:300 mb:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+0.064895526	13786	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr max:25mi mean
+0.0648386	1906	PWAT:entire atmosphere:hour fcst:wt ens mean -1hr:50mi linestraddling grad
+0.064802356	10498	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr min:100mi leftward grad
+0.06441008	6164	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: +1hr:100mi mean
+0.06382643	848	HGT:250 mb:hour fcst:wt ens mean -1hr:25mi forward grad
+0.06370041	15842	ConvergenceOnly10m*10^5:calculated:hour fcst: 3hr max:100mi leftward grad
+0.06367987	11515	DifferentialDivergence250-850mb*10^5:calculated:hour fcst: 3hr mean:100mi mean
+0.06366105	6025	CIN:surface:hour fcst:wt ens mean +1hr:100mi mean
+0.06365969	18558	HGT:1000 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+0.0635385	5093	TPFI:225 mb:hour fcst:prob =2:100mi leftward grad
+0.06330804	4945	UGRD:10 m above ground:hour fcst:wt ens mean:100mi leftward grad
+0.06325115	15105	WIND:250 mb:hour fcst:wt ens mean 3hr max:50mi leftward grad
+0.06315501	4322	Upstream2mDPT2hr:calculated:hour fcst::50mi forward grad
+0.0629396	10902	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr mean:
+0.06285148	18326	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: 3hr delta:100mi forward grad
+0.0626321	3333	TMP:700 mb:hour fcst:wt ens mean:100mi mean
+0.062060695	18550	VGRD:1000 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+0.061897673	8753	VIS:surface:hour fcst:prob <4827 3hr min:100mi mean
+0.06176667	14204	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr max:100mi mean
+0.061745785	13581	StormUpstream10mConvergence6hrGatedBySCP:calculated:hour fcst: 3hr max:
+0.061713275	13586	StormUpstreamDifferentialDivergence250-850mb3hrGatedBySCP:calculated:hour fcst: 3hr max:
+0.061680898	11108	StormUpstream10mConvergence3hrGatedBySCP:calculated:hour fcst: 3hr mean:25mi mean
+0.061386254	11241	COVTW:entire atmosphere:hour fcst:prob >7000 3hr mean:50mi mean
+0.061129257	18308	SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: 3hr delta:100mi forward grad
+0.06092534	12781	UGRD:250 mb:hour fcst:wt ens mean 3hr mean:100mi forward grad
+0.060843863	172	SBCAPE*BWD0-500mb:calculated:hour fcst: -1hr:
+0.060664006	3798	PLI:30-0 mb above ground:hour fcst:prob <-6:25mi leftward grad
+0.06038726	5317	CWORK:0 m above ground:hour fcst:prob >0.036:100mi linestraddling grad
+0.06011552	13714	COVTW:entire atmosphere:hour fcst:prob >10000 3hr max:25mi mean
+0.059876952	13019	DPT:850 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+0.05982459	16680	UpstreamSBCAPE2hr:calculated:hour fcst: 3hr delta:50mi mean
+0.059469692	10106	VGRD:700 mb:hour fcst:wt ens mean 3hr min:100mi forward grad
+0.059301652	65	WIND:500 mb:hour fcst:wt ens mean -1hr:
+0.05920526	18175	DPT:2 m above ground:hour fcst:wt ens mean 3hr delta:100mi forward grad
+0.05873005	9569	CIN:surface:hour fcst:prob <-100 3hr min:50mi forward grad
+0.058478367	2385	TCDC:entire atmosphere:hour fcst:prob >=0 <20 -1hr:100mi leftward grad
+0.057844087	15697	DPT:850 mb:hour fcst:wt ens mean 3hr max:100mi leftward grad
+0.057397105	8764	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >30 3hr min:100mi mean
+0.05639971	794	SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst: -1hr:100mi mean
+0.056162268	15792	TPFI:400 mb:hour fcst:prob =1 3hr max:100mi leftward grad
+0.055787154	9999	var discipline=3 center=7 local_table=1 parmcat=16 parm=196:entire atmosphere:hour fcst:prob >20 3hr min:50mi linestraddling grad
+0.05558176	16954	WIND:850 mb:hour fcst:wt ens mean 3hr delta:25mi forward grad
+0.05545778	2110	PLI:30-0 mb above ground:hour fcst:wt ens mean -1hr:100mi forward grad
+0.054650497	18544	UGRD:850 mb:hour fcst:wt ens mean 3hr delta:100mi linestraddling grad
+0.05419952	13685	PLI:30-0 mb above ground:hour fcst:prob <-4 3hr max:25mi mean
+0.05411525	16489	UGRD:250 mb:hour fcst:wt ens mean 3hr delta:50mi mean
+0.05397275	4788	PLI:30-0 mb above ground:hour fcst:wt ens mean:100mi forward grad
+0.053649932	7455	TMP:500 mb:hour fcst:wt ens mean +1hr:100mi forward grad
+0.05320588	7820	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: +1hr:100mi leftward grad
+0.05270798	8427	ConvergenceOnly850mb*10^5:calculated:hour fcst: 3hr min:25mi mean
+0.05248916	529	COVTW:entire atmosphere:hour fcst:prob >7000 -1hr:50mi mean
+0.052458815	10187	CIN:surface:hour fcst:prob <-100 3hr min:100mi forward grad
+0.05213941	18339	UGRD:700 mb:hour fcst:wt ens mean 3hr delta:100mi leftward grad
+0.052095756	7472	CRAIN:surface:hour fcst:wt ens mean +1hr:100mi forward grad
+0.051895	7418	VGRD:10 m above ground:hour fcst:wt ens mean +1hr:100mi forward grad
+0.050987817	11776	RH:500 mb:hour fcst:wt ens mean 3hr mean:25mi leftward grad
+0.050885778	2345	CAPE:surface:hour fcst:prob >2000 -1hr:100mi leftward grad
+0.0504484	1652	UGRD:850 mb:hour fcst:wt ens mean -1hr:50mi leftward grad
+0.050003953	7074	HGT:700-850 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+0.049825158	8278	TMP:600 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.049524255	8072	TMP:600 mb:hour fcst:wt ens mean 3hr min:
+0.049061358	11206	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr mean:50mi mean
+0.049036976	8029	Upstream2mDPT1hr:calculated:hour fcst: +1hr:100mi linestraddling grad
+0.04880402	13238	HGT:cloud ceiling:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+0.04848813	3412	COVTW:entire atmosphere:hour fcst:prob >5000:100mi mean
+0.04833264	16307	RH:600 mb:hour fcst:wt ens mean 3hr delta:25mi mean
+0.048229586	4962	HGT:1000 mb:hour fcst:wt ens mean:100mi leftward grad
+0.048198555	17673	VIS:cloud base:hour fcst:prob =3 3hr delta:50mi forward grad
+0.047743935	5167	PRMSL:mean sea level:hour fcst:wt ens mean:100mi linestraddling grad
+0.047448993	13003	ABSV:850 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+0.04699888	12700	TPFI:450 mb:hour fcst:prob =2 3hr mean:50mi linestraddling grad
+0.04698246	832	UGRD:300 mb:hour fcst:wt ens mean -1hr:25mi forward grad
+0.046781383	13181	UpstreamSurfaceLayerRH1hr:calculated:hour fcst: 3hr mean:100mi leftward grad
+0.04650159	7012	UGRD:300 mb:hour fcst:wt ens mean +1hr:50mi leftward grad
+0.046335045	11505	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr mean:100mi mean
+0.045701236	13044	WIND:300 mb:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+0.045411393	8209	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:
+0.04530569	7481	WIND:500 mb:hour fcst:wt ens mean +1hr:100mi forward grad
+0.04499475	14453	RH:600 mb:hour fcst:wt ens mean 3hr max:25mi leftward grad
+0.04494917	16336	WIND:850 mb:hour fcst:wt ens mean 3hr delta:25mi mean
+0.044946074	17754	TMP:600 mb:hour fcst:wt ens mean 3hr delta:50mi leftward grad
+0.04493102	8074	TMP:300 mb:hour fcst:wt ens mean 3hr min:
+0.044892557	67	WIND:250 mb:hour fcst:wt ens mean -1hr:
+0.044856664	8867	UGRD:250 mb:hour fcst:wt ens mean 3hr min:25mi forward grad
+0.04473111	1468	ABSV:700 mb:hour fcst:wt ens mean -1hr:50mi forward grad
+0.044425633	10098	UGRD:850 mb:hour fcst:wt ens mean 3hr min:100mi forward grad
+0.044192567	14169	VIS:cloud base:hour fcst:prob =1 3hr max:100mi mean
+0.043446496	15460	VGRD:1000 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+0.04344442	12531	sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst: 3hr mean:50mi leftward grad
+0.043419953	2535	WIND:700 mb:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+0.043299973	756	TPFI:400 mb:hour fcst:prob =3 -1hr:100mi mean
+0.04325693	12356	Upstream2mDPT2hr:calculated:hour fcst: 3hr mean:50mi forward grad
+0.043202028	586	SBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:50mi mean
+0.043173186	1715	WIND:250 mb:hour fcst:wt ens mean -1hr:50mi leftward grad
+0.043143388	18771	month_climatological_tornado_day_prob:calculated:hour fcst::
+0.043117903	7957	TIPD:400 mb:hour fcst:prob =1 +1hr:100mi linestraddling grad
+0.042990908	14024	VGRD:250 mb:hour fcst:wt ens mean 3hr max:100mi mean
+0.04276354	11518	AbsVorticity10m*10^5:calculated:hour fcst: 3hr mean:100mi mean
+0.042598613	8684	RH:700 mb:hour fcst:wt ens mean 3hr min:100mi mean
+0.042520758	6008	RH:500 mb:hour fcst:wt ens mean +1hr:100mi mean
+0.04250196	15436	StormUpstream10mConvergence9hrGatedBySCP:calculated:hour fcst: 3hr max:50mi linestraddling grad
+0.04249673	3449	TPFI:200 mb:hour fcst:prob =3:100mi mean
+0.042358913	3363	WIND:250 mb:hour fcst:wt ens mean:100mi mean
+0.04203525	18209	CAPE:surface:hour fcst:prob >4000 3hr delta:100mi forward grad
+0.041804608	2121	WIND:1000 mb:hour fcst:wt ens mean -1hr:100mi forward grad
+0.041521434	5034	PLI:30-0 mb above ground:hour fcst:prob <-6:100mi leftward grad
+0.040362723	5180	ABSV:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+0.040278398	15454	UGRD:850 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+0.040198907	5407	CIN:surface:hour fcst:wt ens mean +1hr:
+0.039881542	7644	HGT:500 mb:hour fcst:wt ens mean +1hr:100mi leftward grad
+0.039843157	3130	TMP:300 mb:hour fcst:wt ens mean:50mi mean
+0.03944634	13603	UGRD:500 mb:hour fcst:wt ens mean 3hr max:25mi mean
+0.039427407	8621	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:50mi mean
+0.039406948	8281	DPT:850 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.039385654	12488	TIPD:500 mb:hour fcst:prob =1 3hr mean:50mi leftward grad
+0.03935132	5784	VGRD:250 mb:hour fcst:wt ens mean +1hr:50mi mean
+0.03934969	451	TMP:500 mb:hour fcst:wt ens mean -1hr:50mi mean
+0.038783293	14352	TPFI:400 mb:hour fcst:prob =3 3hr max:25mi forward grad
+0.038686972	5155	UGRD:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+0.038304076	7499	HLCY:3000-0 m above ground:hour fcst:prob >150 +1hr:100mi forward grad
+0.037972137	8256	VGRD:250 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.037967853	15458	UGRD:300 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+0.03786634	15577	TIPD:575 mb:hour fcst:prob =1 3hr max:100mi forward grad
+0.037770152	6144	SBCAPE*HLCY3000-0m:calculated:hour fcst: +1hr:100mi mean
+0.037185803	16130	WIND:850 mb:hour fcst:wt ens mean 3hr delta:
+0.037152227	238	RH:700 mb:hour fcst:wt ens mean -1hr:25mi mean
+0.036777843	18214	HLCY:3000-0 m above ground:hour fcst:prob >300 3hr delta:100mi forward grad
+0.036065463	9664	AbsVorticity10m*10^5:calculated:hour fcst: 3hr min:50mi forward grad
+0.03580509	18159	RH:850 mb:hour fcst:wt ens mean 3hr delta:100mi forward grad
+0.035608225	13834	RH:700 mb:hour fcst:wt ens mean 3hr max:50mi mean
+0.035408236	381	sqrtSBCAPE*(200+SBCIN):calculated:hour fcst: -1hr:25mi mean
+0.035336137	12237	HLCY:3000-0 m above ground:hour fcst:prob >150 3hr mean:50mi forward grad
+0.034959003	3230	TPFI:350 mb:hour fcst:prob =2:50mi mean
+0.03463982	40	TMP:300 mb:hour fcst:wt ens mean -1hr:
+0.034486763	13014	RH:2 m above ground:hour fcst:wt ens mean 3hr mean:100mi leftward grad
+0.03416061	7510	CIN:surface:hour fcst:prob <-200 +1hr:100mi forward grad
+0.033999614	16284	VGRD:1000 mb:hour fcst:wt ens mean 3hr delta:25mi mean
+0.033932924	13214	ABSV:250 mb:hour fcst:wt ens mean 3hr mean:100mi linestraddling grad
+0.033283588	2102	DPT:700 mb:hour fcst:wt ens mean -1hr:100mi forward grad
+0.03312518	13736	TPFI:350 mb:hour fcst:prob =2 3hr max:25mi mean
+0.03292116	15489	TMP:500 mb:hour fcst:wt ens mean 3hr max:100mi forward grad
+0.032617614	1098	HGT:850-1000 mb:hour fcst:wt ens mean -1hr:25mi leftward grad
+0.032333326	11167	DPT:500 mb:hour fcst:wt ens mean 3hr mean:50mi mean
+0.032275334	2543	VWSH:0 sigma level:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+0.0312218	18628	PLI:30-0 mb above ground:hour fcst:prob <-2 3hr delta:100mi linestraddling grad
+0.031058997	2477	UGRD:700 mb:hour fcst:wt ens mean -1hr:100mi linestraddling grad
+0.030860614	12319	VWSH:0 sigma level:hour fcst:prob >20 3hr mean:50mi forward grad
+0.030423673	5760	StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP:calculated:hour fcst: +1hr:25mi mean
+0.029871821	11953	UGRD:700 mb:hour fcst:wt ens mean 3hr mean:25mi linestraddling grad
+0.029240493	8283	DPT:500 mb:hour fcst:wt ens mean 3hr min:25mi mean
+0.02837	8693	DPT:850 mb:hour fcst:wt ens mean 3hr min:100mi mean
+0.028179333	7858	ABSV:250 mb:hour fcst:wt ens mean +1hr:100mi linestraddling grad
+0.026009135	8620	SBCAPE*(200+SBCIN):calculated:hour fcst: 3hr min:50mi mean
+0.0244049	6810	VGRD:700 mb:hour fcst:wt ens mean +1hr:50mi forward grad
+0.022703804	15944	HLCY:3000-0 m above ground:hour fcst:prob >100 3hr max:100mi linestraddling grad
+

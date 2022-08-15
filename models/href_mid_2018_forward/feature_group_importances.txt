@@ -288,7 +288,7 @@
 0.964	3hr min
 0.952	\+1hr:
 0.916	entire atmosphere
-0.900	:prob 
+0.900	:prob
 0.890	REF
 0.847	Vorticity
 0.845	leftward grad
@@ -320,3 +320,22 @@
 0.432	Divergence
 0.409	:25mi
 0.380	linestraddling grad
+2.810	:100mi mean
+1.940	mi mean
+1.816	:50mi mean
+1.621	:100mi leftward grad
+1.554	:100mi forward grad
+1.358	:100mi \w+ grad
+1.195	:25mi mean
+0.898	:100mi linestraddling grad
+0.845	leftward grad
+0.789	forward grad
+0.684	:50mi leftward grad
+0.623	:50mi forward grad
+0.509	:50mi \w+ grad
+0.380	linestraddling grad
+0.231	:25mi leftward grad
+0.220	:50mi linestraddling grad
+0.190	:25mi forward grad
+0.147	:25mi \w+ grad
+0.020	:25mi linestraddling grad

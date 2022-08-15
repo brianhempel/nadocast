@@ -1,0 +1,327 @@
+41.866	tornado_day_given_severe_day_climatological_spatial_prob:
+41.866	sig_tornado_day_given_severe_day_climatological_spatial_prob:
+39.706	month_climatological_wind_day_given_severe_day_prob:
+39.540	severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+38.128	wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+34.556	month_climatological_wind_day_prob:
+34.307	wind_day_climatological_spatial_prob:
+33.891	month_climatological_hail_day_given_severe_day_prob:
+33.633	severe_day_climatological_spatial_prob:
+32.728	sig_tornado_day_climatological_spatial_prob:
+32.562	sig_tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+32.396	wind_day_given_severe_day_climatological_spatial_prob:
+31.566	hail_day_climatological_spatial_prob:
+31.233	hour_in_day_climatological_severe_prob:
+30.569	sig_hail_day_given_severe_day_climatological_spatial_prob:
+28.741	tornado_day_climatological_spatial_prob:
+28.326	tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+27.412	month_climatological_tornado_day_given_severe_day_prob:
+27.412	month_climatological_hail_day_prob:
+26.748	month_climatological_tornado_day_prob:
+25.502	hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+24.671	hail_day_given_severe_day_climatological_spatial_prob:
+23.259	sig_hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+20.435	sig_hail_day_climatological_spatial_prob:
+19.604	sig_severe_day_climatological_spatial_prob:
+19.604	month_climatological_severe_day_prob:
+15.949	sig_wind_day_given_severe_day_climatological_spatial_prob:
+14.952	sig_wind_day_climatological_spatial_prob:
+11.463	sig_wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+10.300	sig_severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:
+9.636	sig_severe_day_given_severe_day_climatological_spatial_prob:
+2.399	sqrtSBCAPE\*BWD0\-500mb:
+2.244	SBCAPE\*BWD0\-500mb:
+2.098	PWAT:
+1.891	BWD0\-500mb:
+1.864	TMP:
+1.844	sqrtSBCAPE\*BWD0\-500mb\*HLCY3000\-0m\*\(200\+SBCIN\):
+1.773	sqrtSBCAPE\*\(200\+SBCIN\):
+1.741	RH:
+1.670	UpstreamSurfaceLayerRH2hr:
+1.657	DPT:
+1.620	SBCAPE\*BWD0\-500mb\*HLCY3000\-0m\*\(200\+SBCIN\):
+1.555	PRMSL:
+1.490	SBCAPE\*\(200\+SBCIN\):
+1.426	SBCAPE\*BWD0\-500mb\*HLCY3000\-0m\*10\^\-6:
+1.402	UpstreamSurfaceLayerRH1hr:
+1.386	sqrtSBCAPE\*BWD0\-500mb\*HLCY3000\-0m:
+1.328	CRAIN:
+1.278	PLI:
+1.244	UGRD:
+1.213	CIN:
+1.148	VWSH:
+1.125	StormUpstream10mConvergence6hrGatedBySCP:
+1.124	HGT:
+1.124	WIND:
+1.087	COVTW:
+1.076	VGRD:
+1.044	Divergence250mb\*10\^5:
+1.010	StormUpstream10mConvergence9hrGatedBySCP:
+1.010	StormUpstream10mConvergence3hrGatedBySCP:
+0.971	Upstream2mDPT2hr:
+0.951	AbsVorticity10m\*10\^5:
+0.920	StormUpstreamDifferentialDivergence250\-850mb3hrGatedBySCP:
+0.831	Upstream2mDPT1hr:
+0.802	var\ discipline=3\ center=7\ local_table=1\ parmcat=16\ parm=196:
+0.769	StormUpstream850mbConvergence9hrGatedBySCP:
+0.732	DifferentialDivergence250\-850mb\*10\^5:
+0.728	SBCAPE\*HLCY3000\-0m\*\(200\+SBCIN\):
+0.699	Divergence10m\*10\^5:
+0.688	sqrtSBCAPE\*HLCY3000\-0m\*\(200\+SBCIN\):
+0.683	SBCAPE\*HLCY3000\-0m:
+0.672	ABSV:
+0.666	UpstreamCRAIN1hr:
+0.663	StormUpstream850mbConvergence3hrGatedBySCP:
+0.648	StormUpstreamDifferentialDivergence250\-850mb6hrGatedBySCP:
+0.648	ConvergenceOnly10m\*10\^5:
+0.647	HLCY:
+0.646	StormUpstreamDifferentialDivergence250\-850mb9hrGatedBySCP:
+0.644	VIS:
+0.623	TIPD:
+0.617	StormUpstream850mbConvergence6hrGatedBySCP:
+0.604	UpstreamCRAIN2hr:
+0.593	sqrtSBCAPE\*HLCY3000\-0m:
+0.564	CAPE:
+0.550	TCDC:
+0.489	Divergence850mb\*10\^5:
+0.471	TPFI:
+0.466	UpstreamSBCAPE2hr:
+0.429	CWORK:
+0.403	UpstreamSBCAPE1hr:
+0.400	SCPish\(RM\)>1:
+0.393	ConvergenceOnly850mb\*10\^5:
+0.018	CSNOW:
+0.007	CFRZR:
+0.003	CICEP:
+41.866	tornado_day_given_severe_day_climatological_spatial_prob:calculated:
+41.866	sig_tornado_day_given_severe_day_climatological_spatial_prob:calculated:
+39.706	month_climatological_wind_day_given_severe_day_prob:calculated:
+39.540	severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+38.128	wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+34.556	month_climatological_wind_day_prob:calculated:
+34.307	wind_day_climatological_spatial_prob:calculated:
+33.891	month_climatological_hail_day_given_severe_day_prob:calculated:
+33.633	severe_day_climatological_spatial_prob:calculated:
+32.728	sig_tornado_day_climatological_spatial_prob:calculated:
+32.562	sig_tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+32.396	wind_day_given_severe_day_climatological_spatial_prob:calculated:
+31.566	hail_day_climatological_spatial_prob:calculated:
+31.233	hour_in_day_climatological_severe_prob:calculated:
+30.569	sig_hail_day_given_severe_day_climatological_spatial_prob:calculated:
+28.741	tornado_day_climatological_spatial_prob:calculated:
+28.326	tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+27.412	month_climatological_tornado_day_given_severe_day_prob:calculated:
+27.412	month_climatological_hail_day_prob:calculated:
+26.748	month_climatological_tornado_day_prob:calculated:
+25.502	hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+24.671	hail_day_given_severe_day_climatological_spatial_prob:calculated:
+23.259	sig_hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+20.435	sig_hail_day_climatological_spatial_prob:calculated:
+19.604	sig_severe_day_climatological_spatial_prob:calculated:
+19.604	month_climatological_severe_day_prob:calculated:
+15.949	sig_wind_day_given_severe_day_climatological_spatial_prob:calculated:
+14.952	sig_wind_day_climatological_spatial_prob:calculated:
+11.463	sig_wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+10.300	sig_severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:
+9.636	sig_severe_day_given_severe_day_climatological_spatial_prob:calculated:
+3.929	TMP:500\ mb:
+3.120	HGT:850\-1000\ mb:
+2.801	TMP:300\ mb:
+2.598	RH:700\ mb:
+2.399	sqrtSBCAPE\*BWD0\-500mb:calculated:
+2.244	SBCAPE\*BWD0\-500mb:calculated:
+2.156	TMP:600\ mb:
+2.131	HGT:1000\ mb:
+2.101	DPT:500\ mb:
+2.098	PWAT:entire\ atmosphere:
+2.023	UGRD:850\ mb:
+1.895	RH:600\ mb:
+1.891	BWD0\-500mb:calculated:
+1.844	sqrtSBCAPE\*BWD0\-500mb\*HLCY3000\-0m\*\(200\+SBCIN\):calculated:
+1.818	WIND:850\ mb:
+1.785	DPT:850\ mb:
+1.784	DPT:300\ mb:
+1.773	sqrtSBCAPE\*\(200\+SBCIN\):calculated:
+1.716	WIND:700\ mb:
+1.681	DPT:700\ mb:
+1.670	UpstreamSurfaceLayerRH2hr:calculated:
+1.652	RH:500\ mb:
+1.638	TMP:700\ mb:
+1.620	SBCAPE\*BWD0\-500mb\*HLCY3000\-0m\*\(200\+SBCIN\):calculated:
+1.594	WIND:300\ mb:
+1.577	RH:850\ mb:
+1.563	RH:2\ m\ above\ ground:
+1.555	PRMSL:mean\ sea\ level:
+1.538	TMP:2\ m\ above\ ground:
+1.508	HGT:850\ mb:
+1.490	SBCAPE\*\(200\+SBCIN\):calculated:
+1.473	TIPD:575\ mb:
+1.457	HGT:250\ mb:
+1.431	HGT:700\ mb:
+1.426	SBCAPE\*BWD0\-500mb\*HLCY3000\-0m\*10\^\-6:calculated:
+1.420	UGRD:300\ mb:
+1.404	WIND:600\ mb:
+1.402	UpstreamSurfaceLayerRH1hr:calculated:
+1.400	VGRD:250\ mb:
+1.386	sqrtSBCAPE\*BWD0\-500mb\*HLCY3000\-0m:calculated:
+1.328	CRAIN:surface:
+1.307	WIND:500\ mb:
+1.302	HGT:700\-850\ mb:
+1.278	PLI:30\-0\ mb\ above\ ground:
+1.234	VGRD:300\ mb:
+1.213	CIN:surface:
+1.207	HGT:300\ mb:
+1.207	ABSV:850\ mb:
+1.198	ABSV:250\ mb:
+1.188	WIND:1000\ mb:
+1.179	VGRD:700\ mb:
+1.174	VGRD:850\ mb:
+1.167	VGRD:500\ mb:
+1.167	UGRD:700\ mb:
+1.163	RH:300\ mb:
+1.154	WIND:250\ mb:
+1.148	VWSH:0\ sigma\ level:
+1.145	UGRD:250\ mb:
+1.137	UGRD:600\ mb:
+1.130	UGRD:500\ mb:
+1.130	TIPD:400\ mb:
+1.128	HGT:500\-1000\ mb:
+1.125	StormUpstream10mConvergence6hrGatedBySCP:calculated:
+1.114	HGT:500\ mb:
+1.087	COVTW:entire\ atmosphere:
+1.081	HGT:600\ mb:
+1.073	HGT:cloud\ top:
+1.052	VGRD:600\ mb:
+1.044	Divergence250mb\*10\^5:calculated:
+1.010	StormUpstream10mConvergence9hrGatedBySCP:calculated:
+1.010	StormUpstream10mConvergence3hrGatedBySCP:calculated:
+1.002	UGRD:1000\ mb:
+0.971	Upstream2mDPT2hr:calculated:
+0.951	AbsVorticity10m\*10\^5:calculated:
+0.933	DPT:2\ m\ above\ ground:
+0.926	UGRD:10\ m\ above\ ground:
+0.920	StormUpstreamDifferentialDivergence250\-850mb3hrGatedBySCP:calculated:
+0.918	ABSV:500\ mb:
+0.831	Upstream2mDPT1hr:calculated:
+0.821	TMP:850\ mb:
+0.802	var\ discipline=3\ center=7\ local_table=1\ parmcat=16\ parm=196:entire\ atmosphere:
+0.769	StormUpstream850mbConvergence9hrGatedBySCP:calculated:
+0.759	TIPD:500\ mb:
+0.732	DifferentialDivergence250\-850mb\*10\^5:calculated:
+0.728	SBCAPE\*HLCY3000\-0m\*\(200\+SBCIN\):calculated:
+0.717	VGRD:10\ m\ above\ ground:
+0.712	ABSV:700\ mb:
+0.699	Divergence10m\*10\^5:calculated:
+0.695	VIS:surface:
+0.688	sqrtSBCAPE\*HLCY3000\-0m\*\(200\+SBCIN\):calculated:
+0.688	VGRD:1000\ mb:
+0.683	SBCAPE\*HLCY3000\-0m:calculated:
+0.666	UpstreamCRAIN1hr:calculated:
+0.663	StormUpstream850mbConvergence3hrGatedBySCP:calculated:
+0.648	StormUpstreamDifferentialDivergence250\-850mb6hrGatedBySCP:calculated:
+0.648	ConvergenceOnly10m\*10\^5:calculated:
+0.647	HLCY:3000\-0\ m\ above\ ground:
+0.646	StormUpstreamDifferentialDivergence250\-850mb9hrGatedBySCP:calculated:
+0.617	StormUpstream850mbConvergence6hrGatedBySCP:calculated:
+0.604	UpstreamCRAIN2hr:calculated:
+0.593	sqrtSBCAPE\*HLCY3000\-0m:calculated:
+0.570	TIPD:650\ mb:
+0.564	CAPE:surface:
+0.550	TCDC:entire\ atmosphere:
+0.548	TPFI:500\ mb:
+0.545	WIND:10\ m\ above\ ground:
+0.543	VIS:cloud\ base:
+0.531	TPFI:200\ mb:
+0.527	TPFI:225\ mb:
+0.526	HGT:cloud\ ceiling:
+0.489	Divergence850mb\*10\^5:calculated:
+0.466	UpstreamSBCAPE2hr:calculated:
+0.454	TPFI:275\ mb:
+0.451	TPFI:450\ mb:
+0.449	TPFI:400\ mb:
+0.429	CWORK:0\ m\ above\ ground:
+0.408	TPFI:300\ mb:
+0.403	UpstreamSBCAPE1hr:calculated:
+0.402	TPFI:350\ mb:
+0.400	SCPish\(RM\)>1:calculated:
+0.393	ConvergenceOnly850mb\*10\^5:calculated:
+0.319	TIPD:725\ mb:
+0.108	TIPD:800\ mb:
+0.018	CSNOW:surface:
+0.007	CFRZR:surface:
+0.003	CICEP:surface:
+0.000	TIPD:900\ mb:
+0.000	ABSV:600\ mb:
+0.000	ABSV:300\ mb:
+32.822	spatial
+32.112	climatol
+31.233	hour_in_day
+29.904	month
+1.880	mi mean
+1.725	:100mi
+1.543	1000 mb
+1.536	\bUpstream\w*RH
+1.515	700 mb
+1.471	:\n
+1.447	sqrt
+1.404	850 mb
+1.311	-1hr:
+1.310	500 mb
+1.271	250 mb
+1.258	calculated
+1.246	600 mb
+1.130	300 mb
+1.121	\*
+1.046	3hr max
+1.008	3hr mean
+1.007	CAPE
+0.980	\+1hr:
+0.974	3hr min
+0.965	ens mean:
+0.951	Vorticity
+0.928	\bUpstream\w*2hr
+0.924	entire atmosphere
+0.907	10m
+0.901	\bUpstream\w*DPT
+0.877	\bUpstream
+0.864	3hrGated
+0.855	leftward grad
+0.826	\bUpstream\w*1hr
+0.823	StormUpstream
+0.808	9hrGated
+0.797	6hrGated
+0.784	forward grad
+0.781	SCP
+0.779	Convergence
+0.740	Divergence
+0.737	DifferentialDivergence
+0.724	:50mi
+0.672	surface
+0.654	3hr delta
+0.653	850mb
+0.637	:10 m
+0.635	\bUpstreamCRAIN
+0.627	:prob 
+0.543	cloud base
+0.435	\bUpstream\w*CAPE
+0.431	:25mi
+0.322	linestraddling grad
+2.971	:100mi mean
+1.880	mi mean
+1.680	:100mi leftward grad
+1.534	:50mi mean
+1.495	:100mi forward grad
+1.310	:100mi \w+ grad
+1.134	:25mi mean
+0.855	leftward grad
+0.784	forward grad
+0.754	:100mi linestraddling grad
+0.595	:50mi forward grad
+0.594	:50mi leftward grad
+0.453	:50mi \w+ grad
+0.322	linestraddling grad
+0.289	:25mi leftward grad
+0.262	:25mi forward grad
+0.197	:25mi \w+ grad
+0.171	:50mi linestraddling grad
+0.040	:25mi linestraddling grad
