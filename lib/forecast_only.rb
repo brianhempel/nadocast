@@ -17,6 +17,10 @@ RUN_DATE = ENV["RUN_DATE"] ? Date.parse(ENV["RUN_DATE"]) : Time.now.utc.to_date
 RUN_HOUR = ENV["RUN_HOUR"] ? Integer(ENV["RUN_HOUR"])    : Time.now.utc.hour
 JULIA    = ENV["JULIA"]    ? ENV["JULIA"]                : "julia"
 
+MINUTE     = 60
+HOUR       = 60*MINUTE
+start_time = Time.now
+
 loop do
   2.times do
     FileUtils.cd lib_dir
@@ -27,5 +31,10 @@ loop do
     end
   end
 
-  sleep(60*5)
+  if Time.now - start_time > 10*HOUR
+    STDERR.puts("RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} 10hr timeout")
+    exit(1)
+  end
+
+  sleep(5*MINUTE)
 end

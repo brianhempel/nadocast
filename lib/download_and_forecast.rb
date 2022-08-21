@@ -17,6 +17,9 @@ RUN_HOUR = ENV["RUN_HOUR"]            ? Integer(ENV["RUN_HOUR"])    : Time.now.u
 HRRR_RAP = ENV["HRRR_RAP"].to_s != "" ? ENV["HRRR_RAP"] == "true"   : true
 JULIA    = ENV["JULIA"]               ? ENV["JULIA"]                : "julia"
 
+MINUTE     = 60
+HOUR       = 60*MINUTE
+start_time = Time.now
 
 loop do
   2.times do
@@ -48,5 +51,10 @@ loop do
     end
   end
 
-  sleep(60*5)
+  if Time.now - start_time > 10*HOUR
+    STDERR.puts("RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} 10hr timeout")
+    exit(1)
+  end
+
+  sleep(5*MINUTE)
 end
