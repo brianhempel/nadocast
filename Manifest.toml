@@ -2,15 +2,15 @@
 
 [[AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
-git-tree-sha1 = "6f1d9bc1c08f9f4a8fa92e3ea3cb50153a1b40d4"
+git-tree-sha1 = "69f7020bd72f069c219b5e8c236c1fa90d2cb409"
 uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
-version = "1.1.0"
+version = "1.2.1"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
+git-tree-sha1 = "195c5505521008abea5aee4f96930717958eac6f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "3.3.3"
+version = "3.4.0"
 
 [[ArchGDAL]]
 deps = ["DataStreams", "Dates", "GDAL", "GeoInterface"]
@@ -64,9 +64,9 @@ version = "0.2.0"
 
 [[ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "9950387274246d08af38f6eef8cb5480862a435f"
+git-tree-sha1 = "80ca332f6dcb2508adba68f22f551adb2d00a624"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.14.0"
+version = "1.15.3"
 
 [[CodecZstd]]
 deps = ["BinaryProvider", "Libdl", "Test", "TranscodingStreams"]
@@ -177,9 +177,9 @@ version = "0.4.1"
 
 [[Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
-git-tree-sha1 = "1c5a84319923bea76fa145d49e93aa4394c73fc2"
+git-tree-sha1 = "d61890399bc535850c4bf08e4e0d3a7ad0f21cbd"
 uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
-version = "1.1.1"
+version = "1.1.2"
 
 [[ImageCore]]
 deps = ["AbstractFFTs", "Colors", "FixedPointNumbers", "Graphics", "MappedArrays", "MosaicViews", "OffsetArrays", "PaddedViews", "Reexport"]
@@ -240,10 +240,16 @@ uuid = "da04e1cc-30fd-572f-bb4f-1f8673147195"
 version = "0.19.2"
 
 [[MPICH_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "9f781ffc4020c24ca05d83fa4eb4df0d34832b18"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "Pkg", "TOML"]
+git-tree-sha1 = "089ec72dbf7d7a853626f438d140d0a642ddbda4"
 uuid = "7cb0a576-ebde-5e09-9194-50597f1243b4"
-version = "4.0.2+1"
+version = "4.0.2+4"
+
+[[MPIPreferences]]
+deps = ["Libdl", "Preferences"]
+git-tree-sha1 = "49f10d34284610c125421c7a4e6f913e4bc00897"
+uuid = "3da0fdf6-3ccc-4f1b-acd9-58baa6c99267"
+version = "0.1.3"
 
 [[MappedArrays]]
 git-tree-sha1 = "e8b359ef06ec72e8c030463fe02efe5527ee5142"
@@ -260,7 +266,7 @@ uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 
 [[MemoryConstrainedTreeBoosting]]
 deps = ["BSON", "MPI", "Random", "SIMD"]
-git-tree-sha1 = "aaf2bffe1863047d412c9caaec5e1d26cc7c12f9"
+git-tree-sha1 = "2a0efdea5f0d8e6cf2d2a390df73e7dfd8bdbe7e"
 repo-rev = "master"
 repo-url = "https://github.com/brianhempel/MemoryConstrainedTreeBoosting.jl"
 uuid = "892701ce-1da2-11e9-2428-fd1c8d726794"
@@ -297,28 +303,33 @@ version = "0.3.3"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 
 [[NaNMath]]
-git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
+deps = ["OpenLibm_jll"]
+git-tree-sha1 = "a7c3d1da1189a1c2fe843a3bfa04d18d20eb3211"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "0.3.7"
+version = "1.0.1"
 
 [[NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
 [[OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "aee446d0b3d5764e35289762f6a18e8ea041a592"
+git-tree-sha1 = "1ea784113a6aa054c5ebd95945fa5e52c2f378e7"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.11.0"
+version = "1.12.7"
 
 [[OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
+[[OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+
 [[OpenMPI_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
-git-tree-sha1 = "6340586e076b2abd41f5ba1a3b9c774ec6b30fde"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "Pkg", "TOML"]
+git-tree-sha1 = "f603a060218ca6818055be3608d4969e937d81bb"
 uuid = "fe0851c0-eecd-5654-98d4-656369965a5c"
-version = "4.1.2+0"
+version = "4.1.3+2"
 
 [[OrderedCollections]]
 git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
