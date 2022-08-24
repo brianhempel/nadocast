@@ -278,7 +278,7 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_
   # ForecastCombinators.map_forecasts(window_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
 
-function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(forecasts)
+function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology_etc(forecasts; run_datetime_to_simulation_version)
   grid = forecasts[1].grid
 
   new_features_post = [
@@ -319,6 +319,8 @@ function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(for
     Climatology.month_hail_day_given_severe_day_probability_feature(grid),
 
     Climatology.population_density_feature(grid),
+
+    ("simulation_version", forecast -> Climatology.fill_grid(run_datetime_to_simulation_version(Forecasts.run_utc_datetime(forecast)), grid))
   ]
 
   three_hour_window_and_min_mean_max_delta_forecasts(

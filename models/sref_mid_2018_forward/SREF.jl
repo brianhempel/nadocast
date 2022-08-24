@@ -255,11 +255,14 @@ end
 #   ForecastCombinators.map_forecasts(three_hour_window_feature_engineered_forecasts(); inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 # end
 
-function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
-  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(feature_engineered_forecasts())
+# Last upgrade to SREF I could find was 2015ish
+function run_datetime_to_simulation_version(datetime)
+  7
 end
 
-
+function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology_etc(feature_engineered_forecasts(); run_datetime_to_simulation_version = run_datetime_to_simulation_version)
+end
 
 # function feature_i_to_name(feature_i)
 #   inventory = Forecasts.inventory(example_forecast())

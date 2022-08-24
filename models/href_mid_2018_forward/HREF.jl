@@ -232,8 +232,29 @@ function feature_engineered_forecasts()
   )
 end
 
+
+# $ wgrib2 href_conus_20210511_t06z_prob_f01.grib2 | grep UPHL
+# 24:5624584:d=2021051106:UPHL:5000-2000 m above ground:1 hour fcst:prob >25:prob fcst 0/8:Neighborhood Probability
+# 25:5820903:d=2021051106:UPHL:5000-2000 m above ground:1 hour fcst:prob >100:prob fcst 0/8:Neighborhood Probability
+# 29:6707470:d=2021051106:MXUPHL:5000-2000 m above ground:1 hour fcst:prob >25:prob fcst 0/8:Neighborhood Probability
+# 30:6912528:d=2021051106:MXUPHL:5000-2000 m above ground:1 hour fcst:prob >100:prob fcst 0/8:Neighborhood Probability
+# $ wgrib2 href_conus_20210511_t12z_prob_f01.grib2 | grep UPHL
+# 25:5484237:d=2021051112:MXUPHL:5000-2000 m above ground:1 hour fcst:prob >25:prob fcst 0/10:Neighborhood Probability
+# 26:5687886:d=2021051112:MXUPHL:5000-2000 m above ground:1 hour fcst:prob >75:prob fcst 0/10:Neighborhood Probability
+# 27:5881021:d=2021051112:MXUPHL:5000-2000 m above ground:1 hour fcst:prob >150:prob fcst 0/10:Neighborhood Probability
+
+const HREFv3_implementation_datetime = Dates.DateTime(2021,5,11,12)
+
+function run_datetime_to_simulation_version(datetime)
+  if datetime >= HREFv3_implementation_datetime
+    3
+  else
+    2 # I don't know when v2.1 started or what it is
+  end
+end
+
 function three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()
-  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(feature_engineered_forecasts())
+  ThreeHourWindowForecasts.three_hour_window_and_min_mean_max_delta_forecasts_with_climatology_etc(feature_engineered_forecasts(); run_datetime_to_simulation_version = run_datetime_to_simulation_version)
 end
 
 function example_forecast()
