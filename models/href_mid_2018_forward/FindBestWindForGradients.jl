@@ -7,10 +7,10 @@ import Inventories
 
 include("HREF.jl")
 
-forecasts = HREF.extra_features_forecasts()
+forecasts = HREF.extra_features_forecasts();
 
-f1_forecasts = filter(fcst -> fcst.forecast_hour == 1, forecasts)
-f2_forecasts = filter(fcst -> fcst.forecast_hour == 2, forecasts)
+f1_forecasts = filter(fcst -> fcst.forecast_hour == 1, forecasts);
+f2_forecasts = filter(fcst -> fcst.forecast_hour == 2, forecasts);
 
 f1_f2_forecasts_paired = []
 
@@ -55,8 +55,10 @@ function try_it(factor)
   for forecast_i in eachindex(f1_f2_forecasts_paired)
     print("\r$forecast_i/$(length(f1_f2_forecasts_paired))")
     f1_fcst, f2_fcst = f1_f2_forecasts_paired[forecast_i]
-    data1 = f1_fcst._get_data()
-    data2 = f2_fcst._get_data()
+    data1 = Forecasts.data_or_nothing(f1_fcst)
+    data2 = Forecasts.data_or_nothing(f2_fcst)
+    !isnothing(data1) || continue
+    !isnothing(data2) || continue
     refl1 = get_layer(data1, "REFC:entire atmosphere:hour fcst:prob >30")
     refl2 = get_layer(data2, "REFC:entire atmosphere:hour fcst:prob >30")
 

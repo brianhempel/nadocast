@@ -127,6 +127,23 @@ function iterate_data_of_uncorrupted_forecasts(forecasts)
   UncorruptedForecastsDataIteratorNoCache(collect(forecasts))
 end
 
+function data_or_nothing(forecast)
+  try
+    data(forecast)
+  catch exception
+    if isa(exception, Inventories.FieldMissing)
+      println(stderr, exception)
+      return nothing
+    elseif isa(exception, EOFError) || isa(exception, ErrorException) || isa(exception, ProcessFailedException) || isa(exception, TaskFailedException)
+      println(stderr, exception)
+      println(stderr, "Bad forecast: $(forecast.model_name) $(Forecasts.time_title(forecast))")
+      return nothing
+    else
+      rethrow(exception)
+    end
+  end
+end
+
 function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(1, nothing))
   i, preload_process = state
   forecasts          = iterator.forecasts
@@ -156,23 +173,13 @@ function Base.iterate(iterator::UncorruptedForecastsDataIteratorNoCache, state=(
 
   next_state = (i+1, preload_process)
 
-  data =
-    try
-      Forecasts.data(forecast)
-    catch exception
-      if isa(exception, Inventories.FieldMissing)
-        println(exception)
-        return Base.iterate(iterator, next_state)
-      elseif isa(exception, EOFError) || isa(exception, ErrorException) || isa(exception, ProcessFailedException) || isa(exception, TaskFailedException)
-        println(exception)
-        println("Bad forecast: $(forecast.model_name) $(Forecasts.time_title(forecast))")
-        return Base.iterate(iterator, next_state)
-      else
-        rethrow(exception)
-      end
-    end
+  out = data_or_nothing(forecast)
 
-  ((forecast, data), next_state)
+  if isnothing(out)
+    Base.iterate(iterator, next_state)
+  else
+    ((forecast, out), next_state)
+  end
 end
 
 
