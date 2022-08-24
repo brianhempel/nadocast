@@ -941,13 +941,32 @@ require "set"
 #
 #
 
-
 # Files available 2.5hrs after run time
 
-DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "ftpprd.ncep.noaa.gov" : "nomads.ncep.noaa.gov/pub"
+# try to use whichever domain is responding best...
+
+def time(&block)
+  start_t = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  out     = yield
+  end_t   = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  [out, end_t - start_t]
+end
+
+FTPPROD = "ftpprd.ncep.noaa.gov"
+NOMADS  = "nomads.ncep.noaa.gov/pub"
+
+ymds_1, ftpprod_time = time { `curl -s https://#{FTPPROD}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
+ymds_2, nomads_time  = time { `curl -s https://#{NOMADS}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
+
+if ([ymds_1.size, -ftpprod_time] <=> [ymds_2.size, -nomads_time]) > 0
+  DOMAIN = FTPPROD
+  YMDS   = ymds_1
+else
+  DOMAIN = NOMADS
+  YMDS   = ymds_2
+end
 
 TYPES          = ["mean", "prob"]
-YMDS           = `curl -s https://#{DOMAIN}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [00, 06, 12, 18]
 FORECAST_HOURS = (01..48).to_a
 BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/href"

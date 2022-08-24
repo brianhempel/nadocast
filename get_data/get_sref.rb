@@ -11,10 +11,28 @@ require "set"
 # 1hrly files contain hours 1-38 not divisible by 3
 # 3hrly files contain hours anl,3-87 divisible by 3
 
-DOMAIN = ENV["USE_ALT_DOMAIN"] == "true" ? "ftpprd.ncep.noaa.gov" : "nomads.ncep.noaa.gov/pub"
+def time(&block)
+  start_t = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  out     = yield
+  end_t   = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  [out, end_t - start_t]
+end
+
+FTPPROD = "ftpprd.ncep.noaa.gov"
+NOMADS  = "nomads.ncep.noaa.gov/pub"
+
+ymds_1, ftpprod_time = time { `curl -s https://#{FTPPROD}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
+ymds_2, nomads_time  = time { `curl -s https://#{NOMADS}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
+
+if ([ymds_1.size, -ftpprod_time] <=> [ymds_2.size, -nomads_time]) > 0
+  DOMAIN = FTPPROD
+  YMDS   = ymds_1
+else
+  DOMAIN = NOMADS
+  YMDS   = ymds_2
+end
 
 TYPES          = ["mean_1hrly", "mean_3hrly", "prob_1hrly", "prob_3hrly"]
-YMDS           = `curl -s https://#{DOMAIN}/data/nccf/com/sref/prod/`.scan(/\bsref\.(\d{8})\//).flatten.uniq
 HOURS_OF_DAY   = [3, 9, 15, 21]
 BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/sref"
 BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/sref"
