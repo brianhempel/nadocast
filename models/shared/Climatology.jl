@@ -15,24 +15,30 @@ using HREF15KMGrid
 
 climatology_data_dir = joinpath((@__DIR__), "..", "..", "climatological_background_1998-2013")
 
+# population is basically climatology, since it determines the reporting rate
+population_data_dir = joinpath((@__DIR__), "..", "..", "population")
 
-
-function load_climatology_on_grid(climatology_file, grid)
+function load_on_grid(dir, file_base_name, grid)
   resampler = Grids.get_upsampler(HREF_CROPPED_15KM_GRID, grid) # not always upsampling, but this does nearest neighbor
 
-  resampler(Float32.(reinterpret(Float16, read(joinpath(climatology_data_dir, climatology_file * ".float16.bin")))))
+  resampler(Float32.(reinterpret(Float16, read(joinpath(dir, file_base_name * ".float16.bin")))))
 end
 
 function fill_grid(val, grid)
   fill(Float32(val), length(grid.latlons))
 end
 
-
 function spatial_climatology_feature(file_name, grid)
-  climatology_on_grid = load_climatology_on_grid(file_name, grid)
+  climatology_on_grid = load_on_grid(climatology_data_dir, file_name, grid)
   feature_name        = replace(file_name, "_probability" => "_spatial_prob")
   (feature_name, _ -> climatology_on_grid)
 end
+
+function population_density_feature(grid)
+  gridded = load_on_grid(population_data_dir, "pop_density_on_15km_grid", grid)
+  ("people_per_sq_km", _ -> gridded)
+end
+
 
 hail_day_spatial_probability_feature(grid)                                         = spatial_climatology_feature("hail_day_climatological_probability",                                         grid)
 hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid)        = spatial_climatology_feature("hail_day_geomean_absolute_and_conditional_climatological_probability",        grid)

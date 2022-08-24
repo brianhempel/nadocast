@@ -314,6 +314,8 @@ function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(for
     Climatology.month_tornado_day_given_severe_day_probability_feature(grid),
     Climatology.month_wind_day_given_severe_day_probability_feature(grid),
     Climatology.month_hail_day_given_severe_day_probability_feature(grid),
+
+    Climatology.population_density_feature(grid),
   ]
 
   three_hour_window_and_min_mean_max_delta_forecasts(
