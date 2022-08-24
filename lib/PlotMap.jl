@@ -9,6 +9,7 @@ import PNGFiles
 import PNGFiles.ImageCore.ColorTypes
 
 push!(LOAD_PATH, @__DIR__)
+import Conus
 import Grids
 import GeoUtils
 
@@ -502,7 +503,7 @@ end
 
 # PlotMap.plot_fast(base_path, grid, vals; val_to_color=PlotMap.prob_to_spc_color, post_process=PlotMap.add_conus_lines_href_5k_native_proj_80_pct)
 
-function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_conus_lines_href_5k_native_proj_80_pct)
+function plot_fast_no_resample(base_path, grid, vals; val_to_color=Gray, post_process=add_conus_lines_href_5k_native_proj_80_pct)
   # Awww yeah rotation.
   vals = permutedims(reshape(vals, (grid.width, grid.height)))[:,:]
   # Now flip vertically
@@ -512,6 +513,13 @@ function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_co
     vals[grid.height - j + 1,:] = row
   end
   PNGFiles.save("$base_path.png", post_process(val_to_color.(vals)); compression_level = 9)
+end
+
+function plot_fast(base_path, grid, vals; val_to_color=Gray, post_process=add_conus_lines_href_5k_native_proj_80_pct)
+  href_cropped_5km_grid = Conus.href_cropped_5km_grid()
+  resampler = Grids.get_upsampler(grid, href_cropped_5km_grid) # not always upsampling, but this does nearest neighbor
+
+  plot_fast_no_resample(base_path, href_cropped_5km_grid, resampler(vals); val_to_color=val_to_color, post_process=post_process)
 end
 
 function optimize_png(base_path; wait = true, quantization_levels = nothing)

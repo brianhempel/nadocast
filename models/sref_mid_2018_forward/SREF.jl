@@ -17,6 +17,79 @@ import ThreeHourWindowForecasts
 # To match the HREF grid, we'll cut 26 off the W, 12 off the E, 14 off the S, 28 off the N
 crop = ((1+26):(185-12), (1+14):(129-28))
 
+
+# import Conus
+# import Inventories
+# import PlotMap
+# function debug_plot(forecast)
+#   raw_layer_count = length(Forecasts.inventory(example_forecast())) + length(extra_features)
+
+#   conus_mask = Conus.is_in_conus.(grid().latlons)
+#   data = Forecasts.data(forecast)
+#   inventory = Forecasts.inventory(forecast)
+#   for layer_i in [1:raw_layer_count; rand(1:length(inventory), 20); length(inventory)-34:length(inventory)]
+#     layer_data = @view data[:, layer_i]
+#     lo, hi = extrema(@view layer_data[conus_mask])
+
+#     str = Inventories.inventory_line_description(inventory[layer_i])
+#     base_path = "feature_$(layer_i)_$(replace(str, r"[: ]" => "_"))_$(lo)_$(hi)"
+#     println(base_path)
+
+#     range = hi - lo
+#     if range > 0
+#       PlotMap.plot_fast(base_path, grid(), clamp.((layer_data .- lo) ./ range, 0f0, 1f0))
+#     else
+#       PlotMap.plot_fast(base_path, grid(), clamp.(layer_data .- lo, 0f0, 1f0))
+#     end
+#   end
+# end
+
+# data = SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()[1]._get_data()
+# inv  = SREF.three_hour_window_three_hour_min_mean_max_delta_feature_engineered_forecasts()[1]._get_inventory()
+
+# us = data[:,201]
+# vs = data[:,202]
+
+# import Grids
+
+# function kts(grid, us, vs, latlon)
+#   u = us[Grids.latlon_to_closest_grid_i(grid, latlon)]
+#   v = vs[Grids.latlon_to_closest_grid_i(grid, latlon)]
+#   (u * 1.94, v * 1.94, 1.94 * sqrt(u^2 + v^2))
+# end
+
+# push!(LOAD_PATH, (@__DIR__) * "/../rap_march_2014_forward")
+
+# import RAP
+
+# rap_forecast = RAP.forecasts()[1]
+
+# rap_data = rap_forecast._get_data()
+
+# findall(line -> line.abbrev == "USTM", rap_forecast._get_inventory()) # 183
+# findall(line -> line.abbrev == "VSTM", rap_forecast._get_inventory()) # 184
+
+# const rap_us = rap_data[:,183]
+# const rap_vs = rap_data[:,184]
+
+# function mad(u_i, v_i)
+#   us = @view data[:,u_i]
+#   vs = @view data[:,v_i]
+#   abs_dev = 0.0
+#   n       = 0
+#   conus_mask = Conus.is_in_conus.(grid().latlons)
+
+#   for latlon in grid().latlons[conus_mask]
+#     du = us[Grids.latlon_to_closest_grid_i(grid(), latlon)] - rap_us[Grids.latlon_to_closest_grid_i(RAP.grid(), latlon)]
+#     dv = vs[Grids.latlon_to_closest_grid_i(grid(), latlon)] - rap_vs[Grids.latlon_to_closest_grid_i(RAP.grid(), latlon)]
+#     abs_dev += 1.94 * sqrt(du^2 + dv^2)
+#     n += 1
+#   end
+
+#   abs_dev / n
+# end
+
+
 # FORECASTS_ROOT="../../test_grib2s"
 forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
 
@@ -25,40 +98,6 @@ layer_blocks_to_make = FeatureEngineeringShared.fewer_grad_blocks
 # Didn't realize the 1hrly file didn't have hours divisible by 3 and needed to grab the 3hrly files too.
 # 2019-1-9 is the first day with all hours.
 
-
-# # For elasticnet models:
-# layer_blocks_to_make = [
-#   FeatureEngineeringShared.raw_features_block,
-#   # FeatureEngineeringShared.twenty_five_mi_mean_block,
-#   FeatureEngineeringShared.fifty_mi_mean_block,
-#   # FeatureEngineeringShared.hundred_mi_mean_block,
-#   # FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
-#   # FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
-#   # FeatureEngineeringShared.twenty_five_mi_linestraddling_gradient_block,
-#   FeatureEngineeringShared.fifty_mi_forward_gradient_block,
-#   FeatureEngineeringShared.fifty_mi_leftward_gradient_block,
-#   FeatureEngineeringShared.fifty_mi_linestraddling_gradient_block,
-#   # FeatureEngineeringShared.hundred_mi_forward_gradient_block,
-#   # FeatureEngineeringShared.hundred_mi_leftward_gradient_block,
-#   # FeatureEngineeringShared.hundred_mi_linestraddling_gradient_block,
-# ]
-
-# # For reduced elasticnet models:
-# layer_blocks_to_make = [
-#   FeatureEngineeringShared.raw_features_block,
-#   # FeatureEngineeringShared.twenty_five_mi_mean_block,
-#   # FeatureEngineeringShared.fifty_mi_mean_block,
-#   # FeatureEngineeringShared.hundred_mi_mean_block,
-#   # FeatureEngineeringShared.twenty_five_mi_forward_gradient_block,
-#   # FeatureEngineeringShared.twenty_five_mi_leftward_gradient_block,
-#   # FeatureEngineeringShared.twenty_five_mi_linestraddling_gradient_block,
-#   # FeatureEngineeringShared.fifty_mi_forward_gradient_block,
-#   # FeatureEngineeringShared.fifty_mi_leftward_gradient_block,
-#   # FeatureEngineeringShared.fifty_mi_linestraddling_gradient_block,
-#   # FeatureEngineeringShared.hundred_mi_forward_gradient_block,
-#   # FeatureEngineeringShared.hundred_mi_leftward_gradient_block,
-#   # FeatureEngineeringShared.hundred_mi_linestraddling_gradient_block,
-# ]
 
 vector_wind_layers = [
   "GRD:10 m above ground:hour fcst:wt ens mean",
@@ -69,6 +108,9 @@ vector_wind_layers = [
   "GRD:500 mb:hour fcst:wt ens mean",
   "GRD:300 mb:hour fcst:wt ens mean",
   "GRD:250 mb:hour fcst:wt ens mean",
+  "STM", # Our computed Bunkers storm motion.
+  "SHEAR",
+  "MEAN",
 ]
 
 _forecasts = []
@@ -102,6 +144,7 @@ surface_v_key = "VGRD:10 m above ground:hour fcst:wt ens mean"
 dpt_key       = "DPT:2 m above ground:hour fcst:wt ens mean"
 rh_key        = "RH:2 m above ground:hour fcst:wt ens mean"
 rain_key      = "CRAIN:surface:hour fcst:wt ens mean"
+tmp_500mb_key = "TMP:500 mb:hour fcst:wt ens mean"
 
 function compute_0_500mb_BWD!(get_layer, out)
   diff_u = get_layer("UGRD:500 mb:hour fcst:wt ens mean") .- get_layer("UGRD:10 m above ground:hour fcst:wt ens mean")
@@ -122,8 +165,8 @@ function storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, key; hours)
   out .=
     FeatureEngineeringShared.compute_upstream_mean_threaded(
       grid         = grid,
-      u_data       = get_layer("UGRD:700 mb:hour fcst:wt ens mean"),
-      v_data       = get_layer("VGRD:700 mb:hour fcst:wt ens mean"),
+      u_data       = get_layer("USTM"),
+      v_data       = get_layer("VSTM"),
       feature_data = meanify_25mi(grid, get_layer(key) .* Float32.(get_layer("SBCAPE*BWD0-500mb*HLCY3000-0m*10^-6") .> 0.1f0)),
       hours        = hours,
       out          = out
@@ -143,7 +186,9 @@ end
 
 
 extra_features = [
-  ("BWD0-500mb", (_, get_layer, out) -> compute_0_500mb_BWD!(get_layer, out)),
+  ("BWD0-500mb",         (_, get_layer, out) -> compute_0_500mb_BWD!(get_layer, out)),
+  ("700-500mbLapseRate", (_, get_layer, out) -> FeatureEngineeringShared.lapse_rate_from_ensemble_mean!(get_layer, out, "700 mb", "500 mb")),
+  ("850-700mbLapseRate", (_, get_layer, out) -> FeatureEngineeringShared.lapse_rate_from_ensemble_mean!(get_layer, out, "850 mb", "700 mb")),
 
   # 0-3km EHI, roughly
   (    "SBCAPE*HLCY3000-0m", (_, get_layer, out) -> out .=       get_layer(sbcape_key)  .* get_layer(helicity3km_key)),
@@ -167,6 +212,32 @@ extra_features = [
   (    "SBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer, out) -> out .= get_layer(    "SBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
   ("sqrtSBCAPE*BWD0-500mb*HLCY3000-0m*(200+SBCIN)", (_, get_layer, out) -> out .= get_layer("sqrtSBCAPE*HLCY3000-0m*(200+SBCIN)") .* get_layer("BWD0-500mb")),
 
+  # SHIP terms
+  # SREF only has SBCAPE, no MUCAPE, so ignoring CAPE
+  # https://www.spc.noaa.gov/exper/mesoanalysis/help/help_sigh.html
+  # [(MUCAPE j/kg) * (Mixing Ratio of MU PARCEL g/kg) * (700-500mb LAPSE RATE c/km) * (-500mb TEMP C) * (0-6km Shear m/s) ] / 42,000,000
+  # "0-6 km shear is confined to a range of 7-27 m s-1, mixing ratio is confined to a range of 11-13.6 g kg-1, and the 500 mb temperature is set to -5.5 C for any warmer values."
+  # ignoring other adjustments
+
+  ("700-500mbLapseRate*BWD0-500mb",               (_, get_layer, out) -> out .= get_layer("BWD0-500mb") .* get_layer("700-500mbLapseRate")),
+  ("700-500mbLapseRate*-Celcius500mb*BWD0-500mb", (_, get_layer, out) -> out .= get_layer("700-500mbLapseRate*BWD0-500mb") .* (273.15f0 .- min.(get_layer(tmp_500mb_key), -5.5f0 + 273.15f0))),
+
+  ("MixingRatio850mb", (_, get_layer, out) -> out .= clamp.(FeatureEngineeringShared.mixing_ratio.(get_layer("DPT:850 mb:hour fcst:wt ens mean"), 850f0), 11f0, 13.6f0)),
+  ("MixingRatio700mb", (_, get_layer, out) -> out .= clamp.(FeatureEngineeringShared.mixing_ratio.(get_layer("DPT:700 mb:hour fcst:wt ens mean"), 700f0), 11f0, 13.6f0)),
+  ("MixingRatio500mb", (_, get_layer, out) -> out .= clamp.(FeatureEngineeringShared.mixing_ratio.(get_layer("DPT:500 mb:hour fcst:wt ens mean"), 500f0), 11f0, 13.6f0)),
+
+  ("MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-500mb", (_, get_layer, out) -> out .= get_layer("700-500mbLapseRate*-Celcius500mb*BWD0-500mb") .* get_layer("MixingRatio850mb")),
+  ("MixingRatio700mb*700-500mbLapseRate*-Celcius500mb*BWD0-500mb", (_, get_layer, out) -> out .= get_layer("700-500mbLapseRate*-Celcius500mb*BWD0-500mb") .* get_layer("MixingRatio700mb")),
+  ("MixingRatio500mb*700-500mbLapseRate*-Celcius500mb*BWD0-500mb", (_, get_layer, out) -> out .= get_layer("700-500mbLapseRate*-Celcius500mb*BWD0-500mb") .* get_layer("MixingRatio500mb")),
+
+  # low level wind fields
+  # Andy Wade's idea
+  ("MaxWind<=850mb", (_, get_layer, out) -> out .= max.(get_layer("WIND:10 m above ground:hour fcst:wt ens mean"), get_layer("WIND:1000 mb:hour fcst:wt ens mean"), get_layer("WIND:850 mb:hour fcst:wt ens mean"))),
+  ("SumWind<=850mb", (_, get_layer, out) -> out .=   .+(get_layer("WIND:10 m above ground:hour fcst:wt ens mean"), get_layer("WIND:1000 mb:hour fcst:wt ens mean"), get_layer("WIND:850 mb:hour fcst:wt ens mean"))),
+  ("MaxWind<=700mb", (_, get_layer, out) -> out .= max.(get_layer("MaxWind<=850mb"), get_layer("WIND:700 mb:hour fcst:wt ens mean"))),
+  ("SumWind<=700mb", (_, get_layer, out) -> out .=   .+(get_layer("SumWind<=850mb"), get_layer("WIND:700 mb:hour fcst:wt ens mean"))),
+
+
   ("Divergence10m*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_divergence_threaded!(grid, out, get_layer("UGRD:10 m above ground:hour fcst:wt ens mean"), get_layer("VGRD:10 m above ground:hour fcst:wt ens mean"))),
 
   # Following SPC Mesoscale analysis page
@@ -177,7 +248,26 @@ extra_features = [
   ("ConvergenceOnly10m*10^5"  , (grid, get_layer, out) -> out .= max.(0f0, 0f0 .- get_layer("Divergence10m*10^5"  ))),
   ("ConvergenceOnly850mb*10^5", (grid, get_layer, out) -> out .= max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5"))),
 
-  ("AbsVorticity10m*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:10 m above ground:hour fcst:wt ens mean"), get_layer("VGRD:10 m above ground:hour fcst:wt ens mean"))),
+  ("AbsVorticity10m*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_abs_vorticity_threaded!(grid, out, get_layer("UGRD:10 m above ground:hour fcst:wt ens mean"), get_layer("VGRD:10 m above ground:hour fcst:wt ens mean"))),
+
+  # Estimating Bunkers Storm motion
+  #
+  # The unusual weighting was chosen by lots of guess and check, trying to match RAP's storm motion. We don't have a lot of wind layers to work with.
+  ("UMEAN", (_, get_layer, out) -> out .= (1/3.03f0) .* (1.5f0 .* get_layer("UGRD:10 m above ground:hour fcst:wt ens mean") .+ 0.5f0 .* get_layer("UGRD:850 mb:hour fcst:wt ens mean") .+ 0.45f0 .* get_layer("UGRD:700 mb:hour fcst:wt ens mean") .+ 0.1f0 .* get_layer("UGRD:600 mb:hour fcst:wt ens mean") .+ 0.75f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean") .+ 0.08f0 .* get_layer("UGRD:300 mb:hour fcst:wt ens mean"))),
+  ("VMEAN", (_, get_layer, out) -> out .= (1/3.03f0) .* (1.5f0 .* get_layer("VGRD:10 m above ground:hour fcst:wt ens mean") .+ 0.5f0 .* get_layer("VGRD:850 mb:hour fcst:wt ens mean") .+ 0.45f0 .* get_layer("VGRD:700 mb:hour fcst:wt ens mean") .+ 0.1f0 .* get_layer("VGRD:600 mb:hour fcst:wt ens mean") .+ 0.75f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean") .+ 0.08f0 .* get_layer("VGRD:300 mb:hour fcst:wt ens mean"))),
+
+  # *Supposed* to be 250m - 5750m shear vector.
+  ("USHEAR", (_, get_layer, out) -> out .= 0.06f0 .* get_layer("UGRD:300 mb:hour fcst:wt ens mean") .+ 0.94f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean") .- 1.07f0 .* (0.6f0 .* get_layer("UGRD:10 m above ground:hour fcst:wt ens mean") .+ 0.4f0 .* get_layer("UGRD:850 mb:hour fcst:wt ens mean"))),
+  ("VSHEAR", (_, get_layer, out) -> out .= 0.06f0 .* get_layer("VGRD:300 mb:hour fcst:wt ens mean") .+ 0.94f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean") .- 1.07f0 .* (0.6f0 .* get_layer("VGRD:10 m above ground:hour fcst:wt ens mean") .+ 0.4f0 .* get_layer("VGRD:850 mb:hour fcst:wt ens mean"))),
+
+  ("SHEAR", (_, get_layer, out) -> out .= sqrt.(get_layer("USHEAR").^2 .+ get_layer("VSHEAR").^2) .+ eps(1f0)),
+
+  # mean + D(shear x k) / |shear|
+  # D = 7.5 m/s
+
+  ("USTM", (_, get_layer, out) -> out .= get_layer("UMEAN") .+ 7.5f0 .* get_layer("VSHEAR") ./ (get_layer("SHEAR") .+ 0.23f0)),
+  ("VSTM", (_, get_layer, out) -> out .= get_layer("VMEAN") .- 7.5f0 .* get_layer("USHEAR") ./ (get_layer("SHEAR") .+ 0.23f0)),
+
 
   # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
   #
@@ -200,9 +290,6 @@ extra_features = [
   ("StormUpstreamDifferentialDivergence250-850mb9hrGatedBySCP", (grid, get_layer, out) -> out .= max.(0f0, storm_upstream_feature_gated_by_SCP!(grid, get_layer, out, "DifferentialDivergence250-850mb*10^5", hours = 9))),
 
   # Low level upstream features. What kind of air is the storm ingesting?
-
-  ("UpstreamSBCAPE1hr",          (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, surface_u_key, surface_v_key, sbcape_key, hours = 1)),
-  ("UpstreamSBCAPE2hr",          (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, surface_u_key, surface_v_key, sbcape_key, hours = 2)),
 
   ("Upstream2mDPT1hr" ,          (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, surface_u_key, surface_v_key, dpt_key   , hours = 1)),
   ("Upstream2mDPT2hr" ,          (grid, get_layer, out) -> upstream_feature!(grid, get_layer, out, surface_u_key, surface_v_key, dpt_key   , hours = 2)),
@@ -272,6 +359,8 @@ end
 common_layers_mean = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_mean.txt"), String), "\n"))
 common_layers_prob = filter(line -> line != "", split(read(open((@__DIR__) * "/common_layers_prob.txt"), String), "\n"))
 
+mean_layers_to_compute_from_prob = []
+
 function reload_forecasts()
   sref_paths =
     if get(ENV, "USE_ALT_DISK", "false") == "true"
@@ -308,7 +397,7 @@ function reload_forecasts()
 
       for forecast_hour in filter(hr -> mod(hr, 3) != 0, 1:39)
 
-        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("SREF", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, grid = grid, forecast_hour = forecast_hour)
+        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("SREF", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, mean_layers_to_compute_from_prob, grid = grid, forecast_hour = forecast_hour)
 
         push!(_forecasts, forecast)
       end
@@ -321,7 +410,7 @@ function reload_forecasts()
 
       for forecast_hour in filter(hr -> mod(hr, 3) == 0, 1:87)
 
-        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("SREF", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, grid = grid, forecast_hour = forecast_hour)
+        forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("SREF", mean_sref_path, prob_sref_path, common_layers_mean, common_layers_prob, mean_layers_to_compute_from_prob, grid = grid, forecast_hour = forecast_hour)
 
         push!(_forecasts, forecast)
       end

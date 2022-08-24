@@ -199,11 +199,11 @@ interaction_terms = [
   ("ConvergenceOnly80m*10^5"  , (grid, get_layer, out) -> out .= max.(0f0, 0f0 .- get_layer("Divergence80m*10^5"  ))),
   ("ConvergenceOnly850mb*10^5", (grid, get_layer, out) -> out .= max.(0f0, 0f0 .- get_layer("Divergence850mb*10^5"))),
 
-  ("AbsVorticity10m*10^5"  , (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:10 m above ground:hour fcst:"), get_layer("VGRD:10 m above ground:hour fcst:"))),
-  ("AbsVorticity80m*10^5"  , (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:80 m above ground:hour fcst:"), get_layer("VGRD:80 m above ground:hour fcst:"))),
-  ("AbsVorticity850mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:850 mb:hour fcst:"           ), get_layer("VGRD:850 mb:hour fcst:"           ))),
-  ("AbsVorticity500mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:500 mb:hour fcst:"           ), get_layer("VGRD:500 mb:hour fcst:"           ))),
-  ("AbsVorticity250mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_vorticity_threaded!(grid, out, get_layer("UGRD:250 mb:hour fcst:"           ), get_layer("VGRD:250 mb:hour fcst:"           ))),
+  ("AbsVorticity10m*10^5"  , (grid, get_layer, out) -> FeatureEngineeringShared.compute_abs_vorticity_threaded!(grid, out, get_layer("UGRD:10 m above ground:hour fcst:"), get_layer("VGRD:10 m above ground:hour fcst:"))),
+  ("AbsVorticity80m*10^5"  , (grid, get_layer, out) -> FeatureEngineeringShared.compute_abs_vorticity_threaded!(grid, out, get_layer("UGRD:80 m above ground:hour fcst:"), get_layer("VGRD:80 m above ground:hour fcst:"))),
+  ("AbsVorticity850mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_abs_vorticity_threaded!(grid, out, get_layer("UGRD:850 mb:hour fcst:"           ), get_layer("VGRD:850 mb:hour fcst:"           ))),
+  ("AbsVorticity500mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_abs_vorticity_threaded!(grid, out, get_layer("UGRD:500 mb:hour fcst:"           ), get_layer("VGRD:500 mb:hour fcst:"           ))),
+  ("AbsVorticity250mb*10^5", (grid, get_layer, out) -> FeatureEngineeringShared.compute_abs_vorticity_threaded!(grid, out, get_layer("UGRD:250 mb:hour fcst:"           ), get_layer("VGRD:250 mb:hour fcst:"           ))),
 
   # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
   #

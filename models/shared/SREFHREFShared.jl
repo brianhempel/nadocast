@@ -5,13 +5,38 @@ import Forecasts
 import Grib2
 import Inventories
 
+# prob layers must be in reverse order: least probable first (i.e. furthest from 0 first)
+# prob layers are 0-100 (not 0-1)
+# layers must be 100% prob for a val of 0
+function convert_probs_to_mean(prob_layers)
+  out = Vector{Float32}(undef, length(prob_layers[1][1]))
+
+  # @inbounds Threads.@threads for i in 1:length(out)
+  Threads.@threads for i in 1:length(out)
+    out_x     = 0f0
+    last_prob = 0f0
+    for (layer_probs, x) in prob_layers
+      weight = layer_probs[i] - last_prob
+      out_x += weight * x
+      last_prob = layer_probs[i]
+    end
+    # Implicit final prob of 100% at x = 0
+    # weight = 100f0 - last_prob
+    # out_x += weight * 0
+    out[i] = out_x * 0.01f0 # probs were 0-100
+  end
+
+  out
+end
+
 
 function mean_prob_grib2s_to_forecast(
             href_or_sref_str,
             mean_grib2_path,
             prob_grib2_path,
             common_layers_mean, # List of layer keys
-            common_layers_prob; # List of layer keys
+            common_layers_prob, # List of layer keys
+            mean_layers_to_compute_from_prob; # List of lists of (layer key, threshold)
             forecast_hour = nothing,
             grid
           ) :: Forecasts.Forecast
@@ -28,6 +53,15 @@ function mean_prob_grib2s_to_forecast(
     forecast_hour      = parse(Int64, forecast_hour_str)
   end
 
+  layer_key_to_inventory_line(key, inventory, inventory_line_keys) = begin
+    i = findfirst(isequal(key), inventory_line_keys)
+    if !isnothing(i)
+      inventory[i]
+    else
+      throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in layers: $inventory")
+    end
+  end
+
   get_inventory() = begin
     # Somewhat inefficient that each hour must trigger wgrib2 on the same file...could add another layer of caching here.
     mean_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(mean_grib2_path))
@@ -36,39 +70,69 @@ function mean_prob_grib2s_to_forecast(
     mean_inventory_line_keys = Inventories.inventory_line_key.(mean_inventory) # avoid n^2 nasty allocs by precomputing this
     prob_inventory_line_keys = Inventories.inventory_line_key.(prob_inventory) # avoid n^2 nasty allocs by precomputing this
 
-    mean_layer_key_to_inventory_line(key) = begin
-      i = findfirst(isequal(key), mean_inventory_line_keys)
-      if !isnothing(i)
-        mean_inventory[i]
-      else
-        throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in mean layers: $mean_inventory")
-      end
+    mean_inventory_to_use = map(key -> layer_key_to_inventory_line(key, mean_inventory, mean_inventory_line_keys), common_layers_mean)
+    prob_inventory_to_use = map(key -> layer_key_to_inventory_line(key, prob_inventory, prob_inventory_line_keys), common_layers_prob)
+
+    mean_layers_computed_from_prob_inventory = map(mean_layers_to_compute_from_prob) do (keys_and_thresholds)
+      line_key, _ = keys_and_thresholds[1]
+      abbrev, level = split(line_key, ":")
+      Inventories.InventoryLine(
+        "", # message_dot_submessage
+        "", # position_str
+        "", # date_str, who cares
+        abbrev, # abbrev
+        level, # level
+        "$forecast_hour hour fcst", # forecast_hour_str
+        "estimated from probs", # misc
+        "" # feature_engineering
+      )
     end
 
-    prob_layer_key_to_inventory_line(key) = begin
-      i = findfirst(isequal(key), prob_inventory_line_keys)
-      if !isnothing(i)
-        prob_inventory[i]
-      else
-        throw("$href_or_sref_str forecast $(Forecasts.time_title(run_year, run_month, run_day, run_hour, forecast_hour)) does not have $key in prob layers: $prob_inventory")
-      end
-    end
-
-    mean_inventory_to_use = map(mean_layer_key_to_inventory_line, common_layers_mean)
-    prob_inventory_to_use = map(prob_layer_key_to_inventory_line, common_layers_prob)
-
-    vcat(mean_inventory_to_use, prob_inventory_to_use)
+    vcat(mean_inventory_to_use, prob_inventory_to_use, mean_layers_computed_from_prob_inventory)
   end
 
   get_data() = begin
-    inventory = get_inventory()
-    mean_inventory = collect(Iterators.take(inventory, length(common_layers_mean)))
-    prob_inventory = collect(Iterators.drop(inventory, length(common_layers_mean)))
+    # Somewhat inefficient that each hour must trigger wgrib2 on the same file...could add another layer of caching here.
+    mean_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(mean_grib2_path))
+    prob_inventory = filter(line -> forecast_hour == Inventories.forecast_hour(line), Grib2.read_inventory(prob_grib2_path))
 
-    mean_data = Grib2.read_layers_data_raw(mean_grib2_path, mean_inventory, crop_downsample_grid = grid)
-    prob_data = Grib2.read_layers_data_raw(prob_grib2_path, prob_inventory, crop_downsample_grid = grid)
+    mean_inventory_line_keys = Inventories.inventory_line_key.(mean_inventory) # avoid n^2 nasty allocs by precomputing this
+    prob_inventory_line_keys = Inventories.inventory_line_key.(prob_inventory) # avoid n^2 nasty allocs by precomputing this
 
-    hcat(mean_data, prob_data)
+    mean_inventory_to_use = map(key -> layer_key_to_inventory_line(key, mean_inventory, mean_inventory_line_keys), common_layers_mean)
+    prob_inventory_to_use = map(key -> layer_key_to_inventory_line(key, prob_inventory, prob_inventory_line_keys), common_layers_prob)
+
+    keys_needed_for_computing_means = unique(Iterators.flatten(map(keys_and_thresholds -> map(first, keys_and_thresholds), mean_layers_to_compute_from_prob)))
+
+    extra_inventory_and_keys_needed_to_compute_means = filter(collect(zip(prob_inventory, prob_inventory_line_keys))) do (_inv_line, line_key)
+      (line_key in keys_needed_for_computing_means) &&
+      !(line_key in common_layers_prob)
+    end
+
+    extra_inventory_needed_to_compute_means = map(first, extra_inventory_and_keys_needed_to_compute_means)
+    extra_keys_needed_to_compute_means      = map(last,  extra_inventory_and_keys_needed_to_compute_means)
+
+    prob_inventory_needed           = vcat(prob_inventory_to_use, extra_inventory_needed_to_compute_means)
+    prob_inventory_needed_line_keys = vcat(common_layers_prob,    extra_keys_needed_to_compute_means)
+
+    mean_data = Grib2.read_layers_data_raw(mean_grib2_path, mean_inventory_to_use, crop_downsample_grid = grid)
+    prob_data = Grib2.read_layers_data_raw(prob_grib2_path, prob_inventory_needed, crop_downsample_grid = grid)
+
+    compact(arr) = filter(x -> !isnothing(x), arr)
+
+    mean_data_from_prob = map(mean_layers_to_compute_from_prob) do keys_and_thresholds
+      prob_layers = map(keys_and_thresholds) do (line_key, threshold)
+        i = findfirst(isequal(line_key), prob_inventory_needed_line_keys)
+        if !isnothing(i)
+          ((@view prob_data[:, i]), threshold)
+        else
+          nothing
+        end
+      end
+      convert_probs_to_mean(compact(prob_layers))
+    end
+
+    hcat(mean_data, (@view prob_data[:, 1:length(prob_inventory_to_use)]), mean_data_from_prob...)
   end
 
   preload_paths = [mean_grib2_path, prob_grib2_path]

@@ -114,12 +114,12 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
     new_inventory = Inventories.InventoryLine[]
 
     new_features_pre_lines =
-      map(new_features_pre) do feature_name_and_compute_function
+      map(new_features_pre) do (feature_name, _compute_feature)
         Inventories.InventoryLine(
           "",                                   # message_dot_submessage
           "",                                   # position_str
           base_inventory[1].date_str,
-          feature_name_and_compute_function[1], # abbrev
+          feature_name, # abbrev
           "calculated",                         # level
           "hour fcst",                          # forecast_hour_str
           "",                                   # misc
@@ -270,7 +270,7 @@ end
 function compute_directional_is!(
     height, width,
     point_heights_miles, point_widths_miles,
-    mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
+    us, vs,
     twenty_five_mi_forward_is, twenty_five_mi_backward_is, twenty_five_mi_leftward_is, twenty_five_mi_rightward_is,
     fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
     hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
@@ -279,7 +279,7 @@ function compute_directional_is!(
     @inbounds for i in 1:width
       flat_i = width*(j-1) + i
 
-      relative_u, relative_v = uv_normalize(mean_wind_lower_half_atmosphere_us[flat_i], mean_wind_lower_half_atmosphere_vs[flat_i])
+      relative_u, relative_v = uv_normalize(us[flat_i], vs[flat_i])
 
       point_height = Float32(point_heights_miles[flat_i])
       point_width  = Float32(point_widths_miles[flat_i]) # On the SREF grid, point_width and point_height are always nearly equal, <1.0% difference.
@@ -364,25 +364,37 @@ function compute_gradient!(out, out_feature_i, mean_feature_i, forward_is, backw
 end
 
 # Mutates out
-function rotate_and_perhaps_center_uv_layers!(out, u_i, v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, should_center)
-  if should_center
-    @inbounds for i in 1:size(out,1)
-      u = out[i, u_i] - mean_wind_lower_half_atmosphere_us[i]
-      v = out[i, v_i] - mean_wind_lower_half_atmosphere_vs[i]
-      out[i, u_i] = u * rot_coses[i] - v * rot_sines[i]
-      out[i, v_i] = u * rot_sines[i] + v * rot_coses[i]
-    end
-  else
-    @inbounds for i in 1:size(out,1)
-      u = out[i, u_i]
-      v = out[i, v_i]
-      out[i, u_i] = u * rot_coses[i] - v * rot_sines[i]
-      out[i, v_i] = u * rot_sines[i] + v * rot_coses[i]
-    end
+function rotate_uv_layers!(out, u_i, v_i, rot_coses, rot_sines)
+  @inbounds for i in 1:size(out,1)
+    u = out[i, u_i]
+    v = out[i, v_i]
+    out[i, u_i] = u * rot_coses[i] - v * rot_sines[i]
+    out[i, v_i] = u * rot_sines[i] + v * rot_coses[i]
   end
 
   ()
 end
+
+# Mutates out
+# function rotate_and_perhaps_center_uv_layers!(out, u_i, v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, should_center)
+#   if should_center
+#     @inbounds for i in 1:size(out,1)
+#       u = out[i, u_i] - mean_wind_lower_half_atmosphere_us[i]
+#       v = out[i, v_i] - mean_wind_lower_half_atmosphere_vs[i]
+#       out[i, u_i] = u * rot_coses[i] - v * rot_sines[i]
+#       out[i, v_i] = u * rot_sines[i] + v * rot_coses[i]
+#     end
+#   else
+#     @inbounds for i in 1:size(out,1)
+#       u = out[i, u_i]
+#       v = out[i, v_i]
+#       out[i, u_i] = u * rot_coses[i] - v * rot_sines[i]
+#       out[i, v_i] = u * rot_sines[i] + v * rot_coses[i]
+#     end
+#   end
+
+#   ()
+# end
 
 
 
@@ -392,8 +404,22 @@ function get_feature_i(inventory, feature_key)
   end
 end
 
-function feature_key_to_interaction_feature_name(feature_key)
-  replace(feature_key, r"[: ]" => "")
+
+function lapse_rate_from_ensemble_mean!(get_layer, out, lo_key, hi_key)
+  lo_layer_tmp = get_layer("TMP:$(lo_key):hour fcst:wt ens mean")
+  hi_layer_tmp = get_layer("TMP:$(hi_key):hour fcst:wt ens mean")
+  lo_layer_hgt = get_layer("HGT:$(lo_key):hour fcst:wt ens mean")
+  hi_layer_hgt = get_layer("HGT:$(hi_key):hour fcst:wt ens mean")
+  out .= (lo_layer_tmp .- hi_layer_tmp) ./ ((hi_layer_hgt .- lo_layer_hgt .+ eps(1f0)) .* 0.001f0)
+end
+
+# Formulas from mixing ratio calculator, by Tim Brice and Todd Hall
+# https://www.weather.gov/epz/wxcalc_mixingratio
+function mixing_ratio(dpt_K, mb)
+  dpt_C    = dpt_K - 273.15f0
+  vap_pres = 6.11f0 * 10f0^(7.5f0*dpt_C / (237.7f0 + dpt_C))
+  out = 621.97f0 * vap_pres/(mb - vap_pres)
+  isnan(out) ? 0f0 : out
 end
 
 function compute_divergence_threaded!(grid, out, u_data, v_data)
@@ -435,7 +461,7 @@ function compute_divergence_threaded!(grid, out, u_data, v_data)
   ()
 end
 
-function compute_vorticity_threaded!(grid, out, u_data, v_data)
+function compute_abs_vorticity_threaded!(grid, out, u_data, v_data)
   @assert length(grid.point_widths_miles) == length(out)
   @assert length(grid.point_widths_miles) == length(u_data)
   @assert length(grid.point_widths_miles) == length(v_data)
@@ -459,7 +485,7 @@ function compute_vorticity_threaded!(grid, out, u_data, v_data)
         (v_data[flat_i + 1]     - v_data[flat_i - 1])     / Float32(dx) +
         (u_data[flat_i + width] - u_data[flat_i - width]) / Float32(dy)
 
-      out[flat_i] = vorticity * 100_000f0
+      out[flat_i] = abs(vorticity * 100_000f0)
     end
 
     # West/East edges, copy the neighbor.
@@ -476,6 +502,45 @@ function compute_vorticity_threaded!(grid, out, u_data, v_data)
   ()
 end
 
+
+# Let's estimate supercell likelihood to try not to miss events like Kansas 2019-5-17
+#
+# Reports:    https://www.spc.noaa.gov/climo/reports/190517_rpts.html
+# Prediction: https://twitter.com/nadocast/status/1129390878269874176
+#
+# Algorithm to estimate initial forcing:
+#
+# 1. If SCP > 0, follow the bunkers storm motion upstream until SCP < 0.
+# 2. Walk upstream one more hour. Now we've reached (presumably) the initiation zone.
+# 3. Begin walking forwards. Sum up convergence. Continue walking/summing for 2 at least hours, continue until convergence <= 2.
+# 4. The above mechanism estimates the amount of initiation forcing.
+#
+# Other considerations:
+# 1. Abort and return 0 if the max SCP along the path < 1.
+# 2. Abort and return 0 if we hit the edge.
+#
+# Actually maybe should just do 3-hour and 6-hour and 9-hour upstream convergence sum, gated by SCP > 1 + 1 hour.
+
+function compute_upstream_mean(j_float :: Float32, i_float :: Float32, n_steps :: Int64, width, height, u_steps, v_steps, feature_data)
+  value   = 0f0
+  weight  = 0.00001f0
+
+  @inbounds for _ in 1:n_steps
+    j_closest = clamp(Int64(round(j_float)), 1, height)
+    i_closest = clamp(Int64(round(i_float)), 1, width)
+    flat_i_closest = width*(j_closest-1) + i_closest
+
+    value  += feature_data[flat_i_closest]
+    weight += 1f0
+
+    j_float -= v_steps[flat_i_closest]
+    i_float -= u_steps[flat_i_closest]
+  end
+
+  value / weight
+end
+
+
 # Follow wind vectors upstream so many hours and compute an average of the given feature.
 #
 # No interpolation along the way.
@@ -491,33 +556,15 @@ function compute_upstream_mean_threaded(; grid, u_data, v_data, feature_data, ho
   width  = grid.width
   height = grid.height
 
+  u_steps = Float32(step_size) .* u_data ./ Float32.(grid.point_widths_miles  .* GeoUtils.METERS_PER_MILE)
+  v_steps = Float32(step_size) .* v_data ./ Float32.(grid.point_heights_miles .* GeoUtils.METERS_PER_MILE)
+
+  n_steps = 1 + hours*60*60÷step_size
+
   Threads.@threads for j in 1:height
     for i in 1:width
-      j_float = j
-      i_float = i
-      value   = 0f0
-      weight  = 0.00001f0
-      seconds = 0f0
-
-      @inbounds while true
-        j_closest = clamp(Int64(round(j_float)), 1, height)
-        i_closest = clamp(Int64(round(i_float)), 1, width)
-        flat_i_closest = width*(j_closest-1) + i_closest
-
-        value  += feature_data[flat_i_closest]
-        weight += 1f0
-
-        seconds += step_size
-
-        if seconds > hours*60*60
-          break
-        end
-
-        j_float -= step_size * v_data[flat_i_closest] / Float32(grid.point_heights_miles[flat_i_closest] * GeoUtils.METERS_PER_MILE)
-        i_float -= step_size * u_data[flat_i_closest] / Float32(grid.point_widths_miles[flat_i_closest]  * GeoUtils.METERS_PER_MILE)
-      end
-
-      out[width*(j-1) + i] = value / weight
+      flat_i = width*(j-1) + i
+      out[flat_i] = compute_upstream_mean(Float32(j), Float32(i), n_steps, width, height, u_steps, v_steps, feature_data)
     end
   end
 
@@ -545,6 +592,9 @@ function meanify_threaded2(grid, feature_data, mean_is2)
   out         = zeros(Float32, size(feature_data))
   row_cumsums = Array{Float64}(undef, (grid.width+1, grid.height))
 
+  @assert (grid.width * grid.height) == length(feature_data)
+  @assert length(mean_is2) == length(feature_data)
+
   width = grid.width
 
   Threads.@threads for j in 1:grid.height
@@ -553,8 +603,7 @@ function meanify_threaded2(grid, feature_data, mean_is2)
     row_sum = 0.0
     row_cumsums[1,j] = row_sum
 
-    # @inbounds
-    for i in 1:width
+    @inbounds for i in 1:width
       flat_i = row_offset + i
       row_sum += Float64(feature_data[flat_i])
       row_cumsums[i+1,j] = row_sum
@@ -565,8 +614,7 @@ function meanify_threaded2(grid, feature_data, mean_is2)
     val = 0f0
     len = 0f0
 
-    # @inbounds
-    for (row, range) in mean_is2[grid_i]
+    @inbounds for (row, range) in mean_is2[grid_i]
       val += Float32(row_cumsums[range.stop+1, row] - row_cumsums[range.start, row])
       len += length(range)
     end
@@ -728,69 +776,10 @@ function make_data(
   end
 
 
+  # Assume storm motion is in new_features_pre
 
-  # Make 0-5500m(ish) mean wind.
-
-  mean_wind_lower_half_atmosphere_us = Array{Float32}(undef, grid_point_count)
-  mean_wind_lower_half_atmosphere_vs = Array{Float32}(undef, grid_point_count)
-
-  total_weight = 0.0f0
-
-  # Not density weighted. Not even reasonably weighted lol.
-
-  if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
-    # SREF
-    mean_wind_lower_half_atmosphere_us .= get_layer("UGRD:10 m above ground:hour fcst:wt ens mean")
-    mean_wind_lower_half_atmosphere_vs .= get_layer("VGRD:10 m above ground:hour fcst:wt ens mean")
-    total_weight += 1.0f0
-  elseif "GRD:10 m above ground:hour fcst:" in vector_wind_layers
-    # RAP, HRRR
-    mean_wind_lower_half_atmosphere_us .= get_layer("UGRD:10 m above ground:hour fcst:")
-    mean_wind_lower_half_atmosphere_vs .= get_layer("VGRD:10 m above ground:hour fcst:")
-    total_weight += 1.0f0
-  else
-    # HREF
-    fill!(mean_wind_lower_half_atmosphere_us, 0.0f0)
-    fill!(mean_wind_lower_half_atmosphere_vs, 0.0f0)
-  end
-
-  for mb in 950:-25:500
-    if "GRD:$mb mb:hour fcst:wt ens mean" in vector_wind_layers
-      # HREF/SREF
-      mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:wt ens mean")
-      mean_wind_lower_half_atmosphere_vs .+= get_layer("VGRD:$mb mb:hour fcst:wt ens mean")
-      total_weight += 1.0f0
-    elseif "GRD:$mb mb:hour fcst:" in vector_wind_layers
-      # RAP, HRRR
-      mean_wind_lower_half_atmosphere_us .+= get_layer("UGRD:$mb mb:hour fcst:")
-      mean_wind_lower_half_atmosphere_vs .+= get_layer("VGRD:$mb mb:hour fcst:")
-      total_weight += 1.0f0
-    elseif mb == 600
-      # HRRR/HREF don't have 600mb.
-      # And the HRRR/HREF levels (surface, 925mb, 850mb, 700mb, 500mb) are likely too biased towards the lower atmosphere.
-      # Estimate 600mb winds into the mix.
-      if "GRD:700 mb:hour fcst:wt ens mean" in vector_wind_layers
-        # HREF
-        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:700 mb:hour fcst:wt ens mean")
-        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:700 mb:hour fcst:wt ens mean")
-        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean")
-        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean")
-        total_weight += 1.0f0
-      else
-        # HRRR
-        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:700 mb:hour fcst:")
-        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:700 mb:hour fcst:")
-        mean_wind_lower_half_atmosphere_us .+= 0.5f0 .* get_layer("UGRD:500 mb:hour fcst:")
-        mean_wind_lower_half_atmosphere_vs .+= 0.5f0 .* get_layer("VGRD:500 mb:hour fcst:")
-        total_weight += 1.0f0
-      end
-    end
-  end
-
-  mean_wind_lower_half_atmosphere_us *= 1f0 / total_weight
-  mean_wind_lower_half_atmosphere_vs *= 1f0 / total_weight
-
-
+  storm_motion_us = get_layer("USTM")[:]
+  storm_motion_vs = get_layer("VSTM")[:]
 
   # Compute several "convolution" kernels by sampling the mean layers.
 
@@ -841,7 +830,8 @@ function make_data(
   compute_directional_is!(
       height, width,
       grid.point_heights_miles, grid.point_widths_miles,
-      mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
+      # mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
+      storm_motion_us, storm_motion_vs,
       twenty_five_mi_forward_is, twenty_five_mi_backward_is, twenty_five_mi_leftward_is, twenty_five_mi_rightward_is,
       fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
       hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
@@ -937,81 +927,15 @@ function make_data(
     end
   end
 
-  # Let's estimate supercell likelihood to try not to miss events like Kansas 2019-5-17
-  #
-  # Reports:    https://www.spc.noaa.gov/climo/reports/190517_rpts.html
-  # Prediction: https://twitter.com/nadocast/status/1129390878269874176
-  #
-  # Algorithm to estimate initial forcing:
-  #
-  # 1. If SCP > 0, follow the bunkers storm motion upstream until SCP < 0.
-  # 2. Walk upstream one more hour. Now we've reached (presumably) the initiation zone.
-  # 3. Begin walking forwards. Sum up convergence. Continue walking/summing for 2 at least hours, continue until convergence <= 2.
-  # 4. The above mechanism estimates the amount of initiation forcing.
-  #
-  # Other considerations:
-  # 1. Abort and return 0 if the max SCP along the path < 1.
-  # 2. Abort and return 0 if we hit the edge.
-  #
-  # Actually maybe should just do 3-hour and 6-hour and 9-hour upstream convergence sum, gated by SCP > 1 + 1 hour.
+  storm_motion_angles = atan.(storm_motion_vs, storm_motion_us)
 
-
-
-  # Make ~500m - ~5000m shear vector relative to which we will rotate the winds
-  # Actually the angle for Bunkers motion deviation is 0-500m mean wind (~250m) to 5.5-6km mean wind (~5750m).
-
-  if "GRD:10 m above ground:hour fcst:wt ens mean" in vector_wind_layers
-    # SREF
-    mean_wind_lower_atmosphere_us  = 0.5f0 .* (get_layer("UGRD:10 m above ground:hour fcst:wt ens mean") .+ get_layer("UGRD:850 mb:hour fcst:wt ens mean"))
-    mean_wind_lower_atmosphere_vs  = 0.5f0 .* (get_layer("VGRD:10 m above ground:hour fcst:wt ens mean") .+ get_layer("VGRD:850 mb:hour fcst:wt ens mean"))
-    mean_wind_middle_atmosphere_us = 0.5f0 .* (get_layer("UGRD:600 mb:hour fcst:wt ens mean")            .+ get_layer("UGRD:500 mb:hour fcst:wt ens mean"))
-    mean_wind_middle_atmosphere_vs = 0.5f0 .* (get_layer("VGRD:600 mb:hour fcst:wt ens mean")            .+ get_layer("VGRD:500 mb:hour fcst:wt ens mean"))
-  elseif "GRD:925 mb:hour fcst:wt ens mean" in vector_wind_layers
-    # HREF
-    mean_wind_lower_atmosphere_us  = 0.75f0 .* get_layer("UGRD:925 mb:hour fcst:wt ens mean")  .+  0.25f0 .* get_layer("UGRD:850 mb:hour fcst:wt ens mean")
-    mean_wind_lower_atmosphere_vs  = 0.75f0 .* get_layer("VGRD:925 mb:hour fcst:wt ens mean")  .+  0.25f0 .* get_layer("VGRD:850 mb:hour fcst:wt ens mean")
-    mean_wind_middle_atmosphere_us = 0.25f0 .* get_layer("UGRD:700 mb:hour fcst:wt ens mean")  .+  0.75f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean")
-    mean_wind_middle_atmosphere_vs = 0.25f0 .* get_layer("VGRD:700 mb:hour fcst:wt ens mean")  .+  0.75f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean")
-  elseif "GRD:950 mb:hour fcst:" in vector_wind_layers
-    # RAP
-    mean_wind_lower_atmosphere_us  = 0.5f0 .* (get_layer("UGRD:80 m above ground:hour fcst:") .+ get_layer("UGRD:950 mb:hour fcst:"))
-    mean_wind_lower_atmosphere_vs  = 0.5f0 .* (get_layer("VGRD:80 m above ground:hour fcst:") .+ get_layer("VGRD:950 mb:hour fcst:"))
-    mean_wind_middle_atmosphere_us = 0.5f0 .* (get_layer("UGRD:600 mb:hour fcst:")            .+ get_layer("UGRD:500 mb:hour fcst:"))
-    mean_wind_middle_atmosphere_vs = 0.5f0 .* (get_layer("VGRD:600 mb:hour fcst:")            .+ get_layer("VGRD:500 mb:hour fcst:"))
-  else
-    # HRRR
-    mean_wind_lower_atmosphere_us  = 0.5f0 .* (get_layer("UGRD:80 m above ground:hour fcst:") .+ get_layer("UGRD:925 mb:hour fcst:"))
-    mean_wind_lower_atmosphere_vs  = 0.5f0 .* (get_layer("VGRD:80 m above ground:hour fcst:") .+ get_layer("VGRD:925 mb:hour fcst:"))
-    mean_wind_middle_atmosphere_us = 0.25f0 .* get_layer("UGRD:700 mb:hour fcst:")  .+  0.75f0 .* get_layer("UGRD:500 mb:hour fcst:")
-    mean_wind_middle_atmosphere_vs = 0.25f0 .* get_layer("VGRD:700 mb:hour fcst:")  .+  0.75f0 .* get_layer("VGRD:500 mb:hour fcst:")
-  end
-
-  mean_wind_angles = atan.(mean_wind_middle_atmosphere_vs .- mean_wind_lower_atmosphere_vs, mean_wind_middle_atmosphere_us .- mean_wind_lower_atmosphere_us)
-
-  if any(isnan, mean_wind_angles)
+  if any(isnan, storm_motion_angles)
     error("nan wind angle")
   end
 
-  rot_coses = cos.(-mean_wind_angles)
-  rot_sines = sin.(-mean_wind_angles)
+  rot_coses = cos.(-storm_motion_angles)
+  rot_sines = sin.(-storm_motion_angles)
 
-
-  # Center wind vectors around 0-6km(ish) mean wind
-  # Rotate winds to align to the ~500m - ~5500m shear vector (inspired by Bunker's storm motion, which we are not calculating yet)
-
-  # Save some allocations by using a pre-existing scratch_us and scratch_vs
-  # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, u_i, v_i, should_center) = begin
-  #   if should_center
-  #     scratch_us[:] = (@view out[:, u_i]) .- mean_wind_lower_half_atmosphere_us
-  #     scratch_vs[:] = (@view out[:, v_i]) .- mean_wind_lower_half_atmosphere_vs
-  #   else
-  #     scratch_us[:] = @view out[:, u_i] # Don't use @view because u and v are each used in the calculation of the other
-  #     scratch_vs[:] = @view out[:, v_i]
-  #   end
-
-  #   out[:, u_i] .= (scratch_us .* rot_coses) .- (scratch_vs .* rot_sines)
-  #   out[:, v_i] .= (scratch_us .* rot_sines) .+ (scratch_vs .* rot_coses)
-  # end
 
   Threads.@threads for wind_layer_key in vector_wind_layers
   # for wind_layer_key in vector_wind_layers
@@ -1026,100 +950,83 @@ function make_data(
       layer_key_v = "V" * wind_layer_key
     end
 
-    # Center the non-gradient layers (gradients are relativized already)
     # And rotate everrrryything.
 
     raw_layer_u_i = feature_key_to_i[layer_key_u]
     raw_layer_v_i = feature_key_to_i[layer_key_v]
 
-    # scratch_us = Array{Float32}(undef, grid_point_count)
-    # scratch_vs = Array{Float32}(undef, grid_point_count)
-
-    # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, raw_layer_u_i, raw_layer_v_i, true)
-    rotate_and_perhaps_center_uv_layers!(out, raw_layer_u_i, raw_layer_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, true)
+    rotate_uv_layers!(out, raw_layer_u_i, raw_layer_v_i, rot_coses, rot_sines)
 
     if twenty_five_mi_mean_block in layer_blocks_to_make
       twenty_five_mi_mean_u_i = raw_layer_u_i + twenty_five_mi_mean_features_range.start - 1
       twenty_five_mi_mean_v_i = raw_layer_v_i + twenty_five_mi_mean_features_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_mean_u_i, twenty_five_mi_mean_v_i, true)
-      rotate_and_perhaps_center_uv_layers!(out, twenty_five_mi_mean_u_i, twenty_five_mi_mean_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, true)
+      rotate_uv_layers!(out, twenty_five_mi_mean_u_i, twenty_five_mi_mean_v_i, rot_coses, rot_sines)
     end
 
     if fifty_mi_mean_block in layer_blocks_to_make
       fifty_mi_mean_u_i = raw_layer_u_i + fifty_mi_mean_features_range.start - 1
       fifty_mi_mean_v_i = raw_layer_v_i + fifty_mi_mean_features_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_mean_u_i, fifty_mi_mean_v_i, true)
-      rotate_and_perhaps_center_uv_layers!(out, fifty_mi_mean_u_i, fifty_mi_mean_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, true)
+      rotate_uv_layers!(out, fifty_mi_mean_u_i, fifty_mi_mean_v_i, rot_coses, rot_sines)
     end
 
     if hundred_mi_mean_block in layer_blocks_to_make
       hundred_mi_mean_u_i = raw_layer_u_i + hundred_mi_mean_features_range.start - 1
       hundred_mi_mean_v_i = raw_layer_v_i + hundred_mi_mean_features_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_mean_u_i, hundred_mi_mean_v_i, true)
-      rotate_and_perhaps_center_uv_layers!(out, hundred_mi_mean_u_i, hundred_mi_mean_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, true)
+      rotate_uv_layers!(out, hundred_mi_mean_u_i, hundred_mi_mean_v_i, rot_coses, rot_sines)
     end
 
     if twenty_five_mi_forward_gradient_block in layer_blocks_to_make
       twenty_five_mi_forward_gradient_u_i = raw_layer_u_i + twenty_five_mi_forward_gradient_range.start - 1
       twenty_five_mi_forward_gradient_v_i = raw_layer_v_i + twenty_five_mi_forward_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_forward_gradient_u_i, twenty_five_mi_forward_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, twenty_five_mi_forward_gradient_u_i, twenty_five_mi_forward_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, twenty_five_mi_forward_gradient_u_i, twenty_five_mi_forward_gradient_v_i, rot_coses, rot_sines)
     end
 
     if twenty_five_mi_leftward_gradient_block in layer_blocks_to_make
       twenty_five_mi_leftward_gradient_u_i = raw_layer_u_i + twenty_five_mi_leftward_gradient_range.start - 1
       twenty_five_mi_leftward_gradient_v_i = raw_layer_v_i + twenty_five_mi_leftward_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_leftward_gradient_u_i, twenty_five_mi_leftward_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, twenty_five_mi_leftward_gradient_u_i, twenty_five_mi_leftward_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, twenty_five_mi_leftward_gradient_u_i, twenty_five_mi_leftward_gradient_v_i, rot_coses, rot_sines)
     end
 
     if twenty_five_mi_linestraddling_gradient_block in layer_blocks_to_make
       twenty_five_mi_linestraddling_gradient_u_i = raw_layer_u_i + twenty_five_mi_linestraddling_gradient_range.start - 1
       twenty_five_mi_linestraddling_gradient_v_i = raw_layer_v_i + twenty_five_mi_linestraddling_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, twenty_five_mi_linestraddling_gradient_u_i, twenty_five_mi_linestraddling_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, twenty_five_mi_linestraddling_gradient_u_i, twenty_five_mi_linestraddling_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, twenty_five_mi_linestraddling_gradient_u_i, twenty_five_mi_linestraddling_gradient_v_i, rot_coses, rot_sines)
     end
 
     if fifty_mi_forward_gradient_block in layer_blocks_to_make
       fifty_mi_forward_gradient_u_i = raw_layer_u_i + fifty_mi_forward_gradient_range.start - 1
       fifty_mi_forward_gradient_v_i = raw_layer_v_i + fifty_mi_forward_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_forward_gradient_u_i, fifty_mi_forward_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, fifty_mi_forward_gradient_u_i, fifty_mi_forward_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, fifty_mi_forward_gradient_u_i, fifty_mi_forward_gradient_v_i, rot_coses, rot_sines)
     end
 
     if fifty_mi_leftward_gradient_block in layer_blocks_to_make
       fifty_mi_leftward_gradient_u_i = raw_layer_u_i + fifty_mi_leftward_gradient_range.start - 1
       fifty_mi_leftward_gradient_v_i = raw_layer_v_i + fifty_mi_leftward_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_leftward_gradient_u_i, fifty_mi_leftward_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, fifty_mi_leftward_gradient_u_i, fifty_mi_leftward_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, fifty_mi_leftward_gradient_u_i, fifty_mi_leftward_gradient_v_i, rot_coses, rot_sines)
     end
 
     if fifty_mi_linestraddling_gradient_block in layer_blocks_to_make
       fifty_mi_linestraddling_gradient_u_i = raw_layer_u_i + fifty_mi_linestraddling_gradient_range.start - 1
       fifty_mi_linestraddling_gradient_v_i = raw_layer_v_i + fifty_mi_linestraddling_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, fifty_mi_linestraddling_gradient_u_i, fifty_mi_linestraddling_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, fifty_mi_linestraddling_gradient_u_i, fifty_mi_linestraddling_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, fifty_mi_linestraddling_gradient_u_i, fifty_mi_linestraddling_gradient_v_i, rot_coses, rot_sines)
     end
 
     if hundred_mi_forward_gradient_block in layer_blocks_to_make
       hundred_mi_forward_gradient_u_i = raw_layer_u_i + hundred_mi_forward_gradient_range.start - 1
       hundred_mi_forward_gradient_v_i = raw_layer_v_i + hundred_mi_forward_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_forward_gradient_u_i, hundred_mi_forward_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, hundred_mi_forward_gradient_u_i, hundred_mi_forward_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, hundred_mi_forward_gradient_u_i, hundred_mi_forward_gradient_v_i, rot_coses, rot_sines)
     end
 
     if hundred_mi_leftward_gradient_block in layer_blocks_to_make
       hundred_mi_leftward_gradient_u_i      = raw_layer_u_i + hundred_mi_leftward_gradient_range.start - 1
       hundred_mi_leftward_gradient_v_i      = raw_layer_v_i + hundred_mi_leftward_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_leftward_gradient_u_i, hundred_mi_leftward_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, hundred_mi_leftward_gradient_u_i, hundred_mi_leftward_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, hundred_mi_leftward_gradient_u_i, hundred_mi_leftward_gradient_v_i, rot_coses, rot_sines)
     end
 
     if hundred_mi_linestraddling_gradient_block in layer_blocks_to_make
       hundred_mi_linestraddling_gradient_u_i = raw_layer_u_i + hundred_mi_linestraddling_gradient_range.start - 1
       hundred_mi_linestraddling_gradient_v_i = raw_layer_v_i + hundred_mi_linestraddling_gradient_range.start - 1
-      # rotate_and_perhaps_center_uv_layers(scratch_us, scratch_vs, hundred_mi_linestraddling_gradient_u_i, hundred_mi_linestraddling_gradient_v_i, false)
-      rotate_and_perhaps_center_uv_layers!(out, hundred_mi_linestraddling_gradient_u_i, hundred_mi_linestraddling_gradient_v_i, mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs, rot_coses, rot_sines, false)
+      rotate_uv_layers!(out, hundred_mi_linestraddling_gradient_u_i, hundred_mi_linestraddling_gradient_v_i, rot_coses, rot_sines)
     end
   end
 
