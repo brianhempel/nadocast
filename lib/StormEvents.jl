@@ -16,7 +16,9 @@ struct TornadoSeverity
 end
 
 struct WindSeverity
-  knots :: Float64
+  knots     :: Float64
+  sustained :: Bool # false == gust
+  measured  :: Bool
 end
 
 struct HailSeverity
@@ -42,6 +44,10 @@ is_sig_hail(hail_event) = hail_event.severity.inches >= 2.0
 
 function seconds_to_convective_days_since_epoch_utc(seconds_from_epoch_utc :: Int64) :: Int64
   fld(seconds_from_epoch_utc - 12*HOUR, DAY)
+end
+
+function convective_days_since_epoch_to_seconds_utc(day_i :: Int64) :: Int64
+  day_i * DAY + 12*HOUR
 end
 
 function start_time_in_convective_days_since_epoch_utc(event :: Event) :: Int64
@@ -94,6 +100,8 @@ function read_events_csv(path) ::Vector{Event}
   end_lon_col_i       = findfirst(isequal("end_lon"), event_headers)
   ef_col_i            = findfirst(isequal("f_scale"), event_headers)
   knots_col_i         = findfirst(isequal("speed"), event_headers)
+  speed_type_col_i    = findfirst(isequal("speed_type"), event_headers)
+  source_col_i        = findfirst(isequal("source"), event_headers)
   inches_col_i        = findfirst(isequal("inches"), event_headers)
 
   row_to_event(row) = begin
@@ -117,7 +125,7 @@ function read_events_csv(path) ::Vector{Event}
       if !isnothing(ef_col_i)
         TornadoSeverity(row[ef_col_i] == "" ? 0 : row[ef_col_i])
       elseif !isnothing(knots_col_i)
-        WindSeverity(row[knots_col_i] == -1 ? 50.0 : row[knots_col_i])
+        WindSeverity(row[knots_col_i] == -1 ? 50.0 : row[knots_col_i], row[speed_type_col_i] == "sustained", row[source_col_i] == "measured")
       elseif !isnothing(inches_col_i)
         HailSeverity(row[inches_col_i])
       else
