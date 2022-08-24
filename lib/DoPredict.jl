@@ -242,7 +242,7 @@ function do_forecast(forecast)
         push!(plotting_paths, sig_period_path)
       end
 
-      if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated && is_day1
+      if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated
         push!(daily_paths_to_perhaps_tweet, period_path)
       end
     end
@@ -264,14 +264,20 @@ function do_forecast(forecast)
     rsync_processes = map(rsync_dir -> run(`rsync -r --update --perms --chmod=a+rx $changelog_file $rsync_dir web@data.nadocast.com:\~/forecasts/`; wait = false), unique(rsync_dirs))
   end
 
+  is_day1 = forecast.forecast_hour <= 35
+
   if get(ENV, "TWEET", "false") == "true"
     tweet_script_path = (@__DIR__) * "/tweet.rb"
 
+    valid_date = convert(Dates.Date, Forecasts.valid_utc_datetime(forecast))  - Dates.Day(1)
+
     tweet_str =
       if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
-        "$(Dates.format(nadocast_run_time_utc, "yyyy-mm-dd")) $(nadocast_run_hour)Z Day Tornado Reforecast (New 2021 Models)"
-      else
+        "$(nadocast_run_hour)Z Day $(is_day1 ? "" : "2 ")Tornado Reforecast for $(Dates.format(valid_date, "yyyy-m-d")) (New 2021 Models)"
+      elseif is_day1
         "$(nadocast_run_hour)Z Day Tornado Forecast (New 2021 Models)"
+      else
+        "$(nadocast_run_hour)Z Day 2 Tornado Forecast for $(Dates.format(valid_date, "yyyy-m-d")) (New 2021 Models)"
       end
 
     for path in daily_paths_to_perhaps_tweet
@@ -287,7 +293,6 @@ function do_forecast(forecast)
 
   should_publish && map(wait, rsync_processes)
 
-  is_day1 = forecast.forecast_hour <= 35
   if is_day1
     # Make grib2s for the hourlies/four-hourlies but don't draw yet because that takes an extra ~9mins.
 
