@@ -8,6 +8,8 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Conus
 import Forecasts
+import Grids
+using HREF15KMGrid
 import Inventories
 import StormEvents
 # import PlotMap
@@ -238,6 +240,15 @@ function mask_rows_threaded(data, mask; final_row_count=count(mask))
   out
 end
 
+# Points within 25mi of 1+ tornado and 1+ severe wind and 1+ severe hail report in the climatological background
+const verifiability_mask_path = joinpath((@__DIR__), "..", "..", "climatological_background_1998-2013", "verifiable_area_mask.bits")
+const verifiability_mask_on_href_cropped_15km_grid = read!(verifiability_mask_path, BitVector(undef, length(HREF_CROPPED_15KM_GRID.latlons)))
+
+function is_verifiable(latlon :: Tuple{Float64, Float64})
+  flat_i = Grids.latlon_to_closest_grid_i(HREF_CROPPED_15KM_GRID, latlon)
+  verifiability_mask_on_href_cropped_15km_grid[flat_i]
+end
+
 # We can keep weights and labels in memory at least. It's the features that really kill us.
 # prior_predictor, if provided, has its logloss calculated against the first labeler
 function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler)
@@ -258,11 +269,10 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   grid = first(forecasts).grid
 
-  conus_on_grid      = map(latlon -> Conus.is_in_conus(latlon) ? 1.0f0 : 0.0f0, grid.latlons)
-  conus_grid_bitmask = (conus_on_grid .== 1.0f0)
-  conus_grid_weights = Float32.(grid.point_weights[conus_grid_bitmask])
+  verifiable_grid_bitmask = Conus.is_in_conus.(grid.latlons) .&& is_verifiable.(grid.latlons) :: BitVector
+  verifiable_grid_weights = Float32.(grid.point_weights[verifiable_grid_bitmask])
 
-  conus_point_count  = count(conus_grid_bitmask)
+  verifiable_point_count = count(verifiable_grid_bitmask)
 
   # Deterministic randomness for calc_inclusion_probabilities, presuming forecasts are given in the same order.
   rng = Random.MersenneTwister(12345)
@@ -276,30 +286,30 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
     forecast_label_layers_full_grid = map(labeler -> labeler(forecast), values(event_name_to_labeler))         :: Vector{Vector{Float32}}
-    forecast_label_layers           = map(layer -> layer[conus_grid_bitmask], forecast_label_layers_full_grid) :: Vector{Vector{Float32}}
+    forecast_label_layers           = map(layer -> layer[verifiable_grid_bitmask], forecast_label_layers_full_grid) :: Vector{Vector{Float32}}
 
     # PlotMap.plot_debug_map("tornadoes_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_forecast_labels(forecast))
     # PlotMap.plot_debug_map("near_events_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_is_near_storm_event(forecast))
 
     if !isnothing(calc_inclusion_probabilities)
-      # is_near_storm_event = compute_is_near_storm_event(forecast)[conus_grid_bitmask] :: Array{Float32,1}
-      probabilities       = Float32.(calc_inclusion_probabilities(forecast, forecast_label_layers_full_grid)[conus_grid_bitmask])
+      # is_near_storm_event = compute_is_near_storm_event(forecast)[verifiable_grid_bitmask] :: Array{Float32,1}
+      probabilities       = Float32.(calc_inclusion_probabilities(forecast, forecast_label_layers_full_grid)[verifiable_grid_bitmask])
       probabilities       = clamp.(probabilities, 0f0, 1f0)
       mask                = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)
       probabilities       = probabilities[mask]
 
-      forecast_weights = conus_grid_weights[mask] ./ probabilities
+      forecast_weights = verifiable_grid_weights[mask] ./ probabilities
 
       forecast_label_layers = map(layer -> layer[mask], forecast_label_layers) :: Vector{Vector{Float32}}
-      # Combine conus mask and mask
-      data_mask = conus_grid_bitmask[:]
-      data_mask[conus_grid_bitmask] = mask
+      # Combine verifiable mask and mask
+      data_mask = verifiable_grid_bitmask[:]
+      data_mask[verifiable_grid_bitmask] = mask
       data_masked = mask_rows_threaded(data, data_mask)
 
       # print("$(count(mask) / length(mask))")
     else
-      forecast_weights = conus_grid_weights
-      data_masked      = mask_rows_threaded(data, conus_grid_bitmask; final_row_count=conus_point_count)
+      forecast_weights = verifiable_grid_weights
+      data_masked      = mask_rows_threaded(data, verifiable_grid_bitmask; final_row_count=verifiable_point_count)
     end
     X_transformed = X_transformer(data_masked)
 
@@ -329,7 +339,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     append!(weights, forecast_weights)
 
     elapsed = (Base.time_ns() - start_time) / 1.0e9
-    print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.  $(elapsed / forecast_i)s each.  ~$((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60) hours left.            ")
+    print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.  $(Float32(elapsed / forecast_i))s each.  ~$(Float32((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60)) hours left.            ")
 
     forecast_i += 1
   end

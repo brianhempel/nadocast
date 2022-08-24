@@ -63,14 +63,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../lib")
 # import GeoUtils
 import Grib2
 import Grids
-
-# Same cropping and 3x downsampling as in HREF.jl
-HREF_CROPPED_15KM_GRID =
-  Grib2.read_grid(
-    (@__DIR__) * "/../lib/href_one_field_for_grid.grib2",
-    crop = ((1+214):(1473 - 99), (1+119):(1025-228)),
-    downsample = 3
-  ) :: Grids.Grid
+using HREF15KMGrid
 
 pop_density_on_15km_grid = Vector{Float32}(undef, length(HREF_CROPPED_15KM_GRID.latlons))
 

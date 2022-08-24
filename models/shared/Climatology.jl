@@ -9,18 +9,12 @@ push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Grib2
 import Grids
+using HREF15KMGrid
 
 # push!(LOAD_PATH, (@__DIR__) * "/../../climatological_background_1998-2013")
 
 climatology_data_dir = joinpath((@__DIR__), "..", "..", "climatological_background_1998-2013")
 
-# Same cropping and 3x downsampling as in HREF.jl
-HREF_CROPPED_15KM_GRID =
-  Grib2.read_grid(
-    (@__DIR__) * "/../../lib/href_one_field_for_grid.grib2",
-    crop = ((1+214):(1473 - 99), (1+119):(1025-228)),
-    downsample = 3
-  ) :: Grids.Grid
 
 
 function load_climatology_on_grid(climatology_file, grid)

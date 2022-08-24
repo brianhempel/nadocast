@@ -6,6 +6,7 @@ import Conus
 import Forecasts
 import GeoUtils
 import Grib2
+using HREF15KMGrid
 import Grids
 import PlotMap
 import StormEvents
@@ -20,15 +21,7 @@ NEIGHBORHOOD_RADIUS_MILES = 25
 CROSS_VALIDATION_FOLD_COUNT = 4
 
 
-# Same cropping and 3x downsampling as in HREF.jl
-HREF_CROPPED_15KM_GRID =
-  Grib2.read_grid(
-    (@__DIR__) * "/../lib/href_one_field_for_grid.grib2",
-    crop = ((1+214):(1473 - 99), (1+119):(1025-228)),
-    downsample = 3
-  ) :: Grids.Grid
-
-CONUS_ON_HREF_CROPPED_15KM_GRID = Conus.is_in_conus.(HREF_CROPPED_15KM_GRID.latlons)
+const CONUS_ON_HREF_CROPPED_15KM_GRID = Conus.is_in_conus.(HREF_CROPPED_15KM_GRID.latlons)
 
 function read_and_filter_events_csv(path)
   filter(StormEvents.read_events_csv(path)) do event
@@ -322,7 +315,33 @@ blurrers = map(blur_radii) do radius
   blurrer
 end
 
-convective_day_to_severe_events   = make_convective_day_to_events(conus_severe_events)
+
+convective_day_to_severe_events = make_convective_day_to_events(conus_severe_events)
+
+function verifiable_areas()
+  convective_day_to_tornadoes          = make_convective_day_to_events(conus_tornadoes)
+  convective_day_to_severe_wind_events = make_convective_day_to_events(conus_severe_wind_events)
+  convective_day_to_severe_hail_events = make_convective_day_to_events(conus_severe_hail_events)
+
+  # Determine verifiable areas
+  day_count, tornadoes_day_counts_grid,          _event_day_counts_grid = count_events_by_day(start_seconds_from_epoch:end_seconds_from_epoch, HREF_CROPPED_15KM_GRID, convective_day_to_tornadoes,          convective_day_to_severe_events)
+  day_count, severe_wind_events_day_counts_grid, _event_day_counts_grid = count_events_by_day(start_seconds_from_epoch:end_seconds_from_epoch, HREF_CROPPED_15KM_GRID, convective_day_to_severe_wind_events, convective_day_to_severe_events)
+  day_count, severe_hail_events_day_counts_grid, _event_day_counts_grid = count_events_by_day(start_seconds_from_epoch:end_seconds_from_epoch, HREF_CROPPED_15KM_GRID, convective_day_to_severe_hail_events, convective_day_to_severe_events)
+
+  verifiable_area_mask = tornadoes_day_counts_grid .>= 1 .&& severe_wind_events_day_counts_grid .>= 1 .&& severe_hail_events_day_counts_grid .>= 1
+
+  println("Plotting Verifiable Area Mask...")
+  PlotMap.plot_debug_map(
+    "verifiable_area_mask",
+    HREF_CROPPED_15KM_GRID,
+    Float32.(verifiable_area_mask);
+    title="Verifiable Area: >=1 event of each type 1998-2013",
+    zlow=0,
+    zhigh=1,
+  )
+  write("verifiable_area_mask.bits", verifiable_area_mask)
+end
+verifiable_areas()
 
 println()
 for (event_name, events_of_interest) in types
