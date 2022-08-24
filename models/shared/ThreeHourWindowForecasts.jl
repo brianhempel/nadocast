@@ -305,6 +305,9 @@ function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology(for
     Climatology.wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
     Climatology.wind_day_given_severe_day_spatial_probability_feature(grid),
 
+    Climatology.asos_gust_days_per_year_feature(grid),
+    Climatology.asos_sig_gust_days_per_year_feature(grid),
+
     Climatology.hour_in_day_severe_probability_feature(grid),
 
     Climatology.month_tornado_day_probability_feature(grid),

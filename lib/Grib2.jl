@@ -194,7 +194,7 @@ end
 
 # Set undefineds to 0 instead of 9.999f20
 function zero_undefs!(arr)
-  for i in eachindex(arr)
+  @inbounds for i in eachindex(arr)
     v = arr[i]
     arr[i] = v == 9.999f20 ? 0.0f0 : v
   end
@@ -203,7 +203,7 @@ end
 
 function apply_mask!(in, out, mask :: BitArray{1})
   j = 1
-  for i in eachindex(in)
+  @inbounds for i in eachindex(in)
     if mask[i]
       out[j] = in[i]
       j += 1

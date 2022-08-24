@@ -2,6 +2,10 @@ module HREF15KMGrid
 
 export HREF_CROPPED_15KM_GRID
 
+push!(LOAD_PATH, @__DIR__)
+import Grib2
+import Grids
+
 # Same cropping and 3x downsampling as in HREF.jl
 const HREF_CROPPED_15KM_GRID =
   Grib2.read_grid(

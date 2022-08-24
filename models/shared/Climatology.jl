@@ -10,16 +10,18 @@ import Forecasts
 import Grib2
 import Grids
 using HREF15KMGrid
+using Grid130
 
 # push!(LOAD_PATH, (@__DIR__) * "/../../climatological_background_1998-2013")
 
-climatology_data_dir = joinpath((@__DIR__), "..", "..", "climatological_background_1998-2013")
+climatology_data_dir      = joinpath((@__DIR__), "..", "..", "climatological_background_1998-2013")
+asos_climatology_data_dir = joinpath((@__DIR__), "..", "..", "asos_climatology_2003-2021")
 
 # population is basically climatology, since it determines the reporting rate
 population_data_dir = joinpath((@__DIR__), "..", "..", "population")
 
-function load_on_grid(dir, file_base_name, grid)
-  resampler = Grids.get_upsampler(HREF_CROPPED_15KM_GRID, grid) # not always upsampling, but this does nearest neighbor
+function load_on_grid(dir, file_base_name, in_grid, out_grid)
+  resampler = Grids.get_upsampler(in_grid, out_grid) # not always upsampling, but this does nearest neighbor
 
   resampler(Float32.(reinterpret(Float16, read(joinpath(dir, file_base_name * ".float16.bin")))))
 end
@@ -29,14 +31,22 @@ function fill_grid(val, grid)
 end
 
 function spatial_climatology_feature(file_name, grid)
-  climatology_on_grid = load_on_grid(climatology_data_dir, file_name, grid)
+  climatology_on_grid = load_on_grid(climatology_data_dir, file_name, HREF_CROPPED_15KM_GRID, grid)
   feature_name        = replace(file_name, "_probability" => "_spatial_prob")
   (feature_name, _ -> climatology_on_grid)
 end
 
 function population_density_feature(grid)
-  gridded = load_on_grid(population_data_dir, "pop_density_on_15km_grid", grid)
+  gridded = load_on_grid(population_data_dir, "pop_density_on_15km_grid", HREF_CROPPED_15KM_GRID, grid)
   ("people_per_sq_km", _ -> gridded)
+end
+
+# asos_gust_days_per_year_grid_130_cropped_blurred
+# asos_sig_gust_days_per_year_grid_130_cropped_blurred
+function asos_spatial_climatology_feature(file_name, grid)
+  climatology_on_grid = load_on_grid(asos_climatology_data_dir, file_name, GRID_130_CROPPED, grid)
+  feature_name        = replace(file_name, "_grid_130_cropped_blurred" => "")
+  (feature_name, _ -> climatology_on_grid)
 end
 
 
@@ -62,6 +72,9 @@ tornado_day_given_severe_day_spatial_probability_feature(grid)                  
 wind_day_spatial_probability_feature(grid)                                         = spatial_climatology_feature("wind_day_climatological_probability",                                         grid)
 wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid)        = spatial_climatology_feature("wind_day_geomean_absolute_and_conditional_climatological_probability",        grid)
 wind_day_given_severe_day_spatial_probability_feature(grid)                        = spatial_climatology_feature("wind_day_given_severe_day_climatological_probability",                        grid)
+
+asos_gust_days_per_year_feature(grid)                                              = asos_spatial_climatology_feature("asos_gust_days_per_year_grid_130_cropped_blurred",                       grid)
+asos_sig_gust_days_per_year_feature(grid)                                          = asos_spatial_climatology_feature("asos_sig_gust_days_per_year_grid_130_cropped_blurred",                   grid)
 
 
 # I won't say the curves for the different event types are *exactly* the same, but they are rather similar, so we'll just include severe.
