@@ -313,6 +313,36 @@ end
 #   event_segments_around_time(tornadoes(), seconds_from_utc_epoch, seconds_before_and_after)
 # end
 
+# f should be a function that take an indices_range and returns a tuple of reduction values
+#
+# parallel_iterate will unzip those tuples into a tuple of arrays of reduction values and return that.
+function parallel_iterate(f, count)
+  thread_results = Vector{Any}(undef, Threads.nthreads())
+
+  Threads.@threads for thread_i in 1:Threads.nthreads()
+  # for thread_i in 1:Threads.nthreads()
+    start = div((thread_i-1) * count, Threads.nthreads()) + 1
+    stop  = div( thread_i    * count, Threads.nthreads())
+    thread_results[thread_i] = f(start:stop)
+  end
+
+  if isa(thread_results[1], Tuple)
+    # Mangling so you get a tuple of arrays.
+    Tuple(collect.(zip(thread_results...)))
+  else
+    thread_results
+  end
+end
+
+# probably only a win if the predicate is expensive or only a few items pass the predicate
+function parallel_filter(f, arr)
+  arrs = parallel_iterate(length(arr)) do thread_range
+    filter(f, @view arr[thread_range])
+  end
+
+  vcat(arrs...)
+end
+
 function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
   period_start_seconds = seconds_from_utc_epoch - seconds_before_and_after
   period_end_seconds   = seconds_from_utc_epoch + seconds_before_and_after
@@ -324,7 +354,7 @@ function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_ep
     (event.start_seconds_from_epoch_utc == period_start_seconds && event.end_seconds_from_epoch_utc == period_start_seconds)
   end
 
-  relevant_events = filter(is_relevant_event, events)
+  relevant_events = parallel_filter(is_relevant_event, events)
 
   event_to_segment(event) = begin
     start_seconds = event.start_seconds_from_epoch_utc

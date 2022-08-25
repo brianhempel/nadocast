@@ -5,6 +5,12 @@ import Conus
 import GeoUtils
 import Inventories
 
+push!(LOAD_PATH, (@__DIR__) * "/../shared")
+
+import TrainingShared
+import StormEvents
+
+
 include("HREF.jl")
 
 forecasts = HREF.extra_features_forecasts();
@@ -59,8 +65,10 @@ function try_it(factor)
     data2 = Forecasts.data_or_nothing(f2_fcst)
     !isnothing(data1) || continue
     !isnothing(data2) || continue
-    refl1 = get_layer(data1, "REFC:entire atmosphere:hour fcst:prob >30")
-    refl2 = get_layer(data2, "REFC:entire atmosphere:hour fcst:prob >30")
+    refl1 = get_layer(data1, "REFC:entire atmosphere:hour fcst:estimated from probs")
+    refl2 = get_layer(data2, "REFC:entire atmosphere:hour fcst:estimated from probs")
+
+    grid_labeled = TrainingShared.grid_to_labels(StormEvents.conus_severe_events(), f1_fcst)
 
     for wind_layer_i in eachindex(vector_wind_layers)
       wind_layer_key = vector_wind_layers[wind_layer_i]
@@ -84,7 +92,7 @@ function try_it(factor)
         for i in 1:width
           flat_i = width*(j-1) + i
 
-          if Conus.is_in_conus(latlons[flat_i]) && refl1[flat_i] > 10f0
+          if grid_labeled[flat_i] > 0.1f0 && Conus.is_in_conus(latlons[flat_i])
             point_width_meters  = Float32(point_widths_miles[flat_i]  * GeoUtils.METERS_PER_MILE)
             point_height_meters = Float32(point_heights_miles[flat_i] * GeoUtils.METERS_PER_MILE)
 
@@ -119,3 +127,12 @@ function try_it(factor)
 end
 
 try_it(1f0)
+# GRD:250 mb:hour fcst:wt ens mean        16.015606
+# GRD:500 mb:hour fcst:wt ens mean        11.753886
+# GRD:700 mb:hour fcst:wt ens mean        10.789041
+# GRD:850 mb:hour fcst:wt ens mean        11.212617
+# GRD:925 mb:hour fcst:wt ens mean        11.6807995
+# STM:calculated:hour fcst:               11.798549
+# STM½:calculated:hour fcst:              10.773256
+# SHEAR:calculated:hour fcst:             12.392371
+# MEAN:calculated:hour fcst:              10.629265
