@@ -361,7 +361,8 @@ function grid_to_adjusted_event_neighborhoods(events :: Vector{Event}, grid :: G
   Threads.@threads for grid_i in 1:length(grid.latlons)
     pt_out = 0f0
 
-    if is_near_event(grid.latlons[grid_i])
+    latlon = grid.latlons[grid_i]
+    if is_near_event(latlon)
       for (latlon1, latlon2) in event_segments
         meters_away = GeoUtils.instant_meters_to_line(latlon, latlon1, latlon2)
         if meters_away <= miles * GeoUtils.METERS_PER_MILE
