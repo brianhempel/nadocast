@@ -1,3 +1,6 @@
+# Look at motion of composite reflectivity within 100mi of severe events.
+# Which wind vector does it best follow?
+
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
 import Forecasts
@@ -7,7 +10,6 @@ import Inventories
 
 push!(LOAD_PATH, (@__DIR__) * "/../shared")
 
-import TrainingShared
 import StormEvents
 
 
@@ -42,6 +44,12 @@ function get_layer(data, key)
   @view data[:, feature_key_to_i[key]]
 end
 
+const MINUTE = 60
+
+function grid_to_labels(events, forecast)
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, 100.0, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), 30*MINUTE)
+end
+
 function try_it(factor)
   vector_wind_layers = [
     "GRD:250 mb:hour fcst:wt ens mean",
@@ -51,6 +59,7 @@ function try_it(factor)
     "GRD:925 mb:hour fcst:wt ens mean",
     "STM:calculated:hour fcst:", # Our computed Bunkers storm motion.
     "STM½:calculated:hour fcst:", # half as much deviation from the mean wind
+    "½STM½500mb:calculated:hour fcst:",
     "SHEAR:calculated:hour fcst:",
     "MEAN:calculated:hour fcst:",
   ]
@@ -68,15 +77,18 @@ function try_it(factor)
     refl1 = get_layer(data1, "REFC:entire atmosphere:hour fcst:estimated from probs")
     refl2 = get_layer(data2, "REFC:entire atmosphere:hour fcst:estimated from probs")
 
-    grid_labeled = TrainingShared.grid_to_labels(StormEvents.conus_severe_events(), f1_fcst)
+    grid_labeled1 = grid_to_labels(StormEvents.conus_severe_events(), f1_fcst)
+    grid_labeled2 = grid_to_labels(StormEvents.conus_severe_events(), f2_fcst)
 
     for wind_layer_i in eachindex(vector_wind_layers)
       wind_layer_key = vector_wind_layers[wind_layer_i]
       u_key = "U" * wind_layer_key
       v_key = "V" * wind_layer_key
 
-      us    = get_layer(data1, u_key)
-      vs    = get_layer(data2, v_key)
+      us1    = get_layer(data1, u_key)
+      vs1    = get_layer(data1, v_key)
+      us2    = get_layer(data2, u_key)
+      vs2    = get_layer(data2, v_key)
 
       width               = grid.width
       height              = grid.height
@@ -92,24 +104,45 @@ function try_it(factor)
         for i in 1:width
           flat_i = width*(j-1) + i
 
-          if grid_labeled[flat_i] > 0.1f0 && Conus.is_in_conus(latlons[flat_i])
+          if Conus.is_in_conus(latlons[flat_i])
             point_width_meters  = Float32(point_widths_miles[flat_i]  * GeoUtils.METERS_PER_MILE)
             point_height_meters = Float32(point_heights_miles[flat_i] * GeoUtils.METERS_PER_MILE)
 
-            u, v = us[flat_i], vs[flat_i]
+            if grid_labeled1[flat_i] > 0.1f0
+              # forward, f1 to f2
+              u, v = us1[flat_i], vs1[flat_i]
 
-            du = round(Int64, factor * u*60f0*60f0 / point_width_meters)
-            dv = round(Int64, factor * v*60f0*60f0 / point_height_meters)
+              du = round(Int64, factor * u*60f0*60f0 / point_width_meters)
+              dv = round(Int64, factor * v*60f0*60f0 / point_height_meters)
 
-            i2 = clamp(i+du, 1, width)
-            j2 = clamp(j+dv, 1, height)
+              i2 = clamp(i+du, 1, width)
+              j2 = clamp(j+dv, 1, height)
 
-            flat_i2 = width*(j2-1) + i2
+              flat_i2 = width*(j2-1) + i2
 
-            abs_dev = abs(refl2[flat_i2] - refl1[flat_i])
+              abs_dev = abs(refl2[flat_i2] - refl1[flat_i])
 
-            abs_devs[flat_i] = abs_dev * point_weights[flat_i]
-            weights[flat_i]  = point_weights[flat_i]
+              abs_devs[flat_i] += abs_dev * point_weights[flat_i]
+              weights[flat_i]  += point_weights[flat_i]
+            end
+
+            if grid_labeled2[flat_i] > 0.1f0
+              # backward, f2 to f1
+              u, v = us2[flat_i], vs2[flat_i]
+
+              du = round(Int64, factor * u*60f0*60f0 / point_width_meters)
+              dv = round(Int64, factor * v*60f0*60f0 / point_height_meters)
+
+              i2 = clamp(i-du, 1, width)
+              j2 = clamp(j-dv, 1, height)
+
+              flat_i2 = width*(j2-1) + i2
+
+              abs_dev = abs(refl1[flat_i2] - refl2[flat_i])
+
+              abs_devs[flat_i] += abs_dev * point_weights[flat_i]
+              weights[flat_i]  += point_weights[flat_i]
+            end
           end
         end
       end
@@ -117,6 +150,7 @@ function try_it(factor)
       layers_abs_dev[wind_layer_i] += sum(abs_devs)
       layers_weight[wind_layer_i]  += sum(weights)
     end
+    break
   end
 
   println()
@@ -127,12 +161,3 @@ function try_it(factor)
 end
 
 try_it(1f0)
-# GRD:250 mb:hour fcst:wt ens mean        16.015606
-# GRD:500 mb:hour fcst:wt ens mean        11.753886
-# GRD:700 mb:hour fcst:wt ens mean        10.789041
-# GRD:850 mb:hour fcst:wt ens mean        11.212617
-# GRD:925 mb:hour fcst:wt ens mean        11.6807995
-# STM:calculated:hour fcst:               11.798549
-# STM½:calculated:hour fcst:              10.773256
-# SHEAR:calculated:hour fcst:             12.392371
-# MEAN:calculated:hour fcst:              10.629265

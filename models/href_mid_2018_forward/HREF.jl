@@ -67,6 +67,7 @@ const vector_wind_layers = [
   "GRD:925 mb:hour fcst:wt ens mean",
   "STM", # Our computed Bunkers storm motion.
   "STM½", # half as much deviation from the mean wind
+  "½STM½500mb", # mean between bunkers and 500mb wind
   "SHEAR",
   "MEAN",
 ]
@@ -245,6 +246,9 @@ const extra_features = [
 
   ("USTM½", (_, get_layer, out) -> out .= get_layer("UMEAN") .+ 3.25f0 .* get_layer("VSHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
   ("VSTM½", (_, get_layer, out) -> out .= get_layer("VMEAN") .- 3.25f0 .* get_layer("USHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
+
+  ("U½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* get_layer("USTM") .+ 0.5f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean")),
+  ("V½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* get_layer("VSTM") .+ 0.5f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean")),
 
   # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
   #
