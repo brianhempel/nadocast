@@ -67,6 +67,11 @@ function get_grid_i(grid :: Grid, (s_to_n_row, w_to_e_col) :: Tuple{Int64, Int64
   grid.width*(s_to_n_row-1) + w_to_e_col
 end
 
+function lookup_nearest(grid, vals, latlon)
+  flat_i = latlon_to_closest_grid_i(grid, latlon)
+  vals[flat_i]
+end
+
 
 # Returns the index into the grid to return the point closest to the given lat-lon coordinate.
 #

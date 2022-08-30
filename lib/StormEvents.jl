@@ -37,6 +37,9 @@ is_severe_tornado(tornado) = true
 is_severe_wind(wind_event) = wind_event.severity.knots  >= 50.0
 is_severe_hail(hail_event) = hail_event.severity.inches >= 1.0
 
+is_estimated_wind(wind_event) = !wind_event.severity.measured
+is_measured_wind(wind_event)  = wind_event.severity.measured
+
 is_sig_tornado(tornado) = tornado.severity.ef_rating >= 2
 is_sig_wind(wind_event) = wind_event.severity.knots  >= 65.0
 is_sig_hail(hail_event) = hail_event.severity.inches >= 2.0
@@ -59,20 +62,24 @@ function end_time_in_convective_days_since_epoch_utc(event :: Event) :: Int64
 end
 
 
-_tornadoes                = nothing
-_wind_events              = nothing
-_hail_events              = nothing
-_conus_tornado_events     = nothing
-_conus_wind_events        = nothing
-_conus_hail_events        = nothing
-_conus_events             = nothing # not-quite severe events are still used for the ±1hr, 100mi radius of near storm negative data
-_conus_severe_wind_events = nothing
-_conus_severe_hail_events = nothing
-_conus_severe_events      = nothing
-_conus_sig_tornado_events = nothing
-_conus_sig_wind_events    = nothing
-_conus_sig_hail_events    = nothing
-_conus_sig_severe_events  = nothing
+_tornadoes                          = nothing
+_wind_events                        = nothing
+_hail_events                        = nothing
+_conus_tornado_events               = nothing
+_conus_wind_events                  = nothing
+_conus_hail_events                  = nothing
+_conus_events                       = nothing # not-quite severe events are still used for the ±1hr, 100mi radius of near storm negative data
+_conus_severe_wind_events           = nothing
+_conus_estimated_severe_wind_events = nothing
+_conus_measured_severe_wind_events  = nothing
+_conus_severe_hail_events           = nothing
+_conus_severe_events                = nothing
+_conus_sig_tornado_events           = nothing
+_conus_sig_wind_events              = nothing
+_conus_estimated_sig_wind_events    = nothing
+_conus_measured_sig_wind_events     = nothing
+_conus_sig_hail_events              = nothing
+_conus_sig_severe_events            = nothing
 
 function event_looks_okay(event :: Event) :: Bool
   duration = event.end_seconds_from_epoch_utc - event.start_seconds_from_epoch_utc
@@ -235,6 +242,18 @@ function conus_severe_wind_events() :: Vector{Event}
   _conus_severe_wind_events
 end
 
+function conus_estimated_severe_wind_events() :: Vector{Event}
+  global _conus_estimated_severe_wind_events
+  isnothing(_conus_estimated_severe_wind_events) && (_conus_estimated_severe_wind_events = filter(is_estimated_wind, conus_severe_wind_events()))
+  _conus_estimated_severe_wind_events
+end
+
+function conus_measured_severe_wind_events() :: Vector{Event}
+  global _conus_measured_severe_wind_events
+  isnothing(_conus_measured_severe_wind_events) && (_conus_measured_severe_wind_events = filter(is_measured_wind, conus_severe_wind_events()))
+  _conus_measured_severe_wind_events
+end
+
 function conus_severe_hail_events() :: Vector{Event}
   global _conus_severe_hail_events
   isnothing(_conus_severe_hail_events) && (_conus_severe_hail_events = filter(is_severe_hail, conus_hail_events()))
@@ -262,6 +281,18 @@ function conus_sig_wind_events() :: Vector{Event}
   global _conus_sig_wind_events
   isnothing(_conus_sig_wind_events) && (_conus_sig_wind_events = filter(is_sig_wind, conus_wind_events()))
   _conus_sig_wind_events
+end
+
+function conus_estimated_sig_wind_events() :: Vector{Event}
+  global _conus_estimated_sig_wind_events
+  isnothing(_conus_estimated_sig_wind_events) && (_conus_estimated_sig_wind_events = filter(is_sig_wind, conus_estimated_severe_wind_events()))
+  _conus_estimated_sig_wind_events
+end
+
+function conus_measured_sig_wind_events() :: Vector{Event}
+  global _conus_measured_sig_wind_events
+  isnothing(_conus_measured_sig_wind_events) && (_conus_measured_sig_wind_events = filter(is_sig_wind, conus_measured_severe_wind_events()))
+  _conus_measured_sig_wind_events
 end
 
 function conus_sig_hail_events() :: Vector{Event}
@@ -303,6 +334,46 @@ function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid
 
   Threads.@threads for grid_i in 1:length(grid.latlons)
     out[grid_i] = is_near_event(grid.latlons[grid_i]) ? 1.0f0 : 0.0f0
+  end
+
+  out
+end
+
+# Returns a data layer on the grid with 0.0 to 1.0 indicators of points within x miles of any storm event
+function grid_to_adjusted_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid, normalization_grid :: Grids.Grid, gridded_normalization :: Vector{Float32}, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
+  event_segments = event_segments_around_time(events, seconds_from_utc_epoch, seconds_before_and_after)
+
+  is_near_event(latlon) = begin
+    is_near = false
+
+    for (latlon1, latlon2) in event_segments
+      meters_away = GeoUtils.instant_meters_to_line(latlon, latlon1, latlon2)
+      if meters_away <= miles * GeoUtils.METERS_PER_MILE
+        is_near = true
+      end
+    end
+
+    is_near
+  end
+
+  out = Vector{Float32}(undef, length(grid.latlons))
+
+  Threads.@threads for grid_i in 1:length(grid.latlons)
+    pt_out = 0f0
+
+    if is_near_event(grid.latlons[grid_i])
+      for (latlon1, latlon2) in event_segments
+        meters_away = GeoUtils.instant_meters_to_line(latlon, latlon1, latlon2)
+        if meters_away <= miles * GeoUtils.METERS_PER_MILE
+          factor1 = Grids.lookup_nearest(normalization_grid, gridded_normalization, latlon1)
+          factor2 = Grids.lookup_nearest(normalization_grid, gridded_normalization, latlon2)
+          factor = 0.5f0 * factor1 + 0.5f0 * factor2
+          pt_out += factor
+        end
+      end
+    end
+
+    out[grid_i] = min(1f0, pt_out)
   end
 
   out

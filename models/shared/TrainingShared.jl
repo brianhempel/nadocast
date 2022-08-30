@@ -10,9 +10,14 @@ import Conus
 import Forecasts
 import Grids
 using HREF15KMGrid
+using Grid130
 import Inventories
 import StormEvents
 # import PlotMap
+
+push!(LOAD_PATH, @__DIR__)
+
+import Climatology
 
 
 MINUTE = 60 # seconds
@@ -168,27 +173,56 @@ function grid_to_labels(events, forecast)
   StormEvents.grid_to_event_neighborhoods(events, forecast.grid, EVENT_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
+_hour_estimated_wind_gridded_normalization = nothing
+function hour_estimated_wind_gridded_normalization()
+  global _hour_estimated_wind_gridded_normalization
+  if isnothing(_hour_estimated_wind_gridded_normalization)
+    _hour_estimated_wind_gridded_normalization = Climatology.read_float16_file(joinpath(Climatology.asos_climatology_data_dir, "hour_x1_normalization_grid_130_cropped.float16.bin"))
+  end
+  _hour_estimated_wind_gridded_normalization
+
+end
+
+_hour_estimated_sig_wind_gridded_normalization = nothing
+function hour_estimated_sig_wind_gridded_normalization()
+  global _hour_estimated_sig_wind_gridded_normalization
+  if isnothing(_hour_estimated_sig_wind_gridded_normalization)
+    _hour_estimated_sig_wind_gridded_normalization = Climatology.read_float16_file(joinpath(Climatology.asos_climatology_data_dir, "sig_hour_x1_normalization_grid_130_cropped.float16.bin"))
+  end
+  _hour_estimated_sig_wind_gridded_normalization
+end
+
+function grid_to_adjusted_wind_labels(measured_events, estimated_events, gridded_normalization, forecast)
+  measured_labels  = grid_to_labels(measured_events, forecast) # vals are 0 or 1
+  estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, forecast.grid, GRID_130_CROPPED, gridded_normalization, EVENT_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
+  max.(measured_labels, estimated_labels)
+end
+
 function compute_is_near_storm_event(forecast) :: Array{Float32,1}
   StormEvents.grid_to_event_neighborhoods(StormEvents.conus_events(), forecast.grid, NEAR_EVENT_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), NEAR_EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
 # Dict of name to (forecast_has_event, forecast_to_gridpoint_labels)
 event_name_to_forecast_predicate = Dict(
-  "tornado"     => forecast_is_tornado_hour,
-  "wind"        => forecast_is_severe_wind_hour,
-  "hail"        => forecast_is_severe_hail_hour,
-  "sig_tornado" => forecast_is_sig_tornado_hour,
-  "sig_wind"    => forecast_is_sig_wind_hour,
-  "sig_hail"    => forecast_is_sig_hail_hour,
+  "tornado"      => forecast_is_tornado_hour,
+  "wind"         => forecast_is_severe_wind_hour,
+  "wind_adj"     => forecast_is_severe_wind_hour,
+  "hail"         => forecast_is_severe_hail_hour,
+  "sig_tornado"  => forecast_is_sig_tornado_hour,
+  "sig_wind"     => forecast_is_sig_wind_hour,
+  "sig_wind_adj" => forecast_is_sig_wind_hour,
+  "sig_hail"     => forecast_is_sig_hail_hour,
 )
 
 event_name_to_labeler = Dict(
-  "tornado"     => (forecast -> grid_to_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> grid_to_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> grid_to_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> grid_to_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> grid_to_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> grid_to_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+  "tornado"      => (forecast -> grid_to_labels(StormEvents.conus_tornado_events(),                                                                                                                           forecast)),
+  "wind"         => (forecast -> grid_to_labels(StormEvents.conus_severe_wind_events(),                                                                                                                       forecast)),
+  "wind_adj"     => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), hour_estimated_wind_gridded_normalization(), forecast)),
+  "hail"         => (forecast -> grid_to_labels(StormEvents.conus_severe_hail_events(),                                                                                                                       forecast)),
+  "sig_tornado"  => (forecast -> grid_to_labels(StormEvents.conus_sig_tornado_events(),                                                                                                                       forecast)),
+  "sig_wind"     => (forecast -> grid_to_labels(StormEvents.conus_sig_wind_events(),                                                                                                                          forecast)),
+  "sig_wind_adj" => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), hour_estimated_sig_wind_gridded_normalization(),   forecast)),
+  "sig_hail"     => (forecast -> grid_to_labels(StormEvents.conus_sig_hail_events(),                                                                                                                          forecast)),
 )
 
 

@@ -20,10 +20,14 @@ asos_climatology_data_dir = joinpath((@__DIR__), "..", "..", "asos_climatology_2
 # population is basically climatology, since it determines the reporting rate
 population_data_dir = joinpath((@__DIR__), "..", "..", "population")
 
+function read_float16_file(path) :: Vector{Float32}
+  Float32.(reinterpret(Float16, read(path)))
+end
+
 function load_on_grid(dir, file_base_name, in_grid, out_grid)
   resampler = Grids.get_upsampler(in_grid, out_grid) # not always upsampling, but this does nearest neighbor
 
-  resampler(Float32.(reinterpret(Float16, read(joinpath(dir, file_base_name * ".float16.bin")))))
+  resampler(read_float16_file(joinpath(dir, file_base_name * ".float16.bin")))
 end
 
 function fill_grid(val, grid)
