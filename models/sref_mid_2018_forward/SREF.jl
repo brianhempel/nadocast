@@ -108,9 +108,10 @@ vector_wind_layers = [
   "GRD:500 mb:hour fcst:wt ens mean",
   "GRD:300 mb:hour fcst:wt ens mean",
   "GRD:250 mb:hour fcst:wt ens mean",
+  "MEAN", # lower atmosphere mean wind for Bunkers motion
+  "SHEAR", # shear vector for Bunkers motion. *Supposed* to be 250m - 5750m shear vector.
   "STM", # Our computed Bunkers storm motion.
-  "SHEAR",
-  "MEAN",
+  "½STM½500mb", # mean between Vunkers and 500mb wind. HREF composite reflectivity movement near storm events is most correlated with this
 ]
 
 _forecasts = []
@@ -268,6 +269,8 @@ extra_features = [
   ("USTM", (_, get_layer, out) -> out .= get_layer("UMEAN") .+ 7.5f0 .* get_layer("VSHEAR") ./ (get_layer("SHEAR") .+ 0.23f0)),
   ("VSTM", (_, get_layer, out) -> out .= get_layer("VMEAN") .- 7.5f0 .* get_layer("USHEAR") ./ (get_layer("SHEAR") .+ 0.23f0)),
 
+  ("U½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* (get_layer("USTM") .+ get_layer("UGRD:500 mb:hour fcst:wt ens mean"))),
+  ("V½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* (get_layer("VSTM") .+ get_layer("VGRD:500 mb:hour fcst:wt ens mean"))),
 
   # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
   #

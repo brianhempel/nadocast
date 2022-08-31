@@ -65,11 +65,11 @@ const vector_wind_layers = [
   "GRD:700 mb:hour fcst:wt ens mean",
   "GRD:850 mb:hour fcst:wt ens mean",
   "GRD:925 mb:hour fcst:wt ens mean",
+  "MEAN", # lower atmosphere mean wind for Bunkers motion
+  "SHEAR", # shear vector for Bunkers motion. *Supposed* to be 250m - 5750m shear vector.
   "STM", # Our computed Bunkers storm motion.
-  "STM½", # half as much deviation from the mean wind
-  "½STM½500mb", # mean between bunkers and 500mb wind
-  "SHEAR",
-  "MEAN",
+  # "STM½", # half as much deviation from the mean wind
+  "½STM½500mb", # mean between Bunkers and 500mb wind. HREF composite reflectivity movement near storm events is most correlated with this
 ]
 
 const downsample = 3 # 3x downsample, roughly 15km grid.
@@ -244,11 +244,11 @@ const extra_features = [
   ("USTM", (_, get_layer, out) -> out .= get_layer("UMEAN") .+ 7.5f0 .* get_layer("VSHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
   ("VSTM", (_, get_layer, out) -> out .= get_layer("VMEAN") .- 7.5f0 .* get_layer("USHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
 
-  ("USTM½", (_, get_layer, out) -> out .= get_layer("UMEAN") .+ 3.25f0 .* get_layer("VSHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
-  ("VSTM½", (_, get_layer, out) -> out .= get_layer("VMEAN") .- 3.25f0 .* get_layer("USHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
+  # ("USTM½", (_, get_layer, out) -> out .= get_layer("UMEAN") .+ 3.25f0 .* get_layer("VSHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
+  # ("VSTM½", (_, get_layer, out) -> out .= get_layer("VMEAN") .- 3.25f0 .* get_layer("USHEAR") ./ (get_layer("SHEAR") .+ 0.25f0)),
 
-  ("U½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* get_layer("USTM") .+ 0.5f0 .* get_layer("UGRD:500 mb:hour fcst:wt ens mean")),
-  ("V½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* get_layer("VSTM") .+ 0.5f0 .* get_layer("VGRD:500 mb:hour fcst:wt ens mean")),
+  ("U½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* (get_layer("USTM") .+ get_layer("UGRD:500 mb:hour fcst:wt ens mean"))),
+  ("V½STM½500mb", (_, get_layer, out) -> out .= 0.5f0 .* (get_layer("VSTM") .+ get_layer("VGRD:500 mb:hour fcst:wt ens mean"))),
 
   # Earlier experiments seemed to have trouble with conditions where supercells moved off fronts.
   #
@@ -291,6 +291,7 @@ function feature_engineered_forecasts()
   )
 end
 
+# Used this to try and figure out best wind direction to use for gradients, which ended up being a mean between bunkers and 500mb wind.
 function extra_features_forecasts()
   FeatureEngineeringShared.feature_engineered_forecasts(
     forecasts();

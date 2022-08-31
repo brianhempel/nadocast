@@ -259,9 +259,28 @@ function make_mean_layers2!(
 end
 
 function uv_normalize(u, v)
-  ε = 1f-8
-  len = √(u^2 + v^2) + ε
-  (u / len, v / len)
+  if u == 0f0 && v == 0f0
+    (1f0, 0f0)
+  else
+    scale = max(abs(u), abs(v)) # Ensure small numbers don't get squared off to zero
+    u /= scale
+    v /= scale
+    len = √(u^2 + v^2)
+    (u / len, v / len)
+  end
+end
+
+# Normalizes in place, but also returns the vectors
+function normalize_uvs!(us, vs)
+  @assert length(us) == length(vs)
+
+  @inbounds Threads.@threads for flat_i in 1:length(us)
+    normalized_u, normalized_v = @inbounds uv_normalize(us[flat_i], vs[flat_i])
+    us[flat_i] = normalized_u
+    vs[flat_i] = normalized_v
+  end
+
+  us, vs
 end
 
 # Mutates all the something_is arguments.
@@ -270,7 +289,8 @@ end
 function compute_directional_is!(
     height, width,
     point_heights_miles, point_widths_miles,
-    us, vs,
+    # us, vs,
+    normalized_us, normalized_vs,
     twenty_five_mi_forward_is, twenty_five_mi_backward_is, twenty_five_mi_leftward_is, twenty_five_mi_rightward_is,
     fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
     hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
@@ -279,17 +299,18 @@ function compute_directional_is!(
     @inbounds for i in 1:width
       flat_i = width*(j-1) + i
 
-      relative_u, relative_v = uv_normalize(us[flat_i], vs[flat_i])
+      # normalized_u, normalized_v = uv_normalize(us[flat_i], vs[flat_i])
+      # normalized_u = normalized_us[flat_i]
 
       point_height = Float32(point_heights_miles[flat_i])
       point_width  = Float32(point_widths_miles[flat_i]) # On the SREF grid, point_width and point_height are always nearly equal, <1.0% difference.
 
-      delta_25mi_j  = round(Int64, relative_v * 25.0f0  / point_height)
-      delta_25mi_i  = round(Int64, relative_u * 25.0f0  / point_width)
-      delta_50mi_j  = round(Int64, relative_v * 50.0f0  / point_height)
-      delta_50mi_i  = round(Int64, relative_u * 50.0f0  / point_width)
-      delta_100mi_j = round(Int64, relative_v * 100.0f0 / point_height)
-      delta_100mi_i = round(Int64, relative_u * 100.0f0 / point_width)
+      delta_25mi_j  = round(Int64, normalized_vs[flat_i] * 25.0f0  / point_height)
+      delta_25mi_i  = round(Int64, normalized_us[flat_i] * 25.0f0  / point_width)
+      delta_50mi_j  = round(Int64, normalized_vs[flat_i] * 50.0f0  / point_height)
+      delta_50mi_i  = round(Int64, normalized_us[flat_i] * 50.0f0  / point_width)
+      delta_100mi_j = round(Int64, normalized_vs[flat_i] * 100.0f0 / point_height)
+      delta_100mi_i = round(Int64, normalized_us[flat_i] * 100.0f0 / point_width)
 
       forward_25mi_j    = clamp(j+delta_25mi_j,  1, height)
       forward_25mi_i    = clamp(i+delta_25mi_i,  1, width)
@@ -776,10 +797,28 @@ function make_data(
   end
 
 
-  # Assume storm motion is in new_features_pre
+  # Assume motion is in new_features_pre
+  # HREF composite reflectivity movement near storm events is most correlated with mean between Bunkers and 500mb wind
+  motion_us = get_layer("U½STM½500mb")[:]
+  motion_vs = get_layer("V½STM½500mb")[:]
 
-  storm_motion_us = get_layer("USTM")[:]
-  storm_motion_vs = get_layer("VSTM")[:]
+  # motion_angles = atan.(motion_vs, motion_us)
+
+  # if any(isnan, motion_angles)
+  #   error("nan wind angle")
+  # end
+
+  # rot_coses = cos.(-motion_angles)
+  # rot_sines = sin.(-motion_angles)
+
+  motion_normalized_us, motion_normalized_vs = normalize_uvs!(motion_us, motion_vs)
+
+  # @assert rot_coses ≈ cos.(motion_angles)
+  # @assert motion_normalized_us ≈ rot_coses
+  # @assert .-motion_normalized_vs ≈ rot_sines
+
+  rot_coses = motion_normalized_us
+  rot_sines = .-motion_normalized_vs
 
   # Compute several "convolution" kernels by sampling the mean layers.
 
@@ -831,7 +870,8 @@ function make_data(
       height, width,
       grid.point_heights_miles, grid.point_widths_miles,
       # mean_wind_lower_half_atmosphere_us, mean_wind_lower_half_atmosphere_vs,
-      storm_motion_us, storm_motion_vs,
+      # motion_us, motion_vs,
+      motion_normalized_us, motion_normalized_vs,
       twenty_five_mi_forward_is, twenty_five_mi_backward_is, twenty_five_mi_leftward_is, twenty_five_mi_rightward_is,
       fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
       hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
@@ -926,16 +966,6 @@ function make_data(
       end
     end
   end
-
-  storm_motion_angles = atan.(storm_motion_vs, storm_motion_us)
-
-  if any(isnan, storm_motion_angles)
-    error("nan wind angle")
-  end
-
-  rot_coses = cos.(-storm_motion_angles)
-  rot_sines = sin.(-storm_motion_angles)
-
 
   Threads.@threads for wind_layer_key in vector_wind_layers
   # for wind_layer_key in vector_wind_layers

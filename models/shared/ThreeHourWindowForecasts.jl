@@ -49,9 +49,6 @@ function three_hour_window_associated_forecasts(base_forecasts)
 end
 
 function three_hour_window_forecasts(base_forecasts)
-  # base_model_name = isempty(base_forecasts) ? "" : base_forecasts[1].model_name
-  # model_name = "$(base_model_name)-1hr|$(base_model_name)|$(base_model_name)+1hr"
-
   # Use runtime/forecast hour of middle forecast.
   forecasts_tuple_to_canonical_forecast(forecasts_tuple) = forecasts_tuple[2]
 
