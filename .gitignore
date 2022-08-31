@@ -22,3 +22,10 @@ remote_forecasts/
 lib/computation_cache/
 data_labels_weights_*
 get_data/rap_archive_*/
+sfe_forecasts/
+train_*.sbatch
+train_*_stdout.txt
+train_*_stderr.txt
+small_test
+models/*/*.pdf
+models/*/*.png
