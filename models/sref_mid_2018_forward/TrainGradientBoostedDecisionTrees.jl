@@ -52,7 +52,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
     climatology_amount = climatology_amount, # can vary this without reloading the data
 
-    bin_split_forecast_sample_count    = 300, # will be divided among the label types
+    bin_split_forecast_sample_count    = 400, # will be divided among the label types
     max_iterations_without_improvement = 30,
 
     # Start with middle value for each parameter, plus some number of random choices, before beginning coordinate descent.
