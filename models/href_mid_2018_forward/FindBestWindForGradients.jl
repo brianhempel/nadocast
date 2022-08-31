@@ -150,7 +150,6 @@ function try_it(factor)
       layers_abs_dev[wind_layer_i] += sum(abs_devs)
       layers_weight[wind_layer_i]  += sum(weights)
     end
-    break
   end
 
   println()
@@ -160,4 +159,39 @@ function try_it(factor)
   end
 end
 
-try_it(1f0)
+try_it(0.95f0);
+# GRD:250 mb:hour fcst:wt ens mean  5.3206134
+# GRD:500 mb:hour fcst:wt ens mean  4.289878
+# GRD:700 mb:hour fcst:wt ens mean  4.3090906
+# GRD:850 mb:hour fcst:wt ens mean  5.0702868
+# GRD:925 mb:hour fcst:wt ens mean  5.436484
+# STM:calculated:hour fcst:         4.47567
+# STM½:calculated:hour fcst:        4.3612885
+# ½STM½500mb:calculated:hour fcst:  4.1178074 *best*
+# SHEAR:calculated:hour fcst:       4.4639482
+# MEAN:calculated:hour fcst:        4.5022173
+
+try_it(1f0);
+# GRD:250 mb:hour fcst:wt ens mean  5.5074487
+# GRD:500 mb:hour fcst:wt ens mean  4.3725104
+# GRD:700 mb:hour fcst:wt ens mean  4.338505
+# GRD:850 mb:hour fcst:wt ens mean  5.1156535
+# GRD:925 mb:hour fcst:wt ens mean  5.4856634
+# STM:calculated:hour fcst:         4.5193696
+# STM½:calculated:hour fcst:        4.3771033
+# ½STM½500mb:calculated:hour fcst:  4.153804 *
+# SHEAR:calculated:hour fcst:       4.5594854
+# MEAN:calculated:hour fcst:        4.5154295
+
+try_it(1.1f0);
+# GRD:250 mb:hour fcst:wt ens mean  5.8886676
+# GRD:500 mb:hour fcst:wt ens mean  4.563737
+# GRD:700 mb:hour fcst:wt ens mean  4.4184375
+# GRD:850 mb:hour fcst:wt ens mean  5.2162657
+# GRD:925 mb:hour fcst:wt ens mean  5.587692
+# STM:calculated:hour fcst:         4.6195164
+# STM½:calculated:hour fcst:        4.4206405
+# ½STM½500mb:calculated:hour fcst:  4.2465105*
+# SHEAR:calculated:hour fcst:       4.7773128
+# MEAN:calculated:hour fcst:        4.554372
+
