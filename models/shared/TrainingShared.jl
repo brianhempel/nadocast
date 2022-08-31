@@ -384,7 +384,7 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     append!(weights, forecast_weights)
     append!(lats, forecast_lats)
     append!(lons, forecast_lons)
-    append!(run_times, fill(Forecast.run_utc_datetime(forecast), length(forecast_weights)))
+    append!(run_times, fill(Forecasts.run_utc_datetime(forecast), length(forecast_weights)))
     append!(forecast_hours, fill(UInt8(forecast.forecast_hour), length(forecast_weights)))
 
     elapsed = (Base.time_ns() - start_time) / 1.0e9
