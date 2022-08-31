@@ -45,7 +45,7 @@ elseif get(ENV, "DAY1OR2", "1") == "2"
 else
   println("DAY1OR2 should be 1 or 2!")
   exit(1)
-end
+end;
 
 if haskey(ENV, "RUN_DATE")
   year, month, day = map(str -> parse(Int64, str), split(ENV["RUN_DATE"], "-"))

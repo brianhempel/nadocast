@@ -214,7 +214,7 @@ function train_with_coordinate_descent_hyperparameter_search(
       rank       = MPI.Comm_rank(mpi_comm) # Zero-indexed
       rank_count = MPI.Comm_size(mpi_comm) # Number of processes in cluster
     else
-      println("must_load_from_disk must be true if you want to distribute learning with MPI. (the initial dataset generation does not support MPI)")
+      println(stderr, "must_load_from_disk must be true if you want to distribute learning with MPI. (the initial dataset generation does not support MPI)")
       exit(1)
     end
   else
@@ -225,7 +225,8 @@ function train_with_coordinate_descent_hyperparameter_search(
   end
 
   # If we are barely over memory, preferentially page out the validation data since only a fraction of it is used.
-  pageout_hint(arr) = Sys.islinux() ? (try Mmap.madvise!(arr, Mmap.MADV_COLD) catch end) : nothing
+  # pageout_hint(arr) = Sys.islinux() ? (try Mmap.madvise!(arr, Mmap.MADV_COLD) catch end) : nothing
+  pageout_hint(arr) = nothing
 
   if !load_only
     if isnothing(validation_server)
