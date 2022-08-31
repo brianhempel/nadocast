@@ -3,6 +3,7 @@ module TrainingShared
 import Random
 import Serialization
 import Printf
+import Dates
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 
@@ -291,9 +292,13 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   save_path(path) = joinpath(save_dir, path)
   serialize_async(path, value) = Threads.@spawn Serialization.serialize(path, value)
 
-  event_names  = collect(keys(event_name_to_labeler))
-  label_arrays = map(_ -> Float32[], event_names)
-  weights      = Float32[]
+  event_names    = collect(keys(event_name_to_labeler))
+  label_arrays   = map(_ -> Float32[], event_names)
+  weights        = Float32[]
+  lats           = Float32[]
+  lons           = Float32[]
+  run_times      = Dates.DateTime[]
+  forecast_hours = UInt8[]
 
   prior_losses         = []
   prior_losses_weights = []
@@ -305,6 +310,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
 
   verifiable_grid_bitmask = Conus.is_in_conus.(grid.latlons) .&& is_verifiable.(grid.latlons) :: BitVector
   verifiable_grid_weights = Float32.(grid.point_weights[verifiable_grid_bitmask])
+  verifiable_lats         = Float32.(first.(grid.latlons)[verifiable_grid_bitmask])
+  verifiable_lons         = Float32.(last.(grid.latlons)[verifiable_grid_bitmask])
 
   verifiable_point_count = count(verifiable_grid_bitmask)
 
@@ -333,6 +340,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       probabilities       = probabilities[mask]
 
       forecast_weights = verifiable_grid_weights[mask] ./ probabilities
+      forecast_lats    = @view verifiable_lats[mask]
+      forecast_lons    = @view verifiable_lons[mask]
 
       forecast_label_layers = map(layer -> layer[mask], forecast_label_layers) :: Vector{Vector{Float32}}
       # Combine verifiable mask and mask
@@ -343,6 +352,8 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       # print("$(count(mask) / length(mask))")
     else
       forecast_weights = verifiable_grid_weights
+      forecast_lats    = verifiable_lats
+      forecast_lons    = verifiable_lons
       data_masked      = mask_rows_threaded(data, verifiable_grid_bitmask; final_row_count=verifiable_point_count)
     end
     X_transformed = X_transformer(data_masked)
@@ -371,6 +382,10 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
       append!(label_arrays[label_layer_i], forecast_label_layers[label_layer_i])
     end
     append!(weights, forecast_weights)
+    append!(lats, forecast_lats)
+    append!(lons, forecast_lons)
+    append!(run_times, fill(Forecast.run_utc_datetime(forecast), length(forecast_weights)))
+    append!(forecast_hours, fill(UInt8(forecast.forecast_hour), length(forecast_weights)))
 
     elapsed = (Base.time_ns() - start_time) / 1.0e9
     print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.  $(Float32(elapsed / forecast_i))s each.  ~$(Float32((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60)) hours left.            ")
@@ -381,9 +396,19 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
   wait(serialization_task) # Synchronize
 
   for i in 1:length(event_names)
+    @assert length(label_arrays[i]) == length(weights)
     Serialization.serialize(save_path("labels-$(event_names[i]).serialized"), label_arrays[i])
   end
+  @assert length(lats)           == length(weights)
+  @assert length(lons)           == length(weights)
+  @assert length(run_times)      == length(weights)
+  @assert length(forecast_hours) == length(weights)
   Serialization.serialize(save_path("weights.serialized"), weights)
+  # In case we need them later...
+  Serialization.serialize(save_path("lats.serialized"), lats)
+  Serialization.serialize(save_path("lons.serialized"), lons)
+  Serialization.serialize(save_path("run_times.serialized"), run_times)
+  Serialization.serialize(save_path("forecast_hours.serialized"), forecast_hours)
 
   if !isnothing(prior_predictor)
     prior_loss = sum(prior_losses) / sum(prior_losses_weights)
