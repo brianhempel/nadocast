@@ -52,7 +52,7 @@ function run_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
 end
 
 function run_utc_datetime(forecast :: Forecast) :: Dates.DateTime
-  Dates.unix2datetime(run_time_in_seconds_since_epoch_utc(forecast))
+  Dates.DateTime(forecast.run_year, forecast.run_month, forecast.run_day, forecast.run_hour)
 end
 
 function valid_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
@@ -60,7 +60,7 @@ function valid_time_in_seconds_since_epoch_utc(forecast :: Forecast) :: Int64
 end
 
 function valid_utc_datetime(forecast :: Forecast) :: Dates.DateTime
-  Dates.unix2datetime(valid_time_in_seconds_since_epoch_utc(forecast))
+  run_utc_datetime(forecast) + Dates.Hour(forecast.forecast_hour)
 end
 
 function valid_time_in_convective_days_since_epoch_utc(forecast :: Forecast) :: Int64
