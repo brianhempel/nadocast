@@ -29,7 +29,7 @@ distributed        = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
 climatology_amount = get(ENV, "CLIMATOLOGY", "all") # options: none, minimal, some, all
 
 
-data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.26"))
+data_subset_ratio = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.3"))
 
 near_storm_ratio = 1f0 # SREF is tiny
 

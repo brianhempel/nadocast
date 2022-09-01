@@ -115,13 +115,15 @@ function conus_sig_hail_hours_in_seconds_from_epoch_utc()
   _conus_sig_hail_hours_in_seconds_from_epoch_utc
 end
 
-# Use all forecasts in which there is a tornado, wind, or hail event in that or an adjacent hour.
+# Use all forecasts in which there is a tornado, wind, or hail event in that hour or ±2hours.
 function is_relevant_forecast(forecast)
   valid_time = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)
 
-  (valid_time in conus_event_hours_in_seconds_from_epoch_utc()) ||
-    ((valid_time + HOUR) in conus_event_hours_in_seconds_from_epoch_utc()) ||
-    ((valid_time - HOUR) in conus_event_hours_in_seconds_from_epoch_utc())
+  ((valid_time + 2*HOUR) in conus_event_hours_in_seconds_from_epoch_utc()) ||
+  ((valid_time +   HOUR) in conus_event_hours_in_seconds_from_epoch_utc()) ||
+  (valid_time            in conus_event_hours_in_seconds_from_epoch_utc()) ||
+  ((valid_time -   HOUR) in conus_event_hours_in_seconds_from_epoch_utc()) ||
+  ((valid_time - 2*HOUR) in conus_event_hours_in_seconds_from_epoch_utc())
 end
 
 function forecast_is_tornado_hour(forecast)
