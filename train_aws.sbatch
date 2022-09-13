@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --exclusive
-#SBATCH --mem=100G
+##SBATCH --mem=100G
 #SBATCH --nodes=6
 #SBATCH --cpus-per-task=48
 #SBATCH --ntasks-per-node=1
@@ -28,5 +28,7 @@ export MUST_LOAD_FROM_DISK=true
 export DISTRIBUTED=true
 
 env
+
+cat /proc/cpuinfo
 
 time mpirun --bind-to none julia --compiled-modules=no --project=/scratch/nadocast_dev /scratch/nadocast_dev/models/${SREF_OR_HREF}_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl
