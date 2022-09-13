@@ -10,7 +10,8 @@ confidence_shapes.txt: test_0z.csv BootstrapConfidenceIntervals.jl
 index.html: index.html.erb maps/*/*.png
 	erb index.html.erb > index.html
 
-day2_vs_day1.html: day2_vs_day1.html.erb
+.PHONY: day2_vs_day1.html
+day2_vs_day1.html:
 	erb day2_vs_day1.html.erb > day2_vs_day1.html
 
 publish: index.html
