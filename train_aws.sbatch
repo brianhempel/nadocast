@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --exclusive
 #SBATCH --mem=100G
-#SBATCH --nodes=7
+#SBATCH --nodes=6
 #SBATCH --cpus-per-task=48
 #SBATCH --ntasks-per-node=1
 #SBATCH --output=train_${SREF_OR_HREF}_f${FORECAST_HOUR_START}-${FORECAST_HOUR_STOP}_${DATA_SUBSET_RATIO}_${NEAR_STORM_RATIO}_${EVENT_TYPES}_%J_stdout.txt
@@ -12,9 +12,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH --chdir=${DATA_ROOT}
 
-# USAGE: DATA_ROOT=$(pwd) SREF_OR_HREF=sref FORECAST_HOUR_START=12 FORECAST_HOUR_STOP=23 DATA_SUBSET_RATIO=0.3 NEAR_STORM_RATIO=0.4 EVENT_TYPES= sbatch train_aws.sbatch
+# USAGE: DATA_ROOT=$(pwd) SREF_OR_HREF=sref FORECAST_HOUR_START=12 FORECAST_HOUR_STOP=23 DATA_SUBSET_RATIO=0.3 NEAR_STORM_RATIO=0.4 EVENT_TYPES= sbatch /scratch/nadocast_dev/train_aws.sbatch
 
-# DATA_ROOT=$(pwd) SREF_OR_HREF=href FORECAST_HOUR_START=2 FORECAST_HOUR_STOP=13 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 EVENT_TYPES= sbatch train_aws.sbatch
+# DATA_ROOT=$(pwd) SREF_OR_HREF=href FORECAST_HOUR_START=2 FORECAST_HOUR_STOP=13 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 EVENT_TYPES= sbatch /scratch/nadocast_dev/train_aws.sbatch
 
 export HOME=/home/brian.hempel
 export PATH=$PATH:$HOME/.local/bin:$HOME/bin
