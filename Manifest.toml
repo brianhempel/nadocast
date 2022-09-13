@@ -64,9 +64,9 @@ version = "0.2.0"
 
 [[ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "80ca332f6dcb2508adba68f22f551adb2d00a624"
+git-tree-sha1 = "dc4405cee4b2fe9e1108caec2d760b7ea758eca2"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.3"
+version = "1.15.5"
 
 [[CodecZstd]]
 deps = ["BinaryProvider", "Libdl", "Test", "TranscodingStreams"]
@@ -266,7 +266,7 @@ uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 
 [[MemoryConstrainedTreeBoosting]]
 deps = ["BSON", "MPI", "Random", "SIMD"]
-git-tree-sha1 = "2a0efdea5f0d8e6cf2d2a390df73e7dfd8bdbe7e"
+git-tree-sha1 = "9e1fee3c8a5c7a3ffeb168e9a5e8249fd261ce39"
 repo-rev = "master"
 repo-url = "https://github.com/brianhempel/MemoryConstrainedTreeBoosting.jl"
 uuid = "892701ce-1da2-11e9-2428-fd1c8d726794"
@@ -380,9 +380,9 @@ version = "0.4.1"
 
 [[QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "78aadffb3efd2155af139781b8a8df1ef279ea39"
+git-tree-sha1 = "3c009334f45dfd546a16a57960a821a1a023d241"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.4.2"
+version = "2.5.0"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
