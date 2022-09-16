@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --exclusive
-#SBATCH --nodes=6
+#SBATCH --nodes=3
 #SBATCH --cpus-per-task=48
 #SBATCH --ntasks-per-node=1
 #SBATCH --output=%x_%J_stdout.txt
