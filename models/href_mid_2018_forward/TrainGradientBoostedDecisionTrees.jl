@@ -28,7 +28,7 @@ forecast_hour_range =
 
 event_types        = split(get(ENV, "EVENT_TYPES", ""), ",")
 event_types        = event_types == [""] ? nothing : event_types
-data_subset_ratio  = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.026"))
+data_subset_ratio  = parse(Float32, get(ENV, "DATA_SUBSET_RATIO", "0.03"))
 near_storm_ratio   = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
 load_only          = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 distributed = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
@@ -73,15 +73,61 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
   )
 
 
-# $ LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# $ LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# 23847 for training,     from 2018-06-29 00Z +2  to      2022-06-01 06Z +2.
+#   (2853 with sig_wind,  from 2018-06-29 00Z +2  to      2022-06-01 00Z +5)
+#   (1840 with sig_hail,  from 2018-06-29 00Z +2  to      2022-06-01 00Z +3)
+#   (8101 with hail,      from 2018-06-29 00Z +2  to      2022-06-01 00Z +6)
+#   (2853 with sig_wind_adj,      from 2018-06-29 00Z +2  to      2022-06-01 00Z +5)
+#   (3611 with tornado,   from 2018-06-29 00Z +2  to      2022-06-01 00Z +4)
+#   (12279 with wind_adj,         from 2018-06-29 00Z +2  to      2022-06-01 00Z +5)
+#   (598 with sig_tornado,        from 2018-06-29 00Z +2  to      2022-05-30 18Z +4)
+#   (12279 with wind,     from 2018-06-29 00Z +2  to      2022-06-01 00Z +5)
+# 4824 for validation,    from 2018-06-30 00Z +13 to      2022-05-29 06Z +5.
+# 4550 for testing,       from 2018-07-01 06Z +9  to      2022-05-30 06Z +5.
+# Preparing bin splits by sampling 400 training forecasts with events
+# sampling 24490 datapoints...computing bin splits...done.
+# Loading training data
+
+
+
+# $ USE_ALT_DISK=true LOAD_ONLY=true FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# 23806 for training,     from 2018-06-29 00Z +13 to      2022-05-31 18Z +14.
+#   (2839 with sig_wind,  from 2018-06-29 00Z +13 to      2022-05-31 12Z +17)
+#   (1832 with sig_hail,  from 2018-06-29 00Z +22 to      2022-05-31 12Z +15)
+#   (8071 with hail,      from 2018-06-29 00Z +20 to      2022-05-31 12Z +18)
+#   (2839 with sig_wind_adj,      from 2018-06-29 00Z +13 to      2022-05-31 12Z +17)
+#   (3607 with tornado,   from 2018-06-29 00Z +15 to      2022-05-31 12Z +16)
+#   (12251 with wind_adj,         from 2018-06-29 00Z +13 to      2022-05-31 12Z +17)
+#   (594 with sig_tornado,        from 2018-07-03 12Z +19 to      2022-05-30 06Z +16)
+#   (12251 with wind,     from 2018-06-29 00Z +13 to      2022-05-31 12Z +17)
+# 4808 for validation,    from 2018-06-29 18Z +19 to      2022-05-28 18Z +17.
+# 4568 for testing,       from 2018-06-30 18Z +21 to      2022-05-29 18Z +17.
+# Preparing bin splits by sampling 400 training forecasts with events
+# sampling 26565 datapoints...computing bin splits...done.
+# Loading training data
 
 
 
 # $ sshfs brian@nadocaster2:/Volumes/ ~/nadocaster2/
-# $ FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
+# $ cd ~/hd
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ USE_ALT_DISK=true LOAD_ONLY=true FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 JULIA_NUM_THREADS=$CORE_COUNT time julia --project=~/nadocast_dev ~/nadocast_dev/models/href_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl
+# 23778 for training,     from 2018-06-29 00Z +24 to      2022-05-31 06Z +26.
+#   (2833 with sig_wind,  from 2018-06-29 00Z +25 to      2022-05-31 00Z +29)
+#   (1823 with sig_hail,  from 2018-06-29 00Z +24 to      2022-05-31 00Z +27)
+#   (8048 with hail,      from 2018-06-29 00Z +24 to      2022-05-31 06Z +24)
+#   (2833 with sig_wind_adj,      from 2018-06-29 00Z +25 to      2022-05-31 00Z +29)
+#   (3612 with tornado,   from 2018-07-03 00Z +31 to      2022-05-31 00Z +28)
+#   (12229 with wind_adj,         from 2018-06-29 00Z +24 to      2022-05-31 00Z +29)
+#   (596 with sig_tornado,        from 2018-07-03 00Z +31 to      2022-05-29 18Z +28)
+#   (12229 with wind,     from 2018-06-29 00Z +24 to      2022-05-31 00Z +29)
+# 4789 for validation,    from 2018-06-29 06Z +31 to      2022-05-28 06Z +29.
+# 4528 for testing,       from 2018-06-30 06Z +33 to      2022-05-29 06Z +29.
+# Preparing bin splits by sampling 400 training forecasts with events
+# computing radius ranges...done
+# sampling 21531 datapoints...computing bin splits...done.
+# Loading training data
 
-
-# $ FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=24:35 DATA_SUBSET_RATIO=0.026 NEAR_STORM_RATIO=0.4 make train_gradient_boosted_decision_trees
 
 
 

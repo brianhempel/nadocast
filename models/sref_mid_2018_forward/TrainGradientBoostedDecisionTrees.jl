@@ -72,87 +72,71 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
   )
 
 
-# $ FORECASTS_ROOT=../../test_grib2s LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.26 make train_gradient_boosted_decision_trees
-# $ LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.26 make train_gradient_boosted_decision_trees
-# 16177 for training,      from 2019-01-17 09Z +13 to 2021-12-31 21Z +3.
-#   (1464 with sig_hail,   from 2019-03-11 09Z +12 to 2021-12-15 21Z +2)
-#   (6299 with hail,       from 2019-01-18 21Z +10 to 2021-12-30 15Z +7)
-#   (2718 with tornado,    from 2019-01-17 15Z +8  to 2021-12-31 21Z +2)
-#   (430 with sig_tornado, from 2019-03-12 15Z +9  to 2021-12-15 21Z +6)
-#   (2247 with sig_wind,   from 2019-01-24 03Z +8  to 2021-12-30 15Z +6)
-#   (9498 with wind,       from 2019-01-18 21Z +10 to 2021-12-30 15Z +7)
-# 3290 for validation,     from 2019-01-19 03Z +9  to 2021-12-25 21Z +2.
-# 2922 for testing,        from 2019-01-20 03Z +11 to 2021-12-06 09Z +2.
-# Preparing bin splits by sampling 300 training forecasts with events
-# sampling 3415 datapoints...computing bin splits...done.
-# Loading training data
-# done. 23705020 datapoints with 18777 features each.
-# Loading validation data
-# done. 4839602 datapoints with 18777 features each.
-# 416GB + 85GB
-
+# $ FORECASTS_ROOT=../../test_grib2s LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.3 make train_gradient_boosted_decision_trees
 # $ sshfs -o debug,sshfs_debug,loglevel=debug brian@nadocaster2:/Volumes/ ~/nadocaster2/
 # $ sshfs brian@nadocaster2:/Volumes/ ~/nadocaster2/
-# FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.26 make train_gradient_boosted_decision_trees
-# 16154 for training,      from 2019-01-17 03Z +19 to      2021-12-31 09Z +15.
-#   (1464 with sig_hail,   from 2019-03-11 03Z +18 to      2021-12-15 09Z +14)
-#   (6296 with hail,       from 2019-01-18 09Z +22 to      2021-12-30 09Z +13)
-#   (2718 with tornado,    from 2019-01-17 03Z +20 to      2021-12-31 09Z +14)
-#   (430 with sig_tornado, from 2019-03-12 03Z +21 to      2021-12-15 15Z +12)
-#   (2244 with sig_wind,   from 2019-01-23 15Z +20 to      2021-12-30 09Z +12)
-#   (9492 with wind,       from 2019-01-18 09Z +22 to      2021-12-30 09Z +13)
-# 3290 for validation,     from 2019-01-18 15Z +21 to      2021-12-25 09Z +14).
-# 2924 for testing,        from 2019-01-19 15Z +23 to      2021-12-05 21Z +14).
-# Preparing bin splits by sampling 300 training forecasts with events
-# sampling 3908 datapoints...computing bin splits...done.
-# Loading training data
-# done. 23669916 datapoints with 18777 features each.
+# $ FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.3 make train_gradient_boosted_decision_trees
+# 20843 for training,     from 2019-01-17 09Z +12 to      2022-06-01 03Z +5.
+#   (2553 with sig_wind,  from 2019-01-24 03Z +8  to      2022-06-01 03Z +2)
+#   (1706 with sig_hail,  from 2019-03-11 09Z +12 to      2022-05-31 21Z +6)
+#   (7195 with hail,      from 2019-01-18 21Z +10 to      2022-06-01 03Z +3)
+#   (2553 with sig_wind_adj,      from 2019-01-24 03Z +8  to      2022-06-01 03Z +2)
+#   (3222 with tornado,   from 2019-01-17 15Z +8  to      2022-05-31 21Z +7)
+#   (10700 with wind_adj,         from 2019-01-18 21Z +10 to      2022-06-01 03Z +2)
+#   (548 with sig_tornado,        from 2019-03-12 15Z +9  to      2022-05-30 15Z +7)
+#   (10700 with wind,     from 2019-01-18 21Z +10 to      2022-06-01 03Z +2)
+# 4219 for validation,    from 2019-01-19 03Z +9  to      2022-05-29 09Z +2.
+# 3854 for testing,       from 2019-01-20 03Z +10 to      2022-05-30 09Z +2.
+# Preparing bin splits by sampling 400 training forecasts with events
+# ...
+# done. 26397033 datapoints with 14335 features each.
 # Loading validation data
-# done. 4840284 datapoints with 18777 features each.
+# done. 5359021 datapoints with 14335 features each.
 
 
-# LOAD_ONLY=true FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.26 make train_gradient_boosted_decision_trees
-# 24182 for training,      from 2019-01-16 09Z +37 to      2021-12-31 03Z +21.
-#   (2194 with sig_hail,   from 2019-03-10 09Z +36 to      2021-12-14 21Z +26)
-#   (9430 with hail,       from 2019-01-17 21Z +34 to      2021-12-29 21Z +25)
-#   (4064 with tornado,    from 2019-01-16 09Z +38 to      2021-12-30 21Z +26)
-#   (645 with sig_tornado, from 2019-03-11 15Z +33 to      2021-12-15 03Z +24)
-#   (3364 with sig_wind,   from 2019-01-22 21Z +38 to      2021-12-29 21Z +24)
-#   (14232 with wind,      from 2019-01-17 21Z +34 to      2021-12-29 21Z +25)
-# 4935 for validation,     from 2019-01-18 03Z +33 to      2021-12-24 21Z +26.
-# 4393 for testing,        from 2019-01-19 03Z +35 to      2021-12-05 09Z +26.
-# Preparing bin splits by sampling 300 training forecasts with events
-# sampling 3365 datapoints...computing bin splits...done.
+
+
+# cd ~/hd
+# FORECASTS_ROOT=/home/brian/nadocaster2/ USE_ALT_DISK=true LOAD_ONLY=true FORECAST_HOUR_RANGE=12:23 DATA_SUBSET_RATIO=0.3 JULIA_NUM_THREADS=$CORE_COUNT time julia --project=~/nadocast_dev ~/nadocast_dev/models/sref_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl
+# 20808 for training,     from 2019-01-17 03Z +18 to      2022-05-31 15Z +17.
+#   (2550 with sig_wind,  from 2019-01-23 15Z +20 to      2022-05-31 15Z +14)
+#   (1706 with sig_hail,  from 2019-03-11 03Z +18 to      2022-05-31 15Z +12)
+#   (7192 with hail,      from 2019-01-18 09Z +22 to      2022-05-31 15Z +15)
+#   (2550 with sig_wind_adj,      from 2019-01-23 15Z +20 to      2022-05-31 15Z +14)
+#   (3222 with tornado,   from 2019-01-17 03Z +20 to      2022-05-31 15Z +13)
+#   (10693 with wind_adj,         from 2019-01-18 09Z +22 to      2022-05-31 15Z +14)
+#   (548 with sig_tornado,        from 2019-03-12 03Z +21 to      2022-05-30 09Z +13)
+#   (10693 with wind,     from 2019-01-18 09Z +22 to      2022-05-31 15Z +14)
+# 4220 for validation,    from 2019-01-18 15Z +21 to      2022-05-28 21Z +14.
+# 3856 for testing,       from 2019-01-19 15Z +22 to      2022-05-29 21Z +14.
+# Preparing bin splits by sampling 400 training forecasts with events
+# sampling 3243 datapoints...computing bin splits...done.
 # Loading training data
-# done. 35439117 datapoints with 18777 features each.
-# Loading validation data
-# done. 7261105 datapoints with 18777 features each.
-# 621GB + 128GB TOO MUCH, do over
 
-# LOAD_ONLY=true FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.17 make train_gradient_boosted_decision_trees
-# 24182 for training,      from 2019-01-16 09Z +37 to      2021-12-31 03Z +21.
-#   (2194 with sig_hail,   from 2019-03-10 09Z +36 to      2021-12-14 21Z +26)
-#   (9430 with hail,       from 2019-01-17 21Z +34 to      2021-12-29 21Z +25)
-#   (4064 with tornado,    from 2019-01-16 09Z +38 to      2021-12-30 21Z +26)
-#   (645 with sig_tornado, from 2019-03-11 15Z +33 to      2021-12-15 03Z +24)
-#   (3364 with sig_wind,   from 2019-01-22 21Z +38 to      2021-12-29 21Z +24)
-#   (14232 with wind,      from 2019-01-17 21Z +34 to      2021-12-29 21Z +25)
-# 4935 for validation,     from 2019-01-18 03Z +33 to      2021-12-24 21Z +26).
-# 4393 for testing,        from 2019-01-19 03Z +35 to      2021-12-05 09Z +26).
-# Preparing bin splits by sampling 300 training forecasts with events
-# computing radius ranges...done
-# 300/~300 forecasts loaded.  3.4334856009466663s each.  ~0.0 hours left.            left.
-# sampling 3365 datapoints...computing bin splits...done.
+
+# cd ~/hd
+# FORECASTS_ROOT=/home/brian/nadocaster2/ LOAD_ONLY=true FORECAST_HOUR_RANGE=21:38 DATA_SUBSET_RATIO=0.2 JULIA_NUM_THREADS=$CORE_COUNT time julia --project=~/nadocast_dev ~/nadocast_dev/models/sref_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl
+# 31157 for training,     from 2019-01-16 09Z +36 to      2022-05-31 09Z +23.
+#   (3823 with sig_wind,  from 2019-01-22 21Z +38 to      2022-05-31 03Z +26)
+#   (2557 with sig_hail,  from 2019-03-10 09Z +36 to      2022-05-31 03Z +24)
+#   (10774 with hail,     from 2019-01-17 21Z +34 to      2022-05-31 09Z +21)
+#   (3823 with sig_wind_adj,      from 2019-01-22 21Z +38 to      2022-05-31 03Z +26)
+#   (4820 with tornado,   from 2019-01-16 09Z +38 to      2022-05-31 03Z +25)
+#   (16035 with wind_adj,         from 2019-01-17 21Z +34 to      2022-05-31 03Z +26)
+#   (822 with sig_tornado,        from 2019-03-11 15Z +33 to      2022-05-29 21Z +25)
+#   (16035 with wind,     from 2019-01-17 21Z +34 to      2022-05-31 03Z +26)
+# 6330 for validation,    from 2019-01-18 03Z +33 to      2022-05-28 09Z +26.
+# 5798 for testing,       from 2019-01-19 03Z +34 to      2022-05-29 09Z +26.
+# Preparing bin splits by sampling 400 training forecasts with events
+# sampling 4013 datapoints...computing bin splits...done.
 # Loading training data
-# done. 5103845 datapoints with 18777 features each.
-# 12:57:59 elapsed
-# 436G + 90G
+
+
+
+
 
 # time scp -C -r nadocaster2-remote:~/nadocast_dev/models/sref_mid_2018_forward/sref_f2-13_0.26_training ./
 
-
-# small_test
-# VALIDATION_SERVER=acer:/home/brian/nadocast_dev:/home/brian/nadocast_dev/small_test/sref_f2-13_0.26_validation JULIA_NUM_THREADS=$CORE_COUNT MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.26 julia --project=../../.. ../TrainGradientBoostedDecisionTrees.jl
 
 
 # on nadocaster2:
