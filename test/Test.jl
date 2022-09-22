@@ -11,6 +11,9 @@ import SPCOutlooks
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
 import CombinedHREFSREF
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction")
+import HREFPrediction
+
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 import Conus
 import Forecasts
@@ -276,19 +279,19 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
         for threshold_i in 1:length(model_name_to_thresholds[model_name])
           threshold = model_name_to_thresholds[model_name][threshold_i]
 
-          spc_valid_for_model = model_name == model_name_to_event_name(model_name)
+          spc_model_name = model_name_to_event_name(model_name)
 
           total_days_count = length(test_threshold_painted_areas[model_name][threshold_i])
-          spc_threshold_days_count  = count(spc_threshold_painted_areas[model_name][threshold_i] .> 0)
+          spc_threshold_days_count  = count(spc_threshold_painted_areas[spc_model_name][threshold_i] .> 0)
           test_threshold_days_count = count(test_threshold_painted_areas[model_name][threshold_i] .> 0)
 
-          spc_painted_area         = sum(spc_threshold_painted_areas[model_name][threshold_i])
+          spc_painted_area         = sum(spc_threshold_painted_areas[spc_model_name][threshold_i])
           test_painted_area        = sum(test_threshold_painted_areas[model_name][threshold_i])
-          spc_true_positive_area   = sum(spc_threshold_true_positive_areas[model_name][threshold_i])
+          spc_true_positive_area   = sum(spc_threshold_true_positive_areas[spc_model_name][threshold_i])
           test_true_positive_area  = sum(test_threshold_true_positive_areas[model_name][threshold_i])
-          spc_false_negative_area  = sum(spc_threshold_false_negative_areas[model_name][threshold_i])
+          spc_false_negative_area  = sum(spc_threshold_false_negative_areas[spc_model_name][threshold_i])
           test_false_negative_area = sum(test_threshold_false_negative_areas[model_name][threshold_i])
-          spc_true_negative_area   = sum(spc_threshold_true_negative_areas[model_name][threshold_i])
+          spc_true_negative_area   = sum(spc_threshold_true_negative_areas[spc_model_name][threshold_i])
           test_true_negative_area  = sum(test_threshold_true_negative_areas[model_name][threshold_i])
 
           spc_false_positive_area  = spc_painted_area - spc_true_positive_area
@@ -296,20 +299,20 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
           test_false_positive_area = test_painted_area - test_true_positive_area
           test_negative_area       = test_false_positive_area + test_true_negative_area
 
-          spc_sr_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
+          spc_sr_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area = Float32(sum(view(spc_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
-            painted_area  = Float32(sum(view(spc_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
+            true_pos_area = Float32(sum(view(spc_threshold_true_positive_areas[spc_model_name][threshold_i], bootstrap_is)))
+            painted_area  = Float32(sum(view(spc_threshold_painted_areas[spc_model_name][threshold_i], bootstrap_is)))
 
             true_pos_area / (painted_area + ϵ)
           end
 
-          spc_pod_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
+          spc_pod_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
-            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
+            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[spc_model_name][threshold_i], bootstrap_is)))
+            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[spc_model_name][threshold_i], bootstrap_is)))
 
             true_pos_area / (true_pos_area + false_neg_area + ϵ)
           end
@@ -332,12 +335,12 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
             true_pos_area / (true_pos_area + false_neg_area + ϵ)
           end
 
-          spc_csi_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
+          spc_csi_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
-            painted_area   = Float32(sum(view(spc_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
-            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[model_name][threshold_i], bootstrap_is)))
+            true_pos_area  = Float32(sum(view(spc_threshold_true_positive_areas[spc_model_name][threshold_i], bootstrap_is)))
+            painted_area   = Float32(sum(view(spc_threshold_painted_areas[spc_model_name][threshold_i], bootstrap_is)))
+            false_neg_area = Float32(sum(view(spc_threshold_false_negative_areas[spc_model_name][threshold_i], bootstrap_is)))
 
             # CSI = tp / (tp + fp + fn)
             true_pos_area / (painted_area  + false_neg_area + ϵ)
@@ -357,11 +360,9 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
           csi_diff_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            event_name = model_name_to_event_name(model_name)
-
-            spc_true_pos  = Float32(sum(view(spc_threshold_true_positive_areas[event_name][threshold_i], bootstrap_is)))
-            spc_painted   = Float32(sum(view(spc_threshold_painted_areas[event_name][threshold_i], bootstrap_is)))
-            spc_false_neg = Float32(sum(view(spc_threshold_false_negative_areas[event_name][threshold_i], bootstrap_is)))
+            spc_true_pos  = Float32(sum(view(spc_threshold_true_positive_areas[spc_model_name][threshold_i], bootstrap_is)))
+            spc_painted   = Float32(sum(view(spc_threshold_painted_areas[spc_model_name][threshold_i], bootstrap_is)))
+            spc_false_neg = Float32(sum(view(spc_threshold_false_negative_areas[spc_model_name][threshold_i], bootstrap_is)))
 
             test_true_pos  = Float32(sum(view(test_threshold_true_positive_areas[model_name][threshold_i], bootstrap_is)))
             test_painted   = Float32(sum(view(test_threshold_painted_areas[model_name][threshold_i], bootstrap_is)))
@@ -379,20 +380,20 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
             model_name,
             total_days_count,
             Float32(threshold),
-            spc_valid_for_model && spc_threshold_days_count,
+            spc_threshold_days_count,
             test_threshold_days_count,
-            spc_valid_for_model && Float32(spc_true_positive_area  / spc_painted_area), # sr
-            spc_valid_for_model && Float32(spc_true_positive_area  / (spc_true_positive_area + spc_false_negative_area)), # pod
-            spc_valid_for_model && Float32(spc_false_positive_area / spc_negative_area), # fpr
+            Float32(spc_true_positive_area  / spc_painted_area), # sr
+            Float32(spc_true_positive_area  / (spc_true_positive_area + spc_false_negative_area)), # pod
+            Float32(spc_false_positive_area / spc_negative_area), # fpr
             Float32(test_true_positive_area / test_painted_area), # sr
             Float32(test_true_positive_area / (test_true_positive_area + test_false_negative_area)), # pod
             Float32(test_false_positive_area / test_negative_area), # fpr
-            spc_valid_for_model && Statistics.quantile(spc_sr_bootstraps, 0.025),
-            spc_valid_for_model && Statistics.quantile(spc_sr_bootstraps, 0.975),
-            spc_valid_for_model && Statistics.quantile(spc_pod_bootstraps, 0.025),
-            spc_valid_for_model && Statistics.quantile(spc_pod_bootstraps, 0.975),
-            spc_valid_for_model && Statistics.quantile(spc_csi_bootstraps, 0.025),
-            spc_valid_for_model && Statistics.quantile(spc_csi_bootstraps, 0.975),
+            Statistics.quantile(spc_sr_bootstraps, 0.025),
+            Statistics.quantile(spc_sr_bootstraps, 0.975),
+            Statistics.quantile(spc_pod_bootstraps, 0.025),
+            Statistics.quantile(spc_pod_bootstraps, 0.975),
+            Statistics.quantile(spc_csi_bootstraps, 0.025),
+            Statistics.quantile(spc_csi_bootstraps, 0.975),
             Statistics.quantile(test_sr_bootstraps, 0.025),
             Statistics.quantile(test_sr_bootstraps, 0.975),
             Statistics.quantile(test_pod_bootstraps, 0.025),
@@ -415,21 +416,21 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
       println(reliability_csv, join(reliability_headers, ","))
 
       for model_name in model_names
-        spc_valid_for_model = model_name == model_name_to_event_name(model_name)
+        spc_model_name = model_name_to_event_name(model_name)
 
         bin_lo = 0.0
         for bin_i in 1:length(bin_maxes[model_name])
           bin_hi = bin_maxes[model_name][bin_i]
 
           total_days_count    = length(test_bin_painted_areas[model_name][bin_i])
-          spc_bin_days_count  = count(spc_bin_painted_areas[model_name][bin_i] .> 0)
+          spc_bin_days_count  = count(spc_bin_painted_areas[spc_model_name][bin_i] .> 0)
           test_bin_days_count = count(test_bin_painted_areas[model_name][bin_i] .> 0)
 
-          spc_bootstraps = spc_valid_for_model && map(1:1_000_000) do _
+          spc_bootstraps = map(1:1_000_000) do _
             bootstrap_is = rand(1:total_days_count, total_days_count)
 
-            true_pos_area = Float32(sum(view(spc_bin_true_positive_areas[model_name][bin_i], bootstrap_is)))
-            painted_area  = Float32(sum(view(spc_bin_painted_areas[model_name][bin_i], bootstrap_is)))
+            true_pos_area = Float32(sum(view(spc_bin_true_positive_areas[spc_model_name][bin_i], bootstrap_is)))
+            painted_area  = Float32(sum(view(spc_bin_painted_areas[spc_model_name][bin_i], bootstrap_is)))
 
             true_pos_area / (painted_area + ϵ)
           end
@@ -448,12 +449,12 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
             total_days_count,
             Float32(bin_lo),
             Float32(bin_hi),
-            spc_valid_for_model && spc_bin_days_count,
+            spc_bin_days_count,
             test_bin_days_count,
-            spc_valid_for_model && Float32(sum(spc_bin_true_positive_areas[model_name][bin_i])  / sum(spc_bin_painted_areas[model_name][bin_i])),
+            Float32(sum(spc_bin_true_positive_areas[spc_model_name][bin_i])  / sum(spc_bin_painted_areas[spc_model_name][bin_i])),
             Float32(sum(test_bin_true_positive_areas[model_name][bin_i]) / sum(test_bin_painted_areas[model_name][bin_i])),
-            spc_valid_for_model && Statistics.quantile(spc_bootstraps, 0.025),
-            spc_valid_for_model && Statistics.quantile(spc_bootstraps, 0.975),
+            Statistics.quantile(spc_bootstraps, 0.025),
+            Statistics.quantile(spc_bootstraps, 0.975),
             Statistics.quantile(test_bootstraps, 0.025),
             Statistics.quantile(test_bootstraps, 0.975),
           ]
@@ -468,16 +469,22 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
   end
 end
 
+function only_forecasts_with_runtimes(reference_forecasts, forecasts_to_filter)
+  reference_runtimes = Set(Forecasts.run_utc_datetime.(reference_forecasts))
+
+  filter(fcst -> Forecasts.run_utc_datetime(fcst) in reference_runtimes, forecasts_to_filter)
+end
+
+# HREF-SREF models
+
 do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); run_hour = 0, suffix = "")
 # 1143 SPC forecasts available
 # 631 unfiltered test forecasts
 # 158 0z test forecasts
 # 133 0z test forecasts before the event data cutoff date
 
-
 # Do the same, but without the final SPC-like prob rescaling
 do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(); run_hour = 0, suffix = "_absolutely_calibrated")
-
 
 do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); run_hour = 12, suffix = "")
 # 1143 SPC forecasts available
@@ -486,6 +493,27 @@ do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calib
 # 133 12z test forecasts before the event data cutoff date
 
 do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(); run_hour = 12, suffix = "_absolutely_calibrated")
+
+
+
+# HREF-only models
+
+do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()); run_hour = 0, suffix = "_href_only")
+# 1143 SPC forecasts available
+# 679 unfiltered test forecasts
+# 170 0z test forecasts
+# 133 0z test forecasts before the event data cutoff date
+
+# Do the same, but without the final SPC-like prob rescaling
+# do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()); run_hour = 0, suffix = "_href_only_absolutely_calibrated")
+
+do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()); run_hour = 12, suffix = "_href_only")
+# 1143 SPC forecasts available
+# 679 unfiltered test forecasts
+# 170 12z test forecasts
+# 133 12z test forecasts before the event data cutoff date
+
+# do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()); run_hour = 12, suffix = "_href_only_absolutely_calibrated")
 
 
 # scp -r nadocaster:/home/brian/nadocast_dev/test/ ./
