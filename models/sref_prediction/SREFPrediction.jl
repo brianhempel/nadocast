@@ -64,29 +64,37 @@ end
 
 # (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f12_to_f23, gbdt_f21_to_f38)
 models = [
-  ("tornado", "TORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_tornado/389_trees_loss_0.001139937.model",
-                         "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-16T10.56.41.459_tornado/271_trees_loss_0.0012234614.model",
-                         "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-12T21.11.05.785_tornado/187_trees_loss_0.0012662631.model"
+  ("tornado", "TORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-16T21.10.32.236_tornado_climatology_all/1174_trees_loss_0.0012410119.model",
+                         "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T20.17.27.417_tornado_climatology_all/514_trees_loss_0.001334934.model",
+                         "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-22T15.45.20.679_tornado_climatology_all/549_trees_loss_0.0013913331.model"
   ),
-  ("wind", "WINDPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_wind/527_trees_loss_0.0067868917.model",
-                       "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-16T10.56.41.459_wind/464_trees_loss_0.007258802.model",
-                       "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-13T01.36.58.700_wind/560_trees_loss_0.0074025104.model"
+  ("wind", "WINDPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-16T21.10.32.236_wind_climatology_all/1251_trees_loss_0.007144468.model",
+                       "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T20.17.27.417_wind_climatology_all/946_trees_loss_0.0076652328.model",
+                       "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-22T15.45.20.679_wind_climatology_all/1102_trees_loss_0.0079156775.model"
   ),
-  ("hail", "HAILPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_hail/365_trees_loss_0.00337179.model",
-                       "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-16T10.56.41.459_hail/325_trees_loss_0.0036047401.model",
-                       "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-20T09.45.13.302_hail/480_trees_loss_0.0037651379.model"
+  ("wind_adj", "WINDPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-15T19.36.04.508_wind_adj_climatology_all/1109_trees_loss_0.0025972943.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T19.43.23.541_wind_adj_climatology_all/594_trees_loss_0.0027557628.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-21T19.43.25.532_wind_adj_climatology_all/1031_trees_loss_0.0028386333.model"
   ),
-  ("sig_tornado", "STORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-18T08.46.42.718_sig_tornado/232_trees_loss_0.00019671764.model",
-                              "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-20T04.30.47.008_sig_tornado/231_trees_loss_0.00020749163.model",
-                              "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-20T09.45.13.302_sig_tornado/189_trees_loss_0.00021580876.model"
+  ("hail", "HAILPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-15T19.36.04.508_hail_climatology_all/1249_trees_loss_0.0036505193.model",
+                       "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T19.43.23.541_hail_climatology_all/1191_trees_loss_0.003924385.model",
+                       "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-21T19.43.25.532_hail_climatology_all/705_trees_loss_0.0041216174.model"
   ),
-  ("sig_wind", "SWINDPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-22T08.00.21.554_sig_wind/211_trees_loss_0.0010130208.model",
-                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-22T08.06.21.664_sig_wind/262_trees_loss_0.001065569.model",
-                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-22T08.00.27.390_sig_wind/183_trees_loss_0.0010853795.model"
+  ("sig_tornado", "STORPROB", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-16T21.10.32.236_sig_tornado_climatology_all/650_trees_loss_0.00021289948.model",
+                              "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T20.17.27.417_sig_tornado_climatology_all/794_trees_loss_0.00022598228.model",
+                              "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-22T15.45.20.679_sig_tornado_climatology_all/446_trees_loss_0.00023354763.model"
   ),
-  ("sig_hail", "SHAILPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-04-22T08.00.21.554_sig_hail/263_trees_loss_0.00052539556.model",
-                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-04-22T08.06.21.664_sig_hail/290_trees_loss_0.0005572099.model",
-                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-04-22T08.00.27.390_sig_hail/319_trees_loss_0.0005862602.model"
+  ("sig_wind", "SWINDPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-16T21.10.32.236_sig_wind_climatology_all/517_trees_loss_0.001052755.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T20.17.27.417_sig_wind_climatology_all/517_trees_loss_0.0011016179.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-22T15.45.20.679_sig_wind_climatology_all/482_trees_loss_0.0011263784.model"
+  ),
+  ("sig_wind_adj", "SWINDPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-15T19.36.04.508_sig_wind_adj_climatology_all/337_trees_loss_0.00038395263.model",
+                               "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T19.43.23.541_sig_wind_adj_climatology_all/165_trees_loss_0.0004010354.model",
+                               "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-21T19.43.25.532_sig_wind_adj_climatology_all/432_trees_loss_0.00041955602.model"
+  ),
+  ("sig_hail", "SHAILPRO", "gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-15T19.36.04.508_sig_hail_climatology_all/1194_trees_loss_0.00055598136.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f12-23_2022-09-21T19.43.23.541_sig_hail_climatology_all/455_trees_loss_0.0005870462.model",
+                           "gbdt_3hr_window_3hr_min_mean_max_delta_f21-38_2022-09-21T19.43.25.532_sig_hail_climatology_all/566_trees_loss_0.00062155735.model"
   ),
 ]
 
@@ -149,18 +157,20 @@ function reload_forecasts()
   # sig_hail    0                   50                   0.013548006
 
   blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
-  blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
-  blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
-  blur_70mi_grid_is = Grids.radius_grid_is(grid, 70.0)
+  # blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
+  # blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
+  # blur_70mi_grid_is = Grids.radius_grid_is(grid, 70.0)
 
   # Needs to be the same order as models
   blur_grid_is = [
-    (blur_0mi_grid_is,  blur_50mi_grid_is), # tornado
-    (blur_50mi_grid_is, blur_50mi_grid_is), # wind
-    (blur_0mi_grid_is,  blur_35mi_grid_is), # hail
-    (blur_50mi_grid_is, blur_35mi_grid_is), # sig_tornado lol
-    (blur_35mi_grid_is, blur_70mi_grid_is), # sig_wind
-    (blur_0mi_grid_is,  blur_50mi_grid_is), # sig_hail
+    (blur_0mi_grid_is, blur_0mi_grid_is), # tornado
+    (blur_0mi_grid_is, blur_0mi_grid_is), # wind
+    (blur_0mi_grid_is, blur_0mi_grid_is), # wind_adj
+    (blur_0mi_grid_is, blur_0mi_grid_is), # hail
+    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_tornado
+    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_wind
+    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_wind_adj
+    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_hail
   ]
 
   _forecasts_blurred = PredictionForecasts.blurred(_forecasts, 2:38, blur_grid_is)
