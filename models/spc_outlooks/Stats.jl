@@ -29,7 +29,7 @@ training_and_validation_forecasts = vcat(training_forecasts, validation_forecast
 length(training_and_validation_forecasts) #
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 training_and_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, training_and_validation_forecasts);
 
 length(training_and_validation_forecasts) # 2802

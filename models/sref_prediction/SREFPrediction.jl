@@ -139,7 +139,7 @@ function reload_forecasts()
   _forecasts =
     ForecastCombinators.disk_cache_forecasts(
       PredictionForecasts.simple_prediction_forecasts(sref_forecasts, predictors),
-      "sref_prediction_raw_2021_models_$(hash(models))"
+      "sref_prediction_raw_2022_models_$(hash(models))"
     )
 
   # The forecast hour is needed for training purposes.

@@ -20,7 +20,7 @@ import Inventories
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 # disk2_date = Dates.DateTime(2021, 3, 1, 0)
@@ -1508,7 +1508,7 @@ import Inventories
 (_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.regular_forecasts(HREFPrediction.forecasts_blurred()); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_blurred);
 
 # Make sure a forecast loads
@@ -1804,7 +1804,7 @@ import Inventories
 (_, validation_forecasts_calibrated_with_sig_gated, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.regular_forecasts(HREFPrediction.forecasts_calibrated_with_sig_gated()); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts_calibrated_with_sig_gated = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_calibrated_with_sig_gated);
 
 # Make sure a forecast loads

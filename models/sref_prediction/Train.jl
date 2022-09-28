@@ -20,7 +20,7 @@ import Inventories
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 # for testing
@@ -709,7 +709,7 @@ import Inventories
 (_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(SREFPrediction.forecasts_blurred(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts_blurred = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts_blurred);
 
 # Make sure a forecast loads

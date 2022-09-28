@@ -25,7 +25,7 @@ HOUR   = 60*MINUTE
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 length(validation_forecasts) #
@@ -426,7 +426,7 @@ HOUR   = 60*MINUTE
 length(day_validation_forecasts)
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
 
 length(day_validation_forecasts)
@@ -1252,7 +1252,7 @@ HOUR   = 60*MINUTE
 length(day_validation_forecasts) # 628
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
 
 length(day_validation_forecasts) # 528
@@ -1390,7 +1390,7 @@ length(day_validation_forecasts)
 # 903
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
 
 length(day_validation_forecasts)
