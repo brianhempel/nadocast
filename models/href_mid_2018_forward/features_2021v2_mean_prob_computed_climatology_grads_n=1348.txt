@@ -1,0 +1,1348 @@
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:
+CAPE:surface:hour fcst:wt ens mean:
+CIN:90-0 mb above ground:hour fcst:wt ens mean:
+CIN:180-0 mb above ground:hour fcst:wt ens mean:
+CIN:surface:hour fcst:wt ens mean:
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:
+HGT:250 mb:hour fcst:wt ens mean:
+HGT:500 mb:hour fcst:wt ens mean:
+HGT:700 mb:hour fcst:wt ens mean:
+HGT:850 mb:hour fcst:wt ens mean:
+HGT:925 mb:hour fcst:wt ens mean:
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:
+UGRD:250 mb:hour fcst:wt ens mean:
+UGRD:500 mb:hour fcst:wt ens mean:
+UGRD:700 mb:hour fcst:wt ens mean:
+UGRD:850 mb:hour fcst:wt ens mean:
+UGRD:925 mb:hour fcst:wt ens mean:
+VGRD:250 mb:hour fcst:wt ens mean:
+VGRD:500 mb:hour fcst:wt ens mean:
+VGRD:700 mb:hour fcst:wt ens mean:
+VGRD:850 mb:hour fcst:wt ens mean:
+VGRD:925 mb:hour fcst:wt ens mean:
+VVEL:700 mb:hour fcst:wt ens mean:
+TMP:250 mb:hour fcst:wt ens mean:
+TMP:500 mb:hour fcst:wt ens mean:
+TMP:700 mb:hour fcst:wt ens mean:
+TMP:850 mb:hour fcst:wt ens mean:
+TMP:925 mb:hour fcst:wt ens mean:
+TMP:2 m above ground:hour fcst:wt ens mean:
+DPT:500 mb:hour fcst:wt ens mean:
+DPT:700 mb:hour fcst:wt ens mean:
+DPT:850 mb:hour fcst:wt ens mean:
+DPT:925 mb:hour fcst:wt ens mean:
+DPT:2 m above ground:hour fcst:wt ens mean:
+RH:700 mb:hour fcst:wt ens mean:
+PWAT:entire atmosphere:hour fcst:wt ens mean:
+VIS:surface:hour fcst:wt ens mean:
+HGT:cloud base:hour fcst:wt ens mean:
+LCDC:low cloud layer:hour fcst:wt ens mean:
+MCDC:middle cloud layer:hour fcst:wt ens mean:
+HCDC:high cloud layer:hour fcst:wt ens mean:
+TCDC:entire atmosphere:hour fcst:wt ens mean:
+CRAIN:surface:hour fcst:wt ens mean:
+CFRZR:surface:hour fcst:wt ens mean:
+CICEP:surface:hour fcst:wt ens mean:
+CSNOW:surface:hour fcst:wt ens mean:
+WIND:10 m above ground:hour fcst:wt ens mean:
+WIND:850 mb:hour fcst:wt ens mean:
+WIND:80 m above ground:hour fcst:wt ens mean:
+WIND:925 mb:hour fcst:wt ens mean:
+WIND:250 mb:hour fcst:wt ens mean:
+VVEL:700-500 mb:hour fcst:wt ens mean:
+VWSH:surface:hour fcst:wt ens mean:
+HINDEX:surface:hour fcst:wt ens mean:
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:
+HGT:cloud ceiling:hour fcst:wt ens mean:
+REFD:1000 m above ground:hour fcst:prob >30:
+REFD:1000 m above ground:hour fcst:prob >40:
+REFD:1000 m above ground:hour fcst:prob >50:
+MAXREF:1000 m above ground:hour fcst:prob >40:
+MAXREF:1000 m above ground:hour fcst:prob >50:
+REFC:entire atmosphere:hour fcst:prob >10:
+REFC:entire atmosphere:hour fcst:prob >20:
+REFC:entire atmosphere:hour fcst:prob >30:
+REFC:entire atmosphere:hour fcst:prob >40:
+REFC:entire atmosphere:hour fcst:prob >50:
+RETOP:entire atmosphere:hour fcst:prob >6096:
+RETOP:entire atmosphere:hour fcst:prob >9144:
+RETOP:entire atmosphere:hour fcst:prob >10668:
+RETOP:entire atmosphere:hour fcst:prob >12192:
+RETOP:entire atmosphere:hour fcst:prob >15240:
+MAXUVV:400-1000 mb:hour fcst:prob >1:
+MAXUVV:400-1000 mb:hour fcst:prob >10:
+MAXUVV:400-1000 mb:hour fcst:prob >20:
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:
+CAPE:90-0 mb above ground:hour fcst:prob >500:
+CAPE:90-0 mb above ground:hour fcst:prob >1000:
+CAPE:90-0 mb above ground:hour fcst:prob >1500:
+CAPE:90-0 mb above ground:hour fcst:prob >2000:
+CAPE:90-0 mb above ground:hour fcst:prob >3000:
+CIN:90-0 mb above ground:hour fcst:prob <0:
+CIN:90-0 mb above ground:hour fcst:prob <-50:
+CIN:90-0 mb above ground:hour fcst:prob <-100:
+CIN:90-0 mb above ground:hour fcst:prob <-400:
+HLCY:3000-0 m above ground:hour fcst:prob >100:
+HLCY:3000-0 m above ground:hour fcst:prob >200:
+HLCY:3000-0 m above ground:hour fcst:prob >400:
+TMP:2 m above ground:hour fcst:prob <273.15:
+DPT:2 m above ground:hour fcst:prob >283.15:
+DPT:2 m above ground:hour fcst:prob >285.93:
+DPT:2 m above ground:hour fcst:prob >288.71:
+DPT:2 m above ground:hour fcst:prob >291.48:
+DPT:2 m above ground:hour fcst:prob >294.26:
+PWAT:entire atmosphere:hour fcst:prob >25:
+PWAT:entire atmosphere:hour fcst:prob >37.5:
+PWAT:entire atmosphere:hour fcst:prob >50:
+VIS:surface:hour fcst:prob <400:
+VIS:surface:hour fcst:prob <800:
+VIS:surface:hour fcst:prob <1600:
+VIS:surface:hour fcst:prob <3200:
+VIS:surface:hour fcst:prob <6400:
+CRAIN:surface:hour fcst:prob >=1 <0:
+CFRZR:surface:hour fcst:prob >=1 <0:
+CICEP:surface:hour fcst:prob >=1 <0:
+CSNOW:surface:hour fcst:prob >=1 <0:
+WIND:10 m above ground:hour fcst:prob >10.3:
+WIND:10 m above ground:hour fcst:prob >15.4:
+WIND:10 m above ground:hour fcst:prob >20.6:
+WIND:80 m above ground:hour fcst:prob >10.3:
+WIND:80 m above ground:hour fcst:prob >15.4:
+WIND:80 m above ground:hour fcst:prob >20.6:
+WIND:850 mb:hour fcst:prob >10.3:
+WIND:850 mb:hour fcst:prob >20.6:
+WIND:850 mb:hour fcst:prob >30.9:
+WIND:850 mb:hour fcst:prob >41.2:
+WIND:850 mb:hour fcst:prob >51.5:
+WIND:850-300 mb:hour fcst:prob <5:
+FLGHT:surface:hour fcst:prob >=1 <2:
+FLGHT:surface:hour fcst:prob >=2 <3:
+FLGHT:surface:hour fcst:prob >=3 <4:
+FLGHT:surface:hour fcst:prob >=4 <0:
+VWSH:surface:hour fcst:prob >10.3:
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:
+HINDEX:surface:hour fcst:prob >=2 <5:
+HINDEX:surface:hour fcst:prob >=5 <6:
+HINDEX:surface:hour fcst:prob >=6 <7:
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:
+HGT:cloud ceiling:hour fcst:prob <305:
+HGT:cloud ceiling:hour fcst:prob <610:
+HGT:cloud ceiling:hour fcst:prob <915:
+HGT:cloud ceiling:hour fcst:prob <1372:
+HGT:cloud ceiling:hour fcst:prob <1830:
+HGT:cloud ceiling:hour fcst:prob <3050:
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:
+REFD:1000 m above ground:hour fcst:estimated from probs:
+MAXREF:1000 m above ground:hour fcst:estimated from probs:
+REFC:entire atmosphere:hour fcst:estimated from probs:
+RETOP:entire atmosphere:hour fcst:estimated from probs:
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:
+700-500mbLapseRate:calculated:hour fcst::
+925-700mbLapseRate:calculated:hour fcst::
+Wind700mb:calculated:hour fcst::
+Wind500mb:calculated:hour fcst::
+SBCAPE*HLCY3000-0m:calculated:hour fcst::
+MLCAPE*HLCY3000-0m:calculated:hour fcst::
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::
+SBCAPE*BWD0-6km:calculated:hour fcst::
+MLCAPE*BWD0-6km:calculated:hour fcst::
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::
+SBCAPE*(200+SBCIN):calculated:hour fcst::
+MLCAPE*(200+MLCIN):calculated:hour fcst::
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MUCAPE*BWD0-6km:calculated:hour fcst::
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MaxWind<=850mb:calculated:hour fcst::
+SumWind<=850mb:calculated:hour fcst::
+MaxWind<=700mb:calculated:hour fcst::
+SumWind<=700mb:calculated:hour fcst::
+SCPish(RM):calculated:hour fcst::
+Divergence925mb*10^5:calculated:hour fcst::
+Divergence850mb*10^5:calculated:hour fcst::
+Divergence250mb*10^5:calculated:hour fcst::
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::
+ConvergenceOnly925mb*10^5:calculated:hour fcst::
+ConvergenceOnly850mb*10^5:calculated:hour fcst::
+AbsVorticity925mb*10^5:calculated:hour fcst::
+AbsVorticity850mb*10^5:calculated:hour fcst::
+AbsVorticity700mb*10^5:calculated:hour fcst::
+AbsVorticity500mb*10^5:calculated:hour fcst::
+AbsVorticity250mb*10^5:calculated:hour fcst::
+UMEAN:calculated:hour fcst::
+VMEAN:calculated:hour fcst::
+USHEAR:calculated:hour fcst::
+VSHEAR:calculated:hour fcst::
+SHEAR:calculated:hour fcst::
+USTM:calculated:hour fcst::
+VSTM:calculated:hour fcst::
+U½STM½500mb:calculated:hour fcst::
+V½STM½500mb:calculated:hour fcst::
+SCPish(RM)>1:calculated:hour fcst::
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::
+UpstreamSBCAPE2hr:calculated:hour fcst::
+UpstreamMLCAPE2hr:calculated:hour fcst::
+Upstream2mDPT1hr:calculated:hour fcst::
+Upstream2mDPT2hr:calculated:hour fcst::
+UpstreamCRAIN2hr:calculated:hour fcst::
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:50mi forward grad
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:50mi forward grad
+CAPE:surface:hour fcst:wt ens mean:50mi forward grad
+CIN:90-0 mb above ground:hour fcst:wt ens mean:50mi forward grad
+CIN:180-0 mb above ground:hour fcst:wt ens mean:50mi forward grad
+CIN:surface:hour fcst:wt ens mean:50mi forward grad
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:50mi forward grad
+HGT:250 mb:hour fcst:wt ens mean:50mi forward grad
+HGT:500 mb:hour fcst:wt ens mean:50mi forward grad
+HGT:700 mb:hour fcst:wt ens mean:50mi forward grad
+HGT:850 mb:hour fcst:wt ens mean:50mi forward grad
+HGT:925 mb:hour fcst:wt ens mean:50mi forward grad
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:50mi forward grad
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:50mi forward grad
+UGRD:250 mb:hour fcst:wt ens mean:50mi forward grad
+UGRD:500 mb:hour fcst:wt ens mean:50mi forward grad
+UGRD:700 mb:hour fcst:wt ens mean:50mi forward grad
+UGRD:850 mb:hour fcst:wt ens mean:50mi forward grad
+UGRD:925 mb:hour fcst:wt ens mean:50mi forward grad
+VGRD:250 mb:hour fcst:wt ens mean:50mi forward grad
+VGRD:500 mb:hour fcst:wt ens mean:50mi forward grad
+VGRD:700 mb:hour fcst:wt ens mean:50mi forward grad
+VGRD:850 mb:hour fcst:wt ens mean:50mi forward grad
+VGRD:925 mb:hour fcst:wt ens mean:50mi forward grad
+VVEL:700 mb:hour fcst:wt ens mean:50mi forward grad
+TMP:250 mb:hour fcst:wt ens mean:50mi forward grad
+TMP:500 mb:hour fcst:wt ens mean:50mi forward grad
+TMP:700 mb:hour fcst:wt ens mean:50mi forward grad
+TMP:850 mb:hour fcst:wt ens mean:50mi forward grad
+TMP:925 mb:hour fcst:wt ens mean:50mi forward grad
+TMP:2 m above ground:hour fcst:wt ens mean:50mi forward grad
+DPT:500 mb:hour fcst:wt ens mean:50mi forward grad
+DPT:700 mb:hour fcst:wt ens mean:50mi forward grad
+DPT:850 mb:hour fcst:wt ens mean:50mi forward grad
+DPT:925 mb:hour fcst:wt ens mean:50mi forward grad
+DPT:2 m above ground:hour fcst:wt ens mean:50mi forward grad
+RH:700 mb:hour fcst:wt ens mean:50mi forward grad
+PWAT:entire atmosphere:hour fcst:wt ens mean:50mi forward grad
+VIS:surface:hour fcst:wt ens mean:50mi forward grad
+HGT:cloud base:hour fcst:wt ens mean:50mi forward grad
+LCDC:low cloud layer:hour fcst:wt ens mean:50mi forward grad
+MCDC:middle cloud layer:hour fcst:wt ens mean:50mi forward grad
+HCDC:high cloud layer:hour fcst:wt ens mean:50mi forward grad
+TCDC:entire atmosphere:hour fcst:wt ens mean:50mi forward grad
+CRAIN:surface:hour fcst:wt ens mean:50mi forward grad
+CFRZR:surface:hour fcst:wt ens mean:50mi forward grad
+CICEP:surface:hour fcst:wt ens mean:50mi forward grad
+CSNOW:surface:hour fcst:wt ens mean:50mi forward grad
+WIND:10 m above ground:hour fcst:wt ens mean:50mi forward grad
+WIND:850 mb:hour fcst:wt ens mean:50mi forward grad
+WIND:80 m above ground:hour fcst:wt ens mean:50mi forward grad
+WIND:925 mb:hour fcst:wt ens mean:50mi forward grad
+WIND:250 mb:hour fcst:wt ens mean:50mi forward grad
+VVEL:700-500 mb:hour fcst:wt ens mean:50mi forward grad
+VWSH:surface:hour fcst:wt ens mean:50mi forward grad
+HINDEX:surface:hour fcst:wt ens mean:50mi forward grad
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:50mi forward grad
+HGT:cloud ceiling:hour fcst:wt ens mean:50mi forward grad
+REFD:1000 m above ground:hour fcst:prob >30:50mi forward grad
+REFD:1000 m above ground:hour fcst:prob >40:50mi forward grad
+REFD:1000 m above ground:hour fcst:prob >50:50mi forward grad
+MAXREF:1000 m above ground:hour fcst:prob >40:50mi forward grad
+MAXREF:1000 m above ground:hour fcst:prob >50:50mi forward grad
+REFC:entire atmosphere:hour fcst:prob >10:50mi forward grad
+REFC:entire atmosphere:hour fcst:prob >20:50mi forward grad
+REFC:entire atmosphere:hour fcst:prob >30:50mi forward grad
+REFC:entire atmosphere:hour fcst:prob >40:50mi forward grad
+REFC:entire atmosphere:hour fcst:prob >50:50mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >6096:50mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >9144:50mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >10668:50mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >12192:50mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >15240:50mi forward grad
+MAXUVV:400-1000 mb:hour fcst:prob >1:50mi forward grad
+MAXUVV:400-1000 mb:hour fcst:prob >10:50mi forward grad
+MAXUVV:400-1000 mb:hour fcst:prob >20:50mi forward grad
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:50mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >500:50mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1000:50mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1500:50mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >2000:50mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >3000:50mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <0:50mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <-50:50mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <-100:50mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <-400:50mi forward grad
+HLCY:3000-0 m above ground:hour fcst:prob >100:50mi forward grad
+HLCY:3000-0 m above ground:hour fcst:prob >200:50mi forward grad
+HLCY:3000-0 m above ground:hour fcst:prob >400:50mi forward grad
+TMP:2 m above ground:hour fcst:prob <273.15:50mi forward grad
+DPT:2 m above ground:hour fcst:prob >283.15:50mi forward grad
+DPT:2 m above ground:hour fcst:prob >285.93:50mi forward grad
+DPT:2 m above ground:hour fcst:prob >288.71:50mi forward grad
+DPT:2 m above ground:hour fcst:prob >291.48:50mi forward grad
+DPT:2 m above ground:hour fcst:prob >294.26:50mi forward grad
+PWAT:entire atmosphere:hour fcst:prob >25:50mi forward grad
+PWAT:entire atmosphere:hour fcst:prob >37.5:50mi forward grad
+PWAT:entire atmosphere:hour fcst:prob >50:50mi forward grad
+VIS:surface:hour fcst:prob <400:50mi forward grad
+VIS:surface:hour fcst:prob <800:50mi forward grad
+VIS:surface:hour fcst:prob <1600:50mi forward grad
+VIS:surface:hour fcst:prob <3200:50mi forward grad
+VIS:surface:hour fcst:prob <6400:50mi forward grad
+CRAIN:surface:hour fcst:prob >=1 <0:50mi forward grad
+CFRZR:surface:hour fcst:prob >=1 <0:50mi forward grad
+CICEP:surface:hour fcst:prob >=1 <0:50mi forward grad
+CSNOW:surface:hour fcst:prob >=1 <0:50mi forward grad
+WIND:10 m above ground:hour fcst:prob >10.3:50mi forward grad
+WIND:10 m above ground:hour fcst:prob >15.4:50mi forward grad
+WIND:10 m above ground:hour fcst:prob >20.6:50mi forward grad
+WIND:80 m above ground:hour fcst:prob >10.3:50mi forward grad
+WIND:80 m above ground:hour fcst:prob >15.4:50mi forward grad
+WIND:80 m above ground:hour fcst:prob >20.6:50mi forward grad
+WIND:850 mb:hour fcst:prob >10.3:50mi forward grad
+WIND:850 mb:hour fcst:prob >20.6:50mi forward grad
+WIND:850 mb:hour fcst:prob >30.9:50mi forward grad
+WIND:850 mb:hour fcst:prob >41.2:50mi forward grad
+WIND:850 mb:hour fcst:prob >51.5:50mi forward grad
+WIND:850-300 mb:hour fcst:prob <5:50mi forward grad
+FLGHT:surface:hour fcst:prob >=1 <2:50mi forward grad
+FLGHT:surface:hour fcst:prob >=2 <3:50mi forward grad
+FLGHT:surface:hour fcst:prob >=3 <4:50mi forward grad
+FLGHT:surface:hour fcst:prob >=4 <0:50mi forward grad
+VWSH:surface:hour fcst:prob >10.3:50mi forward grad
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:50mi forward grad
+HINDEX:surface:hour fcst:prob >=2 <5:50mi forward grad
+HINDEX:surface:hour fcst:prob >=5 <6:50mi forward grad
+HINDEX:surface:hour fcst:prob >=6 <7:50mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:50mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:50mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:50mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:50mi forward grad
+HGT:cloud ceiling:hour fcst:prob <305:50mi forward grad
+HGT:cloud ceiling:hour fcst:prob <610:50mi forward grad
+HGT:cloud ceiling:hour fcst:prob <915:50mi forward grad
+HGT:cloud ceiling:hour fcst:prob <1372:50mi forward grad
+HGT:cloud ceiling:hour fcst:prob <1830:50mi forward grad
+HGT:cloud ceiling:hour fcst:prob <3050:50mi forward grad
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:50mi forward grad
+REFD:1000 m above ground:hour fcst:estimated from probs:50mi forward grad
+MAXREF:1000 m above ground:hour fcst:estimated from probs:50mi forward grad
+REFC:entire atmosphere:hour fcst:estimated from probs:50mi forward grad
+RETOP:entire atmosphere:hour fcst:estimated from probs:50mi forward grad
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:50mi forward grad
+700-500mbLapseRate:calculated:hour fcst::50mi forward grad
+925-700mbLapseRate:calculated:hour fcst::50mi forward grad
+Wind700mb:calculated:hour fcst::50mi forward grad
+Wind500mb:calculated:hour fcst::50mi forward grad
+SBCAPE*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+MLCAPE*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+SBCAPE*BWD0-6km:calculated:hour fcst::50mi forward grad
+MLCAPE*BWD0-6km:calculated:hour fcst::50mi forward grad
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::50mi forward grad
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::50mi forward grad
+SBCAPE*(200+SBCIN):calculated:hour fcst::50mi forward grad
+MLCAPE*(200+MLCIN):calculated:hour fcst::50mi forward grad
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::50mi forward grad
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::50mi forward grad
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi forward grad
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi forward grad
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi forward grad
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi forward grad
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi forward grad
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi forward grad
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi forward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi forward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi forward grad
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::50mi forward grad
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi forward grad
+MUCAPE*BWD0-6km:calculated:hour fcst::50mi forward grad
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::50mi forward grad
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi forward grad
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi forward grad
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi forward grad
+MaxWind<=850mb:calculated:hour fcst::50mi forward grad
+SumWind<=850mb:calculated:hour fcst::50mi forward grad
+MaxWind<=700mb:calculated:hour fcst::50mi forward grad
+SumWind<=700mb:calculated:hour fcst::50mi forward grad
+SCPish(RM):calculated:hour fcst::50mi forward grad
+Divergence925mb*10^5:calculated:hour fcst::50mi forward grad
+Divergence850mb*10^5:calculated:hour fcst::50mi forward grad
+Divergence250mb*10^5:calculated:hour fcst::50mi forward grad
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::50mi forward grad
+ConvergenceOnly925mb*10^5:calculated:hour fcst::50mi forward grad
+ConvergenceOnly850mb*10^5:calculated:hour fcst::50mi forward grad
+AbsVorticity925mb*10^5:calculated:hour fcst::50mi forward grad
+AbsVorticity850mb*10^5:calculated:hour fcst::50mi forward grad
+AbsVorticity700mb*10^5:calculated:hour fcst::50mi forward grad
+AbsVorticity500mb*10^5:calculated:hour fcst::50mi forward grad
+AbsVorticity250mb*10^5:calculated:hour fcst::50mi forward grad
+UMEAN:calculated:hour fcst::50mi forward grad
+VMEAN:calculated:hour fcst::50mi forward grad
+USHEAR:calculated:hour fcst::50mi forward grad
+VSHEAR:calculated:hour fcst::50mi forward grad
+SHEAR:calculated:hour fcst::50mi forward grad
+USTM:calculated:hour fcst::50mi forward grad
+VSTM:calculated:hour fcst::50mi forward grad
+U½STM½500mb:calculated:hour fcst::50mi forward grad
+V½STM½500mb:calculated:hour fcst::50mi forward grad
+SCPish(RM)>1:calculated:hour fcst::50mi forward grad
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::50mi forward grad
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::50mi forward grad
+UpstreamSBCAPE2hr:calculated:hour fcst::50mi forward grad
+UpstreamMLCAPE2hr:calculated:hour fcst::50mi forward grad
+Upstream2mDPT1hr:calculated:hour fcst::50mi forward grad
+Upstream2mDPT2hr:calculated:hour fcst::50mi forward grad
+UpstreamCRAIN2hr:calculated:hour fcst::50mi forward grad
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:50mi leftward grad
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:50mi leftward grad
+CAPE:surface:hour fcst:wt ens mean:50mi leftward grad
+CIN:90-0 mb above ground:hour fcst:wt ens mean:50mi leftward grad
+CIN:180-0 mb above ground:hour fcst:wt ens mean:50mi leftward grad
+CIN:surface:hour fcst:wt ens mean:50mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:50mi leftward grad
+HGT:250 mb:hour fcst:wt ens mean:50mi leftward grad
+HGT:500 mb:hour fcst:wt ens mean:50mi leftward grad
+HGT:700 mb:hour fcst:wt ens mean:50mi leftward grad
+HGT:850 mb:hour fcst:wt ens mean:50mi leftward grad
+HGT:925 mb:hour fcst:wt ens mean:50mi leftward grad
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:50mi leftward grad
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:50mi leftward grad
+UGRD:250 mb:hour fcst:wt ens mean:50mi leftward grad
+UGRD:500 mb:hour fcst:wt ens mean:50mi leftward grad
+UGRD:700 mb:hour fcst:wt ens mean:50mi leftward grad
+UGRD:850 mb:hour fcst:wt ens mean:50mi leftward grad
+UGRD:925 mb:hour fcst:wt ens mean:50mi leftward grad
+VGRD:250 mb:hour fcst:wt ens mean:50mi leftward grad
+VGRD:500 mb:hour fcst:wt ens mean:50mi leftward grad
+VGRD:700 mb:hour fcst:wt ens mean:50mi leftward grad
+VGRD:850 mb:hour fcst:wt ens mean:50mi leftward grad
+VGRD:925 mb:hour fcst:wt ens mean:50mi leftward grad
+VVEL:700 mb:hour fcst:wt ens mean:50mi leftward grad
+TMP:250 mb:hour fcst:wt ens mean:50mi leftward grad
+TMP:500 mb:hour fcst:wt ens mean:50mi leftward grad
+TMP:700 mb:hour fcst:wt ens mean:50mi leftward grad
+TMP:850 mb:hour fcst:wt ens mean:50mi leftward grad
+TMP:925 mb:hour fcst:wt ens mean:50mi leftward grad
+TMP:2 m above ground:hour fcst:wt ens mean:50mi leftward grad
+DPT:500 mb:hour fcst:wt ens mean:50mi leftward grad
+DPT:700 mb:hour fcst:wt ens mean:50mi leftward grad
+DPT:850 mb:hour fcst:wt ens mean:50mi leftward grad
+DPT:925 mb:hour fcst:wt ens mean:50mi leftward grad
+DPT:2 m above ground:hour fcst:wt ens mean:50mi leftward grad
+RH:700 mb:hour fcst:wt ens mean:50mi leftward grad
+PWAT:entire atmosphere:hour fcst:wt ens mean:50mi leftward grad
+VIS:surface:hour fcst:wt ens mean:50mi leftward grad
+HGT:cloud base:hour fcst:wt ens mean:50mi leftward grad
+LCDC:low cloud layer:hour fcst:wt ens mean:50mi leftward grad
+MCDC:middle cloud layer:hour fcst:wt ens mean:50mi leftward grad
+HCDC:high cloud layer:hour fcst:wt ens mean:50mi leftward grad
+TCDC:entire atmosphere:hour fcst:wt ens mean:50mi leftward grad
+CRAIN:surface:hour fcst:wt ens mean:50mi leftward grad
+CFRZR:surface:hour fcst:wt ens mean:50mi leftward grad
+CICEP:surface:hour fcst:wt ens mean:50mi leftward grad
+CSNOW:surface:hour fcst:wt ens mean:50mi leftward grad
+WIND:10 m above ground:hour fcst:wt ens mean:50mi leftward grad
+WIND:850 mb:hour fcst:wt ens mean:50mi leftward grad
+WIND:80 m above ground:hour fcst:wt ens mean:50mi leftward grad
+WIND:925 mb:hour fcst:wt ens mean:50mi leftward grad
+WIND:250 mb:hour fcst:wt ens mean:50mi leftward grad
+VVEL:700-500 mb:hour fcst:wt ens mean:50mi leftward grad
+VWSH:surface:hour fcst:wt ens mean:50mi leftward grad
+HINDEX:surface:hour fcst:wt ens mean:50mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:50mi leftward grad
+HGT:cloud ceiling:hour fcst:wt ens mean:50mi leftward grad
+REFD:1000 m above ground:hour fcst:prob >30:50mi leftward grad
+REFD:1000 m above ground:hour fcst:prob >40:50mi leftward grad
+REFD:1000 m above ground:hour fcst:prob >50:50mi leftward grad
+MAXREF:1000 m above ground:hour fcst:prob >40:50mi leftward grad
+MAXREF:1000 m above ground:hour fcst:prob >50:50mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >10:50mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >20:50mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >30:50mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >40:50mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >50:50mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >6096:50mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >9144:50mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >10668:50mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >12192:50mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >15240:50mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:prob >1:50mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:prob >10:50mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:prob >20:50mi leftward grad
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:50mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >500:50mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1000:50mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1500:50mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >2000:50mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >3000:50mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <0:50mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <-50:50mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <-100:50mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <-400:50mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:prob >100:50mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:prob >200:50mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:prob >400:50mi leftward grad
+TMP:2 m above ground:hour fcst:prob <273.15:50mi leftward grad
+DPT:2 m above ground:hour fcst:prob >283.15:50mi leftward grad
+DPT:2 m above ground:hour fcst:prob >285.93:50mi leftward grad
+DPT:2 m above ground:hour fcst:prob >288.71:50mi leftward grad
+DPT:2 m above ground:hour fcst:prob >291.48:50mi leftward grad
+DPT:2 m above ground:hour fcst:prob >294.26:50mi leftward grad
+PWAT:entire atmosphere:hour fcst:prob >25:50mi leftward grad
+PWAT:entire atmosphere:hour fcst:prob >37.5:50mi leftward grad
+PWAT:entire atmosphere:hour fcst:prob >50:50mi leftward grad
+VIS:surface:hour fcst:prob <400:50mi leftward grad
+VIS:surface:hour fcst:prob <800:50mi leftward grad
+VIS:surface:hour fcst:prob <1600:50mi leftward grad
+VIS:surface:hour fcst:prob <3200:50mi leftward grad
+VIS:surface:hour fcst:prob <6400:50mi leftward grad
+CRAIN:surface:hour fcst:prob >=1 <0:50mi leftward grad
+CFRZR:surface:hour fcst:prob >=1 <0:50mi leftward grad
+CICEP:surface:hour fcst:prob >=1 <0:50mi leftward grad
+CSNOW:surface:hour fcst:prob >=1 <0:50mi leftward grad
+WIND:10 m above ground:hour fcst:prob >10.3:50mi leftward grad
+WIND:10 m above ground:hour fcst:prob >15.4:50mi leftward grad
+WIND:10 m above ground:hour fcst:prob >20.6:50mi leftward grad
+WIND:80 m above ground:hour fcst:prob >10.3:50mi leftward grad
+WIND:80 m above ground:hour fcst:prob >15.4:50mi leftward grad
+WIND:80 m above ground:hour fcst:prob >20.6:50mi leftward grad
+WIND:850 mb:hour fcst:prob >10.3:50mi leftward grad
+WIND:850 mb:hour fcst:prob >20.6:50mi leftward grad
+WIND:850 mb:hour fcst:prob >30.9:50mi leftward grad
+WIND:850 mb:hour fcst:prob >41.2:50mi leftward grad
+WIND:850 mb:hour fcst:prob >51.5:50mi leftward grad
+WIND:850-300 mb:hour fcst:prob <5:50mi leftward grad
+FLGHT:surface:hour fcst:prob >=1 <2:50mi leftward grad
+FLGHT:surface:hour fcst:prob >=2 <3:50mi leftward grad
+FLGHT:surface:hour fcst:prob >=3 <4:50mi leftward grad
+FLGHT:surface:hour fcst:prob >=4 <0:50mi leftward grad
+VWSH:surface:hour fcst:prob >10.3:50mi leftward grad
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:50mi leftward grad
+HINDEX:surface:hour fcst:prob >=2 <5:50mi leftward grad
+HINDEX:surface:hour fcst:prob >=5 <6:50mi leftward grad
+HINDEX:surface:hour fcst:prob >=6 <7:50mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:50mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:50mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:50mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:50mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <305:50mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <610:50mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <915:50mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <1372:50mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <1830:50mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <3050:50mi leftward grad
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:50mi leftward grad
+REFD:1000 m above ground:hour fcst:estimated from probs:50mi leftward grad
+MAXREF:1000 m above ground:hour fcst:estimated from probs:50mi leftward grad
+REFC:entire atmosphere:hour fcst:estimated from probs:50mi leftward grad
+RETOP:entire atmosphere:hour fcst:estimated from probs:50mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:50mi leftward grad
+700-500mbLapseRate:calculated:hour fcst::50mi leftward grad
+925-700mbLapseRate:calculated:hour fcst::50mi leftward grad
+Wind700mb:calculated:hour fcst::50mi leftward grad
+Wind500mb:calculated:hour fcst::50mi leftward grad
+SBCAPE*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+MLCAPE*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+SBCAPE*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MLCAPE*BWD0-6km:calculated:hour fcst::50mi leftward grad
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::50mi leftward grad
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::50mi leftward grad
+SBCAPE*(200+SBCIN):calculated:hour fcst::50mi leftward grad
+MLCAPE*(200+MLCIN):calculated:hour fcst::50mi leftward grad
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::50mi leftward grad
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::50mi leftward grad
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi leftward grad
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi leftward grad
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi leftward grad
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi leftward grad
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi leftward grad
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi leftward grad
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi leftward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi leftward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi leftward grad
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::50mi leftward grad
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MUCAPE*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi leftward grad
+MaxWind<=850mb:calculated:hour fcst::50mi leftward grad
+SumWind<=850mb:calculated:hour fcst::50mi leftward grad
+MaxWind<=700mb:calculated:hour fcst::50mi leftward grad
+SumWind<=700mb:calculated:hour fcst::50mi leftward grad
+SCPish(RM):calculated:hour fcst::50mi leftward grad
+Divergence925mb*10^5:calculated:hour fcst::50mi leftward grad
+Divergence850mb*10^5:calculated:hour fcst::50mi leftward grad
+Divergence250mb*10^5:calculated:hour fcst::50mi leftward grad
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::50mi leftward grad
+ConvergenceOnly925mb*10^5:calculated:hour fcst::50mi leftward grad
+ConvergenceOnly850mb*10^5:calculated:hour fcst::50mi leftward grad
+AbsVorticity925mb*10^5:calculated:hour fcst::50mi leftward grad
+AbsVorticity850mb*10^5:calculated:hour fcst::50mi leftward grad
+AbsVorticity700mb*10^5:calculated:hour fcst::50mi leftward grad
+AbsVorticity500mb*10^5:calculated:hour fcst::50mi leftward grad
+AbsVorticity250mb*10^5:calculated:hour fcst::50mi leftward grad
+UMEAN:calculated:hour fcst::50mi leftward grad
+VMEAN:calculated:hour fcst::50mi leftward grad
+USHEAR:calculated:hour fcst::50mi leftward grad
+VSHEAR:calculated:hour fcst::50mi leftward grad
+SHEAR:calculated:hour fcst::50mi leftward grad
+USTM:calculated:hour fcst::50mi leftward grad
+VSTM:calculated:hour fcst::50mi leftward grad
+U½STM½500mb:calculated:hour fcst::50mi leftward grad
+V½STM½500mb:calculated:hour fcst::50mi leftward grad
+SCPish(RM)>1:calculated:hour fcst::50mi leftward grad
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::50mi leftward grad
+UpstreamSBCAPE2hr:calculated:hour fcst::50mi leftward grad
+UpstreamMLCAPE2hr:calculated:hour fcst::50mi leftward grad
+Upstream2mDPT1hr:calculated:hour fcst::50mi leftward grad
+Upstream2mDPT2hr:calculated:hour fcst::50mi leftward grad
+UpstreamCRAIN2hr:calculated:hour fcst::50mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:100mi forward grad
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:100mi forward grad
+CAPE:surface:hour fcst:wt ens mean:100mi forward grad
+CIN:90-0 mb above ground:hour fcst:wt ens mean:100mi forward grad
+CIN:180-0 mb above ground:hour fcst:wt ens mean:100mi forward grad
+CIN:surface:hour fcst:wt ens mean:100mi forward grad
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:100mi forward grad
+HGT:250 mb:hour fcst:wt ens mean:100mi forward grad
+HGT:500 mb:hour fcst:wt ens mean:100mi forward grad
+HGT:700 mb:hour fcst:wt ens mean:100mi forward grad
+HGT:850 mb:hour fcst:wt ens mean:100mi forward grad
+HGT:925 mb:hour fcst:wt ens mean:100mi forward grad
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:100mi forward grad
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:100mi forward grad
+UGRD:250 mb:hour fcst:wt ens mean:100mi forward grad
+UGRD:500 mb:hour fcst:wt ens mean:100mi forward grad
+UGRD:700 mb:hour fcst:wt ens mean:100mi forward grad
+UGRD:850 mb:hour fcst:wt ens mean:100mi forward grad
+UGRD:925 mb:hour fcst:wt ens mean:100mi forward grad
+VGRD:250 mb:hour fcst:wt ens mean:100mi forward grad
+VGRD:500 mb:hour fcst:wt ens mean:100mi forward grad
+VGRD:700 mb:hour fcst:wt ens mean:100mi forward grad
+VGRD:850 mb:hour fcst:wt ens mean:100mi forward grad
+VGRD:925 mb:hour fcst:wt ens mean:100mi forward grad
+VVEL:700 mb:hour fcst:wt ens mean:100mi forward grad
+TMP:250 mb:hour fcst:wt ens mean:100mi forward grad
+TMP:500 mb:hour fcst:wt ens mean:100mi forward grad
+TMP:700 mb:hour fcst:wt ens mean:100mi forward grad
+TMP:850 mb:hour fcst:wt ens mean:100mi forward grad
+TMP:925 mb:hour fcst:wt ens mean:100mi forward grad
+TMP:2 m above ground:hour fcst:wt ens mean:100mi forward grad
+DPT:500 mb:hour fcst:wt ens mean:100mi forward grad
+DPT:700 mb:hour fcst:wt ens mean:100mi forward grad
+DPT:850 mb:hour fcst:wt ens mean:100mi forward grad
+DPT:925 mb:hour fcst:wt ens mean:100mi forward grad
+DPT:2 m above ground:hour fcst:wt ens mean:100mi forward grad
+RH:700 mb:hour fcst:wt ens mean:100mi forward grad
+PWAT:entire atmosphere:hour fcst:wt ens mean:100mi forward grad
+VIS:surface:hour fcst:wt ens mean:100mi forward grad
+HGT:cloud base:hour fcst:wt ens mean:100mi forward grad
+LCDC:low cloud layer:hour fcst:wt ens mean:100mi forward grad
+MCDC:middle cloud layer:hour fcst:wt ens mean:100mi forward grad
+HCDC:high cloud layer:hour fcst:wt ens mean:100mi forward grad
+TCDC:entire atmosphere:hour fcst:wt ens mean:100mi forward grad
+CRAIN:surface:hour fcst:wt ens mean:100mi forward grad
+CFRZR:surface:hour fcst:wt ens mean:100mi forward grad
+CICEP:surface:hour fcst:wt ens mean:100mi forward grad
+CSNOW:surface:hour fcst:wt ens mean:100mi forward grad
+WIND:10 m above ground:hour fcst:wt ens mean:100mi forward grad
+WIND:850 mb:hour fcst:wt ens mean:100mi forward grad
+WIND:80 m above ground:hour fcst:wt ens mean:100mi forward grad
+WIND:925 mb:hour fcst:wt ens mean:100mi forward grad
+WIND:250 mb:hour fcst:wt ens mean:100mi forward grad
+VVEL:700-500 mb:hour fcst:wt ens mean:100mi forward grad
+VWSH:surface:hour fcst:wt ens mean:100mi forward grad
+HINDEX:surface:hour fcst:wt ens mean:100mi forward grad
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:100mi forward grad
+HGT:cloud ceiling:hour fcst:wt ens mean:100mi forward grad
+REFD:1000 m above ground:hour fcst:prob >30:100mi forward grad
+REFD:1000 m above ground:hour fcst:prob >40:100mi forward grad
+REFD:1000 m above ground:hour fcst:prob >50:100mi forward grad
+MAXREF:1000 m above ground:hour fcst:prob >40:100mi forward grad
+MAXREF:1000 m above ground:hour fcst:prob >50:100mi forward grad
+REFC:entire atmosphere:hour fcst:prob >10:100mi forward grad
+REFC:entire atmosphere:hour fcst:prob >20:100mi forward grad
+REFC:entire atmosphere:hour fcst:prob >30:100mi forward grad
+REFC:entire atmosphere:hour fcst:prob >40:100mi forward grad
+REFC:entire atmosphere:hour fcst:prob >50:100mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >6096:100mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >9144:100mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >10668:100mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >12192:100mi forward grad
+RETOP:entire atmosphere:hour fcst:prob >15240:100mi forward grad
+MAXUVV:400-1000 mb:hour fcst:prob >1:100mi forward grad
+MAXUVV:400-1000 mb:hour fcst:prob >10:100mi forward grad
+MAXUVV:400-1000 mb:hour fcst:prob >20:100mi forward grad
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:100mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >500:100mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1000:100mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1500:100mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >2000:100mi forward grad
+CAPE:90-0 mb above ground:hour fcst:prob >3000:100mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <0:100mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <-50:100mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <-100:100mi forward grad
+CIN:90-0 mb above ground:hour fcst:prob <-400:100mi forward grad
+HLCY:3000-0 m above ground:hour fcst:prob >100:100mi forward grad
+HLCY:3000-0 m above ground:hour fcst:prob >200:100mi forward grad
+HLCY:3000-0 m above ground:hour fcst:prob >400:100mi forward grad
+TMP:2 m above ground:hour fcst:prob <273.15:100mi forward grad
+DPT:2 m above ground:hour fcst:prob >283.15:100mi forward grad
+DPT:2 m above ground:hour fcst:prob >285.93:100mi forward grad
+DPT:2 m above ground:hour fcst:prob >288.71:100mi forward grad
+DPT:2 m above ground:hour fcst:prob >291.48:100mi forward grad
+DPT:2 m above ground:hour fcst:prob >294.26:100mi forward grad
+PWAT:entire atmosphere:hour fcst:prob >25:100mi forward grad
+PWAT:entire atmosphere:hour fcst:prob >37.5:100mi forward grad
+PWAT:entire atmosphere:hour fcst:prob >50:100mi forward grad
+VIS:surface:hour fcst:prob <400:100mi forward grad
+VIS:surface:hour fcst:prob <800:100mi forward grad
+VIS:surface:hour fcst:prob <1600:100mi forward grad
+VIS:surface:hour fcst:prob <3200:100mi forward grad
+VIS:surface:hour fcst:prob <6400:100mi forward grad
+CRAIN:surface:hour fcst:prob >=1 <0:100mi forward grad
+CFRZR:surface:hour fcst:prob >=1 <0:100mi forward grad
+CICEP:surface:hour fcst:prob >=1 <0:100mi forward grad
+CSNOW:surface:hour fcst:prob >=1 <0:100mi forward grad
+WIND:10 m above ground:hour fcst:prob >10.3:100mi forward grad
+WIND:10 m above ground:hour fcst:prob >15.4:100mi forward grad
+WIND:10 m above ground:hour fcst:prob >20.6:100mi forward grad
+WIND:80 m above ground:hour fcst:prob >10.3:100mi forward grad
+WIND:80 m above ground:hour fcst:prob >15.4:100mi forward grad
+WIND:80 m above ground:hour fcst:prob >20.6:100mi forward grad
+WIND:850 mb:hour fcst:prob >10.3:100mi forward grad
+WIND:850 mb:hour fcst:prob >20.6:100mi forward grad
+WIND:850 mb:hour fcst:prob >30.9:100mi forward grad
+WIND:850 mb:hour fcst:prob >41.2:100mi forward grad
+WIND:850 mb:hour fcst:prob >51.5:100mi forward grad
+WIND:850-300 mb:hour fcst:prob <5:100mi forward grad
+FLGHT:surface:hour fcst:prob >=1 <2:100mi forward grad
+FLGHT:surface:hour fcst:prob >=2 <3:100mi forward grad
+FLGHT:surface:hour fcst:prob >=3 <4:100mi forward grad
+FLGHT:surface:hour fcst:prob >=4 <0:100mi forward grad
+VWSH:surface:hour fcst:prob >10.3:100mi forward grad
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:100mi forward grad
+HINDEX:surface:hour fcst:prob >=2 <5:100mi forward grad
+HINDEX:surface:hour fcst:prob >=5 <6:100mi forward grad
+HINDEX:surface:hour fcst:prob >=6 <7:100mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:100mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:100mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:100mi forward grad
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:100mi forward grad
+HGT:cloud ceiling:hour fcst:prob <305:100mi forward grad
+HGT:cloud ceiling:hour fcst:prob <610:100mi forward grad
+HGT:cloud ceiling:hour fcst:prob <915:100mi forward grad
+HGT:cloud ceiling:hour fcst:prob <1372:100mi forward grad
+HGT:cloud ceiling:hour fcst:prob <1830:100mi forward grad
+HGT:cloud ceiling:hour fcst:prob <3050:100mi forward grad
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:100mi forward grad
+REFD:1000 m above ground:hour fcst:estimated from probs:100mi forward grad
+MAXREF:1000 m above ground:hour fcst:estimated from probs:100mi forward grad
+REFC:entire atmosphere:hour fcst:estimated from probs:100mi forward grad
+RETOP:entire atmosphere:hour fcst:estimated from probs:100mi forward grad
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:100mi forward grad
+700-500mbLapseRate:calculated:hour fcst::100mi forward grad
+925-700mbLapseRate:calculated:hour fcst::100mi forward grad
+Wind700mb:calculated:hour fcst::100mi forward grad
+Wind500mb:calculated:hour fcst::100mi forward grad
+SBCAPE*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+MLCAPE*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+SBCAPE*BWD0-6km:calculated:hour fcst::100mi forward grad
+MLCAPE*BWD0-6km:calculated:hour fcst::100mi forward grad
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::100mi forward grad
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::100mi forward grad
+SBCAPE*(200+SBCIN):calculated:hour fcst::100mi forward grad
+MLCAPE*(200+MLCIN):calculated:hour fcst::100mi forward grad
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::100mi forward grad
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::100mi forward grad
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi forward grad
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi forward grad
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi forward grad
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi forward grad
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi forward grad
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi forward grad
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi forward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi forward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi forward grad
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi forward grad
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi forward grad
+MUCAPE*BWD0-6km:calculated:hour fcst::100mi forward grad
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi forward grad
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi forward grad
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi forward grad
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi forward grad
+MaxWind<=850mb:calculated:hour fcst::100mi forward grad
+SumWind<=850mb:calculated:hour fcst::100mi forward grad
+MaxWind<=700mb:calculated:hour fcst::100mi forward grad
+SumWind<=700mb:calculated:hour fcst::100mi forward grad
+SCPish(RM):calculated:hour fcst::100mi forward grad
+Divergence925mb*10^5:calculated:hour fcst::100mi forward grad
+Divergence850mb*10^5:calculated:hour fcst::100mi forward grad
+Divergence250mb*10^5:calculated:hour fcst::100mi forward grad
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::100mi forward grad
+ConvergenceOnly925mb*10^5:calculated:hour fcst::100mi forward grad
+ConvergenceOnly850mb*10^5:calculated:hour fcst::100mi forward grad
+AbsVorticity925mb*10^5:calculated:hour fcst::100mi forward grad
+AbsVorticity850mb*10^5:calculated:hour fcst::100mi forward grad
+AbsVorticity700mb*10^5:calculated:hour fcst::100mi forward grad
+AbsVorticity500mb*10^5:calculated:hour fcst::100mi forward grad
+AbsVorticity250mb*10^5:calculated:hour fcst::100mi forward grad
+UMEAN:calculated:hour fcst::100mi forward grad
+VMEAN:calculated:hour fcst::100mi forward grad
+USHEAR:calculated:hour fcst::100mi forward grad
+VSHEAR:calculated:hour fcst::100mi forward grad
+SHEAR:calculated:hour fcst::100mi forward grad
+USTM:calculated:hour fcst::100mi forward grad
+VSTM:calculated:hour fcst::100mi forward grad
+U½STM½500mb:calculated:hour fcst::100mi forward grad
+V½STM½500mb:calculated:hour fcst::100mi forward grad
+SCPish(RM)>1:calculated:hour fcst::100mi forward grad
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::100mi forward grad
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::100mi forward grad
+UpstreamSBCAPE2hr:calculated:hour fcst::100mi forward grad
+UpstreamMLCAPE2hr:calculated:hour fcst::100mi forward grad
+Upstream2mDPT1hr:calculated:hour fcst::100mi forward grad
+Upstream2mDPT2hr:calculated:hour fcst::100mi forward grad
+UpstreamCRAIN2hr:calculated:hour fcst::100mi forward grad
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:100mi leftward grad
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:100mi leftward grad
+CAPE:surface:hour fcst:wt ens mean:100mi leftward grad
+CIN:90-0 mb above ground:hour fcst:wt ens mean:100mi leftward grad
+CIN:180-0 mb above ground:hour fcst:wt ens mean:100mi leftward grad
+CIN:surface:hour fcst:wt ens mean:100mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:100mi leftward grad
+HGT:250 mb:hour fcst:wt ens mean:100mi leftward grad
+HGT:500 mb:hour fcst:wt ens mean:100mi leftward grad
+HGT:700 mb:hour fcst:wt ens mean:100mi leftward grad
+HGT:850 mb:hour fcst:wt ens mean:100mi leftward grad
+HGT:925 mb:hour fcst:wt ens mean:100mi leftward grad
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:100mi leftward grad
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:100mi leftward grad
+UGRD:250 mb:hour fcst:wt ens mean:100mi leftward grad
+UGRD:500 mb:hour fcst:wt ens mean:100mi leftward grad
+UGRD:700 mb:hour fcst:wt ens mean:100mi leftward grad
+UGRD:850 mb:hour fcst:wt ens mean:100mi leftward grad
+UGRD:925 mb:hour fcst:wt ens mean:100mi leftward grad
+VGRD:250 mb:hour fcst:wt ens mean:100mi leftward grad
+VGRD:500 mb:hour fcst:wt ens mean:100mi leftward grad
+VGRD:700 mb:hour fcst:wt ens mean:100mi leftward grad
+VGRD:850 mb:hour fcst:wt ens mean:100mi leftward grad
+VGRD:925 mb:hour fcst:wt ens mean:100mi leftward grad
+VVEL:700 mb:hour fcst:wt ens mean:100mi leftward grad
+TMP:250 mb:hour fcst:wt ens mean:100mi leftward grad
+TMP:500 mb:hour fcst:wt ens mean:100mi leftward grad
+TMP:700 mb:hour fcst:wt ens mean:100mi leftward grad
+TMP:850 mb:hour fcst:wt ens mean:100mi leftward grad
+TMP:925 mb:hour fcst:wt ens mean:100mi leftward grad
+TMP:2 m above ground:hour fcst:wt ens mean:100mi leftward grad
+DPT:500 mb:hour fcst:wt ens mean:100mi leftward grad
+DPT:700 mb:hour fcst:wt ens mean:100mi leftward grad
+DPT:850 mb:hour fcst:wt ens mean:100mi leftward grad
+DPT:925 mb:hour fcst:wt ens mean:100mi leftward grad
+DPT:2 m above ground:hour fcst:wt ens mean:100mi leftward grad
+RH:700 mb:hour fcst:wt ens mean:100mi leftward grad
+PWAT:entire atmosphere:hour fcst:wt ens mean:100mi leftward grad
+VIS:surface:hour fcst:wt ens mean:100mi leftward grad
+HGT:cloud base:hour fcst:wt ens mean:100mi leftward grad
+LCDC:low cloud layer:hour fcst:wt ens mean:100mi leftward grad
+MCDC:middle cloud layer:hour fcst:wt ens mean:100mi leftward grad
+HCDC:high cloud layer:hour fcst:wt ens mean:100mi leftward grad
+TCDC:entire atmosphere:hour fcst:wt ens mean:100mi leftward grad
+CRAIN:surface:hour fcst:wt ens mean:100mi leftward grad
+CFRZR:surface:hour fcst:wt ens mean:100mi leftward grad
+CICEP:surface:hour fcst:wt ens mean:100mi leftward grad
+CSNOW:surface:hour fcst:wt ens mean:100mi leftward grad
+WIND:10 m above ground:hour fcst:wt ens mean:100mi leftward grad
+WIND:850 mb:hour fcst:wt ens mean:100mi leftward grad
+WIND:80 m above ground:hour fcst:wt ens mean:100mi leftward grad
+WIND:925 mb:hour fcst:wt ens mean:100mi leftward grad
+WIND:250 mb:hour fcst:wt ens mean:100mi leftward grad
+VVEL:700-500 mb:hour fcst:wt ens mean:100mi leftward grad
+VWSH:surface:hour fcst:wt ens mean:100mi leftward grad
+HINDEX:surface:hour fcst:wt ens mean:100mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:100mi leftward grad
+HGT:cloud ceiling:hour fcst:wt ens mean:100mi leftward grad
+REFD:1000 m above ground:hour fcst:prob >30:100mi leftward grad
+REFD:1000 m above ground:hour fcst:prob >40:100mi leftward grad
+REFD:1000 m above ground:hour fcst:prob >50:100mi leftward grad
+MAXREF:1000 m above ground:hour fcst:prob >40:100mi leftward grad
+MAXREF:1000 m above ground:hour fcst:prob >50:100mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >10:100mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >20:100mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >30:100mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >40:100mi leftward grad
+REFC:entire atmosphere:hour fcst:prob >50:100mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >6096:100mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >9144:100mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >10668:100mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >12192:100mi leftward grad
+RETOP:entire atmosphere:hour fcst:prob >15240:100mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:prob >1:100mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:prob >10:100mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:prob >20:100mi leftward grad
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:100mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >500:100mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1000:100mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >1500:100mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >2000:100mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:prob >3000:100mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <0:100mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <-50:100mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <-100:100mi leftward grad
+CIN:90-0 mb above ground:hour fcst:prob <-400:100mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:prob >100:100mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:prob >200:100mi leftward grad
+HLCY:3000-0 m above ground:hour fcst:prob >400:100mi leftward grad
+TMP:2 m above ground:hour fcst:prob <273.15:100mi leftward grad
+DPT:2 m above ground:hour fcst:prob >283.15:100mi leftward grad
+DPT:2 m above ground:hour fcst:prob >285.93:100mi leftward grad
+DPT:2 m above ground:hour fcst:prob >288.71:100mi leftward grad
+DPT:2 m above ground:hour fcst:prob >291.48:100mi leftward grad
+DPT:2 m above ground:hour fcst:prob >294.26:100mi leftward grad
+PWAT:entire atmosphere:hour fcst:prob >25:100mi leftward grad
+PWAT:entire atmosphere:hour fcst:prob >37.5:100mi leftward grad
+PWAT:entire atmosphere:hour fcst:prob >50:100mi leftward grad
+VIS:surface:hour fcst:prob <400:100mi leftward grad
+VIS:surface:hour fcst:prob <800:100mi leftward grad
+VIS:surface:hour fcst:prob <1600:100mi leftward grad
+VIS:surface:hour fcst:prob <3200:100mi leftward grad
+VIS:surface:hour fcst:prob <6400:100mi leftward grad
+CRAIN:surface:hour fcst:prob >=1 <0:100mi leftward grad
+CFRZR:surface:hour fcst:prob >=1 <0:100mi leftward grad
+CICEP:surface:hour fcst:prob >=1 <0:100mi leftward grad
+CSNOW:surface:hour fcst:prob >=1 <0:100mi leftward grad
+WIND:10 m above ground:hour fcst:prob >10.3:100mi leftward grad
+WIND:10 m above ground:hour fcst:prob >15.4:100mi leftward grad
+WIND:10 m above ground:hour fcst:prob >20.6:100mi leftward grad
+WIND:80 m above ground:hour fcst:prob >10.3:100mi leftward grad
+WIND:80 m above ground:hour fcst:prob >15.4:100mi leftward grad
+WIND:80 m above ground:hour fcst:prob >20.6:100mi leftward grad
+WIND:850 mb:hour fcst:prob >10.3:100mi leftward grad
+WIND:850 mb:hour fcst:prob >20.6:100mi leftward grad
+WIND:850 mb:hour fcst:prob >30.9:100mi leftward grad
+WIND:850 mb:hour fcst:prob >41.2:100mi leftward grad
+WIND:850 mb:hour fcst:prob >51.5:100mi leftward grad
+WIND:850-300 mb:hour fcst:prob <5:100mi leftward grad
+FLGHT:surface:hour fcst:prob >=1 <2:100mi leftward grad
+FLGHT:surface:hour fcst:prob >=2 <3:100mi leftward grad
+FLGHT:surface:hour fcst:prob >=3 <4:100mi leftward grad
+FLGHT:surface:hour fcst:prob >=4 <0:100mi leftward grad
+VWSH:surface:hour fcst:prob >10.3:100mi leftward grad
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:100mi leftward grad
+HINDEX:surface:hour fcst:prob >=2 <5:100mi leftward grad
+HINDEX:surface:hour fcst:prob >=5 <6:100mi leftward grad
+HINDEX:surface:hour fcst:prob >=6 <7:100mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:100mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:100mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:100mi leftward grad
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:100mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <305:100mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <610:100mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <915:100mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <1372:100mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <1830:100mi leftward grad
+HGT:cloud ceiling:hour fcst:prob <3050:100mi leftward grad
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:100mi leftward grad
+REFD:1000 m above ground:hour fcst:estimated from probs:100mi leftward grad
+MAXREF:1000 m above ground:hour fcst:estimated from probs:100mi leftward grad
+REFC:entire atmosphere:hour fcst:estimated from probs:100mi leftward grad
+RETOP:entire atmosphere:hour fcst:estimated from probs:100mi leftward grad
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:100mi leftward grad
+700-500mbLapseRate:calculated:hour fcst::100mi leftward grad
+925-700mbLapseRate:calculated:hour fcst::100mi leftward grad
+Wind700mb:calculated:hour fcst::100mi leftward grad
+Wind500mb:calculated:hour fcst::100mi leftward grad
+SBCAPE*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+MLCAPE*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+SBCAPE*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MLCAPE*BWD0-6km:calculated:hour fcst::100mi leftward grad
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::100mi leftward grad
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::100mi leftward grad
+SBCAPE*(200+SBCIN):calculated:hour fcst::100mi leftward grad
+MLCAPE*(200+MLCIN):calculated:hour fcst::100mi leftward grad
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::100mi leftward grad
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::100mi leftward grad
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi leftward grad
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi leftward grad
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi leftward grad
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi leftward grad
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi leftward grad
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi leftward grad
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi leftward grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi leftward grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi leftward grad
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi leftward grad
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MUCAPE*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi leftward grad
+MaxWind<=850mb:calculated:hour fcst::100mi leftward grad
+SumWind<=850mb:calculated:hour fcst::100mi leftward grad
+MaxWind<=700mb:calculated:hour fcst::100mi leftward grad
+SumWind<=700mb:calculated:hour fcst::100mi leftward grad
+SCPish(RM):calculated:hour fcst::100mi leftward grad
+Divergence925mb*10^5:calculated:hour fcst::100mi leftward grad
+Divergence850mb*10^5:calculated:hour fcst::100mi leftward grad
+Divergence250mb*10^5:calculated:hour fcst::100mi leftward grad
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::100mi leftward grad
+ConvergenceOnly925mb*10^5:calculated:hour fcst::100mi leftward grad
+ConvergenceOnly850mb*10^5:calculated:hour fcst::100mi leftward grad
+AbsVorticity925mb*10^5:calculated:hour fcst::100mi leftward grad
+AbsVorticity850mb*10^5:calculated:hour fcst::100mi leftward grad
+AbsVorticity700mb*10^5:calculated:hour fcst::100mi leftward grad
+AbsVorticity500mb*10^5:calculated:hour fcst::100mi leftward grad
+AbsVorticity250mb*10^5:calculated:hour fcst::100mi leftward grad
+UMEAN:calculated:hour fcst::100mi leftward grad
+VMEAN:calculated:hour fcst::100mi leftward grad
+USHEAR:calculated:hour fcst::100mi leftward grad
+VSHEAR:calculated:hour fcst::100mi leftward grad
+SHEAR:calculated:hour fcst::100mi leftward grad
+USTM:calculated:hour fcst::100mi leftward grad
+VSTM:calculated:hour fcst::100mi leftward grad
+U½STM½500mb:calculated:hour fcst::100mi leftward grad
+V½STM½500mb:calculated:hour fcst::100mi leftward grad
+SCPish(RM)>1:calculated:hour fcst::100mi leftward grad
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::100mi leftward grad
+UpstreamSBCAPE2hr:calculated:hour fcst::100mi leftward grad
+UpstreamMLCAPE2hr:calculated:hour fcst::100mi leftward grad
+Upstream2mDPT1hr:calculated:hour fcst::100mi leftward grad
+Upstream2mDPT2hr:calculated:hour fcst::100mi leftward grad
+UpstreamCRAIN2hr:calculated:hour fcst::100mi leftward grad
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:100mi linestraddling grad
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:100mi linestraddling grad
+CAPE:surface:hour fcst:wt ens mean:100mi linestraddling grad
+CIN:90-0 mb above ground:hour fcst:wt ens mean:100mi linestraddling grad
+CIN:180-0 mb above ground:hour fcst:wt ens mean:100mi linestraddling grad
+CIN:surface:hour fcst:wt ens mean:100mi linestraddling grad
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:500 mb:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:850 mb:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:925 mb:hour fcst:wt ens mean:100mi linestraddling grad
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:100mi linestraddling grad
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:100mi linestraddling grad
+UGRD:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+UGRD:500 mb:hour fcst:wt ens mean:100mi linestraddling grad
+UGRD:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+UGRD:850 mb:hour fcst:wt ens mean:100mi linestraddling grad
+UGRD:925 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VGRD:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VGRD:500 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VGRD:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VGRD:850 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VGRD:925 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VVEL:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+TMP:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+TMP:500 mb:hour fcst:wt ens mean:100mi linestraddling grad
+TMP:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+TMP:850 mb:hour fcst:wt ens mean:100mi linestraddling grad
+TMP:925 mb:hour fcst:wt ens mean:100mi linestraddling grad
+TMP:2 m above ground:hour fcst:wt ens mean:100mi linestraddling grad
+DPT:500 mb:hour fcst:wt ens mean:100mi linestraddling grad
+DPT:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+DPT:850 mb:hour fcst:wt ens mean:100mi linestraddling grad
+DPT:925 mb:hour fcst:wt ens mean:100mi linestraddling grad
+DPT:2 m above ground:hour fcst:wt ens mean:100mi linestraddling grad
+RH:700 mb:hour fcst:wt ens mean:100mi linestraddling grad
+PWAT:entire atmosphere:hour fcst:wt ens mean:100mi linestraddling grad
+VIS:surface:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:cloud base:hour fcst:wt ens mean:100mi linestraddling grad
+LCDC:low cloud layer:hour fcst:wt ens mean:100mi linestraddling grad
+MCDC:middle cloud layer:hour fcst:wt ens mean:100mi linestraddling grad
+HCDC:high cloud layer:hour fcst:wt ens mean:100mi linestraddling grad
+TCDC:entire atmosphere:hour fcst:wt ens mean:100mi linestraddling grad
+CRAIN:surface:hour fcst:wt ens mean:100mi linestraddling grad
+CFRZR:surface:hour fcst:wt ens mean:100mi linestraddling grad
+CICEP:surface:hour fcst:wt ens mean:100mi linestraddling grad
+CSNOW:surface:hour fcst:wt ens mean:100mi linestraddling grad
+WIND:10 m above ground:hour fcst:wt ens mean:100mi linestraddling grad
+WIND:850 mb:hour fcst:wt ens mean:100mi linestraddling grad
+WIND:80 m above ground:hour fcst:wt ens mean:100mi linestraddling grad
+WIND:925 mb:hour fcst:wt ens mean:100mi linestraddling grad
+WIND:250 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VVEL:700-500 mb:hour fcst:wt ens mean:100mi linestraddling grad
+VWSH:surface:hour fcst:wt ens mean:100mi linestraddling grad
+HINDEX:surface:hour fcst:wt ens mean:100mi linestraddling grad
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:wt ens mean:100mi linestraddling grad
+REFD:1000 m above ground:hour fcst:prob >30:100mi linestraddling grad
+REFD:1000 m above ground:hour fcst:prob >40:100mi linestraddling grad
+REFD:1000 m above ground:hour fcst:prob >50:100mi linestraddling grad
+MAXREF:1000 m above ground:hour fcst:prob >40:100mi linestraddling grad
+MAXREF:1000 m above ground:hour fcst:prob >50:100mi linestraddling grad
+REFC:entire atmosphere:hour fcst:prob >10:100mi linestraddling grad
+REFC:entire atmosphere:hour fcst:prob >20:100mi linestraddling grad
+REFC:entire atmosphere:hour fcst:prob >30:100mi linestraddling grad
+REFC:entire atmosphere:hour fcst:prob >40:100mi linestraddling grad
+REFC:entire atmosphere:hour fcst:prob >50:100mi linestraddling grad
+RETOP:entire atmosphere:hour fcst:prob >6096:100mi linestraddling grad
+RETOP:entire atmosphere:hour fcst:prob >9144:100mi linestraddling grad
+RETOP:entire atmosphere:hour fcst:prob >10668:100mi linestraddling grad
+RETOP:entire atmosphere:hour fcst:prob >12192:100mi linestraddling grad
+RETOP:entire atmosphere:hour fcst:prob >15240:100mi linestraddling grad
+MAXUVV:400-1000 mb:hour fcst:prob >1:100mi linestraddling grad
+MAXUVV:400-1000 mb:hour fcst:prob >10:100mi linestraddling grad
+MAXUVV:400-1000 mb:hour fcst:prob >20:100mi linestraddling grad
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:100mi linestraddling grad
+CAPE:90-0 mb above ground:hour fcst:prob >500:100mi linestraddling grad
+CAPE:90-0 mb above ground:hour fcst:prob >1000:100mi linestraddling grad
+CAPE:90-0 mb above ground:hour fcst:prob >1500:100mi linestraddling grad
+CAPE:90-0 mb above ground:hour fcst:prob >2000:100mi linestraddling grad
+CAPE:90-0 mb above ground:hour fcst:prob >3000:100mi linestraddling grad
+CIN:90-0 mb above ground:hour fcst:prob <0:100mi linestraddling grad
+CIN:90-0 mb above ground:hour fcst:prob <-50:100mi linestraddling grad
+CIN:90-0 mb above ground:hour fcst:prob <-100:100mi linestraddling grad
+CIN:90-0 mb above ground:hour fcst:prob <-400:100mi linestraddling grad
+HLCY:3000-0 m above ground:hour fcst:prob >100:100mi linestraddling grad
+HLCY:3000-0 m above ground:hour fcst:prob >200:100mi linestraddling grad
+HLCY:3000-0 m above ground:hour fcst:prob >400:100mi linestraddling grad
+TMP:2 m above ground:hour fcst:prob <273.15:100mi linestraddling grad
+DPT:2 m above ground:hour fcst:prob >283.15:100mi linestraddling grad
+DPT:2 m above ground:hour fcst:prob >285.93:100mi linestraddling grad
+DPT:2 m above ground:hour fcst:prob >288.71:100mi linestraddling grad
+DPT:2 m above ground:hour fcst:prob >291.48:100mi linestraddling grad
+DPT:2 m above ground:hour fcst:prob >294.26:100mi linestraddling grad
+PWAT:entire atmosphere:hour fcst:prob >25:100mi linestraddling grad
+PWAT:entire atmosphere:hour fcst:prob >37.5:100mi linestraddling grad
+PWAT:entire atmosphere:hour fcst:prob >50:100mi linestraddling grad
+VIS:surface:hour fcst:prob <400:100mi linestraddling grad
+VIS:surface:hour fcst:prob <800:100mi linestraddling grad
+VIS:surface:hour fcst:prob <1600:100mi linestraddling grad
+VIS:surface:hour fcst:prob <3200:100mi linestraddling grad
+VIS:surface:hour fcst:prob <6400:100mi linestraddling grad
+CRAIN:surface:hour fcst:prob >=1 <0:100mi linestraddling grad
+CFRZR:surface:hour fcst:prob >=1 <0:100mi linestraddling grad
+CICEP:surface:hour fcst:prob >=1 <0:100mi linestraddling grad
+CSNOW:surface:hour fcst:prob >=1 <0:100mi linestraddling grad
+WIND:10 m above ground:hour fcst:prob >10.3:100mi linestraddling grad
+WIND:10 m above ground:hour fcst:prob >15.4:100mi linestraddling grad
+WIND:10 m above ground:hour fcst:prob >20.6:100mi linestraddling grad
+WIND:80 m above ground:hour fcst:prob >10.3:100mi linestraddling grad
+WIND:80 m above ground:hour fcst:prob >15.4:100mi linestraddling grad
+WIND:80 m above ground:hour fcst:prob >20.6:100mi linestraddling grad
+WIND:850 mb:hour fcst:prob >10.3:100mi linestraddling grad
+WIND:850 mb:hour fcst:prob >20.6:100mi linestraddling grad
+WIND:850 mb:hour fcst:prob >30.9:100mi linestraddling grad
+WIND:850 mb:hour fcst:prob >41.2:100mi linestraddling grad
+WIND:850 mb:hour fcst:prob >51.5:100mi linestraddling grad
+WIND:850-300 mb:hour fcst:prob <5:100mi linestraddling grad
+FLGHT:surface:hour fcst:prob >=1 <2:100mi linestraddling grad
+FLGHT:surface:hour fcst:prob >=2 <3:100mi linestraddling grad
+FLGHT:surface:hour fcst:prob >=3 <4:100mi linestraddling grad
+FLGHT:surface:hour fcst:prob >=4 <0:100mi linestraddling grad
+VWSH:surface:hour fcst:prob >10.3:100mi linestraddling grad
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:100mi linestraddling grad
+HINDEX:surface:hour fcst:prob >=2 <5:100mi linestraddling grad
+HINDEX:surface:hour fcst:prob >=5 <6:100mi linestraddling grad
+HINDEX:surface:hour fcst:prob >=6 <7:100mi linestraddling grad
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:100mi linestraddling grad
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:100mi linestraddling grad
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:100mi linestraddling grad
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:prob <305:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:prob <610:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:prob <915:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:prob <1372:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:prob <1830:100mi linestraddling grad
+HGT:cloud ceiling:hour fcst:prob <3050:100mi linestraddling grad
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:100mi linestraddling grad
+REFD:1000 m above ground:hour fcst:estimated from probs:100mi linestraddling grad
+MAXREF:1000 m above ground:hour fcst:estimated from probs:100mi linestraddling grad
+REFC:entire atmosphere:hour fcst:estimated from probs:100mi linestraddling grad
+RETOP:entire atmosphere:hour fcst:estimated from probs:100mi linestraddling grad
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:100mi linestraddling grad
+700-500mbLapseRate:calculated:hour fcst::100mi linestraddling grad
+925-700mbLapseRate:calculated:hour fcst::100mi linestraddling grad
+Wind700mb:calculated:hour fcst::100mi linestraddling grad
+Wind500mb:calculated:hour fcst::100mi linestraddling grad
+SBCAPE*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+MLCAPE*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+SBCAPE*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MLCAPE*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+SBCAPE*(200+SBCIN):calculated:hour fcst::100mi linestraddling grad
+MLCAPE*(200+MLCIN):calculated:hour fcst::100mi linestraddling grad
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::100mi linestraddling grad
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::100mi linestraddling grad
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi linestraddling grad
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi linestraddling grad
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi linestraddling grad
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi linestraddling grad
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi linestraddling grad
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi linestraddling grad
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi linestraddling grad
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi linestraddling grad
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi linestraddling grad
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MUCAPE*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi linestraddling grad
+MaxWind<=850mb:calculated:hour fcst::100mi linestraddling grad
+SumWind<=850mb:calculated:hour fcst::100mi linestraddling grad
+MaxWind<=700mb:calculated:hour fcst::100mi linestraddling grad
+SumWind<=700mb:calculated:hour fcst::100mi linestraddling grad
+SCPish(RM):calculated:hour fcst::100mi linestraddling grad
+Divergence925mb*10^5:calculated:hour fcst::100mi linestraddling grad
+Divergence850mb*10^5:calculated:hour fcst::100mi linestraddling grad
+Divergence250mb*10^5:calculated:hour fcst::100mi linestraddling grad
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::100mi linestraddling grad
+ConvergenceOnly925mb*10^5:calculated:hour fcst::100mi linestraddling grad
+ConvergenceOnly850mb*10^5:calculated:hour fcst::100mi linestraddling grad
+AbsVorticity925mb*10^5:calculated:hour fcst::100mi linestraddling grad
+AbsVorticity850mb*10^5:calculated:hour fcst::100mi linestraddling grad
+AbsVorticity700mb*10^5:calculated:hour fcst::100mi linestraddling grad
+AbsVorticity500mb*10^5:calculated:hour fcst::100mi linestraddling grad
+AbsVorticity250mb*10^5:calculated:hour fcst::100mi linestraddling grad
+UMEAN:calculated:hour fcst::100mi linestraddling grad
+VMEAN:calculated:hour fcst::100mi linestraddling grad
+USHEAR:calculated:hour fcst::100mi linestraddling grad
+VSHEAR:calculated:hour fcst::100mi linestraddling grad
+SHEAR:calculated:hour fcst::100mi linestraddling grad
+USTM:calculated:hour fcst::100mi linestraddling grad
+VSTM:calculated:hour fcst::100mi linestraddling grad
+U½STM½500mb:calculated:hour fcst::100mi linestraddling grad
+V½STM½500mb:calculated:hour fcst::100mi linestraddling grad
+SCPish(RM)>1:calculated:hour fcst::100mi linestraddling grad
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::100mi linestraddling grad
+UpstreamSBCAPE2hr:calculated:hour fcst::100mi linestraddling grad
+UpstreamMLCAPE2hr:calculated:hour fcst::100mi linestraddling grad
+Upstream2mDPT1hr:calculated:hour fcst::100mi linestraddling grad
+Upstream2mDPT2hr:calculated:hour fcst::100mi linestraddling grad
+UpstreamCRAIN2hr:calculated:hour fcst::100mi linestraddling grad
+hail_day_climatological_spatial_prob:calculated:hour fcst::
+hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_hail_day_climatological_spatial_prob:calculated:hour fcst::
+sig_hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_severe_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_tornado_day_climatological_spatial_prob:calculated:hour fcst::
+sig_tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_wind_day_climatological_spatial_prob:calculated:hour fcst::
+sig_wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+tornado_day_climatological_spatial_prob:calculated:hour fcst::
+tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+wind_day_climatological_spatial_prob:calculated:hour fcst::
+wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+asos_gust_days_per_year:calculated:hour fcst::
+asos_sig_gust_days_per_year:calculated:hour fcst::
+hour_in_day_climatological_severe_prob:calculated:hour fcst::
+month_climatological_tornado_day_prob:calculated:hour fcst::
+month_climatological_wind_day_prob:calculated:hour fcst::
+month_climatological_hail_day_prob:calculated:hour fcst::
+month_climatological_severe_day_prob:calculated:hour fcst::
+month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::
+month_climatological_wind_day_given_severe_day_prob:calculated:hour fcst::
+month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::
+people_per_sq_km:calculated:hour fcst::
+simulation_version:calculated:hour fcst::

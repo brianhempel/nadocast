@@ -1,0 +1,910 @@
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:
+CAPE:surface:hour fcst:wt ens mean:
+CIN:90-0 mb above ground:hour fcst:wt ens mean:
+CIN:180-0 mb above ground:hour fcst:wt ens mean:
+CIN:surface:hour fcst:wt ens mean:
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:
+HGT:250 mb:hour fcst:wt ens mean:
+HGT:500 mb:hour fcst:wt ens mean:
+HGT:700 mb:hour fcst:wt ens mean:
+HGT:850 mb:hour fcst:wt ens mean:
+HGT:925 mb:hour fcst:wt ens mean:
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:
+UGRD:250 mb:hour fcst:wt ens mean:
+UGRD:500 mb:hour fcst:wt ens mean:
+UGRD:700 mb:hour fcst:wt ens mean:
+UGRD:850 mb:hour fcst:wt ens mean:
+UGRD:925 mb:hour fcst:wt ens mean:
+VGRD:250 mb:hour fcst:wt ens mean:
+VGRD:500 mb:hour fcst:wt ens mean:
+VGRD:700 mb:hour fcst:wt ens mean:
+VGRD:850 mb:hour fcst:wt ens mean:
+VGRD:925 mb:hour fcst:wt ens mean:
+VVEL:700 mb:hour fcst:wt ens mean:
+TMP:250 mb:hour fcst:wt ens mean:
+TMP:500 mb:hour fcst:wt ens mean:
+TMP:700 mb:hour fcst:wt ens mean:
+TMP:850 mb:hour fcst:wt ens mean:
+TMP:925 mb:hour fcst:wt ens mean:
+TMP:2 m above ground:hour fcst:wt ens mean:
+DPT:500 mb:hour fcst:wt ens mean:
+DPT:700 mb:hour fcst:wt ens mean:
+DPT:850 mb:hour fcst:wt ens mean:
+DPT:925 mb:hour fcst:wt ens mean:
+DPT:2 m above ground:hour fcst:wt ens mean:
+RH:700 mb:hour fcst:wt ens mean:
+PWAT:entire atmosphere:hour fcst:wt ens mean:
+VIS:surface:hour fcst:wt ens mean:
+HGT:cloud base:hour fcst:wt ens mean:
+LCDC:low cloud layer:hour fcst:wt ens mean:
+MCDC:middle cloud layer:hour fcst:wt ens mean:
+HCDC:high cloud layer:hour fcst:wt ens mean:
+TCDC:entire atmosphere:hour fcst:wt ens mean:
+CRAIN:surface:hour fcst:wt ens mean:
+CFRZR:surface:hour fcst:wt ens mean:
+CICEP:surface:hour fcst:wt ens mean:
+CSNOW:surface:hour fcst:wt ens mean:
+WIND:10 m above ground:hour fcst:wt ens mean:
+WIND:850 mb:hour fcst:wt ens mean:
+WIND:80 m above ground:hour fcst:wt ens mean:
+WIND:925 mb:hour fcst:wt ens mean:
+WIND:250 mb:hour fcst:wt ens mean:
+VVEL:700-500 mb:hour fcst:wt ens mean:
+VWSH:surface:hour fcst:wt ens mean:
+HINDEX:surface:hour fcst:wt ens mean:
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:
+HGT:cloud ceiling:hour fcst:wt ens mean:
+REFD:1000 m above ground:hour fcst:prob >30:
+REFD:1000 m above ground:hour fcst:prob >40:
+REFD:1000 m above ground:hour fcst:prob >50:
+MAXREF:1000 m above ground:hour fcst:prob >40:
+MAXREF:1000 m above ground:hour fcst:prob >50:
+REFC:entire atmosphere:hour fcst:prob >10:
+REFC:entire atmosphere:hour fcst:prob >20:
+REFC:entire atmosphere:hour fcst:prob >30:
+REFC:entire atmosphere:hour fcst:prob >40:
+REFC:entire atmosphere:hour fcst:prob >50:
+RETOP:entire atmosphere:hour fcst:prob >6096:
+RETOP:entire atmosphere:hour fcst:prob >9144:
+RETOP:entire atmosphere:hour fcst:prob >10668:
+RETOP:entire atmosphere:hour fcst:prob >12192:
+RETOP:entire atmosphere:hour fcst:prob >15240:
+MAXUVV:400-1000 mb:hour fcst:prob >1:
+MAXUVV:400-1000 mb:hour fcst:prob >10:
+MAXUVV:400-1000 mb:hour fcst:prob >20:
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:
+CAPE:90-0 mb above ground:hour fcst:prob >500:
+CAPE:90-0 mb above ground:hour fcst:prob >1000:
+CAPE:90-0 mb above ground:hour fcst:prob >1500:
+CAPE:90-0 mb above ground:hour fcst:prob >2000:
+CAPE:90-0 mb above ground:hour fcst:prob >3000:
+CIN:90-0 mb above ground:hour fcst:prob <0:
+CIN:90-0 mb above ground:hour fcst:prob <-50:
+CIN:90-0 mb above ground:hour fcst:prob <-100:
+CIN:90-0 mb above ground:hour fcst:prob <-400:
+HLCY:3000-0 m above ground:hour fcst:prob >100:
+HLCY:3000-0 m above ground:hour fcst:prob >200:
+HLCY:3000-0 m above ground:hour fcst:prob >400:
+TMP:2 m above ground:hour fcst:prob <273.15:
+DPT:2 m above ground:hour fcst:prob >283.15:
+DPT:2 m above ground:hour fcst:prob >285.93:
+DPT:2 m above ground:hour fcst:prob >288.71:
+DPT:2 m above ground:hour fcst:prob >291.48:
+DPT:2 m above ground:hour fcst:prob >294.26:
+PWAT:entire atmosphere:hour fcst:prob >25:
+PWAT:entire atmosphere:hour fcst:prob >37.5:
+PWAT:entire atmosphere:hour fcst:prob >50:
+VIS:surface:hour fcst:prob <400:
+VIS:surface:hour fcst:prob <800:
+VIS:surface:hour fcst:prob <1600:
+VIS:surface:hour fcst:prob <3200:
+VIS:surface:hour fcst:prob <6400:
+CRAIN:surface:hour fcst:prob >=1 <0:
+CFRZR:surface:hour fcst:prob >=1 <0:
+CICEP:surface:hour fcst:prob >=1 <0:
+CSNOW:surface:hour fcst:prob >=1 <0:
+WIND:10 m above ground:hour fcst:prob >10.3:
+WIND:10 m above ground:hour fcst:prob >15.4:
+WIND:10 m above ground:hour fcst:prob >20.6:
+WIND:80 m above ground:hour fcst:prob >10.3:
+WIND:80 m above ground:hour fcst:prob >15.4:
+WIND:80 m above ground:hour fcst:prob >20.6:
+WIND:850 mb:hour fcst:prob >10.3:
+WIND:850 mb:hour fcst:prob >20.6:
+WIND:850 mb:hour fcst:prob >30.9:
+WIND:850 mb:hour fcst:prob >41.2:
+WIND:850 mb:hour fcst:prob >51.5:
+WIND:850-300 mb:hour fcst:prob <5:
+FLGHT:surface:hour fcst:prob >=1 <2:
+FLGHT:surface:hour fcst:prob >=2 <3:
+FLGHT:surface:hour fcst:prob >=3 <4:
+FLGHT:surface:hour fcst:prob >=4 <0:
+VWSH:surface:hour fcst:prob >10.3:
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:
+HINDEX:surface:hour fcst:prob >=2 <5:
+HINDEX:surface:hour fcst:prob >=5 <6:
+HINDEX:surface:hour fcst:prob >=6 <7:
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:
+HGT:cloud ceiling:hour fcst:prob <305:
+HGT:cloud ceiling:hour fcst:prob <610:
+HGT:cloud ceiling:hour fcst:prob <915:
+HGT:cloud ceiling:hour fcst:prob <1372:
+HGT:cloud ceiling:hour fcst:prob <1830:
+HGT:cloud ceiling:hour fcst:prob <3050:
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:
+REFD:1000 m above ground:hour fcst:estimated from probs:
+MAXREF:1000 m above ground:hour fcst:estimated from probs:
+REFC:entire atmosphere:hour fcst:estimated from probs:
+RETOP:entire atmosphere:hour fcst:estimated from probs:
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:
+700-500mbLapseRate:calculated:hour fcst::
+925-700mbLapseRate:calculated:hour fcst::
+Wind700mb:calculated:hour fcst::
+Wind500mb:calculated:hour fcst::
+SBCAPE*HLCY3000-0m:calculated:hour fcst::
+MLCAPE*HLCY3000-0m:calculated:hour fcst::
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::
+SBCAPE*BWD0-6km:calculated:hour fcst::
+MLCAPE*BWD0-6km:calculated:hour fcst::
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::
+SBCAPE*(200+SBCIN):calculated:hour fcst::
+MLCAPE*(200+MLCIN):calculated:hour fcst::
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MUCAPE*BWD0-6km:calculated:hour fcst::
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::
+MaxWind<=850mb:calculated:hour fcst::
+SumWind<=850mb:calculated:hour fcst::
+MaxWind<=700mb:calculated:hour fcst::
+SumWind<=700mb:calculated:hour fcst::
+SCPish(RM):calculated:hour fcst::
+Divergence925mb*10^5:calculated:hour fcst::
+Divergence850mb*10^5:calculated:hour fcst::
+Divergence250mb*10^5:calculated:hour fcst::
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::
+ConvergenceOnly925mb*10^5:calculated:hour fcst::
+ConvergenceOnly850mb*10^5:calculated:hour fcst::
+AbsVorticity925mb*10^5:calculated:hour fcst::
+AbsVorticity850mb*10^5:calculated:hour fcst::
+AbsVorticity700mb*10^5:calculated:hour fcst::
+AbsVorticity500mb*10^5:calculated:hour fcst::
+AbsVorticity250mb*10^5:calculated:hour fcst::
+UMEAN:calculated:hour fcst::
+VMEAN:calculated:hour fcst::
+USHEAR:calculated:hour fcst::
+VSHEAR:calculated:hour fcst::
+SHEAR:calculated:hour fcst::
+USTM:calculated:hour fcst::
+VSTM:calculated:hour fcst::
+U½STM½500mb:calculated:hour fcst::
+V½STM½500mb:calculated:hour fcst::
+SCPish(RM)>1:calculated:hour fcst::
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::
+UpstreamSBCAPE2hr:calculated:hour fcst::
+UpstreamMLCAPE2hr:calculated:hour fcst::
+Upstream2mDPT1hr:calculated:hour fcst::
+Upstream2mDPT2hr:calculated:hour fcst::
+UpstreamCRAIN2hr:calculated:hour fcst::
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:25mi mean
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:25mi mean
+CAPE:surface:hour fcst:wt ens mean:25mi mean
+CIN:90-0 mb above ground:hour fcst:wt ens mean:25mi mean
+CIN:180-0 mb above ground:hour fcst:wt ens mean:25mi mean
+CIN:surface:hour fcst:wt ens mean:25mi mean
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:25mi mean
+HGT:250 mb:hour fcst:wt ens mean:25mi mean
+HGT:500 mb:hour fcst:wt ens mean:25mi mean
+HGT:700 mb:hour fcst:wt ens mean:25mi mean
+HGT:850 mb:hour fcst:wt ens mean:25mi mean
+HGT:925 mb:hour fcst:wt ens mean:25mi mean
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:25mi mean
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:25mi mean
+UGRD:250 mb:hour fcst:wt ens mean:25mi mean
+UGRD:500 mb:hour fcst:wt ens mean:25mi mean
+UGRD:700 mb:hour fcst:wt ens mean:25mi mean
+UGRD:850 mb:hour fcst:wt ens mean:25mi mean
+UGRD:925 mb:hour fcst:wt ens mean:25mi mean
+VGRD:250 mb:hour fcst:wt ens mean:25mi mean
+VGRD:500 mb:hour fcst:wt ens mean:25mi mean
+VGRD:700 mb:hour fcst:wt ens mean:25mi mean
+VGRD:850 mb:hour fcst:wt ens mean:25mi mean
+VGRD:925 mb:hour fcst:wt ens mean:25mi mean
+VVEL:700 mb:hour fcst:wt ens mean:25mi mean
+TMP:250 mb:hour fcst:wt ens mean:25mi mean
+TMP:500 mb:hour fcst:wt ens mean:25mi mean
+TMP:700 mb:hour fcst:wt ens mean:25mi mean
+TMP:850 mb:hour fcst:wt ens mean:25mi mean
+TMP:925 mb:hour fcst:wt ens mean:25mi mean
+TMP:2 m above ground:hour fcst:wt ens mean:25mi mean
+DPT:500 mb:hour fcst:wt ens mean:25mi mean
+DPT:700 mb:hour fcst:wt ens mean:25mi mean
+DPT:850 mb:hour fcst:wt ens mean:25mi mean
+DPT:925 mb:hour fcst:wt ens mean:25mi mean
+DPT:2 m above ground:hour fcst:wt ens mean:25mi mean
+RH:700 mb:hour fcst:wt ens mean:25mi mean
+PWAT:entire atmosphere:hour fcst:wt ens mean:25mi mean
+VIS:surface:hour fcst:wt ens mean:25mi mean
+HGT:cloud base:hour fcst:wt ens mean:25mi mean
+LCDC:low cloud layer:hour fcst:wt ens mean:25mi mean
+MCDC:middle cloud layer:hour fcst:wt ens mean:25mi mean
+HCDC:high cloud layer:hour fcst:wt ens mean:25mi mean
+TCDC:entire atmosphere:hour fcst:wt ens mean:25mi mean
+CRAIN:surface:hour fcst:wt ens mean:25mi mean
+CFRZR:surface:hour fcst:wt ens mean:25mi mean
+CICEP:surface:hour fcst:wt ens mean:25mi mean
+CSNOW:surface:hour fcst:wt ens mean:25mi mean
+WIND:10 m above ground:hour fcst:wt ens mean:25mi mean
+WIND:850 mb:hour fcst:wt ens mean:25mi mean
+WIND:80 m above ground:hour fcst:wt ens mean:25mi mean
+WIND:925 mb:hour fcst:wt ens mean:25mi mean
+WIND:250 mb:hour fcst:wt ens mean:25mi mean
+VVEL:700-500 mb:hour fcst:wt ens mean:25mi mean
+VWSH:surface:hour fcst:wt ens mean:25mi mean
+HINDEX:surface:hour fcst:wt ens mean:25mi mean
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:25mi mean
+HGT:cloud ceiling:hour fcst:wt ens mean:25mi mean
+REFD:1000 m above ground:hour fcst:prob >30:25mi mean
+REFD:1000 m above ground:hour fcst:prob >40:25mi mean
+REFD:1000 m above ground:hour fcst:prob >50:25mi mean
+MAXREF:1000 m above ground:hour fcst:prob >40:25mi mean
+MAXREF:1000 m above ground:hour fcst:prob >50:25mi mean
+REFC:entire atmosphere:hour fcst:prob >10:25mi mean
+REFC:entire atmosphere:hour fcst:prob >20:25mi mean
+REFC:entire atmosphere:hour fcst:prob >30:25mi mean
+REFC:entire atmosphere:hour fcst:prob >40:25mi mean
+REFC:entire atmosphere:hour fcst:prob >50:25mi mean
+RETOP:entire atmosphere:hour fcst:prob >6096:25mi mean
+RETOP:entire atmosphere:hour fcst:prob >9144:25mi mean
+RETOP:entire atmosphere:hour fcst:prob >10668:25mi mean
+RETOP:entire atmosphere:hour fcst:prob >12192:25mi mean
+RETOP:entire atmosphere:hour fcst:prob >15240:25mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >1:25mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >10:25mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >20:25mi mean
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:25mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >500:25mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >1000:25mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >1500:25mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >2000:25mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >3000:25mi mean
+CIN:90-0 mb above ground:hour fcst:prob <0:25mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-50:25mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-100:25mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-400:25mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >100:25mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >200:25mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >400:25mi mean
+TMP:2 m above ground:hour fcst:prob <273.15:25mi mean
+DPT:2 m above ground:hour fcst:prob >283.15:25mi mean
+DPT:2 m above ground:hour fcst:prob >285.93:25mi mean
+DPT:2 m above ground:hour fcst:prob >288.71:25mi mean
+DPT:2 m above ground:hour fcst:prob >291.48:25mi mean
+DPT:2 m above ground:hour fcst:prob >294.26:25mi mean
+PWAT:entire atmosphere:hour fcst:prob >25:25mi mean
+PWAT:entire atmosphere:hour fcst:prob >37.5:25mi mean
+PWAT:entire atmosphere:hour fcst:prob >50:25mi mean
+VIS:surface:hour fcst:prob <400:25mi mean
+VIS:surface:hour fcst:prob <800:25mi mean
+VIS:surface:hour fcst:prob <1600:25mi mean
+VIS:surface:hour fcst:prob <3200:25mi mean
+VIS:surface:hour fcst:prob <6400:25mi mean
+CRAIN:surface:hour fcst:prob >=1 <0:25mi mean
+CFRZR:surface:hour fcst:prob >=1 <0:25mi mean
+CICEP:surface:hour fcst:prob >=1 <0:25mi mean
+CSNOW:surface:hour fcst:prob >=1 <0:25mi mean
+WIND:10 m above ground:hour fcst:prob >10.3:25mi mean
+WIND:10 m above ground:hour fcst:prob >15.4:25mi mean
+WIND:10 m above ground:hour fcst:prob >20.6:25mi mean
+WIND:80 m above ground:hour fcst:prob >10.3:25mi mean
+WIND:80 m above ground:hour fcst:prob >15.4:25mi mean
+WIND:80 m above ground:hour fcst:prob >20.6:25mi mean
+WIND:850 mb:hour fcst:prob >10.3:25mi mean
+WIND:850 mb:hour fcst:prob >20.6:25mi mean
+WIND:850 mb:hour fcst:prob >30.9:25mi mean
+WIND:850 mb:hour fcst:prob >41.2:25mi mean
+WIND:850 mb:hour fcst:prob >51.5:25mi mean
+WIND:850-300 mb:hour fcst:prob <5:25mi mean
+FLGHT:surface:hour fcst:prob >=1 <2:25mi mean
+FLGHT:surface:hour fcst:prob >=2 <3:25mi mean
+FLGHT:surface:hour fcst:prob >=3 <4:25mi mean
+FLGHT:surface:hour fcst:prob >=4 <0:25mi mean
+VWSH:surface:hour fcst:prob >10.3:25mi mean
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:25mi mean
+HINDEX:surface:hour fcst:prob >=2 <5:25mi mean
+HINDEX:surface:hour fcst:prob >=5 <6:25mi mean
+HINDEX:surface:hour fcst:prob >=6 <7:25mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:25mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:25mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:25mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:25mi mean
+HGT:cloud ceiling:hour fcst:prob <305:25mi mean
+HGT:cloud ceiling:hour fcst:prob <610:25mi mean
+HGT:cloud ceiling:hour fcst:prob <915:25mi mean
+HGT:cloud ceiling:hour fcst:prob <1372:25mi mean
+HGT:cloud ceiling:hour fcst:prob <1830:25mi mean
+HGT:cloud ceiling:hour fcst:prob <3050:25mi mean
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:25mi mean
+REFD:1000 m above ground:hour fcst:estimated from probs:25mi mean
+MAXREF:1000 m above ground:hour fcst:estimated from probs:25mi mean
+REFC:entire atmosphere:hour fcst:estimated from probs:25mi mean
+RETOP:entire atmosphere:hour fcst:estimated from probs:25mi mean
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:25mi mean
+700-500mbLapseRate:calculated:hour fcst::25mi mean
+925-700mbLapseRate:calculated:hour fcst::25mi mean
+Wind700mb:calculated:hour fcst::25mi mean
+Wind500mb:calculated:hour fcst::25mi mean
+SBCAPE*HLCY3000-0m:calculated:hour fcst::25mi mean
+MLCAPE*HLCY3000-0m:calculated:hour fcst::25mi mean
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::25mi mean
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::25mi mean
+SBCAPE*BWD0-6km:calculated:hour fcst::25mi mean
+MLCAPE*BWD0-6km:calculated:hour fcst::25mi mean
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::25mi mean
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::25mi mean
+SBCAPE*(200+SBCIN):calculated:hour fcst::25mi mean
+MLCAPE*(200+MLCIN):calculated:hour fcst::25mi mean
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::25mi mean
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::25mi mean
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::25mi mean
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::25mi mean
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::25mi mean
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::25mi mean
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::25mi mean
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::25mi mean
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::25mi mean
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::25mi mean
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::25mi mean
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::25mi mean
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::25mi mean
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::25mi mean
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::25mi mean
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::25mi mean
+MUCAPE*BWD0-6km:calculated:hour fcst::25mi mean
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::25mi mean
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::25mi mean
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::25mi mean
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::25mi mean
+MaxWind<=850mb:calculated:hour fcst::25mi mean
+SumWind<=850mb:calculated:hour fcst::25mi mean
+MaxWind<=700mb:calculated:hour fcst::25mi mean
+SumWind<=700mb:calculated:hour fcst::25mi mean
+SCPish(RM):calculated:hour fcst::25mi mean
+Divergence925mb*10^5:calculated:hour fcst::25mi mean
+Divergence850mb*10^5:calculated:hour fcst::25mi mean
+Divergence250mb*10^5:calculated:hour fcst::25mi mean
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::25mi mean
+ConvergenceOnly925mb*10^5:calculated:hour fcst::25mi mean
+ConvergenceOnly850mb*10^5:calculated:hour fcst::25mi mean
+AbsVorticity925mb*10^5:calculated:hour fcst::25mi mean
+AbsVorticity850mb*10^5:calculated:hour fcst::25mi mean
+AbsVorticity700mb*10^5:calculated:hour fcst::25mi mean
+AbsVorticity500mb*10^5:calculated:hour fcst::25mi mean
+AbsVorticity250mb*10^5:calculated:hour fcst::25mi mean
+UMEAN:calculated:hour fcst::25mi mean
+VMEAN:calculated:hour fcst::25mi mean
+USHEAR:calculated:hour fcst::25mi mean
+VSHEAR:calculated:hour fcst::25mi mean
+SHEAR:calculated:hour fcst::25mi mean
+USTM:calculated:hour fcst::25mi mean
+VSTM:calculated:hour fcst::25mi mean
+U½STM½500mb:calculated:hour fcst::25mi mean
+V½STM½500mb:calculated:hour fcst::25mi mean
+SCPish(RM)>1:calculated:hour fcst::25mi mean
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::25mi mean
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::25mi mean
+UpstreamSBCAPE2hr:calculated:hour fcst::25mi mean
+UpstreamMLCAPE2hr:calculated:hour fcst::25mi mean
+Upstream2mDPT1hr:calculated:hour fcst::25mi mean
+Upstream2mDPT2hr:calculated:hour fcst::25mi mean
+UpstreamCRAIN2hr:calculated:hour fcst::25mi mean
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:50mi mean
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:50mi mean
+CAPE:surface:hour fcst:wt ens mean:50mi mean
+CIN:90-0 mb above ground:hour fcst:wt ens mean:50mi mean
+CIN:180-0 mb above ground:hour fcst:wt ens mean:50mi mean
+CIN:surface:hour fcst:wt ens mean:50mi mean
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:50mi mean
+HGT:250 mb:hour fcst:wt ens mean:50mi mean
+HGT:500 mb:hour fcst:wt ens mean:50mi mean
+HGT:700 mb:hour fcst:wt ens mean:50mi mean
+HGT:850 mb:hour fcst:wt ens mean:50mi mean
+HGT:925 mb:hour fcst:wt ens mean:50mi mean
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:50mi mean
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:50mi mean
+UGRD:250 mb:hour fcst:wt ens mean:50mi mean
+UGRD:500 mb:hour fcst:wt ens mean:50mi mean
+UGRD:700 mb:hour fcst:wt ens mean:50mi mean
+UGRD:850 mb:hour fcst:wt ens mean:50mi mean
+UGRD:925 mb:hour fcst:wt ens mean:50mi mean
+VGRD:250 mb:hour fcst:wt ens mean:50mi mean
+VGRD:500 mb:hour fcst:wt ens mean:50mi mean
+VGRD:700 mb:hour fcst:wt ens mean:50mi mean
+VGRD:850 mb:hour fcst:wt ens mean:50mi mean
+VGRD:925 mb:hour fcst:wt ens mean:50mi mean
+VVEL:700 mb:hour fcst:wt ens mean:50mi mean
+TMP:250 mb:hour fcst:wt ens mean:50mi mean
+TMP:500 mb:hour fcst:wt ens mean:50mi mean
+TMP:700 mb:hour fcst:wt ens mean:50mi mean
+TMP:850 mb:hour fcst:wt ens mean:50mi mean
+TMP:925 mb:hour fcst:wt ens mean:50mi mean
+TMP:2 m above ground:hour fcst:wt ens mean:50mi mean
+DPT:500 mb:hour fcst:wt ens mean:50mi mean
+DPT:700 mb:hour fcst:wt ens mean:50mi mean
+DPT:850 mb:hour fcst:wt ens mean:50mi mean
+DPT:925 mb:hour fcst:wt ens mean:50mi mean
+DPT:2 m above ground:hour fcst:wt ens mean:50mi mean
+RH:700 mb:hour fcst:wt ens mean:50mi mean
+PWAT:entire atmosphere:hour fcst:wt ens mean:50mi mean
+VIS:surface:hour fcst:wt ens mean:50mi mean
+HGT:cloud base:hour fcst:wt ens mean:50mi mean
+LCDC:low cloud layer:hour fcst:wt ens mean:50mi mean
+MCDC:middle cloud layer:hour fcst:wt ens mean:50mi mean
+HCDC:high cloud layer:hour fcst:wt ens mean:50mi mean
+TCDC:entire atmosphere:hour fcst:wt ens mean:50mi mean
+CRAIN:surface:hour fcst:wt ens mean:50mi mean
+CFRZR:surface:hour fcst:wt ens mean:50mi mean
+CICEP:surface:hour fcst:wt ens mean:50mi mean
+CSNOW:surface:hour fcst:wt ens mean:50mi mean
+WIND:10 m above ground:hour fcst:wt ens mean:50mi mean
+WIND:850 mb:hour fcst:wt ens mean:50mi mean
+WIND:80 m above ground:hour fcst:wt ens mean:50mi mean
+WIND:925 mb:hour fcst:wt ens mean:50mi mean
+WIND:250 mb:hour fcst:wt ens mean:50mi mean
+VVEL:700-500 mb:hour fcst:wt ens mean:50mi mean
+VWSH:surface:hour fcst:wt ens mean:50mi mean
+HINDEX:surface:hour fcst:wt ens mean:50mi mean
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:50mi mean
+HGT:cloud ceiling:hour fcst:wt ens mean:50mi mean
+REFD:1000 m above ground:hour fcst:prob >30:50mi mean
+REFD:1000 m above ground:hour fcst:prob >40:50mi mean
+REFD:1000 m above ground:hour fcst:prob >50:50mi mean
+MAXREF:1000 m above ground:hour fcst:prob >40:50mi mean
+MAXREF:1000 m above ground:hour fcst:prob >50:50mi mean
+REFC:entire atmosphere:hour fcst:prob >10:50mi mean
+REFC:entire atmosphere:hour fcst:prob >20:50mi mean
+REFC:entire atmosphere:hour fcst:prob >30:50mi mean
+REFC:entire atmosphere:hour fcst:prob >40:50mi mean
+REFC:entire atmosphere:hour fcst:prob >50:50mi mean
+RETOP:entire atmosphere:hour fcst:prob >6096:50mi mean
+RETOP:entire atmosphere:hour fcst:prob >9144:50mi mean
+RETOP:entire atmosphere:hour fcst:prob >10668:50mi mean
+RETOP:entire atmosphere:hour fcst:prob >12192:50mi mean
+RETOP:entire atmosphere:hour fcst:prob >15240:50mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >1:50mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >10:50mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >20:50mi mean
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:50mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >500:50mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >1000:50mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >1500:50mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >2000:50mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >3000:50mi mean
+CIN:90-0 mb above ground:hour fcst:prob <0:50mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-50:50mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-100:50mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-400:50mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >100:50mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >200:50mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >400:50mi mean
+TMP:2 m above ground:hour fcst:prob <273.15:50mi mean
+DPT:2 m above ground:hour fcst:prob >283.15:50mi mean
+DPT:2 m above ground:hour fcst:prob >285.93:50mi mean
+DPT:2 m above ground:hour fcst:prob >288.71:50mi mean
+DPT:2 m above ground:hour fcst:prob >291.48:50mi mean
+DPT:2 m above ground:hour fcst:prob >294.26:50mi mean
+PWAT:entire atmosphere:hour fcst:prob >25:50mi mean
+PWAT:entire atmosphere:hour fcst:prob >37.5:50mi mean
+PWAT:entire atmosphere:hour fcst:prob >50:50mi mean
+VIS:surface:hour fcst:prob <400:50mi mean
+VIS:surface:hour fcst:prob <800:50mi mean
+VIS:surface:hour fcst:prob <1600:50mi mean
+VIS:surface:hour fcst:prob <3200:50mi mean
+VIS:surface:hour fcst:prob <6400:50mi mean
+CRAIN:surface:hour fcst:prob >=1 <0:50mi mean
+CFRZR:surface:hour fcst:prob >=1 <0:50mi mean
+CICEP:surface:hour fcst:prob >=1 <0:50mi mean
+CSNOW:surface:hour fcst:prob >=1 <0:50mi mean
+WIND:10 m above ground:hour fcst:prob >10.3:50mi mean
+WIND:10 m above ground:hour fcst:prob >15.4:50mi mean
+WIND:10 m above ground:hour fcst:prob >20.6:50mi mean
+WIND:80 m above ground:hour fcst:prob >10.3:50mi mean
+WIND:80 m above ground:hour fcst:prob >15.4:50mi mean
+WIND:80 m above ground:hour fcst:prob >20.6:50mi mean
+WIND:850 mb:hour fcst:prob >10.3:50mi mean
+WIND:850 mb:hour fcst:prob >20.6:50mi mean
+WIND:850 mb:hour fcst:prob >30.9:50mi mean
+WIND:850 mb:hour fcst:prob >41.2:50mi mean
+WIND:850 mb:hour fcst:prob >51.5:50mi mean
+WIND:850-300 mb:hour fcst:prob <5:50mi mean
+FLGHT:surface:hour fcst:prob >=1 <2:50mi mean
+FLGHT:surface:hour fcst:prob >=2 <3:50mi mean
+FLGHT:surface:hour fcst:prob >=3 <4:50mi mean
+FLGHT:surface:hour fcst:prob >=4 <0:50mi mean
+VWSH:surface:hour fcst:prob >10.3:50mi mean
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:50mi mean
+HINDEX:surface:hour fcst:prob >=2 <5:50mi mean
+HINDEX:surface:hour fcst:prob >=5 <6:50mi mean
+HINDEX:surface:hour fcst:prob >=6 <7:50mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:50mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:50mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:50mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:50mi mean
+HGT:cloud ceiling:hour fcst:prob <305:50mi mean
+HGT:cloud ceiling:hour fcst:prob <610:50mi mean
+HGT:cloud ceiling:hour fcst:prob <915:50mi mean
+HGT:cloud ceiling:hour fcst:prob <1372:50mi mean
+HGT:cloud ceiling:hour fcst:prob <1830:50mi mean
+HGT:cloud ceiling:hour fcst:prob <3050:50mi mean
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:50mi mean
+REFD:1000 m above ground:hour fcst:estimated from probs:50mi mean
+MAXREF:1000 m above ground:hour fcst:estimated from probs:50mi mean
+REFC:entire atmosphere:hour fcst:estimated from probs:50mi mean
+RETOP:entire atmosphere:hour fcst:estimated from probs:50mi mean
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:50mi mean
+700-500mbLapseRate:calculated:hour fcst::50mi mean
+925-700mbLapseRate:calculated:hour fcst::50mi mean
+Wind700mb:calculated:hour fcst::50mi mean
+Wind500mb:calculated:hour fcst::50mi mean
+SBCAPE*HLCY3000-0m:calculated:hour fcst::50mi mean
+MLCAPE*HLCY3000-0m:calculated:hour fcst::50mi mean
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::50mi mean
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::50mi mean
+SBCAPE*BWD0-6km:calculated:hour fcst::50mi mean
+MLCAPE*BWD0-6km:calculated:hour fcst::50mi mean
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::50mi mean
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::50mi mean
+SBCAPE*(200+SBCIN):calculated:hour fcst::50mi mean
+MLCAPE*(200+MLCIN):calculated:hour fcst::50mi mean
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::50mi mean
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::50mi mean
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi mean
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi mean
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi mean
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi mean
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi mean
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi mean
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi mean
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::50mi mean
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi mean
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi mean
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::50mi mean
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::50mi mean
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::50mi mean
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi mean
+MUCAPE*BWD0-6km:calculated:hour fcst::50mi mean
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::50mi mean
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi mean
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi mean
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::50mi mean
+MaxWind<=850mb:calculated:hour fcst::50mi mean
+SumWind<=850mb:calculated:hour fcst::50mi mean
+MaxWind<=700mb:calculated:hour fcst::50mi mean
+SumWind<=700mb:calculated:hour fcst::50mi mean
+SCPish(RM):calculated:hour fcst::50mi mean
+Divergence925mb*10^5:calculated:hour fcst::50mi mean
+Divergence850mb*10^5:calculated:hour fcst::50mi mean
+Divergence250mb*10^5:calculated:hour fcst::50mi mean
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::50mi mean
+ConvergenceOnly925mb*10^5:calculated:hour fcst::50mi mean
+ConvergenceOnly850mb*10^5:calculated:hour fcst::50mi mean
+AbsVorticity925mb*10^5:calculated:hour fcst::50mi mean
+AbsVorticity850mb*10^5:calculated:hour fcst::50mi mean
+AbsVorticity700mb*10^5:calculated:hour fcst::50mi mean
+AbsVorticity500mb*10^5:calculated:hour fcst::50mi mean
+AbsVorticity250mb*10^5:calculated:hour fcst::50mi mean
+UMEAN:calculated:hour fcst::50mi mean
+VMEAN:calculated:hour fcst::50mi mean
+USHEAR:calculated:hour fcst::50mi mean
+VSHEAR:calculated:hour fcst::50mi mean
+SHEAR:calculated:hour fcst::50mi mean
+USTM:calculated:hour fcst::50mi mean
+VSTM:calculated:hour fcst::50mi mean
+U½STM½500mb:calculated:hour fcst::50mi mean
+V½STM½500mb:calculated:hour fcst::50mi mean
+SCPish(RM)>1:calculated:hour fcst::50mi mean
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::50mi mean
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::50mi mean
+UpstreamSBCAPE2hr:calculated:hour fcst::50mi mean
+UpstreamMLCAPE2hr:calculated:hour fcst::50mi mean
+Upstream2mDPT1hr:calculated:hour fcst::50mi mean
+Upstream2mDPT2hr:calculated:hour fcst::50mi mean
+UpstreamCRAIN2hr:calculated:hour fcst::50mi mean
+CAPE:90-0 mb above ground:hour fcst:wt ens mean:100mi mean
+CAPE:180-0 mb above ground:hour fcst:wt ens mean:100mi mean
+CAPE:surface:hour fcst:wt ens mean:100mi mean
+CIN:90-0 mb above ground:hour fcst:wt ens mean:100mi mean
+CIN:180-0 mb above ground:hour fcst:wt ens mean:100mi mean
+CIN:surface:hour fcst:wt ens mean:100mi mean
+HLCY:3000-0 m above ground:hour fcst:wt ens mean:100mi mean
+HGT:250 mb:hour fcst:wt ens mean:100mi mean
+HGT:500 mb:hour fcst:wt ens mean:100mi mean
+HGT:700 mb:hour fcst:wt ens mean:100mi mean
+HGT:850 mb:hour fcst:wt ens mean:100mi mean
+HGT:925 mb:hour fcst:wt ens mean:100mi mean
+SOILW:0-0.1 m below ground:hour fcst:wt ens mean:100mi mean
+TSOIL:0-0.1 m below ground:hour fcst:wt ens mean:100mi mean
+UGRD:250 mb:hour fcst:wt ens mean:100mi mean
+UGRD:500 mb:hour fcst:wt ens mean:100mi mean
+UGRD:700 mb:hour fcst:wt ens mean:100mi mean
+UGRD:850 mb:hour fcst:wt ens mean:100mi mean
+UGRD:925 mb:hour fcst:wt ens mean:100mi mean
+VGRD:250 mb:hour fcst:wt ens mean:100mi mean
+VGRD:500 mb:hour fcst:wt ens mean:100mi mean
+VGRD:700 mb:hour fcst:wt ens mean:100mi mean
+VGRD:850 mb:hour fcst:wt ens mean:100mi mean
+VGRD:925 mb:hour fcst:wt ens mean:100mi mean
+VVEL:700 mb:hour fcst:wt ens mean:100mi mean
+TMP:250 mb:hour fcst:wt ens mean:100mi mean
+TMP:500 mb:hour fcst:wt ens mean:100mi mean
+TMP:700 mb:hour fcst:wt ens mean:100mi mean
+TMP:850 mb:hour fcst:wt ens mean:100mi mean
+TMP:925 mb:hour fcst:wt ens mean:100mi mean
+TMP:2 m above ground:hour fcst:wt ens mean:100mi mean
+DPT:500 mb:hour fcst:wt ens mean:100mi mean
+DPT:700 mb:hour fcst:wt ens mean:100mi mean
+DPT:850 mb:hour fcst:wt ens mean:100mi mean
+DPT:925 mb:hour fcst:wt ens mean:100mi mean
+DPT:2 m above ground:hour fcst:wt ens mean:100mi mean
+RH:700 mb:hour fcst:wt ens mean:100mi mean
+PWAT:entire atmosphere:hour fcst:wt ens mean:100mi mean
+VIS:surface:hour fcst:wt ens mean:100mi mean
+HGT:cloud base:hour fcst:wt ens mean:100mi mean
+LCDC:low cloud layer:hour fcst:wt ens mean:100mi mean
+MCDC:middle cloud layer:hour fcst:wt ens mean:100mi mean
+HCDC:high cloud layer:hour fcst:wt ens mean:100mi mean
+TCDC:entire atmosphere:hour fcst:wt ens mean:100mi mean
+CRAIN:surface:hour fcst:wt ens mean:100mi mean
+CFRZR:surface:hour fcst:wt ens mean:100mi mean
+CICEP:surface:hour fcst:wt ens mean:100mi mean
+CSNOW:surface:hour fcst:wt ens mean:100mi mean
+WIND:10 m above ground:hour fcst:wt ens mean:100mi mean
+WIND:850 mb:hour fcst:wt ens mean:100mi mean
+WIND:80 m above ground:hour fcst:wt ens mean:100mi mean
+WIND:925 mb:hour fcst:wt ens mean:100mi mean
+WIND:250 mb:hour fcst:wt ens mean:100mi mean
+VVEL:700-500 mb:hour fcst:wt ens mean:100mi mean
+VWSH:surface:hour fcst:wt ens mean:100mi mean
+HINDEX:surface:hour fcst:wt ens mean:100mi mean
+VWSH:6000-0 m above ground:hour fcst:wt ens mean:100mi mean
+HGT:cloud ceiling:hour fcst:wt ens mean:100mi mean
+REFD:1000 m above ground:hour fcst:prob >30:100mi mean
+REFD:1000 m above ground:hour fcst:prob >40:100mi mean
+REFD:1000 m above ground:hour fcst:prob >50:100mi mean
+MAXREF:1000 m above ground:hour fcst:prob >40:100mi mean
+MAXREF:1000 m above ground:hour fcst:prob >50:100mi mean
+REFC:entire atmosphere:hour fcst:prob >10:100mi mean
+REFC:entire atmosphere:hour fcst:prob >20:100mi mean
+REFC:entire atmosphere:hour fcst:prob >30:100mi mean
+REFC:entire atmosphere:hour fcst:prob >40:100mi mean
+REFC:entire atmosphere:hour fcst:prob >50:100mi mean
+RETOP:entire atmosphere:hour fcst:prob >6096:100mi mean
+RETOP:entire atmosphere:hour fcst:prob >9144:100mi mean
+RETOP:entire atmosphere:hour fcst:prob >10668:100mi mean
+RETOP:entire atmosphere:hour fcst:prob >12192:100mi mean
+RETOP:entire atmosphere:hour fcst:prob >15240:100mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >1:100mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >10:100mi mean
+MAXUVV:400-1000 mb:hour fcst:prob >20:100mi mean
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:100mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >500:100mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >1000:100mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >1500:100mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >2000:100mi mean
+CAPE:90-0 mb above ground:hour fcst:prob >3000:100mi mean
+CIN:90-0 mb above ground:hour fcst:prob <0:100mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-50:100mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-100:100mi mean
+CIN:90-0 mb above ground:hour fcst:prob <-400:100mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >100:100mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >200:100mi mean
+HLCY:3000-0 m above ground:hour fcst:prob >400:100mi mean
+TMP:2 m above ground:hour fcst:prob <273.15:100mi mean
+DPT:2 m above ground:hour fcst:prob >283.15:100mi mean
+DPT:2 m above ground:hour fcst:prob >285.93:100mi mean
+DPT:2 m above ground:hour fcst:prob >288.71:100mi mean
+DPT:2 m above ground:hour fcst:prob >291.48:100mi mean
+DPT:2 m above ground:hour fcst:prob >294.26:100mi mean
+PWAT:entire atmosphere:hour fcst:prob >25:100mi mean
+PWAT:entire atmosphere:hour fcst:prob >37.5:100mi mean
+PWAT:entire atmosphere:hour fcst:prob >50:100mi mean
+VIS:surface:hour fcst:prob <400:100mi mean
+VIS:surface:hour fcst:prob <800:100mi mean
+VIS:surface:hour fcst:prob <1600:100mi mean
+VIS:surface:hour fcst:prob <3200:100mi mean
+VIS:surface:hour fcst:prob <6400:100mi mean
+CRAIN:surface:hour fcst:prob >=1 <0:100mi mean
+CFRZR:surface:hour fcst:prob >=1 <0:100mi mean
+CICEP:surface:hour fcst:prob >=1 <0:100mi mean
+CSNOW:surface:hour fcst:prob >=1 <0:100mi mean
+WIND:10 m above ground:hour fcst:prob >10.3:100mi mean
+WIND:10 m above ground:hour fcst:prob >15.4:100mi mean
+WIND:10 m above ground:hour fcst:prob >20.6:100mi mean
+WIND:80 m above ground:hour fcst:prob >10.3:100mi mean
+WIND:80 m above ground:hour fcst:prob >15.4:100mi mean
+WIND:80 m above ground:hour fcst:prob >20.6:100mi mean
+WIND:850 mb:hour fcst:prob >10.3:100mi mean
+WIND:850 mb:hour fcst:prob >20.6:100mi mean
+WIND:850 mb:hour fcst:prob >30.9:100mi mean
+WIND:850 mb:hour fcst:prob >41.2:100mi mean
+WIND:850 mb:hour fcst:prob >51.5:100mi mean
+WIND:850-300 mb:hour fcst:prob <5:100mi mean
+FLGHT:surface:hour fcst:prob >=1 <2:100mi mean
+FLGHT:surface:hour fcst:prob >=2 <3:100mi mean
+FLGHT:surface:hour fcst:prob >=3 <4:100mi mean
+FLGHT:surface:hour fcst:prob >=4 <0:100mi mean
+VWSH:surface:hour fcst:prob >10.3:100mi mean
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:100mi mean
+HINDEX:surface:hour fcst:prob >=2 <5:100mi mean
+HINDEX:surface:hour fcst:prob >=5 <6:100mi mean
+HINDEX:surface:hour fcst:prob >=6 <7:100mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:100mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:100mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:100mi mean
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:100mi mean
+HGT:cloud ceiling:hour fcst:prob <305:100mi mean
+HGT:cloud ceiling:hour fcst:prob <610:100mi mean
+HGT:cloud ceiling:hour fcst:prob <915:100mi mean
+HGT:cloud ceiling:hour fcst:prob <1372:100mi mean
+HGT:cloud ceiling:hour fcst:prob <1830:100mi mean
+HGT:cloud ceiling:hour fcst:prob <3050:100mi mean
+MXUPHL:5000-2000 m above ground:hour fcst:estimated from probs:100mi mean
+REFD:1000 m above ground:hour fcst:estimated from probs:100mi mean
+MAXREF:1000 m above ground:hour fcst:estimated from probs:100mi mean
+REFC:entire atmosphere:hour fcst:estimated from probs:100mi mean
+RETOP:entire atmosphere:hour fcst:estimated from probs:100mi mean
+MAXUVV:400-1000 mb:hour fcst:estimated from probs:100mi mean
+700-500mbLapseRate:calculated:hour fcst::100mi mean
+925-700mbLapseRate:calculated:hour fcst::100mi mean
+Wind700mb:calculated:hour fcst::100mi mean
+Wind500mb:calculated:hour fcst::100mi mean
+SBCAPE*HLCY3000-0m:calculated:hour fcst::100mi mean
+MLCAPE*HLCY3000-0m:calculated:hour fcst::100mi mean
+sqrtSBCAPE*HLCY3000-0m:calculated:hour fcst::100mi mean
+sqrtMLCAPE*HLCY3000-0m:calculated:hour fcst::100mi mean
+SBCAPE*BWD0-6km:calculated:hour fcst::100mi mean
+MLCAPE*BWD0-6km:calculated:hour fcst::100mi mean
+sqrtSBCAPE*BWD0-6km:calculated:hour fcst::100mi mean
+sqrtMLCAPE*BWD0-6km:calculated:hour fcst::100mi mean
+SBCAPE*(200+SBCIN):calculated:hour fcst::100mi mean
+MLCAPE*(200+MLCIN):calculated:hour fcst::100mi mean
+sqrtSBCAPE*(200+SBCIN):calculated:hour fcst::100mi mean
+sqrtMLCAPE*(200+MLCIN):calculated:hour fcst::100mi mean
+SBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi mean
+MLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi mean
+sqrtSBCAPE*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi mean
+sqrtMLCAPE*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi mean
+SBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi mean
+MLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi mean
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi mean
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m:calculated:hour fcst::100mi mean
+SBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi mean
+MLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi mean
+sqrtSBCAPE*BWD0-6km*HLCY3000-0m*(200+SBCIN):calculated:hour fcst::100mi mean
+sqrtMLCAPE*BWD0-6km*HLCY3000-0m*(200+MLCIN):calculated:hour fcst::100mi mean
+700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi mean
+700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi mean
+MUCAPE*BWD0-6km:calculated:hour fcst::100mi mean
+MUCAPE*700-500mbLapseRate*BWD0-6km:calculated:hour fcst::100mi mean
+MUCAPE*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi mean
+MUCAPE*MixingRatio925mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi mean
+MUCAPE*MixingRatio850mb*700-500mbLapseRate*-Celcius500mb*BWD0-6km:calculated:hour fcst::100mi mean
+MaxWind<=850mb:calculated:hour fcst::100mi mean
+SumWind<=850mb:calculated:hour fcst::100mi mean
+MaxWind<=700mb:calculated:hour fcst::100mi mean
+SumWind<=700mb:calculated:hour fcst::100mi mean
+SCPish(RM):calculated:hour fcst::100mi mean
+Divergence925mb*10^5:calculated:hour fcst::100mi mean
+Divergence850mb*10^5:calculated:hour fcst::100mi mean
+Divergence250mb*10^5:calculated:hour fcst::100mi mean
+DifferentialDivergence250-925mb*10^5:calculated:hour fcst::100mi mean
+ConvergenceOnly925mb*10^5:calculated:hour fcst::100mi mean
+ConvergenceOnly850mb*10^5:calculated:hour fcst::100mi mean
+AbsVorticity925mb*10^5:calculated:hour fcst::100mi mean
+AbsVorticity850mb*10^5:calculated:hour fcst::100mi mean
+AbsVorticity700mb*10^5:calculated:hour fcst::100mi mean
+AbsVorticity500mb*10^5:calculated:hour fcst::100mi mean
+AbsVorticity250mb*10^5:calculated:hour fcst::100mi mean
+UMEAN:calculated:hour fcst::100mi mean
+VMEAN:calculated:hour fcst::100mi mean
+USHEAR:calculated:hour fcst::100mi mean
+VSHEAR:calculated:hour fcst::100mi mean
+SHEAR:calculated:hour fcst::100mi mean
+USTM:calculated:hour fcst::100mi mean
+VSTM:calculated:hour fcst::100mi mean
+U½STM½500mb:calculated:hour fcst::100mi mean
+V½STM½500mb:calculated:hour fcst::100mi mean
+SCPish(RM)>1:calculated:hour fcst::100mi mean
+StormUpstream925mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstream925mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstream925mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstream850mbConvergence3hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstream850mbConvergence6hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstream850mbConvergence9hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstreamDifferentialDivergence250-925mb3hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstreamDifferentialDivergence250-925mb6hrGatedBySCP:calculated:hour fcst::100mi mean
+StormUpstreamDifferentialDivergence250-925mb9hrGatedBySCP:calculated:hour fcst::100mi mean
+UpstreamSBCAPE2hr:calculated:hour fcst::100mi mean
+UpstreamMLCAPE2hr:calculated:hour fcst::100mi mean
+Upstream2mDPT1hr:calculated:hour fcst::100mi mean
+Upstream2mDPT2hr:calculated:hour fcst::100mi mean
+UpstreamCRAIN2hr:calculated:hour fcst::100mi mean
+hail_day_climatological_spatial_prob:calculated:hour fcst::
+hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_hail_day_climatological_spatial_prob:calculated:hour fcst::
+sig_hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_severe_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_tornado_day_climatological_spatial_prob:calculated:hour fcst::
+sig_tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+sig_wind_day_climatological_spatial_prob:calculated:hour fcst::
+sig_wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+sig_wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+tornado_day_climatological_spatial_prob:calculated:hour fcst::
+tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+wind_day_climatological_spatial_prob:calculated:hour fcst::
+wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
+wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
+asos_gust_days_per_year:calculated:hour fcst::
+asos_sig_gust_days_per_year:calculated:hour fcst::
+hour_in_day_climatological_severe_prob:calculated:hour fcst::
+month_climatological_tornado_day_prob:calculated:hour fcst::
+month_climatological_wind_day_prob:calculated:hour fcst::
+month_climatological_hail_day_prob:calculated:hour fcst::
+month_climatological_severe_day_prob:calculated:hour fcst::
+month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::
+month_climatological_wind_day_given_severe_day_prob:calculated:hour fcst::
+month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::
+people_per_sq_km:calculated:hour fcst::
+simulation_version:calculated:hour fcst::

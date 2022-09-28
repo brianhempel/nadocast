@@ -90,7 +90,7 @@ function train_with_coordinate_descent_hyperparameter_search(
     bin_splits_calc_inclusion_probabilities = (forecast, label_layers) -> max.(0.01f0, map(y -> y .> 0f0, label_layers)...),
     max_iterations_without_improvement = 20,
     save_dir,
-    climatology_amount, # "none", "minimal", "some", "all"
+    only_features, # nothing or ["CAPE:90-0 mb above ground:hour fcst:wt ens mean -1hr:", "CAPE:180-0 mb above ground:hour fcst:wt ens mean -1hr:", ...]
     configs...
   )
 
@@ -281,106 +281,6 @@ function train_with_coordinate_descent_hyperparameter_search(
   feature_file_path = joinpath(specific_save_dir("training"), "features.txt")
   feature_names = readlines(feature_file_path)
 
-  # Climatology features:
-  # hail_day_climatological_spatial_prob:calculated:hour fcst::
-  # hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # sig_hail_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # sig_hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_severe_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # sig_severe_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_tornado_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # sig_tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_wind_day_climatological_spatial_prob:calculated:hour fcst::
-  # sig_wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # sig_wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # tornado_day_climatological_spatial_prob:calculated:hour fcst::
-  # tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # wind_day_climatological_spatial_prob:calculated:hour fcst::
-  # wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::
-  # wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::
-  # hour_in_day_climatological_severe_prob:calculated:hour fcst::
-  # month_climatological_tornado_day_prob:calculated:hour fcst::
-  # month_climatological_wind_day_prob:calculated:hour fcst::
-  # month_climatological_hail_day_prob:calculated:hour fcst::
-  # month_climatological_severe_day_prob:calculated:hour fcst::
-  # month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::
-  # month_climatological_wind_day_given_severe_day_prob:calculated:hour fcst::
-  # month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::
-
-  climatology_to_include =
-    if climatology_amount == "all"
-      nothing # handled below
-    elseif climatology_amount == "some"
-      Dict(
-        "tornado" => [ # and sig_tornado
-          "severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "tornado_day_climatological_spatial_prob:calculated:hour fcst::",
-          "tornado_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::",
-          "tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
-          "month_climatological_tornado_day_prob:calculated:hour fcst::",
-          "month_climatological_tornado_day_given_severe_day_prob:calculated:hour fcst::",
-          "month_climatological_severe_day_prob:calculated:hour fcst::",
-        ],
-        "wind" => [ # and sig_wind
-          "severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "wind_day_climatological_spatial_prob:calculated:hour fcst::",
-          "wind_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::",
-          "wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
-          "month_climatological_wind_day_prob:calculated:hour fcst::",
-          "month_climatological_wind_day_given_severe_day_prob:calculated:hour fcst::",
-          "month_climatological_severe_day_prob:calculated:hour fcst::",
-        ],
-        "hail" => [ # and sig_hail
-          "severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hail_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hail_day_geomean_absolute_and_conditional_climatological_spatial_prob:calculated:hour fcst::",
-          "hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
-          "month_climatological_hail_day_prob:calculated:hour fcst::",
-          "month_climatological_hail_day_given_severe_day_prob:calculated:hour fcst::",
-          "month_climatological_severe_day_prob:calculated:hour fcst::",
-        ],
-      )
-    elseif climatology_amount == "minimal"
-      Dict(
-        "tornado" => [ # and sig_tornado
-          "tornado_day_climatological_spatial_prob:calculated:hour fcst::",
-          "tornado_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
-          "month_climatological_severe_day_prob:calculated:hour fcst::",
-        ],
-        "wind" => [ # and sig_wind
-          "wind_day_climatological_spatial_prob:calculated:hour fcst::",
-          "wind_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
-          "month_climatological_severe_day_prob:calculated:hour fcst::",
-        ],
-        "hail" => [ # and sig_hail
-          "hail_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hail_day_given_severe_day_climatological_spatial_prob:calculated:hour fcst::",
-          "hour_in_day_climatological_severe_prob:calculated:hour fcst::",
-          "month_climatological_severe_day_prob:calculated:hour fcst::",
-        ],
-      )
-    elseif climatology_amount == "none"
-      Dict(
-        "tornado" => [], # and sig_tornado
-        "wind"    => [], # and sig_wind
-        "hail"    => [], # and sig_hail
-      )
-    else
-      throw("Unknown climatology_amount \"$climatology_amount\"! Valid values are \"none\" \"minimal\" \"some\" or \"all\"")
-    end
-
   print_mpi(str) = rank == root && print(str)
 
   for event_name in event_types
@@ -391,27 +291,25 @@ function train_with_coordinate_descent_hyperparameter_search(
 
     print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
 
-
-    # "sig_tornado" => "tornado" etc
-    non_sig_event_name = replace(event_name, "sig_" => "")
-    # Exclude sig climatology and climatology not related to feature.
     exclude_features =
-      if climatology_amount == "all"
+      if isnothing(only_features)
         []
       else
-        findall(feature_names) do feature_name
-          contains(feature_name, r"_day_") && # Climatology feature
-          !(feature_name in climatology_to_include[non_sig_event_name])
-        end
+        findall(feat_name -> !(feat_name in only_features), feature_names)
       end
 
-    for feature_name in feature_names[exclude_features]
-      print_mpi("Excluding $feature_name\n")
+    for (feature_i, feature_name) in zip(exclude_features, feature_names[exclude_features])
+      print_mpi("Excluding $feature_i $feature_name\n")
     end
 
     best_model_path = nothing
     best_loss       = Inf32
-    prefix          = "$(model_prefix)_$(event_name)_climatology_$(climatology_amount)"
+    prefix =
+      if exclude_features == []
+        "$(model_prefix)_$(event_name)"
+      else
+        "$(model_prefix)_$(event_name)_excluding_$(length(exclude_features))_features_$(hash(sort(unique(exclude_features))))"
+      end
 
     # Returns path
     save(validation_loss, bin_splits, trees) = begin

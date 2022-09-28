@@ -1,0 +1,80 @@
+REFD:1000 m above ground:hour fcst:prob >30:
+REFD:1000 m above ground:hour fcst:prob >40:
+REFD:1000 m above ground:hour fcst:prob >50:
+MAXREF:1000 m above ground:hour fcst:prob >40:
+MAXREF:1000 m above ground:hour fcst:prob >50:
+REFC:entire atmosphere:hour fcst:prob >10:
+REFC:entire atmosphere:hour fcst:prob >20:
+REFC:entire atmosphere:hour fcst:prob >30:
+REFC:entire atmosphere:hour fcst:prob >40:
+REFC:entire atmosphere:hour fcst:prob >50:
+RETOP:entire atmosphere:hour fcst:prob >6096:
+RETOP:entire atmosphere:hour fcst:prob >9144:
+RETOP:entire atmosphere:hour fcst:prob >10668:
+RETOP:entire atmosphere:hour fcst:prob >12192:
+RETOP:entire atmosphere:hour fcst:prob >15240:
+MAXUVV:400-1000 mb:hour fcst:prob >1:
+MAXUVV:400-1000 mb:hour fcst:prob >10:
+MAXUVV:400-1000 mb:hour fcst:prob >20:
+MXUPHL:5000-2000 m above ground:hour fcst:prob >25:
+CAPE:90-0 mb above ground:hour fcst:prob >500:
+CAPE:90-0 mb above ground:hour fcst:prob >1000:
+CAPE:90-0 mb above ground:hour fcst:prob >1500:
+CAPE:90-0 mb above ground:hour fcst:prob >2000:
+CAPE:90-0 mb above ground:hour fcst:prob >3000:
+CIN:90-0 mb above ground:hour fcst:prob <0:
+CIN:90-0 mb above ground:hour fcst:prob <-50:
+CIN:90-0 mb above ground:hour fcst:prob <-100:
+CIN:90-0 mb above ground:hour fcst:prob <-400:
+HLCY:3000-0 m above ground:hour fcst:prob >100:
+HLCY:3000-0 m above ground:hour fcst:prob >200:
+HLCY:3000-0 m above ground:hour fcst:prob >400:
+TMP:2 m above ground:hour fcst:prob <273.15:
+DPT:2 m above ground:hour fcst:prob >283.15:
+DPT:2 m above ground:hour fcst:prob >285.93:
+DPT:2 m above ground:hour fcst:prob >288.71:
+DPT:2 m above ground:hour fcst:prob >291.48:
+DPT:2 m above ground:hour fcst:prob >294.26:
+PWAT:entire atmosphere:hour fcst:prob >25:
+PWAT:entire atmosphere:hour fcst:prob >37.5:
+PWAT:entire atmosphere:hour fcst:prob >50:
+VIS:surface:hour fcst:prob <400:
+VIS:surface:hour fcst:prob <800:
+VIS:surface:hour fcst:prob <1600:
+VIS:surface:hour fcst:prob <3200:
+VIS:surface:hour fcst:prob <6400:
+CRAIN:surface:hour fcst:prob >=1 <0:
+CFRZR:surface:hour fcst:prob >=1 <0:
+CICEP:surface:hour fcst:prob >=1 <0:
+CSNOW:surface:hour fcst:prob >=1 <0:
+WIND:10 m above ground:hour fcst:prob >10.3:
+WIND:10 m above ground:hour fcst:prob >15.4:
+WIND:10 m above ground:hour fcst:prob >20.6:
+WIND:80 m above ground:hour fcst:prob >10.3:
+WIND:80 m above ground:hour fcst:prob >15.4:
+WIND:80 m above ground:hour fcst:prob >20.6:
+WIND:850 mb:hour fcst:prob >10.3:
+WIND:850 mb:hour fcst:prob >20.6:
+WIND:850 mb:hour fcst:prob >30.9:
+WIND:850 mb:hour fcst:prob >41.2:
+WIND:850 mb:hour fcst:prob >51.5:
+WIND:850-300 mb:hour fcst:prob <5:
+FLGHT:surface:hour fcst:prob >=1 <2:
+FLGHT:surface:hour fcst:prob >=2 <3:
+FLGHT:surface:hour fcst:prob >=3 <4:
+FLGHT:surface:hour fcst:prob >=4 <0:
+VWSH:surface:hour fcst:prob >10.3:
+JFWPRB:10 m above ground:hour fcst:prob >=9 <20:
+HINDEX:surface:hour fcst:prob >=2 <5:
+HINDEX:surface:hour fcst:prob >=5 <6:
+HINDEX:surface:hour fcst:prob >=6 <7:
+VWSH:6000-0 m above ground:hour fcst:prob >10.3:
+VWSH:6000-0 m above ground:hour fcst:prob >15.4:
+VWSH:6000-0 m above ground:hour fcst:prob >20.6:
+VWSH:6000-0 m above ground:hour fcst:prob >25.7:
+HGT:cloud ceiling:hour fcst:prob <305:
+HGT:cloud ceiling:hour fcst:prob <610:
+HGT:cloud ceiling:hour fcst:prob <915:
+HGT:cloud ceiling:hour fcst:prob <1372:
+HGT:cloud ceiling:hour fcst:prob <1830:
+HGT:cloud ceiling:hour fcst:prob <3050:
