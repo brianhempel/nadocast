@@ -276,7 +276,7 @@ function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, tot
   # (Starting POD      = 100%)
   true_pos_weight      = total_pos_weight
   predicted_pos_weight = total_weight
-  thresh               = zero(ŷ_sorted[1])
+  thresh               = -one(ŷ_sorted[1])
   last_sr              = true_pos_weight / predicted_pos_weight
   last_pod             = true_pos_weight / total_pos_weight
   area                 = 0.0
@@ -294,12 +294,18 @@ function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, tot
     pod = true_pos_weight / total_pos_weight
 
     if pod != last_pod
-      area += (last_pod - pod) * (0.5 * sr + 0.5 * last_sr)
+      # area += (last_pod - pod) * (0.5 * sr + 0.5 * last_sr) # interpolated version
+      area += (last_pod - pod) * last_sr # stairstep version
     end
 
     last_sr  = sr
     last_pod = pod
   end
+
+  # close the curve:
+  pod = 0.0
+  # area += (last_pod - pod) * (0.5 * 0.0 + 0.5 * last_sr) # interpolated version
+  area += (last_pod - pod) * last_sr # stairstep version
 
   area
 end
