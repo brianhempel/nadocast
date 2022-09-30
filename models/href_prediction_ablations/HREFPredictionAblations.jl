@@ -33,7 +33,7 @@ _forecasts_day                                = []
 
 logit(p) = log(p / (one(p) - p))
 
-blur_radii = [15, 25, 35, 50, 70, 100]
+blur_radii = []
 
 
 # we only trained out to f35, but with some assumptions we can try to go out to f47 even though I don't have an HREF archive out to f48 to train against
@@ -167,9 +167,9 @@ function reload_forecasts()
     )
 
   # Only used incidentally to determine best blur radii
-  _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(regular_forecasts(_forecasts), blur_radii)
+  # _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(regular_forecasts(_forecasts), blur_radii)
 
-  grid = _forecasts[1].grid
+  # grid = _forecasts[1].grid
 
   # Determined in Train.jl
   # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
@@ -180,107 +180,155 @@ function reload_forecasts()
   # sig_wind    15                  35                   0.016237844
   # sig_hail    15                  25                   0.015587974
 
-  blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
+  # blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
   # blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
   # blur_25mi_grid_is = Grids.radius_grid_is(grid, 25.0)
   # blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
   # blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
 
-  # Needs to be the same order as models
-  blur_grid_is = [
-    (blur_0mi_grid_is, blur_0mi_grid_is), # tornado
-  ]
+  # # Needs to be the same order as models
+  # blur_grid_is = [
+  #   (blur_0mi_grid_is, blur_0mi_grid_is), # tornado
+  # ]
 
-  _forecasts_blurred = PredictionForecasts.blurred(regular_forecasts(_forecasts),  2:35,  blur_grid_is)
-
-
-  # Calibrating hourly predictions to validation data
-
-  event_to_bins = Dict{String, Vector{Float32}}(
-    "tornado_full_13831"     => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  )
-  event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-    "tornado_full_13831"     => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  )
-
-  # Returns array of (event_name, var_name, predict)
-  function make_models(event_to_bins, event_to_bins_logistic_coeffs)
-    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
-
-    map(1:length(models)) do model_i
-      event_name, var_name, _, _, _ = models[model_i] # event_name == model_name here
-
-      predict(forecasts, data) = begin
-        href_ŷs = @view data[:,model_i]
-
-        out = Array{Float32}(undef, length(href_ŷs))
-
-        bin_maxes            = event_to_bins[event_name]
-        bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
-
-        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
-
-        predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
-
-        Threads.@threads for i in 1:length(href_ŷs)
-          href_ŷ = href_ŷs[i]
-          if href_ŷ <= bin_maxes[1]
-            # Bin 1-2 predictor only
-            ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
-          elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
-            # Bin 5-6 predictor only
-            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
-          else
-            # Overlapping bins
-            higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
-            lower_bin_i  = higher_bin_i - 1
-            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
-            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
-
-            # Bin 1-2 and 2-3 predictors
-            ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
-            ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
-          end
-          out[i] = ŷ
-        end
-
-        out
-      end
-
-      (event_name, var_name, predict)
-    end
-  end
-
-  hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
-
-  _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_ablations_severe_probabilities")
+  # _forecasts_blurred = PredictionForecasts.blurred(regular_forecasts(_forecasts),  2:35,  blur_grid_is)
 
 
-  # Day & Four-hourly forecasts
+  # # Calibrating hourly predictions to validation data
 
-  # 1. Try both independent events total prob and max hourly prob as the main descriminator
-  # 2. bin predictions into 10 bins of equal weight of positive labels
-  # 3. combine bin-pairs (overlapping, 9 bins total)
-  # 4. train a logistic regression for each bin,
-  #   σ(a1*logit(independent events total prob) +
-  #     a2*logit(max hourly prob) +
-  #     b)
-  # 5. prediction is weighted mean of the two overlapping logistic models
-  # 6. should thereby be absolutely calibrated (check)
-  # 7. calibrate to SPC thresholds (linear interpolation)
+  # event_to_bins = Dict{String, Vector{Float32}}(
+  #   "tornadao_mean_58"                                           => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_prob_80"                                           => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_138"                                     => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_no_sv_219"                      => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_220"                            => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_partial_climatology_227"        => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_253"                => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_blurs_910"          => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_grads_1348"         => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_3hr_1567"           => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  #   "tornado_full_13831"                                         => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
+  # )
+  # event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+  #   "tornadao_mean_58"                                           => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_prob_80"                                           => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_138"                                     => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_no_sv_219"                      => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_220"                            => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_partial_climatology_227"        => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_climatology_253"                => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_climatology_blurs_910"          => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_climatology_grads_1348"         => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornadao_mean_prob_computed_climatology_3hr_1567"           => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  #   "tornado_full_13831"                                         => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
+  # )
 
-  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPredictionAblations")
+  # # Returns array of (event_name, var_name, predict)
+  # function make_models(event_to_bins, event_to_bins_logistic_coeffs)
+  #   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  # The following was computed in TrainDay.jl
+  #   map(1:length(models)) do model_i
+  #     event_name, var_name, _, _, _ = models[model_i] # event_name == model_name here
 
-  event_to_0z_day_bins = Dict{String, Vector{Float32}}(
-    "tornado_full_13831"     => [0.017401028, 0.057005595, 0.13199422,  1.0],
-  )
-  event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-    "tornado_full_13831"     => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
-  )
+  #     predict(forecasts, data) = begin
+  #       href_ŷs = @view data[:,model_i]
 
-  _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPredictionAblations", period_name = "day")
+  #       out = Array{Float32}(undef, length(href_ŷs))
+
+  #       bin_maxes            = event_to_bins[event_name]
+  #       bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
+
+  #       @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+
+  #       predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
+
+  #       Threads.@threads for i in 1:length(href_ŷs)
+  #         href_ŷ = href_ŷs[i]
+  #         if href_ŷ <= bin_maxes[1]
+  #           # Bin 1-2 predictor only
+  #           ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
+  #         elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
+  #           # Bin 5-6 predictor only
+  #           ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
+  #         else
+  #           # Overlapping bins
+  #           higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
+  #           lower_bin_i  = higher_bin_i - 1
+  #           coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+  #           coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+
+  #           # Bin 1-2 and 2-3 predictors
+  #           ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+  #           ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
+  #         end
+  #         out[i] = ŷ
+  #       end
+
+  #       out
+  #     end
+
+  #     (event_name, var_name, predict)
+  #   end
+  # end
+
+  # hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
+
+  # _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_ablations_severe_probabilities")
+
+
+  # # Day & Four-hourly forecasts
+
+  # # 1. Try both independent events total prob and max hourly prob as the main descriminator
+  # # 2. bin predictions into 10 bins of equal weight of positive labels
+  # # 3. combine bin-pairs (overlapping, 9 bins total)
+  # # 4. train a logistic regression for each bin,
+  # #   σ(a1*logit(independent events total prob) +
+  # #     a2*logit(max hourly prob) +
+  # #     b)
+  # # 5. prediction is weighted mean of the two overlapping logistic models
+  # # 6. should thereby be absolutely calibrated (check)
+  # # 7. calibrate to SPC thresholds (linear interpolation)
+
+  # _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPredictionAblations")
+
+  # # The following was computed in TrainDay.jl
+
+  # event_to_0z_day_bins = Dict{String, Vector{Float32}}(
+  #   "tornadao_mean_58"                                           => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_prob_80"                                           => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_138"                                     => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_no_sv_219"                      => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_220"                            => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_partial_climatology_227"        => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_253"                => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_blurs_910"          => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_grads_1348"         => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornadao_mean_prob_computed_climatology_3hr_1567"           => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  #   "tornado_full_13831"                                         => [0.017401028, 0.057005595, 0.13199422,  1.0],
+  # )
+  # event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+  #   "tornadao_mean_58"                                           => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_prob_80"                                           => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_138"                                     => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_no_sv_219"                      => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_220"                            => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_partial_climatology_227"        => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_climatology_253"                => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_climatology_blurs_910"          => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_climatology_grads_1348"         => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornadao_mean_prob_computed_climatology_3hr_1567"           => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  #   "tornado_full_13831"                                         => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
+  # )
+
+  # _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPredictionAblations", period_name = "day")
 
 
   ()
