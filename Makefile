@@ -56,8 +56,8 @@ training_setup_schooner:
 	mkdir ~/bin
 
 	cd ~
-	curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
-	ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+	curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz | tar -xvz
+	ln -s $(pwd)/julia-1.7.3/bin/julia ~/bin/julia
 
 	curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
 	cd grib2/
@@ -73,6 +73,47 @@ training_setup_schooner:
 	module load OpenMPI
 	julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.instantiate()'
 	# julia --project -e 'ENV["JULIA_MPI_BINARY"]="system"; using Pkg; Pkg.update("MemoryConstrainedTreeBoosting")'
+
+
+training_setup_aws:
+	bash
+	cd ~
+	source .bash_profile
+
+	mkdir .ssh
+	vim .ssh/config # copy ssh config over, may need to remove RemoteCommand lines
+
+	ssh-keygen # copy public keys to places you need to connect
+
+	curl https://ftp.gnu.org/gnu/screen/screen-4.9.0.tar.gz | tar -xvz
+	cd screen-4.9.0 && ./autogen.sh && ./configure && make
+	ln -s ~/screen-4.9.0/screen ~/bin/screen
+
+	cd ~
+	curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
+	ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+
+	curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
+	cd grib2/
+	CC=gcc FC=gfortran make
+	ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
+
+	cd /scratch
+	git clone https://github.com/brianhempel/nadocast.git nadocast_dev
+	cd nadocast_dev
+	JULIA_MPI_BINARY=system JULIA_MPI_PATH=/opt/amazon/openmpi JULIA_MPI_LIBRARY=/opt/amazon/openmpi/lib64/libmpi julia --compiled-modules=no --project
+	#> ]instantiate
+	#> ]build MPI
+	#> ]build Proj4
+	#> ]build SpecialFunctions
+
+
+	# on connect:
+	bash -l
+	screen -UdR
+
+
+
 
 
 setup_data_webserver:
