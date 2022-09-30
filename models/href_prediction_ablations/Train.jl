@@ -10,14 +10,14 @@ import TrainingShared
 import Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPredictionAblations
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
 
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
+(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPredictionAblations.forecasts(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 6, 1, 12)
@@ -1492,7 +1492,7 @@ import TrainingShared
 import Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPredictionAblations
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
