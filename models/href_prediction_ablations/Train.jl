@@ -23,6 +23,14 @@ import Inventories
 cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
+forecast_i = 1
+start_time = time_ns()
+for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
+  elapsed = (Base.time_ns() - start_time) / 1.0e9
+  print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.  $(Float32(elapsed / forecast_i))s each.  ~$(Float32((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60)) hours left.            ")
+  forecast_i += 1
+end
+
 # disk2_date = Dates.DateTime(2021, 3, 1, 0)
 # validation_forecasts = filter(forecast -> Forecasts.run_utc_datetime(forecast) >= disk2_date, validation_forecasts);
 
