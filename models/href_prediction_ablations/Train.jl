@@ -17,17 +17,31 @@ import Forecasts
 import Inventories
 
 
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPredictionAblations.forecasts(); just_hours_near_storm_events = false);
+(_, validation_forecasts, test_forecasts) = TrainingShared.forecasts_train_validation_test(HREFPredictionAblations.forecasts(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
+length(validation_forecasts) # 24373
 
 forecast_i = 1
 start_time = time_ns()
-for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(forecasts)
-  elapsed = (Base.time_ns() - start_time) / 1.0e9
-  print("\r$forecast_i/~$(length(forecasts)) forecasts loaded.  $(Float32(elapsed / forecast_i))s each.  ~$(Float32((elapsed / forecast_i) * (length(forecasts) - forecast_i) / 60 / 60)) hours left.            ")
+for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(validation_forecasts)
+  elapsed = (time_ns() - start_time) / 1.0e9
+  print("\r$forecast_i/~$(length(validation_forecasts)) forecasts loaded.  $(Float32(elapsed / forecast_i))s each.  ~$(Float32((elapsed / forecast_i) * (length(validation_forecasts) - forecast_i) / 60 / 60)) hours left.            ")
+  forecast_i += 1
+end
+
+# We don't have storm events past this time.
+cutoff = Dates.DateTime(2022, 6, 1, 12)
+test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
+length(test_forecasts) # 24662
+
+forecast_i = 1
+start_time = time_ns()
+for (forecast, data) in Forecasts.iterate_data_of_uncorrupted_forecasts(test_forecasts)
+  elapsed = (time_ns() - start_time) / 1.0e9
+  print("\r$forecast_i/~$(length(test_forecasts)) forecasts loaded.  $(Float32(elapsed / forecast_i))s each.  ~$(Float32((elapsed / forecast_i) * (length(test_forecasts) - forecast_i) / 60 / 60)) hours left.            ")
   forecast_i += 1
 end
 

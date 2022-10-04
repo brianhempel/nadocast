@@ -117,7 +117,7 @@ models = [
   ("tornadao_mean_prob_computed_climatology_blurs_grads_2005",   "TORPROB", (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-30T08.46.15.004_tornado_excluding_11826_features_14576562183048218741/523_trees_loss_0.0011400548.model",  (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-09-29T16.13.41.561_tornado_excluding_11826_features_14576562183048218741/558_trees_loss_0.0012086717.model",  (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-09-29T16.13.15.348_tornado_excluding_11826_features_14576562183048218741/578_trees_loss_0.0012580294.model"),
   ("tornadao_mean_prob_computed_climatology_prior_next_hrs_691", "TORPROB", (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-30T12.58.07.439_tornado_excluding_13140_features_3720177259145965027/836_trees_loss_0.0011478734.model",   (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-09-29T14.24.13.566_tornado_excluding_13140_features_3720177259145965027/903_trees_loss_0.0012148821.model",   (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-09-29T15.07.29.700_tornado_excluding_13140_features_3720177259145965027/1175_trees_loss_0.001263166.model"),
   ("tornadao_mean_prob_computed_climatology_3hr_1567",           "TORPROB", (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-30T09.10.44.152_tornado_excluding_12264_features_11093869335794226923/1246_trees_loss_0.0011406931.model", (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-09-28T23.41.12.505_tornado_excluding_12264_features_11093869335794226923/1144_trees_loss_0.0012080203.model", (@__DIR__) * "/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-09-28T23.41.12.050_tornado_excluding_12264_features_11093869335794226923/1106_trees_loss_0.0012586837.model"),
-  ("tornado_full_13831",                                         "TORPROB", (@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-19T10.19.24.875_tornado_climatology_all/440_trees_loss_0.0011318683.model",      (@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-09-23T02.26.17.492_tornado_climatology_all/676_trees_loss_0.0012007512.model",      (@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-09-24T18.25.33.579_tornado_climatology_all/538_trees_loss_0.0012588982.model"),
+  ("tornado_full_13831",                                         "TORPROB", (@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f2-13_2022-09-19T10.19.24.875_tornado_climatology_all/440_trees_loss_0.0011318683.model",       (@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f13-24_2022-09-23T02.26.17.492_tornado_climatology_all/676_trees_loss_0.0012007512.model",       (@__DIR__) * "/../href_mid_2018_forward/gbdt_3hr_window_3hr_min_mean_max_delta_f24-35_2022-09-24T18.25.33.579_tornado_climatology_all/538_trees_loss_0.0012588982.model"),
 ]
 
 
@@ -169,7 +169,7 @@ function reload_forecasts()
   # Only used incidentally to determine best blur radii
   # _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(regular_forecasts(_forecasts), blur_radii)
 
-  # grid = _forecasts[1].grid
+  grid = _forecasts[1].grid
 
   # Determined in Train.jl
   # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
@@ -181,17 +181,29 @@ function reload_forecasts()
   # sig_hail    15                  25                   0.015587974
 
   # blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
-  # blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
+  blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
   # blur_25mi_grid_is = Grids.radius_grid_is(grid, 25.0)
   # blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
   # blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
 
-  # # Needs to be the same order as models
-  # blur_grid_is = [
-  #   (blur_0mi_grid_is, blur_0mi_grid_is), # tornado
-  # ]
+  # Needs to be the same order as models
+  blur_grid_is = [
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_58
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_prob_80
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_138
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_no_sv_219
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_220
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_partial_climatology_227
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_climatology_253
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_climatology_blurs_910
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_climatology_grads_1348
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_climatology_blurs_grads_2005
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_climatology_prior_next_hrs_691
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornadao_mean_prob_computed_climatology_3hr_1567
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_full_13831
+  ]
 
-  # _forecasts_blurred = PredictionForecasts.blurred(regular_forecasts(_forecasts),  2:35,  blur_grid_is)
+  _forecasts_blurred = PredictionForecasts.blurred(regular_forecasts(_forecasts),  2:35,  blur_grid_is)
 
 
   # # Calibrating hourly predictions to validation data
