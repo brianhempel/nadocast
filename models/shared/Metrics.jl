@@ -310,6 +310,46 @@ function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, tot
   area
 end
 
+function _au_pr_curve_interploated(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
+  # Arrays are sorted from lowest score to highest
+  # Assume everything above threshold is predicted
+  # (Starting POD      = 100%)
+  true_pos_weight      = total_pos_weight
+  predicted_pos_weight = total_weight
+  thresh               = -one(ŷ_sorted[1])
+  last_sr              = true_pos_weight / predicted_pos_weight
+  last_pod             = true_pos_weight / total_pos_weight
+  area                 = 0.0
+
+  i = 1
+  @inbounds while i <= length(y_sorted)
+    thresh = ŷ_sorted[i]
+    @inbounds while i <= length(y_sorted) && ŷ_sorted[i] == thresh
+      true_pos_weight -= Float64(weights_sorted[i] * y_sorted[i])
+      predicted_pos_weight -= Float64(weights_sorted[i])
+      i += 1
+    end
+
+    sr  = true_pos_weight / (predicted_pos_weight + ε)
+    pod = true_pos_weight / total_pos_weight
+
+    if pod != last_pod
+      area += (last_pod - pod) * (0.5 * sr + 0.5 * last_sr) # interpolated version
+      # area += (last_pod - pod) * last_sr # stairstep version
+    end
+
+    last_sr  = sr
+    last_pod = pod
+  end
+
+  # close the curve:
+  pod = 0.0
+  area += (last_pod - pod) * (0.5 * 0.0 + 0.5 * last_sr) # interpolated version
+  # area += (last_pod - pod) * last_sr # stairstep version
+
+  area
+end
+
 # Area under the precison-recall curve (success ratio vs probability of detection)
 # = area to the left of the performance diagram curve
 #
@@ -351,6 +391,32 @@ function area_under_pr_curve(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
   total_weight     = total_pos_weight + sum(thread_neg_weights)
 
   _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
+end
+
+function area_under_pr_curve_fast(ŷ, y, weights; bin_count = 1000)
+  threads_bin_Σŷ, threads_bin_Σy, threads_bin_Σweights = Metrics.parallel_iterate(length(y)) do thread_range
+    bin_Σŷ       = zeros(Float64, bin_count)
+    bin_Σy       = zeros(Float64, bin_count)
+    bin_Σweights = fill(eps(Float64), bin_count)
+
+    @inbounds for i in thread_range
+      bin_i = Int64(floor(ŷ[i] * bin_count)) + 1
+      bin_i = min(bin_i, bin_count) # if ŷ[i] == 1.0
+      bin_Σŷ[bin_i]       += ŷ[i] * weights[i]
+      bin_Σy[bin_i]       += y[i] * weights[i]
+      bin_Σweights[bin_i] += weights[i]
+    end
+
+    bin_Σŷ, bin_Σy, bin_Σweights
+  end
+
+  Σbin_Σŷ       = sum(threads_bin_Σŷ)
+  Σbin_Σy       = sum(threads_bin_Σy)
+  Σbin_Σweights = sum(threads_bin_Σweights)
+
+  @assert length(Σbin_Σweights) == bin_count
+
+  _au_pr_curve_interploated(Σbin_Σŷ ./ Σbin_Σweights, Σbin_Σy ./ Σbin_Σweights, Σbin_Σweights, sum(Σbin_Σy), sum(Σbin_Σweights))
 end
 
 

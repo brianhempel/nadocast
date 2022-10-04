@@ -345,42 +345,49 @@ function reload_forecasts()
     )
 
   # Only used incidentally to determine best blur radii
-  _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(regular_forecasts(_forecasts), blur_radii)
+  # _forecasts_with_blurs_and_forecast_hour = PredictionForecasts.with_blurs_and_forecast_hour(regular_forecasts(_forecasts), blur_radii)
 
   grid = _forecasts[1].grid
 
   # Determined in Train.jl
-  # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
-  # tornado     15                  15                   0.038589306
-  # wind        25                  25                   0.115706086
-  # hail        15                  25                   0.07425974
-  # sig_tornado 25                  35                   0.03381651
-  # sig_wind    15                  35                   0.016237844
-  # sig_hail    15                  25                   0.015587974
+  # event_name   best_blur_radius_f2 best_blur_radius_f38 AU_PR
+  # tornado      15                  15                   0.047551293
+  # wind         15                  25                   0.1164659
+  # wind_adj     15                  25                   0.06341821
+  # hail         15                  25                   0.07535621
+  # sig_tornado  15                  15                   0.033054337
+  # sig_wind     15                  35                   0.016219445
+  # sig_wind_adj 100                 100                  0.012251711
+  # sig_hail     0                   15                   0.018009394
 
-  blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
-  # blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
-  # blur_25mi_grid_is = Grids.radius_grid_is(grid, 25.0)
-  # blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
-  # blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
+  blur_0mi_grid_is   = Grids.radius_grid_is(grid, 0.0)
+  blur_15mi_grid_is  = Grids.radius_grid_is(grid, 15.0)
+  blur_25mi_grid_is  = Grids.radius_grid_is(grid, 25.0)
+  blur_35mi_grid_is  = Grids.radius_grid_is(grid, 35.0)
+  blur_50mi_grid_is  = Grids.radius_grid_is(grid, 50.0)
+  blur_100mi_grid_is = Grids.radius_grid_is(grid, 100.0)
 
   # Needs to be the same order as models
   blur_grid_is = [
-    (blur_0mi_grid_is, blur_0mi_grid_is), # tornado
-    (blur_0mi_grid_is, blur_0mi_grid_is), # wind
-    (blur_0mi_grid_is, blur_0mi_grid_is), # hail
-    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_tornado
-    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_wind
-    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_hail
+    (blur_15mi_grid_is,  blur_15mi_grid_is),  # tornado
+    (blur_15mi_grid_is,  blur_25mi_grid_is),  # wind
+    (blur_15mi_grid_is,  blur_25mi_grid_is),  # wind_adj
+    (blur_15mi_grid_is,  blur_25mi_grid_is),  # hail
+    (blur_15mi_grid_is,  blur_15mi_grid_is),  # sig_tornado
+    (blur_15mi_grid_is,  blur_35mi_grid_is),  # sig_wind
+    (blur_100mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
+    (blur_0mi_grid_is,   blur_15mi_grid_is),  # sig_hail
   ]
 
   extended_forecasts_blur_grid_is = [
-    (blur_0mi_grid_is, blur_0mi_grid_is), # tornado
-    (blur_0mi_grid_is, blur_0mi_grid_is), # wind
-    (blur_0mi_grid_is, blur_0mi_grid_is), # hail
-    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_tornado
-    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_wind
-    (blur_0mi_grid_is, blur_0mi_grid_is), # sig_hail
+    (blur_15mi_grid_is,  blur_50mi_grid_is),  # tornado
+    (blur_25mi_grid_is,  blur_50mi_grid_is),  # wind
+    (blur_25mi_grid_is,  blur_50mi_grid_is),  # wind_adj
+    (blur_25mi_grid_is,  blur_50mi_grid_is),  # hail
+    (blur_15mi_grid_is,  blur_50mi_grid_is),  # sig_tornado
+    (blur_35mi_grid_is,  blur_50mi_grid_is),  # sig_wind
+    (blur_100mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
+    (blur_15mi_grid_is,  blur_50mi_grid_is),  # sig_hail
   ]
 
   _forecasts_blurred =
