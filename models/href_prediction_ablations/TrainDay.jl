@@ -8,7 +8,7 @@ import LogisticRegression
 using Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPredictionAblations
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
@@ -18,7 +18,7 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_day_accumulators(); just_hours_near_storm_events = false);
+(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPredictionAblations.forecasts_day_accumulators(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 6, 1, 12)
@@ -99,7 +99,7 @@ function test_predictive_power(forecasts, X, Ys, weights)
 
   for feature_i in 1:length(inventory)
     prediction_i = div(feature_i - 1, 2) + 1
-    event_name, _ = HREFPrediction.models[prediction_i]
+    event_name, _ = HREFPredictionAblations.models[prediction_i]
     y = Ys[event_name]
     x = @view X[:,feature_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
@@ -173,11 +173,11 @@ function find_ŷ_bin_splits(event_name, ŷ, Ys, weights)
   bins_max
 end
 
-event_types_count = length(HREFPrediction.models)
+event_types_count = length(HREFPredictionAblations.models)
 event_to_day_bins = Dict{String,Vector{Float32}}()
 println("event_name\tmean_y\tmean_ŷ\tΣweight\tbin_max")
 for prediction_i in 1:event_types_count
-  (event_name, _, model_name) = HREFPrediction.models[prediction_i]
+  (event_name, _, model_name) = HREFPredictionAblations.models[prediction_i]
 
   ŷ = @view X[:,(prediction_i*2) - 1]; # total prob acc
 
@@ -303,7 +303,7 @@ end
 
 event_to_day_bins_logistic_coeffs = Dict{String,Vector{Vector{Float32}}}()
 for prediction_i in 1:event_types_count
-  event_name, _ = HREFPrediction.models[prediction_i]
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
 
   event_to_day_bins_logistic_coeffs[event_name] = find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
 end
@@ -350,7 +350,7 @@ import LogisticRegression
 using Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPredictionAblations
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
@@ -360,7 +360,7 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_day_with_sig_gated(); just_hours_near_storm_events = false);
+(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPredictionAblations.forecasts_day_with_sig_gated(); just_hours_near_storm_events = false);
 
 length(day_validation_forecasts)
 
@@ -417,7 +417,7 @@ function test_predictive_power(forecasts, X, Ys, weights)
 
   for feature_i in 1:length(inventory)
     prediction_i = feature_i
-    (event_name, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
+    (event_name, _, model_name) = HREFPredictionAblations.models_with_gated[prediction_i]
     y = Ys[event_name]
     x = @view X[:,feature_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
@@ -440,13 +440,13 @@ test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
 function test_predictive_power_all(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  event_names = unique(map(first, HREFPrediction.models_with_gated))
+  event_names = unique(map(first, HREFPredictionAblations.models_with_gated))
 
   # Feature order is all HREF severe probs then all SREF severe probs
   for event_name in event_names
     for feature_i in 1:length(inventory)
       prediction_i = feature_i
-      (_, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
+      (_, _, model_name) = HREFPredictionAblations.models_with_gated[prediction_i]
       x = @view X[:,feature_i]
       y = Ys[event_name]
       au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
@@ -523,7 +523,7 @@ function test_calibration(forecasts, X, Ys, weights)
   println("event_name\tmean_y\tmean_ŷ\tΣweight\tSR\tPOD\tbin_max")
   for feature_i in 1:length(inventory)
     prediction_i = feature_i
-    (event_name, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
+    (event_name, _, model_name) = HREFPredictionAblations.models_with_gated[prediction_i]
     y = Ys[event_name]
     ŷ = @view X[:, feature_i]
 
@@ -849,7 +849,7 @@ target_warning_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
 # Assumes weights are proportional to gridpoint areas
 # (here they are because we do not do any fancy subsetting)
 function spc_calibrate_sr_pod(prediction_i, X, Ys, weights)
-  event_name, _ = HREFPrediction.models[prediction_i]
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
   y = Ys[event_name]
   ŷ = @view X[:, prediction_i]
 
@@ -913,7 +913,7 @@ end
 # Assumes weights are proportional to gridpoint areas
 # (here they are because we are not do any fancy subsetting)
 function spc_calibrate_warning_ratio(prediction_i, X, Ys, weights)
-  event_name, _ = HREFPrediction.models[prediction_i]
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
   y = Ys[event_name]
   ŷ = @view X[:, prediction_i]
 
@@ -951,7 +951,7 @@ end
 # Assumes weights are proportional to gridpoint areas
 # (here they are because we are not do any fancy subsetting)
 function spc_calibrate_all(prediction_i, X, Ys, weights)
-  event_name, _ = HREFPrediction.models[prediction_i]
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
   y = Ys[event_name]
   ŷ = @view X[:, prediction_i]
 
@@ -1032,20 +1032,20 @@ end
 
 println("event_name\tnominal_prob\tthreshold_to_match_success_ratio\tthreshold_to_match_POD\tmean_threshold\tSR\tPOD\tWR")
 calibrations_sr_pod = Dict{String,Vector{Tuple{Float32,Float32}}}()
-for prediction_i in 1:length(HREFPrediction.models)
-  event_name, _ = HREFPrediction.models[prediction_i]
+for prediction_i in 1:length(HREFPredictionAblations.models)
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
   calibrations_sr_pod[event_name] = spc_calibrate_sr_pod(prediction_i, X, Ys, weights)
 end
 println("event_name\tnominal_prob\tthreshold_to_match_warning_ratio\tSR\tPOD\tWR")
 calibrations_wr = Dict{String,Vector{Tuple{Float32,Float32}}}()
-for prediction_i in 1:length(HREFPrediction.models)
-  event_name, _ = HREFPrediction.models[prediction_i]
+for prediction_i in 1:length(HREFPredictionAblations.models)
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
   calibrations_wr[event_name] = spc_calibrate_warning_ratio(prediction_i, X, Ys, weights)
 end
 println("event_name\tnominal_prob\tthreshold_to_match_success_ratio\tthreshold_to_match_POD\tthreshold_to_match_warning_ratio\tmean_threshold\tSR\tPOD\tWR")
 calibrations_all = Dict{String,Vector{Tuple{Float32,Float32}}}()
-for prediction_i in 1:length(HREFPrediction.models)
-  event_name, _ = HREFPrediction.models[prediction_i]
+for prediction_i in 1:length(HREFPredictionAblations.models)
+  event_name, _ = HREFPredictionAblations.models[prediction_i]
   calibrations_all[event_name] = spc_calibrate_all(prediction_i, X, Ys, weights)
 end
 
