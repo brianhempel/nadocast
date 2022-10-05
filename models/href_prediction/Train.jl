@@ -1586,18 +1586,20 @@ function test_predictive_power(forecasts, X, Ys, weights)
     y = Ys[event_name]
     x = @view X[:,prediction_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
-    println("$event_name ($(round(sum(y)))) feature $prediction_i $(Inventories.inventory_line_description(inventory[prediction_i]))\tAU-PR-curve: $(Float32(au_pr_curve))")
+    println("$event_name ($(sum(y))) feature $prediction_i $(Inventories.inventory_line_description(inventory[prediction_i]))\tAU-PR-curve: $(Float32(au_pr_curve))")
   end
 end
 test_predictive_power(validation_forecasts_calibrated_with_sig_gated, X, Ys, weights)
 
 # Same as before, because calibration was monotonic
-# tornado (68134.0)    feature 1 TORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.038589306
-# wind (562866.0)      feature 2 WINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.11570608
-# hail (246689.0)      feature 3 HAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.07425418
-# sig_tornado (9182.0) feature 4 STORPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.033819992
-# sig_wind (57701.0)   feature 5 SWINDPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.016239488
-# sig_hail (30597.0)   feature 6 SHAILPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.015588201
+# tornado (75293.0)       feature 1 TORPROB:calculated:hour  fcst:calculated_prob: AU-PR-curve: 0.047563255
+# wind (588576.0)         feature 2 WINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.11646805
+# wind_adj (182289.4)     feature 3 WINDPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.06342232
+# hail (264451.0)         feature 4 HAILPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.07536129
+# sig_tornado (10243.0)   feature 5 STORPROB:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.03307567
+# sig_wind (58860.0)      feature 6 SWINDPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.016221732
+# sig_wind_adj (21053.29) feature 7 SWINDPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.01225615
+# sig_hail (31850.0)      feature 8 SHAILPRO:calculated:hour fcst:calculated_prob: AU-PR-curve: 0.018038029
 
 
 

@@ -420,6 +420,62 @@ function area_under_pr_curve_fast(ŷ, y, weights; bin_count = 1000)
 end
 
 
+# event_names is list of keys of Ys, one per column in Ŷ
+function reliability_curves_midpoints(bin_count, Ŷ, Ys, event_names, weights, col_names=event_names)
+
+  nmodels = size(Ŷ, 2)
+
+  bins_Σŷ      = map(_ -> zeros(Float64, bin_count), 1:nmodels)
+  bins_Σy      = map(_ -> zeros(Float64, bin_count), 1:nmodels)
+  bins_Σweight = map(_ -> zeros(Float64, bin_count), 1:nmodels)
+  bins_max     = map(_ -> ones(Float32, bin_count), 1:nmodels)
+
+  for prediction_i in 1:nmodels
+    y                     = Ys[event_names[prediction_i]]
+    ŷ                     = @view Ŷ[:,prediction_i];
+    sort_perm             = Metrics.parallel_sort_perm(ŷ);
+    y_sorted              = Metrics.parallel_apply_sort_perm(y, sort_perm);
+    ŷ_sorted              = Metrics.parallel_apply_sort_perm(ŷ, sort_perm);
+    weights_sorted        = Metrics.parallel_apply_sort_perm(weights, sort_perm);
+    total_positive_weight = sum(Metrics.parallel_iterate(is -> sum(Float64.(view(y, is) .* view(weights, is))), length(y)))
+    per_bin_pos_weight    = total_positive_weight / bin_count
+
+    bin_i = 1
+    for i in eachindex(y_sorted)
+      if ŷ_sorted[i] > bins_max[prediction_i][bin_i]
+        bin_i += 1
+      end
+
+      bins_Σŷ[prediction_i][bin_i]      += Float64(ŷ_sorted[i] * weights_sorted[i])
+      bins_Σy[prediction_i][bin_i]      += Float64(y_sorted[i] * weights_sorted[i])
+      bins_Σweight[prediction_i][bin_i] += Float64(weights_sorted[i])
+
+      if bins_Σy[prediction_i][bin_i] >= per_bin_pos_weight
+        bins_max[prediction_i][bin_i] = ŷ_sorted[i]
+      end
+    end
+  end
+
+  for prediction_i in 1:nmodels
+    print("ŷ_$(col_names[prediction_i]),y_$(col_names[prediction_i]),")
+  end
+  println()
+
+  for bin_i in 1:bin_count
+    for prediction_i in 1:nmodels
+      Σŷ      = bins_Σŷ[prediction_i][bin_i]
+      Σy      = bins_Σy[prediction_i][bin_i]
+      Σweight = bins_Σweight[prediction_i][bin_i]
+
+      mean_ŷ = Σŷ / Σweight
+      mean_y = Σy / Σweight
+
+      print("$(Float32(mean_ŷ)),$(Float32(mean_y)),")
+    end
+    println()
+  end
+end
+
 
 # CSI = hits / (hits + false alarms + misses)
 #     = true_pos_weight / (true_pos_weight + false_pos_weight + false_negative_weight)
