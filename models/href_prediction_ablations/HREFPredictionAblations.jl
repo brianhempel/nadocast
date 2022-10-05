@@ -208,88 +208,88 @@ function reload_forecasts()
 
   # # Calibrating hourly predictions to validation data
 
-  # event_to_bins = Dict{String, Vector{Float32}}(
-  #   "tornadao_mean_58"                                           => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_prob_80"                                           => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_138"                                     => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_no_sv_219"                      => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_220"                            => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_partial_climatology_227"        => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_climatology_253"                => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_climatology_blurs_910"          => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_climatology_grads_1348"         => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornadao_mean_prob_computed_climatology_3hr_1567"           => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  #   "tornado_full_13831"                                         => [0.0009693373,  0.003943406,  0.009779687,  0.021067958, 0.04314823,  1.0],
-  # )
-  # event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-  #   "tornadao_mean_58"                                           => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_prob_80"                                           => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_138"                                     => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_no_sv_219"                      => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_220"                            => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_partial_climatology_227"        => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_climatology_253"                => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_climatology_blurs_910"          => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_climatology_grads_1348"         => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornadao_mean_prob_computed_climatology_3hr_1567"           => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  #   "tornado_full_13831"                                         => [[0.9410416,  -0.43989772], [0.9696831, -0.2419776],   [0.9994333,  -0.073430814], [1.094306,   0.3302174],  [1.1247456, 0.4527394]],
-  # )
+  event_to_bins = Dict{String, Vector{Float32}}(
+    "tornadao_mean_58"                                           => [0.000958296,  0.0034187553, 0.008049908,  0.016707344, 0.035788268, 1.0],
+    "tornadao_prob_80"                                           => [0.0010611907, 0.0038441075, 0.009374168,  0.018635446, 0.037465766, 1.0],
+    "tornadao_mean_prob_138"                                     => [0.0011344727, 0.0040516052, 0.009403912,  0.019440345, 0.04088651,  1.0],
+    "tornadao_mean_prob_computed_no_sv_219"                      => [0.001112896,  0.0040969327, 0.009968531,  0.020722248, 0.042520937, 1.0],
+    "tornadao_mean_prob_computed_220"                            => [0.0011188483, 0.0041876957, 0.009798439,  0.019887649, 0.04154461,  1.0],
+    "tornadao_mean_prob_computed_partial_climatology_227"        => [0.0011116201, 0.004092531,  0.010467994,  0.023395522, 0.047907665, 1.0],
+    "tornadao_mean_prob_computed_climatology_253"                => [0.001142257,  0.004164435,  0.0104533415, 0.02289575,  0.0471496,   1.0],
+    "tornadao_mean_prob_computed_climatology_blurs_910"          => [0.001259957,  0.004403745,  0.010849744,  0.022011435, 0.044833306, 1.0],
+    "tornadao_mean_prob_computed_climatology_grads_1348"         => [0.0012080052, 0.0043216683, 0.010642204,  0.021209253, 0.044587743, 1.0],
+    "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [0.0012621598, 0.004405628,  0.01059343,   0.021830112, 0.046009377, 1.0],
+    "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [0.0011541534, 0.004339112,  0.010959722,  0.023348574, 0.04785411,  1.0],
+    "tornadao_mean_prob_computed_climatology_3hr_1567"           => [0.001206508,  0.004330907,  0.0109639205, 0.023913587, 0.051235575, 1.0],
+    "tornado_full_13831"                                         => [0.0012153604, 0.004538168,  0.011742671,  0.023059275, 0.049979284, 1.0],
+  )
+  event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornadao_mean_58"                                           => [[1.0608453, 0.34233692], [1.0113722,  0.013388185], [1.0653579, 0.29739413],  [1.0437187,  0.20861574], [1.0588217, 0.27578637]],
+    "tornadao_prob_80"                                           => [[1.0096253, -0.0469623], [0.9850988,  -0.17768726], [1.0664655, 0.24821338],  [0.9513827,  -0.2362276], [1.0854785, 0.2633485]],
+    "tornadao_mean_prob_138"                                     => [[1.0230768, 0.09093034], [1.0292343,  0.12141731],  [1.0123438, 0.037362378], [1.0350122,  0.1281267],  [1.0963296, 0.3398288]],
+    "tornadao_mean_prob_computed_no_sv_219"                      => [[1.0354019, 0.1911897],  [1.0219095,  0.07485228],  [1.0493485, 0.2075882],   [1.0940257,  0.38835412], [1.0213909, 0.12248391]],
+    "tornadao_mean_prob_computed_220"                            => [[1.0302787, 0.14280733], [1.0681692,  0.34719107],  [1.0482181, 0.24779604],  [1.0291348,  0.15958983], [0.9713004, -0.044102136]],
+    "tornadao_mean_prob_computed_partial_climatology_227"        => [[1.0562521, 0.38805947], [0.92319447, -0.45271772], [0.9888554, -0.13014041], [1.1344755,  0.48079926], [1.0812244, 0.30014265]],
+    "tornadao_mean_prob_computed_climatology_253"                => [[1.0602976, 0.41283026], [0.92125416, -0.4563326],  [0.9710596, -0.20777129], [1.1646894,  0.60834074], [1.1520658, 0.5673795]],
+    "tornadao_mean_prob_computed_climatology_blurs_910"          => [[1.065771,  0.47239247], [0.9286899,  -0.38221243], [1.0567164, 0.26145768],  [0.9913568,  0.01256458], [1.0834966, 0.3218238]],
+    "tornadao_mean_prob_computed_climatology_grads_1348"         => [[1.0203846, 0.15487157], [0.93945754, -0.35369343], [1.1307863, 0.61256605],  [1.0428475,  0.24978055], [1.0871354, 0.40001607]],
+    "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [[1.0343003, 0.2688026],  [0.95909494, -0.18902206], [1.0664421, 0.33880964],  [1.0681071,  0.33059332], [1.078756,  0.37049353]],
+    "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [[1.0457013, 0.29932234], [0.91751766, -0.48559842], [1.0170314, 0.0401797],   [1.0982827,  0.39915916], [1.1686069, 0.6304107]],
+    "tornadao_mean_prob_computed_climatology_3hr_1567"           => [[1.0639268, 0.45781243], [0.9226182,  -0.4165027],  [0.9799438, -0.11478417], [1.0525097,  0.19820513], [1.2263151, 0.7710571]],
+    "tornado_full_13831"                                         => [[1.0710595, 0.5394862],  [0.89414734, -0.5616081],  [1.108447,  0.50613326],  [0.83939207, -0.5758451], [1.2171175, 0.7334359]],
+  )
 
-  # # Returns array of (event_name, var_name, predict)
-  # function make_models(event_to_bins, event_to_bins_logistic_coeffs)
-  #   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+  # Returns array of (model_name, var_name, predict)
+  function make_models(event_to_bins, event_to_bins_logistic_coeffs)
+    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  #   map(1:length(models)) do model_i
-  #     event_name, var_name, _, _, _ = models[model_i] # event_name == model_name here
+    map(1:length(models)) do model_i
+      model_name, var_name, _, _, _ = models[model_i]
 
-  #     predict(forecasts, data) = begin
-  #       href_ŷs = @view data[:,model_i]
+      predict(forecasts, data) = begin
+        href_ŷs = @view data[:,model_i]
 
-  #       out = Array{Float32}(undef, length(href_ŷs))
+        out = Array{Float32}(undef, length(href_ŷs))
 
-  #       bin_maxes            = event_to_bins[event_name]
-  #       bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
+        bin_maxes            = event_to_bins[model_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
 
-  #       @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
-  #       predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
+        predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
 
-  #       Threads.@threads for i in 1:length(href_ŷs)
-  #         href_ŷ = href_ŷs[i]
-  #         if href_ŷ <= bin_maxes[1]
-  #           # Bin 1-2 predictor only
-  #           ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
-  #         elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
-  #           # Bin 5-6 predictor only
-  #           ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
-  #         else
-  #           # Overlapping bins
-  #           higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
-  #           lower_bin_i  = higher_bin_i - 1
-  #           coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
-  #           coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+        Threads.@threads for i in 1:length(href_ŷs)
+          href_ŷ = href_ŷs[i]
+          if href_ŷ <= bin_maxes[1]
+            # Bin 1-2 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
+          elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
+            # Bin 5-6 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
+          else
+            # Overlapping bins
+            higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
+            lower_bin_i  = higher_bin_i - 1
+            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
 
-  #           # Bin 1-2 and 2-3 predictors
-  #           ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
-  #           ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
-  #         end
-  #         out[i] = ŷ
-  #       end
+            # Bin 1-2 and 2-3 predictors
+            ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+            ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
+          end
+          out[i] = ŷ
+        end
 
-  #       out
-  #     end
+        out
+      end
 
-  #     (event_name, var_name, predict)
-  #   end
-  # end
+      (model_name, var_name, predict)
+    end
+  end
 
-  # hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
+  hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
 
-  # _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_ablations_severe_probabilities")
+  _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_ablations_severe_probabilities")
 
 
   # # Day & Four-hourly forecasts
