@@ -682,3 +682,50 @@ Metrics.reliability_curves_midpoints(20, X, Ys, fill("tornado", size(X,2)), weig
 # 0.0489141,0.04849398,0.04560429,0.04680432,0.05387157,0.052853018,0.05577142,0.054101817,0.053378638,0.053171977,0.064191915,0.058706734,0.066804685,0.0653264,0.05997108,0.055935655,0.06355831,0.06379676,0.06446297,0.066310965,0.068778716,0.06413248,0.072276376,0.07354862,0.06879845,0.073836155,
 # 0.069575824,0.070569254,0.06063253,0.0621787,0.07429925,0.078878604,0.0746113,0.07963571,0.071370155,0.07669584,0.088964775,0.09073994,0.094273075,0.09235883,0.081727594,0.08649645,0.08846801,0.08971998,0.08711415,0.09018853,0.09728728,0.09611546,0.1026448,0.10104343,0.093195826,0.10680757,
 # 0.12110988,0.119701274,0.09738751,0.09756376,0.12499578,0.121792644,0.116748765,0.113481656,0.113805495,0.109648675,0.1437102,0.15228544,0.16113481,0.1646441,0.13379784,0.1353726,0.15120576,0.15017122,0.150893,0.1462048,0.16498798,0.17255092,0.18481591,0.18100062,0.15691693,0.15076944,
+
+event_to_bins = Dict{String, Vector{Float32}}("tornadao_mean_prob_computed_partial_climatology_227" => [0.0011116201, 0.004092531, 0.010467994, 0.023395522, 0.047907665, 1.0], "tornadao_mean_58" => [0.000958296, 0.0034187553, 0.008049908, 0.016707344, 0.035788268, 1.0], "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [0.0011541534, 0.004339112, 0.010959722, 0.023348574, 0.04785411, 1.0], "tornadao_prob_80" => [0.0010611907, 0.0038441075, 0.009374168, 0.018635446, 0.037465766, 1.0], "tornado_full_13831" => [0.0012153604, 0.004538168, 0.011742671, 0.023059275, 0.049979284, 1.0], "tornadao_mean_prob_computed_no_sv_219" => [0.001112896, 0.0040969327, 0.009968531, 0.020722248, 0.042520937, 1.0], "tornadao_mean_prob_computed_220" => [0.0011188483, 0.0041876957, 0.009798439, 0.019887649, 0.04154461, 1.0], "tornadao_mean_prob_computed_climatology_253" => [0.001142257, 0.004164435, 0.0104533415, 0.02289575, 0.0471496, 1.0], "tornadao_mean_prob_138" => [0.0011344727, 0.0040516052, 0.009403912, 0.019440345, 0.04088651, 1.0], "tornadao_mean_prob_computed_climatology_grads_1348" => [0.0012080052, 0.0043216683, 0.010642204, 0.021209253, 0.044587743, 1.0], "tornadao_mean_prob_computed_climatology_blurs_910" => [0.001259957, 0.004403745, 0.010849744, 0.022011435, 0.044833306, 1.0], "tornadao_mean_prob_computed_climatology_blurs_grads_2005" => [0.0012621598, 0.004405628, 0.01059343, 0.021830112, 0.046009377, 1.0], "tornadao_mean_prob_computed_climatology_3hr_1567" => [0.001206508, 0.004330907, 0.0109639205, 0.023913587, 0.051235575, 1.0])
+event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("tornadao_mean_prob_computed_partial_climatology_227" => [[1.0562521, 0.38805947], [0.92319447, -0.45271772], [0.9888554, -0.13014041], [1.1344755, 0.48079926], [1.0812244, 0.30014265]], "tornadao_mean_58" => [[1.0608453, 0.34233692], [1.0113722, 0.013388185], [1.0653579, 0.29739413], [1.0437187, 0.20861574], [1.0588217, 0.27578637]], "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [[1.0457013, 0.29932234], [0.91751766, -0.48559842], [1.0170314, 0.0401797], [1.0982827, 0.39915916], [1.1686069, 0.6304107]], "tornadao_prob_80" => [[1.0096253, -0.0469623], [0.9850988, -0.17768726], [1.0664655, 0.24821338], [0.9513827, -0.2362276], [1.0854785, 0.2633485]], "tornado_full_13831" => [[1.0710595, 0.5394862], [0.89414734, -0.5616081], [1.108447, 0.50613326], [0.83939207, -0.5758451], [1.2171175, 0.7334359]], "tornadao_mean_prob_computed_no_sv_219" => [[1.0354019, 0.1911897], [1.0219095, 0.07485228], [1.0493485, 0.2075882], [1.0940257, 0.38835412], [1.0213909, 0.12248391]], "tornadao_mean_prob_computed_220" => [[1.0302787, 0.14280733], [1.0681692, 0.34719107], [1.0482181, 0.24779604], [1.0291348, 0.15958983], [0.9713004, -0.044102136]], "tornadao_mean_prob_computed_climatology_253" => [[1.0602976, 0.41283026], [0.92125416, -0.4563326], [0.9710596, -0.20777129], [1.1646894, 0.60834074], [1.1520658, 0.5673795]], "tornadao_mean_prob_138" => [[1.0230768, 0.09093034], [1.0292343, 0.12141731], [1.0123438, 0.037362378], [1.0350122, 0.1281267], [1.0963296, 0.3398288]], "tornadao_mean_prob_computed_climatology_grads_1348" => [[1.0203846, 0.15487157], [0.93945754, -0.35369343], [1.1307863, 0.61256605], [1.0428475, 0.24978055], [1.0871354, 0.40001607]], "tornadao_mean_prob_computed_climatology_blurs_910" => [[1.065771, 0.47239247], [0.9286899, -0.38221243], [1.0567164, 0.26145768], [0.9913568, 0.01256458], [1.0834966, 0.3218238]], "tornadao_mean_prob_computed_climatology_blurs_grads_2005" => [[1.0343003, 0.2688026], [0.95909494, -0.18902206], [1.0664421, 0.33880964], [1.0681071, 0.33059332], [1.078756, 0.37049353]], "tornadao_mean_prob_computed_climatology_3hr_1567" => [[1.0639268, 0.45781243], [0.9226182, -0.4165027], [0.9799438, -0.11478417], [1.0525097, 0.19820513], [1.2263151, 0.7710571]])
+
+function plot_calibration_curves(model_names, event_to_bins, event_to_bins_logistic_coeffs)
+  σ(x)     = 1.0f0 / (1.0f0 + exp(-x))
+  logit(p) = log(p / (one(p) - p))
+  ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+  predict_one(coeffs, ŷ_in) = σ(coeffs[1]*logit(ŷ_in) + coeffs[2])
+
+  for model_name in model_names
+    print("ŷ_in_$model_name,ŷ_out_$model_name,")
+  end
+  println()
+
+  for ŷ_in in (collect(0:0.01:1).^2)
+    for model_name in model_names
+      bin_maxes            = event_to_bins[model_name]
+      bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
+      @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+
+      if ŷ_in <= bin_maxes[1]
+        # Bin 1-2 predictor only
+        ŷ_out = predict_one(bins_logistic_coeffs[1], ŷ_in)
+      elseif ŷ_in > bin_maxes[length(bin_maxes) - 1]
+        # Bin 5-6 predictor only
+        ŷ_out = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], ŷ_in)
+      else
+        # Overlapping bins
+        higher_bin_i = findfirst(bin_max -> ŷ_in <= bin_max, bin_maxes)
+        lower_bin_i  = higher_bin_i - 1
+        coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+        coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+
+        # Bin 1-2 and 2-3 predictors
+        ratio = ratio_between(ŷ_in, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+        ŷ_out = ratio*predict_one(coeffs_higher_bin, ŷ_in) + (1f0 - ratio)*predict_one(coeffs_lower_bin, ŷ_in)
+      end
+      print("$ŷ_in,$ŷ_out,")
+    end
+    println()
+  end
+
+  ()
+end
+
+plot_calibration_curves(map(m -> m[1], HREFPredictionAblations.models), event_to_bins, event_to_bins_logistic_coeffs)
