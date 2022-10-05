@@ -12,6 +12,7 @@ import HREFPrediction
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
+import Grid130
 import Inventories
 import StormEvents
 
@@ -57,13 +58,33 @@ compute_day_labels(events, forecast) = begin
   StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
+compute_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast) = begin
+  # Annoying that we have to recalculate this.
+  # The end_seconds will always be the last hour of the convective day
+  # start_seconds depends on whether the run started during the day or not
+  # I suppose for 0Z the answer is always "no" but whatev here's the right math
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
+  # utc_datetime = Dates.unix2datetime(start_seconds)
+  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  measured_labels  = StormEvents.grid_to_event_neighborhoods(measured_events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, forecast.grid, Grid130.GRID_130_CROPPED, gridded_normalization, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  max.(measured_labels, estimated_labels)
+end
+
 event_name_to_day_labeler = Dict(
-  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+  "tornado"      => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"         => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "wind_adj"     => (forecast -> compute_adjusted_wind_day_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), TrainingShared.day_estimated_wind_gridded_normalization(), forecast)),
+  "hail"         => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado"  => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"     => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_wind_adj" => (forecast -> compute_adjusted_wind_day_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), TrainingShared.day_estimated_sig_wind_gridded_normalization(),   forecast)),
+  "sig_hail"     => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
 )
 
 # rm("day_accumulators_validation_forecasts_0z"; recursive = true)

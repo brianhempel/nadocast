@@ -195,6 +195,25 @@ function hour_estimated_sig_wind_gridded_normalization()
   _hour_estimated_sig_wind_gridded_normalization
 end
 
+_day_estimated_wind_gridded_normalization = nothing
+function day_estimated_wind_gridded_normalization()
+  global _day_estimated_wind_gridded_normalization
+  if isnothing(_day_estimated_wind_gridded_normalization)
+    _day_estimated_wind_gridded_normalization = Climatology.read_float16_file(joinpath(Climatology.asos_climatology_data_dir, "day_x1_normalization_grid_130_cropped.float16.bin"))
+  end
+  _day_estimated_wind_gridded_normalization
+
+end
+
+_day_estimated_sig_wind_gridded_normalization = nothing
+function day_estimated_sig_wind_gridded_normalization()
+  global _day_estimated_sig_wind_gridded_normalization
+  if isnothing(_day_estimated_sig_wind_gridded_normalization)
+    _day_estimated_sig_wind_gridded_normalization = Climatology.read_float16_file(joinpath(Climatology.asos_climatology_data_dir, "sig_day_x1_normalization_grid_130_cropped.float16.bin"))
+  end
+  _day_estimated_sig_wind_gridded_normalization
+end
+
 function grid_to_adjusted_wind_labels(measured_events, estimated_events, gridded_normalization, forecast)
   measured_labels  = grid_to_labels(measured_events, forecast) # vals are 0 or 1
   estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, forecast.grid, GRID_130_CROPPED, gridded_normalization, EVENT_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
