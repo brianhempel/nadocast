@@ -302,103 +302,106 @@ function reload_forecasts()
   _forecasts_href_newer = ForecastCombinators.concat_forecasts(paired_href_newer; model_name = "Paired_HREF_and_SREF_hour_severe_probabilities_href_newer")
   _forecasts_sref_newer = ForecastCombinators.concat_forecasts(paired_sref_newer; model_name = "Paired_HREF_and_SREF_hour_severe_probabilities_sref_newer")
 
+  href_newer_event_to_bins = Dict{String, Vector{Float32}}(
+    "tornado"      => [0.0013122079,  0.004710326,  0.011888903,  0.022864908,  0.04753879,   1.0],
+    "wind"         => [0.008744916,   0.021842286,  0.04064058,   0.06938802,   0.122678265,  1.0],
+    "wind_adj"     => [0.0028606635,  0.008563636,  0.017410113,  0.031802237,  0.060865648,  1.0],
+    "hail"         => [0.003458654,   0.009600723,  0.020057917,  0.037324984,  0.076065265,  1.0],
+    "sig_tornado"  => [0.0007784463,  0.0033980992, 0.007858597,  0.013500211,  0.021512743,  1.0],
+    "sig_wind"     => [0.00076082407, 0.0025200176, 0.0051898635, 0.008781022,  0.016167704,  1.0],
+    "sig_wind_adj" => [0.0005631988,  0.0014582027, 0.00254442,   0.0040013813, 0.0057724603, 1.0],
+    "sig_hail"     => [0.0007729447,  0.0022382603, 0.0047318107, 0.009228747,  0.020026933,  1.0],
+  )
+  href_newer_event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"      => [[0.8548191, 0.2597601,   0.8644513],  [0.78474545, 0.12277814,  -0.4418093], [1.0832391, 0.038129725, 0.5669815],  [0.75186867, 0.07035734,  -0.6170576],   [1.0223982,  0.12714103,    0.5787479]],
+    "wind"         => [[0.9376985, 0.2066142,   0.70834965], [0.9932054,  0.15726718,  0.71593946], [1.0039783, 0.12171379,  0.6053313],  [0.9382497,  0.13403365,  0.4595898],    [0.74286795, 0.21366222,    0.2578835]],
+    "wind_adj"     => [[0.9797254, 0.16798192,  0.8348953],  [1.0740479,  0.15907931,  1.2374448],  [1.0872117, 0.10037302,  1.0073562],  [0.9246941,  0.19532852,  0.81610787],   [0.73403955, 0.29090548,    0.62176204]],
+    "hail"         => [[0.8451918, 0.2678841,   0.7947575],  [0.82366365, 0.1894165,   0.23550989], [0.9017725, 0.23303771,  0.7705032],  [0.74698466, 0.2205954,   0.16990918],   [0.86427146, 0.2018278,     0.43504176]],
+    "sig_tornado"  => [[0.7318563, 0.3246817,   0.37168285], [0.9523567,  0.26052013,  1.2165213],  [1.473916,  0.17237528,  3.4237669],  [1.3563457,  0.091417536, 2.4898052],    [0.8635645,  -0.0004715729, 0.056863528]],
+    "sig_wind"     => [[1.0237541, 0.07430771,  0.77363414], [0.9801676,  0.22527456,  1.4178667],  [1.1523683, 0.2936303,   2.783076],   [0.7023142,  0.22948036,  0.17595705],   [0.49640635, 0.20968291,    -0.77673304]],
+    "sig_wind_adj" => [[1.127125,  0.052893594, 1.2472699],  [1.5036446,  0.021982145, 3.6960568],  [1.4205347, 0.16423136,  4.1276884],  [1.5778238,  0.50511247,  7.107699],     [0.1278618,  0.78106964,    0.9255426]],
+    "sig_hail"     => [[0.8787013, 0.3119461,   1.6104017],  [0.7609628,  0.27349025,  0.5037077],  [0.6508231, 0.3390255,   0.28728625], [0.562786,   0.35293543,  -0.048666567], [0.63449466, 0.3219732,     0.13853967]],
+  )
 
-  # href_newer_event_to_bins = Dict{String, Vector{Float32}}(
-  #   "tornado"     => [0.0010191497,  0.0040240395, 0.009904478,  0.021118658, 0.04198461,  1.0],
-  #   "wind"        => [0.008220518,   0.020898983,  0.039187722,  0.067865305, 0.1211984,   1.0],
-  #   "hail"        => [0.0033015092,  0.00926606,   0.019275624,  0.03602357,  0.07374218,  1.0],
-  #   "sig_tornado" => [0.0006729238,  0.0026572358, 0.0057637123, 0.010840383, 0.02260619,  1.0],
-  #   "sig_wind"    => [0.0007965934,  0.0025051977, 0.0053047705, 0.008843536, 0.015871514, 1.0],
-  #   "sig_hail"    => [0.00077555457, 0.002129781,  0.004338203,  0.00847202,  0.018383306, 1.0],
-  # )
-  # href_newer_event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-  #   "tornado"     => [[0.6823556,  0.30390468, -0.09062567], [0.7804226,  0.20210582,  -0.1086965],  [0.9002674,  0.099383384, -0.052697014], [1.1373994,  -0.0431747,   0.25296646],   [1.1550109, -0.12750162, -0.030436214]],
-  #   "wind"        => [[0.9084373,  0.23359907,  0.64916927], [0.95582205, 0.22434467,   0.813807],   [0.9773524,  0.17435656,   0.68770856],  [0.9580874,   0.12913947,  0.4690096],   [0.85546756, 0.19877374,   0.44007877]],
-  #   "hail"        => [[0.85908127, 0.22126952,  0.5908619],  [0.89740646, 0.122179836,  0.22032435], [0.9773174,  0.15612426,   0.7210259],   [0.7939177,   0.19984028,  0.23948279],  [0.8816676,  0.26308796,   0.7197715]],
-  #   "sig_tornado" => [[0.71876323, 0.196306,   -0.7678675],  [1.0591443,  0.3063447,    2.2627401],  [1.0977775,  0.2782542,    2.271161],    [0.9274584,   0.23464419,  1.1744276],   [1.1490777,  0.07541906,   1.2876196]],
-  #   "sig_wind"    => [[1.0125877,  0.09472051,  0.75418925], [0.9509606,  0.161822,     0.7489338],  [1.219375,   0.25611165,   2.849027],    [0.73210114,  0.29001468,  0.62654376],  [0.605263,   0.2646362,   -0.023003729]],
-  #   "sig_hail"    => [[0.87852937, 0.39478606,  2.16777],    [0.76197445, 0.28871304,   0.59921116], [0.64860153, 0.26866677,  -0.18315962],  [0.63177335,  0.26839426, -0.25605413], [0.7029047,  0.28590807,    0.18754157]],
-  # )
+  # Returns array of (event_name, var_name, predict)
+  function make_models(event_to_bins, event_to_bins_logistic_coeffs)
+    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  # # Returns array of (event_name, var_name, predict)
-  # function make_models(event_to_bins, event_to_bins_logistic_coeffs)
-  #   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+    map(1:event_types_count) do model_i
+      event_name, var_name, model_name = models[model_i] # event_name == model_name here
 
-  #   map(1:event_types_count) do model_i
-  #     event_name, var_name, model_name = models[model_i] # event_name == model_name here
+      predict(forecasts, data) = begin
+        href_ŷs = @view data[:,model_i]
+        sref_ŷs = @view data[:,model_i + event_types_count]
 
-  #     predict(forecasts, data) = begin
-  #       href_ŷs = @view data[:,model_i]
-  #       sref_ŷs = @view data[:,model_i + event_types_count]
+        out = Array{Float32}(undef, length(href_ŷs))
 
-  #       out = Array{Float32}(undef, length(href_ŷs))
+        bin_maxes            = event_to_bins[model_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
 
-  #       bin_maxes            = event_to_bins[model_name]
-  #       bins_logistic_coeffs = event_to_bins_logistic_coeffs[model_name]
+        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
-  #       @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+        # # Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
+        # href_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565f0*logit(href_ŷ) + 0.19299681f0*logit(sref_ŷ) + -0.21271989f0)
 
-  #       # # Fit logistic coefficients: Float32[0.77540565, 0.19299681, -0.21271989]
-  #       # href_newer_bin_1_2_predict(href_ŷ, sref_ŷ) = σ(0.77540565f0*logit(href_ŷ) + 0.19299681f0*logit(sref_ŷ) + -0.21271989f0)
+        predict_one(coeffs, href_ŷ, sref_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2]*logit(sref_ŷ) + coeffs[3])
 
-  #       predict_one(coeffs, href_ŷ, sref_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2]*logit(sref_ŷ) + coeffs[3])
+        Threads.@threads for i in 1:length(href_ŷs)
+          href_ŷ = href_ŷs[i]
+          sref_ŷ = sref_ŷs[i]
+          if href_ŷ <= bin_maxes[1]
+            # Bin 1-2 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ, sref_ŷ)
+          elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
+            # Bin 5-6 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ, sref_ŷ)
+          else
+            # Overlapping bins
+            higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
+            lower_bin_i  = higher_bin_i - 1
+            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
 
-  #       Threads.@threads for i in 1:length(href_ŷs)
-  #         href_ŷ = href_ŷs[i]
-  #         sref_ŷ = sref_ŷs[i]
-  #         if href_ŷ <= bin_maxes[1]
-  #           # Bin 1-2 predictor only
-  #           ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ, sref_ŷ)
-  #         elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
-  #           # Bin 5-6 predictor only
-  #           ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ, sref_ŷ)
-  #         else
-  #           # Overlapping bins
-  #           higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
-  #           lower_bin_i  = higher_bin_i - 1
-  #           coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
-  #           coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+            # Bin 1-2 and 2-3 predictors
+            ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+            ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ, sref_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ, sref_ŷ)
+          end
+          out[i] = ŷ
+        end
 
-  #           # Bin 1-2 and 2-3 predictors
-  #           ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
-  #           ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ, sref_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ, sref_ŷ)
-  #         end
-  #         out[i] = ŷ
-  #       end
+        out
+      end
 
-  #       out
-  #     end
+      (event_name, var_name, predict)
+    end
+  end
 
-  #     (event_name, var_name, predict)
-  #   end
-  # end
+  href_newer_hour_models = make_models(href_newer_event_to_bins, href_newer_event_to_bins_logistic_coeffs)
 
-  # href_newer_hour_models = make_models(href_newer_event_to_bins, href_newer_event_to_bins_logistic_coeffs)
+  _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer")
+  _forecasts_href_newer_combined_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_href_newer_combined, models, gated_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer_with_sig_gated")
 
-  # _forecasts_href_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_href_newer, href_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer")
-  # _forecasts_href_newer_combined_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_href_newer_combined, models, gated_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_href_newer_with_sig_gated")
-
-  # # _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_sref_newer")
-  # _forecasts_sref_newer_combined = Forecasts.Forecast[]
+  # _forecasts_sref_newer_combined = PredictionForecasts.simple_prediction_forecasts(_forecasts_sref_newer, sref_newer_hour_models; model_name = "CombinedHREFSREF_hour_severe_probabilities_sref_newer")
+  _forecasts_sref_newer_combined = Forecasts.Forecast[]
   # _forecasts_sref_newer_combined_with_sig_gated = Forecasts.Forecast[]
 
 
-  # # Day & Four-hourly forecasts
+  # Day & Four-hourly forecasts
 
-  # # 1. Try both independent events total prob and max hourly prob as the main descriminator
-  # # 2. bin predictions into 10 bins of equal weight of positive labels
-  # # 3. combine bin-pairs (overlapping, 9 bins total)
-  # # 4. train a logistic regression for each bin,
-  # #   σ(a1*logit(independent events total prob) +
-  # #     a2*logit(max hourly prob) +
-  # #     b)
-  # # 5. prediction is weighted mean of the two overlapping logistic models
-  # # 6. should thereby be absolutely calibrated (check)
-  # # 7. calibrate to SPC thresholds (linear interpolation)
+  # 1. Try both independent events total prob and max hourly prob as the main descriminator
+  # 2. bin predictions into 10 bins of equal weight of positive labels
+  # 3. combine bin-pairs (overlapping, 9 bins total)
+  # 4. train a logistic regression for each bin,
+  #   σ(a1*logit(independent events total prob) +
+  #     a2*logit(max hourly prob) +
+  #     b)
+  # 5. prediction is weighted mean of the two overlapping logistic models
+  # 6. should thereby be absolutely calibrated (check)
+  # 7. calibrate to SPC thresholds (linear interpolation)
 
-  # hourly_prediction_forecasts = vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined)
+  hourly_prediction_forecasts = vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined)
 
-  # _forecasts_day_accumulators, _forecasts_day2_accumulators_unused, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name = "CombinedHREFSREF")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators_unused, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name = "CombinedHREFSREF")
 
 
   # event_to_0z_day_bins = Dict{String, Vector{Float32}}(

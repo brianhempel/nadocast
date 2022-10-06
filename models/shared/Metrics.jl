@@ -393,6 +393,7 @@ function area_under_pr_curve(ŷ, y, weights; sort_perm = parallel_sort_perm(ŷ))
   _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
 end
 
+# Bin the data instead of sorting it.
 function area_under_pr_curve_fast(ŷ, y, weights; bin_count = 1000)
   threads_bin_Σŷ, threads_bin_Σy, threads_bin_Σweights = Metrics.parallel_iterate(length(y)) do thread_range
     bin_Σŷ       = zeros(Float64, bin_count)
