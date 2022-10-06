@@ -492,77 +492,77 @@ function reload_forecasts()
 
   # The following was computed in TrainDay.jl
 
-  event_to_0z_day_bins = Dict{String, Vector{Float32}}(
-    "tornado"     => [0.017401028, 0.057005595, 0.13199422,  1.0],
-    "wind"        => [0.105925485, 0.24237353,  0.41793627,  1.0],
-    "wind_adj"        => [0.105925485, 0.24237353,  0.41793627,  1.0],
-    "hail"        => [0.057583164, 0.13694991,  0.26336262,  1.0],
-    "sig_tornado" => [0.00944276,  0.03155332,  0.1166033,   1.0],
-    "sig_wind"    => [0.014537211, 0.044868514, 0.080929644, 1.0],
-    "sig_wind_adj"    => [0.014537211, 0.044868514, 0.080929644, 1.0],
-    "sig_hail"    => [0.017137118, 0.032750417, 0.06910927,  1.0],
+  event_to_day_bins = Dict{String, Vector{Float32}}(
+    "tornado"      => [0.021043906, 0.074019335, 0.17095083, 1.0],
+    "wind"         => [0.12138814,  0.27036425,  0.44575575, 1.0],
+    "wind_adj"     => [0.04442204,  0.12223551,  0.25552708, 1.0],
+    "hail"         => [0.066225864, 0.15690458,  0.29827937, 1.0],
+    "sig_tornado"  => [0.009904385, 0.047619365, 0.14518347, 1.0],
+    "sig_wind"     => [0.017750502, 0.050954822, 0.09204348, 1.0],
+    "sig_wind_adj" => [0.00855192,  0.028172063, 0.07532653, 1.0],
+    "sig_hail"     => [0.016018612, 0.044114113, 0.08977107, 1.0],
   )
-  event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-    "tornado"     => [[0.93318164, 0.06823707, -0.10806717],  [1.3238057,    -0.114339165, 0.34774518],  [0.6581387, 0.06536053,  -0.60667735]],
-    "wind"        => [[0.9533327,  0.08198542, -0.049861502], [1.1315389,    -0.06399821,  -0.22480214], [0.9192797, 0.07381143,  -0.066281155]],
-    "wind_adj"        => [[0.9533327,  0.08198542, -0.049861502], [1.1315389,    -0.06399821,  -0.22480214], [0.9192797, 0.07381143,  -0.066281155]],
-    "hail"        => [[0.78442734, 0.27793196, 0.407107],     [1.0553415,    -0.1081846,   -0.47820166], [1.2830826, -0.47052482, -1.2408078]],
-    "sig_tornado" => [[0.5930697,  0.4203289,  0.43342784],   [-0.032218266, 0.8780866,    0.3627351],   [0.6223907, 0.6945181,   1.4135333]],
-    "sig_wind"    => [[0.53879964, 0.4059111,  0.116683125],  [1.0535268,    0.2508744,    1.1575938],   [0.619009,  0.59856415,  1.4483397]],
-    "sig_wind_adj"    => [[0.53879964, 0.4059111,  0.116683125],  [1.0535268,    0.2508744,    1.1575938],   [0.619009,  0.59856415,  1.4483397]],
-    "sig_hail"    => [[1.7509274,  -0.6264722, -0.59064865],  [1.5742372,    -0.7514552,   -1.8797148],  [1.4796587, -0.48270363, -0.9502378]],
+  event_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"      => [[0.95958227, 0.04161413,   -0.10651286],  [1.2272763,  -0.15624464,  -0.18067063],  [0.5964124,  0.17200926,   -0.3083448]],
+    "wind"         => [[1.0424639,  -0.005972234, -0.1651274],   [1.1494,     -0.107195236, -0.3110462],   [0.92132,    0.0022699288, -0.22744325]],
+    "wind_adj"     => [[0.99742454, 0.02784912,   -0.01899123],  [1.0577022,  -0.1336032,   -0.51860476],  [1.2023934,  -0.058322832, -0.087366514]],
+    "hail"         => [[1.0235776,  0.02489767,   -0.070147164], [1.1081746,  -0.088940814, -0.34076628],  [1.1614795,  -0.24988303,  -0.7304756]],
+    "sig_tornado"  => [[0.3738464,  0.5298857,    -0.016889505], [0.53315455, 0.50932276,   0.41353387],   [0.41091824, 0.60895973,   0.510827]],
+    "sig_wind"     => [[0.60896295, 0.32489055,   -0.06371247],  [0.99172807, 0.15444452,   0.46648186],   [0.8760332,  0.31676358,   0.86151475]],
+    "sig_wind_adj" => [[0.98283756, 0.02864707,   -0.070753366], [0.74302465, 0.17016491,   -0.2746076],   [0.37014917, 1.2757467,    3.3445797]],
+    "sig_hail"     => [[1.2635667,  -0.21535042,  -0.32895777],  [1.5278528,  -0.32414392,  0.0025766783], [1.1042255,  -0.16546442,  -0.4495338]],
   )
 
-  _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day")
+  _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_day_bins, event_to_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day")
   _forecasts_day_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_with_sig_gated")
 
-  _forecasts_day2 = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day2_accumulators, event_to_0z_day_bins, event_to_0z_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day2")
+  _forecasts_day2 = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day2_accumulators, event_to_day_bins, event_to_day_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "day2")
   _forecasts_day2_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_with_sig_gated")
 
-  _forecasts_fourhourly = [] # PredictionForecasts.period_forecasts_from_accumulators(_forecasts_fourhourly_accumulators, event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "four-hourly")
-  _forecasts_fourhourly_with_sig_gated = [] # PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "HREFPrediction_four-hourly_severe_probabilities_with_sig_gated")
+  # _forecasts_fourhourly = [] # PredictionForecasts.period_forecasts_from_accumulators(_forecasts_fourhourly_accumulators, event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "four-hourly")
+  # _forecasts_fourhourly_with_sig_gated = [] # PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "HREFPrediction_four-hourly_severe_probabilities_with_sig_gated")
 
-  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
-    "tornado" => [
-      (0.02, 0.017892838),
-      (0.05, 0.07787514),
-      (0.1,  0.17152214),
-      (0.15, 0.2814541),
-      (0.3,  0.3905239),
-      (0.45, 0.6009083)
-    ],
-    "wind" => [
-      (0.05, 0.051660538),
-      (0.15, 0.21513557),
-      (0.3,  0.49578285),
-      (0.45, 0.78172493)
-    ],
-    "wind_adj" => [
-      (0.05, 0.051660538),
-      (0.15, 0.21513557),
-      (0.3,  0.49578285),
-      (0.45, 0.78172493)
-    ],
-    "hail" => [
-      (0.05, 0.030927658),
-      (0.15, 0.12172127),
-      (0.3,  0.33656883),
-      (0.45, 0.61953926)
-    ],
-    "sig_tornado"  => [(0.1, 0.063589096)],
-    "sig_wind"     => [(0.1, 0.11205864)],
-    "sig_wind_adj" => [(0.1, 0.11205864)],
-    "sig_hail"     => [(0.1, 0.057775497)],
-  )
+  # spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
+  #   "tornado" => [
+  #     (0.02, 0.017892838),
+  #     (0.05, 0.07787514),
+  #     (0.1,  0.17152214),
+  #     (0.15, 0.2814541),
+  #     (0.3,  0.3905239),
+  #     (0.45, 0.6009083)
+  #   ],
+  #   "wind" => [
+  #     (0.05, 0.051660538),
+  #     (0.15, 0.21513557),
+  #     (0.3,  0.49578285),
+  #     (0.45, 0.78172493)
+  #   ],
+  #   "wind_adj" => [
+  #     (0.05, 0.051660538),
+  #     (0.15, 0.21513557),
+  #     (0.3,  0.49578285),
+  #     (0.45, 0.78172493)
+  #   ],
+  #   "hail" => [
+  #     (0.05, 0.030927658),
+  #     (0.15, 0.12172127),
+  #     (0.3,  0.33656883),
+  #     (0.45, 0.61953926)
+  #   ],
+  #   "sig_tornado"  => [(0.1, 0.063589096)],
+  #   "sig_wind"     => [(0.1, 0.11205864)],
+  #   "sig_wind_adj" => [(0.1, 0.11205864)],
+  #   "sig_hail"     => [(0.1, 0.057775497)],
+  # )
 
-  # ensure ordered the same as the features in the data
-  calibrations = map(m -> spc_calibrations[m[1]], models)
+  # # ensure ordered the same as the features in the data
+  # calibrations = map(m -> spc_calibrations[m[1]], models)
 
-  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds")
-  _forecasts_day_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
+  # _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds")
+  # _forecasts_day_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
 
-  _forecasts_day2_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day2, calibrations; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds")
-  _forecasts_day2_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
+  # _forecasts_day2_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day2, calibrations; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds")
+  # _forecasts_day2_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
 
   ()
 end

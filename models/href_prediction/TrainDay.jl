@@ -25,10 +25,10 @@ HOUR   = 60*MINUTE
 cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
-length(validation_forecasts) # 628
+length(validation_forecasts) # 716
 
-validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, validation_forecasts);
-length(validation_forecasts_0z) # 157
+validation_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, validation_forecasts);
+length(validation_forecasts_0z_12z) # 358
 
 @time Forecasts.data(validation_forecasts[10]); # Check if a forecast loads
 
@@ -45,9 +45,9 @@ logit(p) = log(p / (one(p) - p))
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
-    validation_forecasts_0z;
+    validation_forecasts_0z_12z;
     event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
-    save_dir = "day_accumulators_validation_forecasts_0z",
+    save_dir = "day_accumulators_validation_forecasts_0z_12z",
   );
 
 
@@ -55,18 +55,41 @@ X, Ys, weights =
 # should do some checks here.
 import PlotMap
 
-dec11 = filter(f -> Forecasts.time_title(f) == "2021-12-11 00Z +35", validation_forecasts_0z)[1];
+dec11 = validation_forecasts_0z_12z[309]; Forecasts.time_title(dec11) # "2021-12-11 00Z +35"
 dec11_data = Forecasts.data(dec11);
 for i in 1:size(dec11_data,2)
-  PlotMap.plot_debug_map("dec11_0z_day_accs_$i", dec11.grid, dec11_data[:,i]);
+  prediction_i = div(i - 1, 2) + 1
+  event_name, _, _, _, _ = HREFPrediction.models[prediction_i]
+  PlotMap.plot_debug_map("dec11_0z_day_accs_$(i)_$event_name", dec11.grid, dec11_data[:,i]);
 end
 for (event_name, labeler) in TrainingShared.event_name_to_day_labeler
   dec11_labels = labeler(dec11);
   PlotMap.plot_debug_map("dec11_0z_day_$event_name", dec11.grid, dec11_labels);
 end
-# scp nadocaster2:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_1.pdf ./
-# scp nadocaster2:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_tornado.pdf ./
-
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_1_tornado.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_2_tornado.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_3_wind.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_4_wind.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_5_wind_adj.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_6_wind_adj.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_7_hail.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_8_hail.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_9_sig_tornado.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_10_sig_tornado.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_11_sig_wind.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_12_sig_wind.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_13_sig_wind_adj.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_14_sig_wind_adj.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_15_sig_hail.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_16_sig_hail.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_tornado.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_wind.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_wind_adj.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_hail.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_sig_tornado.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_sig_wind.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_sig_wind_adj.pdf ./
+# scp nadocaster:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_sig_hail.pdf ./
 
 # Confirm that the accs are better than the maxes
 function test_predictive_power(forecasts, X, Ys, weights)
@@ -78,23 +101,27 @@ function test_predictive_power(forecasts, X, Ys, weights)
     y = Ys[event_name]
     x = @view X[:,feature_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
-    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+    println("$event_name ($(sum(y))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
-test_predictive_power(validation_forecasts_0z, X, Ys, weights)
+test_predictive_power(validation_forecasts_0z_12z, X, Ys, weights)
 
-# tornado (9446.0)     feature 1 independent events total TORPROB:calculated:day   fcst:: AU-PR-curve: 0.12680832038522866
-# tornado (9446.0)     feature 2 highest hourly TORPROB:calculated:day             fcst:: AU-PR-curve: 0.11642798952925312
-# wind (72111.0)       feature 3 independent events total WINDPROB:calculated:day  fcst:: AU-PR-curve: 0.38313786770146624
-# wind (72111.0)       feature 4 highest hourly WINDPROB:calculated:day            fcst:: AU-PR-curve: 0.3597382825677279
-# hail (31894.0)       feature 5 independent events total HAILPROB:calculated:day  fcst:: AU-PR-curve: 0.2281233952093273
-# hail (31894.0)       feature 6 highest hourly HAILPROB:calculated:day            fcst:: AU-PR-curve: 0.21234088728521894
-# sig_tornado (1268.0) feature 7 independent events total STORPROB:calculated:day  fcst:: AU-PR-curve: 0.09055666618983317
-# sig_tornado (1268.0) feature 8 highest hourly STORPROB:calculated:day            fcst:: AU-PR-curve: 0.08725820073587578
-# sig_wind (8732.0)    feature 9 independent events total SWINDPRO:calculated:day  fcst:: AU-PR-curve: 0.0777788483628452
-# sig_wind (8732.0)    feature 10 highest hourly SWINDPRO:calculated:day           fcst:: AU-PR-curve: 0.075931385644641
-# sig_hail (4478.0)    feature 11 independent events total SHAILPRO:calculated:day fcst:: AU-PR-curve: 0.06721734789273422
-# sig_hail (4478.0)    feature 12 highest hourly SHAILPRO:calculated:day           fcst:: AU-PR-curve: 0.05879058492533432
+# tornado (20606.0)       feature 1 independent events total TORPROB:calculated:day   fcst:: AU-PR-curve: 0.15398282
+# tornado (20606.0)       feature 2 highest hourly TORPROB:calculated:day             fcst:: AU-PR-curve: 0.14738984
+# wind (148934.0)         feature 3 independent events total WINDPROB:calculated:day  fcst:: AU-PR-curve: 0.40272897
+# wind (148934.0)         feature 4 highest hourly WINDPROB:calculated:day            fcst:: AU-PR-curve: 0.3743683
+# wind_adj (53051.016)    feature 5 independent events total WINDPROB:calculated:day  fcst:: AU-PR-curve: 0.24277368
+# wind_adj (53051.016)    feature 6 highest hourly WINDPROB:calculated:day            fcst:: AU-PR-curve: 0.22707964
+# hail (67838.0)          feature 7 independent events total HAILPROB:calculated:day  fcst:: AU-PR-curve: 0.2654488
+# hail (67838.0)          feature 8 highest hourly HAILPROB:calculated:day            fcst:: AU-PR-curve: 0.24634801
+# sig_tornado (2681.0)    feature 9 independent events total STORPROB:calculated:day  fcst:: AU-PR-curve: 0.08502455
+# sig_tornado (2681.0)    feature 10 highest hourly STORPROB:calculated:day           fcst:: AU-PR-curve: 0.09089609 (exception)
+# sig_wind (17640.0)      feature 11 independent events total SWINDPRO:calculated:day fcst:: AU-PR-curve: 0.08987321
+# sig_wind (17640.0)      feature 12 highest hourly SWINDPRO:calculated:day           fcst:: AU-PR-curve: 0.08219389
+# sig_wind_adj (6668.761) feature 13 independent events total SWINDPRO:calculated:day fcst:: AU-PR-curve: 0.09385775
+# sig_wind_adj (6668.761) feature 14 highest hourly SWINDPRO:calculated:day           fcst:: AU-PR-curve: 0.099324994 (exception)
+# sig_hail (9334.0)       feature 15 independent events total SHAILPRO:calculated:day fcst:: AU-PR-curve: 0.08321426
+# sig_hail (9334.0)       feature 16 highest hourly SHAILPRO:calculated:day           fcst:: AU-PR-curve: 0.07902908
 
 
 
@@ -161,35 +188,42 @@ for prediction_i in 1:event_types_count
   # println("event_to_day_bins[\"$event_name\"] = $(event_to_day_bins[event_name])")
 end
 
-# event_name  mean_y        mean_ŷ        Σweight     bin_max
-# tornado     0.0004378549  0.00056639145 5.062415e6  0.017401028
-# tornado     0.025866624   0.030743996   85690.64    0.057005595
-# tornado     0.08508345    0.083929636   26056.912   0.13199422
-# tornado     0.16652103    0.24147587    13304.882   1.0
-# wind        0.0033698757  0.0045183003  4.968903e6  0.105925485
-# wind        0.13308668    0.16104285    125818.55   0.24237353
-# wind        0.2809759     0.317453      59594.195   0.41793627
-# wind        0.5050372     0.55661386    33151.844   1.0
-# hail        0.0014652495  0.0018948776  5.0184295e6 0.057583164
-# hail        0.07475628    0.08927173    98359.9     0.13694991
-# hail        0.15669605    0.18665451    46926.02    0.26336262
-# hail        0.3095211     0.38435712    23752.223   1.0
-# sig_tornado 5.8779195e-5  8.302416e-5   5.1578135e6 0.00944276
-# sig_tornado 0.015303657   0.017065546   19832.14    0.03155332
-# sig_tornado 0.03825248    0.057183858   7928.9473   0.1166033
-# sig_tornado 0.15892082    0.1726563     1892.8201   1.0
-# sig_wind    0.00040164683 0.0004937433  5.026788e6  0.014537211
-# sig_wind    0.018932946   0.025429603   106628.81   0.044868514
-# sig_wind    0.05650823    0.060135435   35736.594   0.080929644
-# sig_wind    0.11015707    0.10808131    18314.014   1.0
-# sig_hail    0.00020400203 0.0002989909  5.1035735e6 0.017137118
-# sig_hail    0.02375851    0.023858236   43831.246   0.032750417
-# sig_hail    0.036847323   0.046266176   28253.066   0.06910927
-# sig_hail    0.08791025    0.10530451    11809.844   1.0
+# event_name   mean_y        mean_ŷ        Σweight    bin_max
+# tornado      0.000549145   0.0006369488  8.804865e6 0.021043906
+# tornado      0.0320742     0.038657922   150732.98  0.074019335
+# tornado      0.100802325   0.10940487    47960.055  0.17095083
+# tornado      0.22403128    0.29084346    21573.916  1.0
+# wind         0.0040149437  0.0052385866  8.622984e6 0.12138814
+# wind         0.1548656     0.18282828    223552.19  0.27036425
+# wind         0.3084194     0.3468556     112252.664 0.44575575
+# wind         0.52182925    0.5839583     66342.76   1.0
+# wind_adj     0.0013985921  0.0016133083  8.715982e6 0.04442204
+# wind_adj     0.06458513    0.073951654   188741.5   0.12223551
+# wind_adj     0.14532952    0.17385516    83878.29   0.25552708
+# wind_adj     0.33364823    0.35534853    36530.12   1.0
+# hail         0.0018027672  0.0023350087  8.702008e6 0.066225864
+# hail         0.08223741    0.10230367    190762.23  0.15690458
+# hail         0.17731425    0.21291392    88476.51   0.29827937
+# hail         0.35741645    0.4218812     43885.312  1.0
+# sig_tornado  7.119834e-5   7.736269e-5   8.967004e6 0.009904385
+# sig_tornado  0.01459437    0.020232938   43714.035  0.047619365
+# sig_tornado  0.06064399    0.08218383    10517.94   0.14518347
+# sig_tornado  0.16341351    0.21502864    3896.0593  1.0
+# sig_wind     0.0004664578  0.00057608244 8.751253e6 0.017750502
+# sig_wind     0.02346163    0.03042175    173973.69  0.050954822
+# sig_wind     0.060928304   0.06799452    66989.875  0.09204348
+# sig_wind     0.123951025   0.12387162    32915.754  1.0
+# sig_wind_adj 0.0001721023  0.00021295004 8.855584e6 0.00855192
+# sig_wind_adj 0.013621317   0.015525776   111892.25  0.028172063
+# sig_wind_adj 0.03506404    0.04570783    43474.57   0.07532653
+# sig_wind_adj 0.107353225   0.10500419    14180.898  1.0
+# sig_hail     0.00024502972 0.00030266377 8.862825e6 0.016018612
+# sig_hail     0.020367835   0.026400018   106617.805 0.044114113
+# sig_hail     0.056877602   0.061670527   38183.52   0.08977107
+# sig_hail     0.12399248    0.13110583    17505.314  1.0
 
-
-println("event_to_0z_day_bins = $event_to_day_bins")
-# event_to_0z_day_bins = Dict{String, Vector{Float32}}("sig_hail" => [0.017137118, 0.032750417, 0.06910927, 1.0], "hail" => [0.057583164, 0.13694991, 0.26336262, 1.0], "tornado" => [0.017401028, 0.057005595, 0.13199422, 1.0], "sig_tornado" => [0.00944276, 0.03155332, 0.1166033, 1.0], "sig_wind" => [0.014537211, 0.044868514, 0.080929644, 1.0], "wind" => [0.105925485, 0.24237353, 0.41793627, 1.0])
+println("event_to_day_bins = $event_to_day_bins")
+# event_to_day_bins = Dict{String, Vector{Float32}}("sig_wind" => [0.017750502, 0.050954822, 0.09204348, 1.0], "sig_hail" => [0.016018612, 0.044114113, 0.08977107, 1.0], "hail" => [0.066225864, 0.15690458, 0.29827937, 1.0], "sig_wind_adj" => [0.00855192, 0.028172063, 0.07532653, 1.0], "tornado" => [0.021043906, 0.074019335, 0.17095083, 1.0], "wind_adj" => [0.04442204, 0.12223551, 0.25552708, 1.0], "sig_tornado" => [0.009904385, 0.047619365, 0.14518347, 1.0], "wind" => [0.12138814, 0.27036425, 0.44575575, 1.0])
 
 
 
@@ -256,11 +290,11 @@ function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
       ("mean_y", sum(bin_y .* bin_weights) / bin_weight),
       ("total_prob_logloss", sum(logloss.(bin_y, bin_total_prob_x) .* bin_weights) / bin_weight),
       ("max_hourly_logloss", sum(logloss.(bin_y, bin_max_hourly_x) .* bin_weights) / bin_weight),
-      ("total_prob_au_pr", Float32(Metrics.area_under_pr_curve(bin_total_prob_x, bin_y, bin_weights))),
-      ("max_hourly_au_pr", Float32(Metrics.area_under_pr_curve(bin_max_hourly_x, bin_y, bin_weights))),
+      ("total_prob_au_pr", Float32(Metrics.area_under_pr_curve_fast(bin_total_prob_x, bin_y, bin_weights))),
+      ("max_hourly_au_pr", Float32(Metrics.area_under_pr_curve_fast(bin_max_hourly_x, bin_y, bin_weights))),
       ("mean_logistic_ŷ", sum(logistic_ŷ .* bin_weights) / bin_weight),
       ("logistic_logloss", sum(logloss.(bin_y, logistic_ŷ) .* bin_weights) / bin_weight),
-      ("logistic_au_pr", Float32(Metrics.area_under_pr_curve(logistic_ŷ, bin_y, bin_weights))),
+      ("logistic_au_pr", Float32(Metrics.area_under_pr_curve_fast(logistic_ŷ, bin_y, bin_weights))),
       ("logistic_coeffs", coeffs)
     ]
 
@@ -283,30 +317,42 @@ for prediction_i in 1:event_types_count
   event_to_day_bins_logistic_coeffs[event_name] = find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
 end
 
-# event_name  bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight      mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
-# tornado     1-2 -1.0             0.057005595      5627908 4772.0    5.148106e6  0.0010687001      0.0002511296      0.0008611188  0.0050174943       0.0055120285       0.02417658       0.02172301       0.0008611187    0.0049950834     0.024044603    Float32[0.93318164,   0.06823707,   -0.10806717]
-# tornado     2-3 0.017401028      0.13199422       119297  4718.0    111747.555  0.04314564        0.01091816        0.0396746     0.15748583         0.18396132         0.09766345       0.07593608       0.039674606     0.15699896       0.09769626     Float32[1.3238057,    -0.114339165, 0.34774518]
-# tornado     3-4 0.057005595      1.0              41362   4674.0    39361.797   0.13718264        0.035017274       0.11261058    0.34227386         0.4042841          0.20022316       0.18475614       0.11261056      0.33662492       0.20026325     Float32[0.6581387,    0.06536053,   -0.60667735]
-# wind        1-2 -1.0             0.24237353       5569373 36113.0   5.0947215e6 0.008383809       0.0020293228      0.0065733446  0.025187163        0.028603999        0.12886713       0.115364924      0.0065733446    0.02494336       0.12816711     Float32[0.9533327,    0.08198542,   -0.049861502]
-# wind        2-3 0.105925485      0.41793627       199914  36148.0   185412.75   0.2113152         0.054536834       0.18062028    0.45407182         0.5633424          0.28151384       0.24929999       0.18062028      0.45087236       0.28202492     Float32[1.1315389,    -0.06399821,  -0.22480214]
-# wind        3-4 0.24237353       1.0              99897   35998.0   92746.05    0.40294045        0.11670191        0.361066      0.6175525          0.84184647         0.54253256       0.5127974        0.361066        0.61342573       0.5430452      Float32[0.9192797,    0.07381143,   -0.066281155]
-# hail        1-2 -1.0             0.13694991       5592431 15961.0   5.116789e6  0.0035745208      0.0008128005      0.002874121   0.012652684        0.014255003        0.070959955      0.06905122       0.002874121     0.012551144      0.07130111     Float32[0.78442734,   0.27793196,   0.407107]
-# hail        2-3 0.057583164      0.26336262       157679  15940.0   145285.9    0.12072548        0.02856196        0.10122208    0.31994775         0.38296047         0.1576388        0.1397978        0.10122208      0.31793103       0.16050415     Float32[1.0553415,    -0.1081846,   -0.47820166]
-# hail        3-4 0.13694991       1.0              76839   15933.0   70678.24    0.2530947         0.06851147        0.20805466    0.49648744         0.61157775         0.32870942       0.3037502        0.20805463      0.4880406        0.33385178     Float32[1.2830826,    -0.47052482,  -1.2408078]
-# sig_tornado 1-2 -1.0             0.03155332       5659086 644.0     5.177646e6  0.00014807297     3.8360264e-5      0.00011717224 0.00077690964      0.0008255258       0.014033859      0.014120079      0.00011717227   0.0007706992     0.014496199    Float32[0.5930697,    0.4203289,    0.43342784]
-# sig_tornado 2-3 0.00944276       0.1166033        29030   629.0     27761.088   0.028523887       0.008058258       0.021858158   0.10256433         0.10823592         0.05090796       0.055792473      0.021858154     0.09987361       0.055865478    Float32[-0.032218266, 0.8780866,    0.3627351]
-# sig_tornado 3-4 0.03155332       1.0              10184   624.0     9821.768    0.07943734        0.021637168       0.061507307   0.21461318         0.23677906         0.15210854       0.14430982       0.061507307     0.20862293       0.15645918     Float32[0.6223907,    0.6945181,    1.4135333]
-# sig_wind    1-2 -1.0             0.044868514      5610943 4365.0    5.133417e6  0.0010116986      0.00022963232     0.00078656984 0.0046597593       0.005062965        0.020260252      0.018085005      0.0007865698    0.004622475      0.019494735    Float32[0.53879964,   0.4059111,    0.116683125]
-# sig_wind    2-3 0.014537211      0.080929644      153594  4362.0    142365.4    0.03414147        0.008040776       0.0283651     0.12389084         0.13986644         0.056721367      0.0615863        0.0283651       0.12294913       0.059668314    Float32[1.0535268,    0.2508744,    1.1575938]
-# sig_wind    3-4 0.044868514      1.0              58327   4367.0    54050.61    0.07638098        0.01728467        0.07468611    0.2593019          0.31307268         0.116249576      0.115519434      0.07468612      0.25815567       0.118530795    Float32[0.619009,     0.59856415,   1.4483397]
-# sig_hail    1-2 -1.0             0.032750417      5625917 2244.0    5.147405e6  0.0004996029      0.0001211714      0.00040457366 0.0023200924       0.0025646547       0.021306612      0.016311225      0.00040457366   0.0022970182     0.024614729    Float32[1.7509274,    -0.6264722,   -0.59064865]
-# sig_hail    2-3 0.017137118      0.06910927       78179   2241.0    72084.31    0.03264091        0.0077077076      0.028888602   0.12973951         0.14995398         0.04186439       0.035388827      0.028888598     0.12867774       0.043021       Float32[1.5742372,    -0.7514552,   -1.8797148]
-# sig_hail    3-4 0.032750417      1.0              43353   2234.0    40062.91    0.06366964        0.016053006       0.051899783   0.19876958         0.22689283         0.100673005      0.08796213       0.051899783     0.19708908       0.10304778     Float32[1.4796587,    -0.48270363,  -0.9502378]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# tornado      1-2 -1.0             0.074019335      9718800 10390.0   8.955598e6 0.0012768853      0.00033077784     0.0010797478  0.0058558607       0.0064523746       0.03274472       0.028818477      0.0010797479    0.0058391923     0.032105613    Float32[0.95958227, 0.04161413,   -0.10651286]1.2272763,   -0.15624464,  -0.18067063]]
+# tornado      2-3 0.021043906      0.17095083       211661  10323.0   198693.03  0.055734657       0.015497775       0.048663635   0.1845327          0.2118171          0.10162046       0.089558855      0.048663624     0.18389481       0.10101143     Float32[1.2272763,  -0.15624464,  -0.18067063]0.5964124,   0.17200926,   -0.3083448]]
+# tornado      3-4 0.074019335      1.0              73216   10216.0   69533.97   0.1656988         0.04697025        0.13903588    0.39089894         0.45915875         0.2386106        0.23309015       0.13903588      0.38513187       0.24188775     Float32[0.5964124,  0.17200926,   -0.3083448]1.0424639,    -0.005972234, -0.1651274]]]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# wind         1-2 -1.0             0.27036425       9599708 74517.0   8.846536e6 0.009726283       0.0025577322      0.007826943   0.028457472        0.032392044        0.15124032       0.13482153       0.007826943     0.028225765      0.15131083     Float32[1.0424639,  -0.005972234, -0.1651274]1.1494,       -0.107195236, -0.3110462]33]]
+# wind         2-3 0.12138814       0.44575575       361168  74509.0   335804.88  0.23765922        0.06770699        0.20619547    0.4901267          0.60512197         0.30748412       0.2719515        0.20619547      0.4870105        0.30837902     Float32[1.1494,     -0.107195236, -0.3110462]0.92132,      0.0022699288, -0.22744325]94]
+# wind         3-4 0.27036425       1.0              192308  74417.0   178595.42  0.43493205        0.13861363        0.38769466    0.63685286         0.8504553          0.55524194       0.51678663       0.38769466      0.6316496        0.555251       Float32[0.92132,    0.0022699288, -0.22744325]0.99742454,  0.02784912,   -0.01899123]]]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# wind_adj     1-2 -1.0             0.12223551       9660343 26377.705 8.904724e6 0.0031465671      0.00083671947     0.0027378725  0.01251359         0.014017867        0.06161958       0.05519649       0.0027378723    0.012482578      0.06138815     Float32[0.99742454, 0.02784912,   -0.01899123]1.0577022,   -0.1336032,   -0.51860476]]]
+# wind_adj     2-3 0.04442204       0.25552708       296069  26534.912 272619.78  0.104689464       0.030789096       0.089428164   0.29192677         0.335548           0.14887409       0.13270415       0.089428164     0.2904334        0.14910421     Float32[1.0577022,  -0.1336032,   -0.51860476]1.2023934,   -0.058322832, -0.087366514]
+# wind_adj     3-4 0.12223551       1.0              131673  26673.31  120408.414 0.22891754        0.07201162        0.2024626     0.47390556         0.5727649          0.36890876       0.34496242       0.2024626       0.4711759        0.3685007      Float32[1.2023934,  -0.058322832, -0.087366514]1.0235776,  0.02489767,   -0.070147164]]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# hail         1-2 -1.0             0.15690458       9648557 33931.0   8.89277e6  0.004479475       0.0010905664      0.0035282015  0.015019934        0.016858088        0.08252732       0.07416679       0.0035282015    0.014897022      0.082630605    Float32[1.0235776,  0.02489767,   -0.070147164]1.1081746,  -0.088940814, -0.34076628]
+# hail         2-3 0.066225864      0.29827937       302339  33919.0   279238.75  0.1373504         0.03518375        0.11236241    0.34156653         0.40259886         0.17611699       0.16087049       0.11236241      0.33865112       0.17745832     Float32[1.1081746,  -0.088940814, -0.34076628]1.1614795,   -0.24988303,  -0.7304756]]
+# hail         3-4 0.15690458       1.0              143459  33907.0   132361.81  0.2821982         0.082033046       0.23702818    0.5251295          0.6478943          0.38524213       0.35740376       0.23702817      0.5188467        0.38724697     Float32[1.1614795,  -0.24988303,  -0.7304756]0.3738464,    0.5298857,    -0.016889505]]]]]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# sig_tornado  1-2 -1.0             0.047619365      9776970 1353.0    9.010718e6 0.00017514417     5.156889e-5       0.00014165514 0.0009077408       0.00096063246      -0.15514319      0.01544859       0.00014165512   0.0008998909     0.015278328    Float32[0.3738464,  0.5298857,    -0.016889505]0.53315455, 0.50932276,   0.41353387]]
+# sig_tornado  2-3 0.009904385      0.14518347       56971   1332.0    54231.977  0.032247912       0.010516065       0.023525394   0.10436762         0.10903808         0.08063426       0.08205603       0.023525394     0.10241765       0.09009691     Float32[0.53315455, 0.50932276,   0.41353387]0.41091824,   0.60895973,   0.510827]]3]
+# sig_tornado  3-4 0.047619365      1.0              15046   1328.0    14414.0    0.11809137        0.03646364        0.088422276   0.29228613         0.31435373         0.13337168       0.14487167       0.08842227      0.28464696       0.14249226     Float32[0.41091824, 0.60895973,   0.510827]0.60896295,     0.32489055,   -0.06371247]]]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# sig_wind     1-2 -1.0             0.050954822      9684039 8826.0    8.925226e6 0.0011578449      0.00029291        0.00091468793 0.005241813        0.005667949        0.02300804       0.021486476      0.000914688     0.005205673      0.02345116     Float32[0.60896295, 0.32489055,   -0.06371247]0.99172807,  0.15444452,   0.46648186]]
+# sig_wind     2-3 0.017750502      0.09204348       259699  8825.0    240963.56  0.04086729        0.010679467       0.033877674   0.14376263         0.1606643          0.05855743       0.05737881       0.03387768      0.14298609       0.0596917      Float32[0.99172807, 0.15444452,   0.46648186]0.8760332,    0.31676358,   0.86151475]]]
+# sig_wind     3-4 0.050954822      1.0              107977  8814.0    99905.625  0.08640426        0.021111885       0.0816923     0.27550456         0.32947657         0.13525863       0.12320096       0.081692316     0.2748943        0.13360213     Float32[0.8760332,  0.31676358,   0.86151475]0.98283756,   0.02864707,   -0.070753366]6]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# sig_wind_adj 1-2 -1.0             0.028172063      9728631 3323.5562 8.967476e6 0.00040401678     9.4150906e-5      0.0003399157  0.0021760792       0.0023787252       0.08148481       0.011081328      0.0003399157    0.0021705371     0.011994057    Float32[0.98283756, 0.02864707,   -0.070753366]0.74302465, 0.17016491,   -0.2746076]]
+# sig_wind_adj 2-3 0.00855192       0.07532653       170006  3353.0269 155366.81  0.023971286       0.0062256325      0.019621396   0.093790375        0.10304016         -0.19568825      0.03913906       0.019621395     0.093309216      0.041019       Float32[0.74302465, 0.17016491,   -0.2746076]0.37014917,   1.2757467,    3.3445797]]]
+# sig_wind_adj 3-4 0.028172063      1.0              63385   3345.205  57655.47   0.060292322       0.015411966       0.052844238   0.19441897         0.22185005         0.16079274       0.17230234       0.052844245     0.19071871       0.17257723     Float32[0.37014917, 1.2757467,    3.3445797]1.2635667,     -0.21535042,  -0.32895777]]]
+# event_name   bin total_prob_ŷ_min total_prob_ŷ_max count   pos_count weight     mean_total_prob_ŷ mean_max_hourly_ŷ mean_y        total_prob_logloss max_hourly_logloss total_prob_au_pr max_hourly_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+# sig_hail     1-2 -1.0             0.044114113      9731954 4673.0    8.969443e6 0.0006128773      0.00016209374     0.0004842251  0.0027594366       0.0029945907       0.020729106      0.021594504      0.00048422528   0.0027425932     0.020822903    Float32[1.2635667,  -0.21535042,  -0.32895777]1.5278528,   -0.32414392,  0.0025766783]]
+# sig_hail     2-3 0.016018612      0.08977107       156725  4683.0    144801.31  0.035700712       0.009499065       0.029995317   0.13012302         0.14597766         -0.6169255       0.05282002       0.029995324     0.12934238       0.058437664    Float32[1.5278528,  -0.32414392,  0.0025766783]1.1042255,  -0.16546442,  -0.4495338]]
+# sig_hail     3-4 0.044114113      1.0              60062   4661.0    55688.836  0.08349693        0.023061702       0.077974595   0.2663782          0.31153002         0.12403267       0.11937379       0.07797461      0.26606894       0.124048114    Float32[1.1042255,  -0.16546442,  -0.4495338]
 
 
-println("event_to_0z_day_bins_logistic_coeffs = $event_to_day_bins_logistic_coeffs")
-# event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("sig_hail" => [[1.7509274, -0.6264722, -0.59064865], [1.5742372, -0.7514552, -1.8797148], [1.4796587, -0.48270363, -0.9502378]], "hail" => [[0.78442734, 0.27793196, 0.407107], [1.0553415, -0.1081846, -0.47820166], [1.2830826, -0.47052482, -1.2408078]], "tornado" => [[0.93318164, 0.06823707, -0.10806717], [1.3238057, -0.114339165, 0.34774518], [0.6581387, 0.06536053, -0.60667735]], "sig_tornado" => [[0.5930697, 0.4203289, 0.43342784], [-0.032218266, 0.8780866, 0.3627351], [0.6223907, 0.6945181, 1.4135333]], "sig_wind" => [[0.53879964, 0.4059111, 0.116683125], [1.0535268, 0.2508744, 1.1575938], [0.619009, 0.59856415, 1.4483397]], "wind" => [[0.9533327, 0.08198542, -0.049861502], [1.1315389, -0.06399821, -0.22480214], [0.9192797, 0.07381143, -0.066281155]])
-
+println("event_to_day_bins_logistic_coeffs = $event_to_day_bins_logistic_coeffs")
+# event_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("sig_wind" => [[0.60896295, 0.32489055, -0.06371247], [0.99172807, 0.15444452, 0.46648186], [0.8760332, 0.31676358, 0.86151475]], "sig_hail" => [[1.2635667, -0.21535042, -0.32895777], [1.5278528, -0.32414392, 0.0025766783], [1.1042255, -0.16546442, -0.4495338]], "hail" => [[1.0235776, 0.02489767, -0.070147164], [1.1081746, -0.088940814, -0.34076628], [1.1614795, -0.24988303, -0.7304756]], "sig_wind_adj" => [[0.98283756, 0.02864707, -0.070753366], [0.74302465, 0.17016491, -0.2746076], [0.37014917, 1.2757467, 3.3445797]], "tornado" => [[0.95958227, 0.04161413, -0.10651286], [1.2272763, -0.15624464, -0.18067063], [0.5964124, 0.17200926, -0.3083448]], "wind_adj" => [[0.99742454, 0.02784912, -0.01899123], [1.0577022, -0.1336032, -0.51860476], [1.2023934, -0.058322832, -0.087366514]], "sig_tornado" => [[0.3738464, 0.5298857, -0.016889505], [0.53315455, 0.50932276, 0.41353387], [0.41091824, 0.60895973, 0.510827]], "wind" => [[1.0424639, -0.005972234, -0.1651274], [1.1494, -0.107195236, -0.3110462], [0.92132, 0.0022699288, -0.22744325]])
 
 
 
@@ -348,17 +394,17 @@ length(day_validation_forecasts)
 # Make sure a forecast loads
 @time Forecasts.data(day_validation_forecasts[10])
 
-day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
-length(day_validation_forecasts_0z) # Expected: 157
-# 157
+day_validation_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, day_validation_forecasts);
+length(day_validation_forecasts_0z_12z) # Expected:
+#
 
-# rm("day_validation_forecasts_0z_with_sig_gated"; recursive = true)
+# rm("day_validation_forecasts_0z_12z_with_sig_gated"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
-    day_validation_forecasts_0z;
+    day_validation_forecasts_0z_12z;
     event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
-    save_dir = "day_validation_forecasts_0z_with_sig_gated",
+    save_dir = "day_validation_forecasts_0z_12z_with_sig_gated",
   );
 
 # Confirm that the combined is better than the accs
@@ -371,10 +417,10 @@ function test_predictive_power(forecasts, X, Ys, weights)
     y = Ys[event_name]
     x = @view X[:,feature_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
-    println("$model_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+    println("$model_name ($(sum(y))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
-test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
+test_predictive_power(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # tornado (9446.0)                      feature 1 TORPROB:calculated:hour fcst:calculated_prob:                  AU-PR-curve: 0.12701213629264377
 # wind (72111.0)                        feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.3834656173824258
@@ -404,7 +450,7 @@ function test_predictive_power_all(forecasts, X, Ys, weights)
     end
   end
 end
-test_predictive_power_all(day_validation_forecasts_0z, X, Ys, weights)
+test_predictive_power_all(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # tornado (9446.0)     feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.12701213629264377
 # tornado (9446.0)     feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.04168648434556345
@@ -526,7 +572,7 @@ function test_calibration(forecasts, X, Ys, weights)
     end
   end
 end
-test_calibration(day_validation_forecasts_0z, X, Ys, weights)
+test_calibration(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # event_name                   mean_y        mean_ŷ        Σweight     SR            POD         bin_max
 # tornado                      9.700865e-5   9.9049845e-5  4.573599e6  0.0017090585  1.0         0.0008555745
