@@ -248,6 +248,42 @@ event_name_to_labeler = Dict(
 )
 
 
+function grid_to_day_labels(events, forecast)
+  # Annoying that we have to recalculate this.
+  # The end_seconds will always be the last hour of the convective day
+  # start_seconds depends on whether the run started during the day or not
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+end
+
+function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast)
+  # Annoying that we have to recalculate this.
+  # The end_seconds will always be the last hour of the convective day
+  # start_seconds depends on whether the run started during the day or not
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  measured_labels  = StormEvents.grid_to_event_neighborhoods(measured_events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, forecast.grid, Grid130.GRID_130_CROPPED, gridded_normalization, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+  max.(measured_labels, estimated_labels)
+end
+
+event_name_to_day_labeler = Dict(
+  "tornado"      => (forecast -> grid_to_day_labels(StormEvents.conus_tornado_events(),     forecast)),
+  "wind"         => (forecast -> grid_to_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
+  "wind_adj"     => (forecast -> grid_to_adjusted_wind_day_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), day_estimated_wind_gridded_normalization(), forecast)),
+  "hail"         => (forecast -> grid_to_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
+  "sig_tornado"  => (forecast -> grid_to_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
+  "sig_wind"     => (forecast -> grid_to_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
+  "sig_wind_adj" => (forecast -> grid_to_adjusted_wind_day_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), day_estimated_sig_wind_gridded_normalization(),   forecast)),
+  "sig_hail"     => (forecast -> grid_to_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+)
+
+
 # Concatenating all the forecasts doubles peak memory usage if done in-RAM.
 #
 # We load each file to disk, after which we know the appropriate size needed

@@ -30,8 +30,8 @@ validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast)
 
 length(validation_forecasts) #
 
-validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, validation_forecasts);
-length(validation_forecasts_0z) # 132
+validation_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, validation_forecasts);
+length(validation_forecasts_0z_12z)
 
 @time Forecasts.data(validation_forecasts[10]) # Check if a forecast loads
 
@@ -45,38 +45,13 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 logit(p) = log(p / (one(p) - p))
 
 
-compute_day_labels(events, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-event_name_to_day_labeler = Dict(
-  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
-)
-
-# rm("day_accumulators_validation_forecasts_0z"; recursive = true)
+# rm("day_accumulators_validation_forecasts_0z_12z"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
-    validation_forecasts_0z;
-    event_name_to_labeler = event_name_to_day_labeler,
-    save_dir = "day_accumulators_validation_forecasts_0z",
+    validation_forecasts_0z_12z;
+    event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
+    save_dir = "day_accumulators_validation_forecasts_0z_12z",
   );
 
 
@@ -84,37 +59,37 @@ X, Ys, weights =
 # should do some checks here.
 import PlotMap
 
-aug29 = validation_forecasts_0z[85]; Forecasts.time_title(aug29) # "2020-08-29 00Z +35"
+aug29 = validation_forecasts_0z_12z[85]; Forecasts.time_title(aug29) # "2020-08-29 00Z +35"
 aug29_data = Forecasts.data(aug29);
 for i in 1:size(aug29_data,2)
   PlotMap.plot_debug_map("aug29_0z_day_accs_$(i)_recalib", aug29.grid, aug29_data[:,i]);
 end
-for (event_name, labeler) in event_name_to_day_labeler
-  aug29_labels = event_name_to_day_labeler[event_name](aug29);
+for (event_name, labeler) in TrainingShared.event_name_to_day_labeler
+  aug29_labels = labeler[event_name](aug29);
   PlotMap.plot_debug_map("aug29_0z_day_$(event_name)_recalib", aug29.grid, aug29_labels);
 end
 # scp nadocaster:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_accs_1.pdf ./
 # scp nadocaster2:/home/brian/nadocast_dev/models/combined_href_sref/aug29_0z_day_tornadoes.pdf ./
 
-july11 = validation_forecasts_0z[78]; Forecasts.time_title(july11) # "2020-07-11 00Z +35"
+july11 = validation_forecasts_0z_12z[78]; Forecasts.time_title(july11) # "2020-07-11 00Z +35"
 july11_data = Forecasts.data(july11);
 for i in 1:size(july11_data,2)
   PlotMap.plot_debug_map("july11_0z_day_accs_$i", july11.grid, july11_data[:,i]);
 end
-for (event_name, labeler) in event_name_to_day_labeler
-  july11_labels = event_name_to_day_labeler[event_name](july11);
+for (event_name, labeler) in TrainingShared.event_name_to_day_labeler
+  july11_labels = labeler[event_name](july11);
   PlotMap.plot_debug_map("july11_0z_day_$event_name", july11.grid, july11_labels);
 end
 # scp nadocaster:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_accs_1.pdf ./
 # scp nadocaster:/home/brian/nadocast_dev/models/combined_href_sref/july11_0z_day_tornado.pdf ./
 
-dec11 = validation_forecasts_0z[130]; Forecasts.time_title(dec11) # "2021-12-11 00Z +35"
+dec11 = validation_forecasts_0z_12z[130]; Forecasts.time_title(dec11) # "2021-12-11 00Z +35"
 dec11_data = Forecasts.data(dec11);
 for i in 1:size(dec11_data,2)
   PlotMap.plot_debug_map("dec11_0z_day_accs_$i", dec11.grid, dec11_data[:,i]);
 end
 for (event_name, labeler) in event_name_to_day_labeler
-  dec11_labels = event_name_to_day_labeler[event_name](dec11);
+  dec11_labels = labeler(dec11);
   PlotMap.plot_debug_map("dec11_0z_day_$event_name", dec11.grid, dec11_labels);
 end
 # scp nadocaster:/home/brian/nadocast_dev/models/combined_href_sref/dec11_0z_day_accs_1.pdf ./
@@ -135,7 +110,7 @@ function test_predictive_power(forecasts, X, Ys, weights)
     println("$model_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
-test_predictive_power(validation_forecasts_0z, X, Ys, weights)
+test_predictive_power(validation_forecasts_0z_12z, X, Ys, weights)
 
 # tornado (8326.0)     feature 1 independent events total TORPROB:calculated:day   fcst:: AU-PR-curve: 0.1281600368558516
 # tornado (8326.0)     feature 2 highest hourly TORPROB:calculated:day             fcst:: AU-PR-curve: 0.11516567319301846
@@ -388,9 +363,8 @@ end
 
 
 
-print("event_to_0z_day_bins_logistic_coeffs = ")
-println(event_to_day_bins_logistic_coeffs)
-# event_to_0z_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("sig_hail" => [[1.9733405, -0.7847382, -0.51065785], [1.3154331, -0.7666408, -2.8496652], [1.3292868, -0.31144178, -0.6903727]], "hail" => [[0.69415, 0.3440887, 0.4457177], [1.1330315, -0.17600663, -0.6018588], [1.4685977, -0.6171552, -1.4658885]], "tornado" => [[0.915529, 0.075384595, -0.13371886], [1.3713769, -0.14764006, 0.3025914], [0.7308742, -0.01088467, -0.7200494]], "sig_tornado" => [[0.9246038, 0.14572951, 0.4728381], [-0.27371246, 1.0642519, 0.48847285], [0.77029693, 0.587577, 1.354599]], "sig_wind" => [[0.28025302, 0.6347386, 0.37337035], [1.0196984, 0.3275573, 1.3824697], [0.59162444, 0.5482808, 1.1521151]], "wind" => [[0.8752906, 0.14241132, 0.019422961], [1.0762116, -0.07859125, -0.31812784], [0.8967682, 0.0795651, -0.053071257]])
+println("event_to_day_bins_logistic_coeffs = $event_to_day_bins_logistic_coeffs")
+# event_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("sig_hail" => [[1.9733405, -0.7847382, -0.51065785], [1.3154331, -0.7666408, -2.8496652], [1.3292868, -0.31144178, -0.6903727]], "hail" => [[0.69415, 0.3440887, 0.4457177], [1.1330315, -0.17600663, -0.6018588], [1.4685977, -0.6171552, -1.4658885]], "tornado" => [[0.915529, 0.075384595, -0.13371886], [1.3713769, -0.14764006, 0.3025914], [0.7308742, -0.01088467, -0.7200494]], "sig_tornado" => [[0.9246038, 0.14572951, 0.4728381], [-0.27371246, 1.0642519, 0.48847285], [0.77029693, 0.587577, 1.354599]], "sig_wind" => [[0.28025302, 0.6347386, 0.37337035], [1.0196984, 0.3275573, 1.3824697], [0.59162444, 0.5482808, 1.1521151]], "wind" => [[0.8752906, 0.14241132, 0.019422961], [1.0762116, -0.07859125, -0.31812784], [0.8967682, 0.0795651, -0.053071257]])
 
 
 
@@ -434,42 +408,17 @@ length(day_validation_forecasts)
 # Make sure a forecast loads
 @time Forecasts.data(day_validation_forecasts[10])
 
-day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
-length(day_validation_forecasts_0z) # Expected: 132
-# 132
+day_validation_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, day_validation_forecasts);
+length(day_validation_forecasts_0z_12z) # Expected:
+#
 
-compute_day_labels(events, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-event_name_to_day_labeler = Dict(
-  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
-)
-
-# rm("day_validation_forecasts_0z_with_sig_gated"; recursive = true)
+# rm("day_validation_forecasts_0z_12z_with_sig_gated"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
-    day_validation_forecasts_0z;
-    event_name_to_labeler = event_name_to_day_labeler,
-    save_dir = "day_validation_forecasts_0z_with_sig_gated",
+    day_validation_forecasts_0z_12z;
+    event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
+    save_dir = "day_validation_forecasts_0z_12z_with_sig_gated",
   );
 
 # Confirm that the combined is better than the accs
@@ -485,7 +434,7 @@ function test_predictive_power(forecasts, X, Ys, weights)
     println("$model_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
-test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
+test_predictive_power(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # tornado (8326.0)     feature 1 independent events total TORPROB:calculated:day   fcst:: AU-PR-curve: 0.1281600368558516
 # tornado (8326.0)     feature 2 highest hourly TORPROB:calculated:day             fcst:: AU-PR-curve: 0.11516567319301846
@@ -535,7 +484,7 @@ function test_predictive_power_all(forecasts, X, Ys, weights)
     end
   end
 end
-test_predictive_power_all(day_validation_forecasts_0z, X, Ys, weights)
+test_predictive_power_all(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # tornado (8326.0)     feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.1282209032860132
 # tornado (8326.0)     feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.04732475800518112
@@ -593,7 +542,7 @@ test_predictive_power_all(day_validation_forecasts_0z, X, Ys, weights)
 # sig_hail (3887.0)    feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.07167567544365759
 
 
-# rm("day_accumulators_validation_forecasts_0z"; recursive = true)
+# rm("day_accumulators_validation_forecasts_0z_12z"; recursive = true)
 
 # test y vs ŷ
 
@@ -658,7 +607,7 @@ function test_calibration(forecasts, X, Ys, weights)
     end
   end
 end
-test_calibration(day_validation_forecasts_0z, X, Ys, weights)
+test_calibration(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # event_name                   mean_y        mean_ŷ        Σweight     SR            POD         bin_max
 # tornado                      0.00010167745 9.478093e-5   3.8498672e6 0.0017925821  1.0         0.0008280874
@@ -1260,42 +1209,17 @@ length(day_validation_forecasts) # 528
 # Make sure a forecast loads
 @time Forecasts.data(day_validation_forecasts[10]);
 
-day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
-length(day_validation_forecasts_0z) # Expected: 132
-# 132
+day_validation_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, day_validation_forecasts);
+length(day_validation_forecasts_0z_12z) # Expected:
+#
 
-compute_day_labels(events, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-event_name_to_day_labeler = Dict(
-  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
-)
-
-# rm("day_validation_forecasts_0z"; recursive = true)
+# rm("day_validation_forecasts_0z_12z"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
-    day_validation_forecasts_0z;
-    event_name_to_labeler = event_name_to_day_labeler,
-    save_dir = "day_validation_forecasts_0z_spc_calibrated_with_sig_gated",
+    day_validation_forecasts_0z_12z;
+    event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
+    save_dir = "day_validation_forecasts_0z_12z_spc_calibrated_with_sig_gated",
   );
 
 # Confirm that the combined is better than the accs
@@ -1311,7 +1235,7 @@ function test_predictive_power(forecasts, X, Ys, weights)
     println("$model_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
   end
 end
-test_predictive_power(day_validation_forecasts_0z, X, Ys, weights)
+test_predictive_power(day_validation_forecasts_0z_12z, X, Ys, weights)
 
 # tornado (8326.0)                      feature 1 TORPROB:calculated:hour fcst:calculated_prob:                  AU-PR-curve: 0.12822090429073685
 # wind (63336.0)                        feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.40661148757985616
@@ -1337,7 +1261,7 @@ function test_threshold(forecasts, X, Ys, weights, threshold)
     println("$model_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tThreshold: $threshold\tCSI: $model_csi")
   end
 end
-test_threshold(day_validation_forecasts_0z, X, Ys, weights, 0.1)
+test_threshold(day_validation_forecasts_0z_12z, X, Ys, weights, 0.1)
 
 # tornado (8326.0)                      feature 1 TORPROB:calculated:hour fcst:calculated_prob:                  Threshold: 0.1  CSI: 0.0999275885395187
 # wind (63336.0)                        feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                 Threshold: 0.1  CSI: 0.2621078607407563
@@ -1350,149 +1274,4 @@ test_threshold(day_validation_forecasts_0z, X, Ys, weights, 0.1)
 # sig_hail_gated_by_hail (3887.0)       feature 9 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail    Threshold: 0.1  CSI: 0.07584469907328449
 
 
-
-
-
-
-
-
-
-
-
-
-
-# tried some post-processing blurring below
-# didn't help AU-PR
-
-import Dates
-import Printf
-
-push!(LOAD_PATH, (@__DIR__) * "/../shared")
-# import TrainGBDTShared
-import TrainingShared
-import LogisticRegression
-using Metrics
-
-push!(LOAD_PATH, @__DIR__)
-import CombinedHREFSREF
-
-push!(LOAD_PATH, (@__DIR__) * "/../../lib")
-import Forecasts
-import Inventories
-import StormEvents
-
-MINUTE = 60 # seconds
-HOUR   = 60*MINUTE
-
-(_, day_validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_day_spc_calibrated(); just_hours_near_storm_events = false);
-
-length(day_validation_forecasts)
-# 903
-
-# We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 6, 1, 12)
-day_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, day_validation_forecasts);
-
-length(day_validation_forecasts)
-
-# Make sure a forecast loads
-@time Forecasts.data(day_validation_forecasts[10])
-
-day_validation_forecasts_0z_with_blurs_and_forecasts_hour = filter(forecast -> forecast.run_hour == 0, day_validation_forecasts);
-length(day_validation_forecasts_0z_with_blurs_and_forecasts_hour) # Expected: 132
-#
-
-compute_day_labels(events, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-event_name_to_day_labeler = Dict(
-  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
-)
-
-X, Ys, weights =
-  TrainingShared.get_data_labels_weights(
-    day_validation_forecasts_0z_with_blurs_and_forecasts_hour;
-    event_name_to_labeler = event_name_to_day_labeler,
-    save_dir = "day_validation_forecasts_0z_with_blurs_and_forecasts_hour",
-  );
-
-println("Determining best blur radii to maximize area under precision-recall curve")
-
-function test_predictive_power(forecasts, X, Ys, weights)
-  inventory = Forecasts.inventory(forecasts[1])
-
-  # Feature order is all HREF severe probs then all SREF severe probs
-  for feature_i in 1:(length(inventory)-1)
-    prediction_i = 1 + div(feature_i-1, 1 + length(CombinedHREFSREF.blur_radii))
-    (event_name, _) = CombinedHREFSREF.models[prediction_i]
-    y = Ys[event_name]
-    x = @view X[:,feature_i]
-    au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
-    println("$event_name ($(round(sum(y)))) feature $feature_i $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
-  end
-end
-test_predictive_power(day_validation_forecasts_0z_with_blurs_and_forecasts_hour, X, Ys, weights)
-
-# tornado (8326.0)     feature 1 TORPROB:calculated:hour fcst:calculated_prob:             AU-PR-curve: 0.12910289299673042
-# tornado (8326.0)     feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean    AU-PR-curve: 0.1289217023896551
-# tornado (8326.0)     feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean    AU-PR-curve: 0.12855908567739005
-# tornado (8326.0)     feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean    AU-PR-curve: 0.1276909837160792
-# tornado (8326.0)     feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean    AU-PR-curve: 0.1257292040430739
-# tornado (8326.0)     feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean    AU-PR-curve: 0.12313387528809555
-# tornado (8326.0)     feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean   AU-PR-curve: 0.11846516730272345
-# wind (63336.0)       feature 8 WINDPROB:calculated:hour fcst:calculated_prob:            AU-PR-curve: 0.407616606429577
-# wind (63336.0)       feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean   AU-PR-curve: 0.40755924309707947
-# wind (63336.0)       feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.40727334595487796
-# wind (63336.0)       feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.40641155183353506
-# wind (63336.0)       feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.4042658521238372
-# wind (63336.0)       feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.39995487770551125
-# wind (63336.0)       feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.3909760337380804
-# hail (28152.0)       feature 15 HAILPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.24281549180460507
-# hail (28152.0)       feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.24208054472267743
-# hail (28152.0)       feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.24082552832989604
-# hail (28152.0)       feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.23807982360404809
-# hail (28152.0)       feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.2323965848387333
-# hail (28152.0)       feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.22298719203063502
-# hail (28152.0)       feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.20709992125171317
-# sig_tornado (1138.0) feature 22 STORPROB:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.09322716799320344
-# sig_tornado (1138.0) feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.0933847036985924
-# sig_tornado (1138.0) feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.09335577047000712
-# sig_tornado (1138.0) feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.0932838322078577
-# sig_tornado (1138.0) feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.09339258977120611
-# sig_tornado (1138.0) feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.09485998312492377
-# sig_tornado (1138.0) feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.0890668815603778
-# sig_wind (7555.0)    feature 29 SWINDPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.08475474530886153
-# sig_wind (7555.0)    feature 30 SWINDPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.08438349231988675
-# sig_wind (7555.0)    feature 31 SWINDPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.08400587484598891
-# sig_wind (7555.0)    feature 32 SWINDPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.08310618991612609
-# sig_wind (7555.0)    feature 33 SWINDPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.08168829200078392
-# sig_wind (7555.0)    feature 34 SWINDPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.07995998955198079
-# sig_wind (7555.0)    feature 35 SWINDPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.07721169925889398
-# sig_hail (3887.0)    feature 36 SHAILPRO:calculated:hour fcst:calculated_prob:           AU-PR-curve: 0.07277620173520509
-# sig_hail (3887.0)    feature 37 SHAILPRO:calculated:hour fcst:calculated_prob:15mi mean  AU-PR-curve: 0.07259306402521629
-# sig_hail (3887.0)    feature 38 SHAILPRO:calculated:hour fcst:calculated_prob:25mi mean  AU-PR-curve: 0.07228935492454468
-# sig_hail (3887.0)    feature 39 SHAILPRO:calculated:hour fcst:calculated_prob:35mi mean  AU-PR-curve: 0.07162547245086157
-# sig_hail (3887.0)    feature 40 SHAILPRO:calculated:hour fcst:calculated_prob:50mi mean  AU-PR-curve: 0.07041989216931623
-# sig_hail (3887.0)    feature 41 SHAILPRO:calculated:hour fcst:calculated_prob:70mi mean  AU-PR-curve: 0.0677679578882266
-# sig_hail (3887.0)    feature 42 SHAILPRO:calculated:hour fcst:calculated_prob:100mi mean AU-PR-curve: 0.056915442960505755
-
-# Well darn. Any blurring decreases the AU-PR
 

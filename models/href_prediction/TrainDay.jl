@@ -41,58 +41,12 @@ logloss(y, ŷ) = -y*log(ŷ + ε) - (1.0f0 - y)*log(1.0f0 - ŷ + ε)
 
 logit(p) = log(p / (one(p) - p))
 
-
-compute_day_labels(events, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-compute_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  measured_labels  = StormEvents.grid_to_event_neighborhoods(measured_events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-  estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, forecast.grid, Grid130.GRID_130_CROPPED, gridded_normalization, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-  max.(measured_labels, estimated_labels)
-end
-
-event_name_to_day_labeler = Dict(
-  "tornado"      => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"         => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "wind_adj"     => (forecast -> compute_adjusted_wind_day_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), TrainingShared.day_estimated_wind_gridded_normalization(), forecast)),
-  "hail"         => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado"  => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"     => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_wind_adj" => (forecast -> compute_adjusted_wind_day_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), TrainingShared.day_estimated_sig_wind_gridded_normalization(),   forecast)),
-  "sig_hail"     => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
-)
-
-# rm("day_accumulators_validation_forecasts_0z"; recursive = true)
+# rm("day_accumulators_validation_forecasts_0z_12z"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
     validation_forecasts_0z;
-    event_name_to_labeler = event_name_to_day_labeler,
+    event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
     save_dir = "day_accumulators_validation_forecasts_0z",
   );
 
@@ -106,8 +60,8 @@ dec11_data = Forecasts.data(dec11);
 for i in 1:size(dec11_data,2)
   PlotMap.plot_debug_map("dec11_0z_day_accs_$i", dec11.grid, dec11_data[:,i]);
 end
-for (event_name, labeler) in event_name_to_day_labeler
-  dec11_labels = event_name_to_day_labeler[event_name](dec11);
+for (event_name, labeler) in TrainingShared.event_name_to_day_labeler
+  dec11_labels = labeler(dec11);
   PlotMap.plot_debug_map("dec11_0z_day_$event_name", dec11.grid, dec11_labels);
 end
 # scp nadocaster2:/home/brian/nadocast_dev/models/href_prediction/dec11_0z_day_accs_1.pdf ./
@@ -398,37 +352,12 @@ day_validation_forecasts_0z = filter(forecast -> forecast.run_hour == 0, day_val
 length(day_validation_forecasts_0z) # Expected: 157
 # 157
 
-compute_day_labels(events, forecast) = begin
-  # Annoying that we have to recalculate this.
-  # The end_seconds will always be the last hour of the convective day
-  # start_seconds depends on whether the run started during the day or not
-  # I suppose for 0Z the answer is always "no" but whatev here's the right math
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
-  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
-  # println(Forecasts.yyyymmdd_thhz_fhh(forecast))
-  # utc_datetime = Dates.unix2datetime(start_seconds)
-  # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
-  # println(Forecasts.valid_yyyymmdd_hhz(forecast))
-  window_half_size = (end_seconds - start_seconds) ÷ 2
-  window_mid_time  = (end_seconds + start_seconds) ÷ 2
-  StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
-end
-
-event_name_to_day_labeler = Dict(
-  "tornado"     => (forecast -> compute_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"        => (forecast -> compute_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "hail"        => (forecast -> compute_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado" => (forecast -> compute_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"    => (forecast -> compute_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_hail"    => (forecast -> compute_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
-)
-
 # rm("day_validation_forecasts_0z_with_sig_gated"; recursive = true)
 
 X, Ys, weights =
   TrainingShared.get_data_labels_weights(
     day_validation_forecasts_0z;
-    event_name_to_labeler = event_name_to_day_labeler,
+    event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
     save_dir = "day_validation_forecasts_0z_with_sig_gated",
   );
 

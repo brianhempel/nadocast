@@ -307,7 +307,7 @@ function _au_pr_curve(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, tot
   # area += (last_pod - pod) * (0.5 * 0.0 + 0.5 * last_sr) # interpolated version
   area += (last_pod - pod) * last_sr # stairstep version
 
-  area
+  Float32(area)
 end
 
 function _au_pr_curve_interploated(ŷ_sorted, y_sorted, weights_sorted, total_pos_weight, total_weight)
@@ -347,7 +347,7 @@ function _au_pr_curve_interploated(ŷ_sorted, y_sorted, weights_sorted, total_po
   area += (last_pod - pod) * (0.5 * 0.0 + 0.5 * last_sr) # interpolated version
   # area += (last_pod - pod) * last_sr # stairstep version
 
-  area
+  Float32(area)
 end
 
 # Area under the precison-recall curve (success ratio vs probability of detection)
