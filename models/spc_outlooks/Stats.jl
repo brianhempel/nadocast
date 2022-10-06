@@ -18,7 +18,7 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-# Run below uses outlooks from 2019-01-7 through 2021-12-30
+# Run below uses outlooks from 2018-6-29 through 2022-5-31
 
 forecasts_day = vcat(SPCOutlooks.forecasts_day_0600(), SPCOutlooks.forecasts_day_1300(), SPCOutlooks.forecasts_day_1630());
 
@@ -26,13 +26,13 @@ forecasts_day = vcat(SPCOutlooks.forecasts_day_0600(), SPCOutlooks.forecasts_day
 
 training_and_validation_forecasts = vcat(training_forecasts, validation_forecasts);
 
-length(training_and_validation_forecasts) #
+length(training_and_validation_forecasts) # 3684
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 6, 1, 12)
 training_and_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, training_and_validation_forecasts);
 
-length(training_and_validation_forecasts) # 2802
+length(training_and_validation_forecasts) # 3684
 
 @time Forecasts.data(training_and_validation_forecasts[10]) # Check if a forecast loads
 
@@ -89,25 +89,27 @@ function stats_for_run_hours(run_hours)
   true_positive_areas  = Dict(map(event_name -> event_name => map(_ -> 0.0, event_name_to_thresholds[event_name]), event_names))
   false_negative_areas = Dict(map(event_name -> event_name => map(_ -> 0.0, event_name_to_thresholds[event_name]), event_names))
 
-  conus_area = sum(SPCOutlooks.grid().point_areas_sq_miles[Conus.conus_mask_href_cropped_5km_grid()])
+  verifiable_grid_bitmask = Conus.conus_mask_href_cropped_5km_grid() .&& TrainingShared.is_verifiable.(SPCOutlooks.grid().latlons) :: BitVector
+
+  conus_verifiable_area = sum(SPCOutlooks.grid().point_areas_sq_miles[verifiable_grid_bitmask])
 
   for forecast in filter(forecast -> forecast.run_hour in run_hours, training_and_validation_forecasts)
     # global total_areas
     # global painted_areas
     # global true_positive_areas
     # global false_negative_areas
+    data = Forecasts.data(forecast)
 
-    for model_i in 1:length(SPCOutlooks.models)
+    Threads.@threads for model_i in 1:length(SPCOutlooks.models)
       event_name, _, _ = SPCOutlooks.models[model_i]
 
       forecast_labels = compute_forecast_labels(event_name, forecast) .> 0.5
-      data            = Forecasts.data(forecast)
 
       thresholds = event_name_to_thresholds[event_name]
       for i in 1:length(thresholds)
         threshold = thresholds[i]
-        painted   = ((@view data[:,model_i]) .>= threshold*0.999) .* Conus.conus_mask_href_cropped_5km_grid()
-        unpainted = ((@view data[:,model_i]) .<  threshold*0.999) .* Conus.conus_mask_href_cropped_5km_grid()
+        painted   = ((@view data[:,model_i]) .>= threshold*0.999) .* verifiable_grid_bitmask
+        unpainted = ((@view data[:,model_i]) .<  threshold*0.999) .* verifiable_grid_bitmask
         painted_area        = sum(forecast.grid.point_areas_sq_miles[painted])
         true_positive_area  = sum(forecast.grid.point_areas_sq_miles[painted   .* forecast_labels])
         false_negative_area = sum(forecast.grid.point_areas_sq_miles[unpainted .* forecast_labels])
@@ -117,7 +119,7 @@ function stats_for_run_hours(run_hours)
         false_negative_areas[event_name][i] += false_negative_area
       end
 
-      total_areas[event_name] += conus_area
+      total_areas[event_name] += conus_verifiable_area
     end
   end
 
@@ -152,27 +154,28 @@ stats_for_run_hours([6])
 # Mon-Sat
 # Outlook hours: [6]
 # event_name  threshold total_sq_mi painted_sq_mi true_positive_sq_mi false_negative_sq_mi success_ratio POD          painting_ratio
-# tornado     0.02      2.7770545e9 5.407083e7    2.672531e6          1.4357058e6          0.049426477   0.6505299    0.019470569
-# tornado     0.05      2.7770545e9 1.3563396e7   1.515951e6          2.5922855e6          0.111767806   0.36900285   0.0048840945
-# tornado     0.1       2.7770545e9 2.37616e6     514057.2            3.5941795e6          0.21633947    0.12512843   0.0008556404
-# tornado     0.15      2.7770545e9 382727.7      102061.42           4.0061752e6          0.2666685     0.024843121  0.00013781784
-# tornado     0.3       2.7770545e9 84705.9       20985.922           4.0872508e6          0.24775042    0.0051082554 3.0502066e-5
-# tornado     0.45      2.7770545e9 0.0           0.0                 4.1082365e6          NaN           0.0          0.0
-# tornado     0.6       2.7770545e9 0.0           0.0                 4.1082365e6          NaN           0.0          0.0
-# wind        0.05      2.7770545e9 1.5798806e8   2.1593148e7         9.102145e6           0.13667582    0.7034677    0.056890514
-# wind        0.15      2.7770545e9 4.5019748e7   1.1600551e7         1.9094742e7          0.25767696    0.37792608   0.016211329
-# wind        0.3       2.7770545e9 6.559841e6    2.877264e6          2.7818028e7          0.43861794    0.09373633   0.002362158
-# wind        0.45      2.7770545e9 581307.94     363251.8            3.0332042e7          0.62488705    0.011834121  0.00020932537
-# wind        0.6       2.7770545e9 0.0           0.0                 3.0695294e7          NaN           0.0          0.0
-# hail        0.05      2.7770545e9 1.2271457e8   9.699059e6          3.3617152e6          0.07903755    0.7426098    0.04418875
-# hail        0.15      2.7770545e9 3.3856444e7   5.181758e6          7.879016e6           0.15305087    0.39674205   0.012191495
-# hail        0.3       2.7770545e9 3.1561588e6   875876.3            1.2184898e7          0.2775134     0.067061596  0.0011365131
-# hail        0.45      2.7770545e9 143574.6      82895.34            1.2977879e7          0.5773678     0.006346894  5.1700317e-5
-# hail        0.6       2.7770545e9 0.0           0.0                 1.3060774e7          NaN           0.0          0.0
-# sig_tornado 0.1       2.7770545e9 1.4062496e6   124848.77           491995.6             0.08878137    0.20239913   0.0005063817
-# sig_wind    0.1       2.7770545e9 2.6112152e6   311948.3            3.0869872e6          0.11946479    0.09177823   0.00094028236
-# sig_hail    0.1       2.7770545e9 5.3213665e6   459081.44           1.51416e6            0.086271346   0.23265345   0.0019161908
+# tornado     0.02      2.7857797e9 7.0551576e7   3.712704e6          1.7329516e6          0.05262397    0.68177354   0.025325613
+# tornado     0.05      2.7857797e9 1.944113e7    2.2395662e6         3.2060895e6          0.11519733    0.41125742   0.006978703
+# tornado     0.1       2.7857797e9 3.7065245e6   831750.2            4.6139055e6          0.22440165    0.15273647   0.0013305161
+# tornado     0.15      2.7857797e9 577339.5      165682.36           5.2799735e6          0.28697562    0.030424684  0.0002072452
+# tornado     0.3       2.7857797e9 84705.9       20985.922           5.4246695e6          0.24775042    0.0038537    3.0406534e-5
+# tornado     0.45      2.7857797e9 0.0           0.0                 5.4456555e6          NaN           0.0          0.0
+# tornado     0.6       2.7857797e9 0.0           0.0                 5.4456555e6          NaN           0.0          0.0
+# wind        0.05      2.7857797e9 1.927985e8    2.6784788e7         1.0958834e7          0.13892634    0.7096507    0.06920809
+# wind        0.15      2.7857797e9 5.772987e7    1.4647687e7         2.3095936e7          0.25372803    0.38808376   0.020723058
+# wind        0.3       2.7857797e9 8.860872e6    3.8965508e6         3.384707e7           0.43974802    0.10323733   0.003180751
+# wind        0.45      2.7857797e9 855613.3      526978.56           3.7216644e7          0.61590743    0.0139620565 0.00030713604
+# wind        0.6       2.7857797e9 0.0           0.0                 3.7743624e7          NaN           0.0          0.0
+# hail        0.05      2.7857797e9 1.5080246e8   1.2204424e7         4.020566e6           0.080929875   0.7521992    0.054132946
+# hail        0.15      2.7857797e9 4.2428616e7   6.5944735e6         9.630516e6           0.15542515    0.4064393    0.0152304275
+# hail        0.3       2.7857797e9 3.9136002e6   1.1310906e6         1.5093899e7          0.28901535    0.06971287   0.0014048492
+# hail        0.45      2.7857797e9 171313.97     93316.85            1.6131673e7          0.5447125     0.0057514273 6.149588e-5
+# hail        0.6       2.7857797e9 0.0           0.0                 1.622499e7           NaN           0.0          0.0
+# sig_tornado 0.1       2.7857797e9 2.4261432e6   206186.47           648654.5             0.08498528    0.24119863   0.00087090285
+# sig_wind    0.1       2.7857797e9 3.06824e6     359918.2            3.8815878e6          0.11730445    0.08485623   0.0011013936
+# sig_hail    0.1       2.7857797e9 6.755856e6    577385.6            1.8802576e6          0.08546447    0.23493469   0.002425122
 
+# ...
 stats_for_run_hours([13])
 # Mon-Sat
 # Outlook hours: [13]
