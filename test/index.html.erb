@@ -19,18 +19,20 @@
   require "chunky_png"
 
   HAZARDS = [
-    ["tornado",     "Tor"],
-    ["wind",        "Wind"],
-    ["hail",        "Hail"],
-    ["sig_tornado", "Sigtor"],
-    ["sig_wind",    "Sigwind"],
-    ["sig_hail",    "Sighail"],
+    ["tornado",      "Tor"],
+    ["wind",         "Wind"],
+    ["wind_adj",     "Wind_Adj"],
+    ["hail",         "Hail"],
+    ["sig_tornado",  "Sigtor"],
+    ["sig_wind",     "Sigwind"],
+    ["sig_wind_adj", "Sigwind_Adj"],
+    ["sig_hail",     "Sighail"],
   ]
 %>
 
 <body>
   <div style="position:fixed; top:0; width: 100%; z-index: 1; background: white; border-bottom: solid 3px black; padding: 0.5em">
-    <h1>Nadocast "2021 Models" compared to SPC Outlooks, Subjective</h1>
+    <h1>Nadocast "202... Models" compared to SPC Outlooks, Subjective</h1>
     <p>(Objective comparison <a href="2021_models_objective_plots.pdf">here</a>.) Dates below are not in the training data. You may want to zoom out. Sometimes Chrome displays the wrong map: use Firefox.</p>
     <p>
       Sort by:

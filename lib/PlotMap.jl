@@ -487,8 +487,9 @@ function shade_forecast_labels(labels, img)
 
   for i in 1:size(img,1)
     for j in 1:size(img,2)
-      if mod(i + j, 2) == 0 && labels[i,j] > 0.5
-        out[i,j] *= 0f0
+      if mod(i + j, 2) == 0 && labels[i,j] > 0
+        gray = 1.0 - labels[i,j]
+        out[i,j] = RGB{N0f8}(gray, gray, gray)
       end
     end
   end

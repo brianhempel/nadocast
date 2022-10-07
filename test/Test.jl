@@ -14,6 +14,9 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction")
 import HREFPrediction
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
+import HREFPredictionAblations
+
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 import Conus
 import Forecasts
@@ -35,7 +38,7 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid();
 
 const ϵ = eps(1f0)
 
-function do_it(spc_forecasts, forecasts; run_hour, suffix)
+function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix)
 
   println("$(length(spc_forecasts)) SPC forecasts available") #
 
@@ -50,7 +53,7 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
   println("$(length(test_forecasts)) $(run_hour)z test forecasts") # 157
 
   # We don't have storm events past this time.
-  cutoff = Dates.DateTime(2022, 1, 1, 0)
+  cutoff = Dates.DateTime(2022, 6, 1, 12)
 
   test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
   println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
@@ -70,41 +73,32 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
   # test_forecasts = vcat(test_forecasts, other_test_forecasts);
   # length(test_forecasts) # 186
 
-  model_name_to_events = Dict(
+  event_name_to_events = Dict(
     "tornado"                      => StormEvents.conus_tornado_events(),
     "wind"                         => StormEvents.conus_severe_wind_events(),
     "hail"                         => StormEvents.conus_severe_hail_events(),
     "sig_tornado"                  => StormEvents.conus_sig_tornado_events(),
     "sig_wind"                     => StormEvents.conus_sig_wind_events(),
     "sig_hail"                     => StormEvents.conus_sig_hail_events(),
-    "sig_tornado_gated_by_tornado" => StormEvents.conus_sig_tornado_events(),
-    "sig_wind_gated_by_wind"       => StormEvents.conus_sig_wind_events(),
-    "sig_hail_gated_by_hail"       => StormEvents.conus_sig_hail_events(),
   )
 
-  model_name_to_thresholds = Dict(
+  event_name_to_thresholds = Dict(
     "tornado"                      => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
     "wind"                         => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
     "hail"                         => [0.02, 0.05, 0.15, 0.3, 0.45, 0.6],
     "sig_tornado"                  => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
     "sig_wind"                     => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
     "sig_hail"                     => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
-    "sig_tornado_gated_by_tornado" => [0.01, 0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
-    "sig_wind_gated_by_wind"       => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
-    "sig_hail_gated_by_hail"       => [0.02, 0.05, 0.1, 0.15, 0.3, 0.45, 0.6],
   )
 
-  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "")
+  is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\Atornado_.+_\d+\z" => "tornado")
 
   # Use non-sig colors (i.e. not just 10%)
-  model_name_to_colorer(model_name)  = PlotMap.event_name_to_colorer_more_sig_colors[model_name_to_event_name(model_name)]
-
-  # Want this sorted for niceness
-  # event_names = map(first, SPCOutlooks.models)
-  model_names = map(last, CombinedHREFSREF.models_with_gated)
+  model_name_to_colorer(model_name) = PlotMap.event_name_to_colorer_more_sig_colors[model_name_to_event_name(model_name)]
 
   compute_forecast_labels(model_name, spc_forecast) = begin
-    events = model_name_to_events[model_name]
+    events = event_name_to_events[model_name_to_event_name(model_name)]
     # Annoying that we have to recalculate this.
     start_seconds =
       if spc_forecast.run_hour == 6
@@ -124,14 +118,14 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
     StormEvents.grid_to_event_neighborhoods(events, spc_forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
   end
 
-  spc_threshold_painted_areas         = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  test_threshold_painted_areas        = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  spc_threshold_true_positive_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  test_threshold_true_positive_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  spc_threshold_false_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  test_threshold_false_negative_areas = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  spc_threshold_true_negative_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
-  test_threshold_true_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], model_name_to_thresholds[model_name]), model_names))
+  spc_threshold_painted_areas         = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  test_threshold_painted_areas        = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  spc_threshold_true_positive_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  test_threshold_true_positive_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  spc_threshold_false_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  test_threshold_false_negative_areas = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  spc_threshold_true_negative_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
+  test_threshold_true_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
 
   function forecast_stats(data, labels, threshold)
     painted   = ((@view data[:,1]) .>= threshold*0.9999) .* CONUS_MASK
@@ -144,9 +138,9 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
     (painted_area, true_positive_area, false_negative_area, true_negative_area)
   end
 
-  # model_name_to_thresholds plus another threshold at 1.0
+  # event_name_to_thresholds plus another threshold at 1.0
   bin_maxes = Dict(map(model_names) do model_name
-    model_name => [model_name_to_thresholds[model_name]; 1.0]
+    model_name => [event_name_to_thresholds[model_name_to_event_name(model_name)]; 1.0]
   end)
 
   spc_bin_painted_areas        = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
@@ -166,7 +160,7 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
     headers = ["yymmdd", "spc", "nadocast"]
 
     for model_name in model_names
-      for threshold in model_name_to_thresholds[model_name]
+      for threshold in event_name_to_thresholds[model_name_to_event_name(model_name)]
         if !occursin("_gated_by_", model_name)
           headers = vcat(headers, ["$(model_name)_spc_painted_sq_mi_$threshold",      "$(model_name)_spc_true_positive_sq_mi_$threshold",      "$(model_name)_spc_false_negative_sq_mi_$threshold",      "$(model_name)_spc_true_negative_sq_mi_$threshold"])
         end
@@ -193,7 +187,7 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
 
       for model_name in model_names
         spc_event_i  = findfirst(m -> m[1] == model_name, SPCOutlooks.models)
-        test_event_i = findfirst(m -> m[3] == model_name, CombinedHREFSREF.models_with_gated)
+        test_event_i = findfirst(isequal(model_name), model_names)
 
         if !isnothing(spc_event_i)
           spc_event_probs  = @view spc_data[:, spc_event_i]
@@ -213,13 +207,15 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
           PlotMap.optimize_png(path; wait = false)
         end
 
-        if !isnothing(spc_event_i)
-          make_plot("spc_day_1_$(model_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_event_probs)
+        if !is_ablation(model_name)
+          if !isnothing(spc_event_i)
+            make_plot("spc_day_1_$(model_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_event_probs)
+          end
+          make_plot("nadocast$(suffix)_$(model_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_event_probs)
         end
-        make_plot("nadocast$(suffix)_$(model_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_event_probs)
 
-        for threshold_i in 1:length(model_name_to_thresholds[model_name])
-          threshold = model_name_to_thresholds[model_name][threshold_i]
+        for threshold_i in 1:length(event_name_to_thresholds[model_name_to_event_name(model_name)])
+          threshold = event_name_to_thresholds[model_name_to_event_name(model_name)][threshold_i]
 
           if !isnothing(spc_event_i)
             (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area)  = forecast_stats(spc_event_probs,  forecast_labels, threshold)
@@ -276,8 +272,8 @@ function do_it(spc_forecasts, forecasts; run_hour, suffix)
       println(stats_csv, join(stats_headers, ","))
 
       for model_name in model_names
-        for threshold_i in 1:length(model_name_to_thresholds[model_name])
-          threshold = model_name_to_thresholds[model_name][threshold_i]
+        for threshold_i in 1:length(event_name_to_thresholds[model_name_to_event_name(model_name)])
+          threshold = event_name_to_thresholds[model_name_to_event_name(model_name)][threshold_i]
 
           spc_model_name = model_name_to_event_name(model_name)
 
@@ -477,43 +473,51 @@ end
 
 # HREF-SREF models
 
-do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); run_hour = 0, suffix = "")
+model_names = map(m -> m[3], CombinedHREFSREF.models)
+
+do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "")
 # 1143 SPC forecasts available
 # 631 unfiltered test forecasts
 # 158 0z test forecasts
 # 133 0z test forecasts before the event data cutoff date
 
-# Do the same, but without the final SPC-like prob rescaling
-do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(); run_hour = 0, suffix = "_absolutely_calibrated")
+do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated")
 
-do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(); run_hour = 12, suffix = "")
+do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "")
 # 1143 SPC forecasts available
 # 631 unfiltered test forecasts
 # 158 12z test forecasts
 # 133 12z test forecasts before the event data cutoff date
 
-do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(); run_hour = 12, suffix = "_absolutely_calibrated")
+do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated")
 
 
 
 # HREF-only models
 
-do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()); run_hour = 0, suffix = "_href_only")
+do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only")
 # 1143 SPC forecasts available
 # 679 unfiltered test forecasts
 # 170 0z test forecasts
 # 133 0z test forecasts before the event data cutoff date
 
-# Do the same, but without the final SPC-like prob rescaling
-# do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()); run_hour = 0, suffix = "_href_only_absolutely_calibrated")
+# do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated")
 
-do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()); run_hour = 12, suffix = "_href_only")
+do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only")
 # 1143 SPC forecasts available
 # 679 unfiltered test forecasts
 # 170 12z test forecasts
 # 133 12z test forecasts before the event data cutoff date
 
-# do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()); run_hour = 12, suffix = "_href_only_absolutely_calibrated")
+# do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
+
+
+ablation_model_names = map(m -> m[1], HREFPredictionAblations.models)
+
+do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day_spc_calibrated()), ablation_model_names; run_hour = 0, suffix = "")
+do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day()), ablation_model_names; run_hour = 0, suffix = "_absolutely_calibrated")
+do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day_spc_calibrated()), ablation_model_names; run_hour = 12, suffix = "")
+do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day()), ablation_model_names; run_hour = 12, suffix = "_absolutely_calibrated")
 
 
 # scp -r nadocaster:/home/brian/nadocast_dev/test/ ./
