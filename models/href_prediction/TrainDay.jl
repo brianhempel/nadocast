@@ -416,8 +416,8 @@ length(day_validation_forecasts)
 @time Forecasts.data(day_validation_forecasts[10])
 
 day_validation_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, day_validation_forecasts);
-length(day_validation_forecasts_0z_12z) # Expected:
-#
+length(day_validation_forecasts_0z_12z) # Expected: 358
+# 358
 
 # rm("day_validation_forecasts_0z_12z_with_sig_gated"; recursive = true)
 
@@ -443,15 +443,18 @@ function test_predictive_power(forecasts, X, Ys, weights)
 end
 test_predictive_power(day_validation_forecasts_0z_12z, X, Ys, weights)
 
-# tornado (9446.0)                      feature 1 TORPROB:calculated:hour fcst:calculated_prob:                  AU-PR-curve: 0.12701213629264377
-# wind (72111.0)                        feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.3834656173824258
-# hail (31894.0)                        feature 3 HAILPROB:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.23064103438576106
-# sig_tornado (1268.0)                  feature 4 STORPROB:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.09451181604245633
-# sig_wind (8732.0)                     feature 5 SWINDPRO:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.07854469228892626
-# sig_hail (4478.0)                     feature 6 SHAILPRO:calculated:hour fcst:calculated_prob:                 AU-PR-curve: 0.0691045922967536
-# sig_tornado_gated_by_tornado (1268.0) feature 7 STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.09363142784066525
-# sig_wind_gated_by_wind (8732.0)       feature 8 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind    AU-PR-curve: 0.07855136828846834
-# sig_hail_gated_by_hail (4478.0)       feature 9 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail    AU-PR-curve: 0.06912157017181443
+# tornado (20606.0)                         feature 1 TORPROB:calculated:hour fcst:calculated_prob:                    AU-PR-curve: 0.1562636
+# wind (148934.0)                           feature 2 WINDPROB:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.40284145
+# wind_adj (53051.016)                      feature 3 WINDPROB:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.24262798 (lol trivially worse)
+# hail (67838.0)                            feature 4 HAILPROB:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.26647338
+# sig_tornado (2681.0)                      feature 5 STORPROB:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.090377256 (slightly worse)
+# sig_wind (17640.0)                        feature 6 SWINDPRO:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.08896147 (slightly worse)
+# sig_wind_adj (6668.761)                   feature 7 SWINDPRO:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.09988912
+# sig_hail (9334.0)                         feature 8 SHAILPRO:calculated:hour fcst:calculated_prob:                   AU-PR-curve: 0.08331046
+# sig_tornado_gated_by_tornado (2681.0)     feature 9 STORPROB:calculated:hour fcst:calculated_prob:gated by tornado   AU-PR-curve: 0.086182915 (worse)
+# sig_wind_gated_by_wind (17640.0)          feature 10 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind     AU-PR-curve: 0.088962585
+# sig_wind_adj_gated_by_wind_adj (6668.761) feature 11 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.099981256
+# sig_hail_gated_by_hail (9334.0)           feature 12 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail     AU-PR-curve: 0.083310924
 
 
 function test_predictive_power_all(forecasts, X, Ys, weights)
@@ -459,326 +462,159 @@ function test_predictive_power_all(forecasts, X, Ys, weights)
 
   event_names = unique(map(first, HREFPrediction.models_with_gated))
 
-  # Feature order is all HREF severe probs then all SREF severe probs
   for event_name in event_names
+    y = Ys[event_name]
     for feature_i in 1:length(inventory)
       prediction_i = feature_i
       (_, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
       x = @view X[:,feature_i]
-      y = Ys[event_name]
       au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
-      println("$event_name ($(round(sum(y)))) feature $feature_i $model_name $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
+      println("$event_name ($(sum(y))) feature $feature_i $model_name $(Inventories.inventory_line_description(inventory[feature_i]))\tAU-PR-curve: $au_pr_curve")
     end
   end
 end
 test_predictive_power_all(day_validation_forecasts_0z_12z, X, Ys, weights)
 
-# tornado (9446.0)     feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.12701213629264377
-# tornado (9446.0)     feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.04168648434556345
-# tornado (9446.0)     feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.030765254579900772
-# tornado (9446.0)     feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.11531809758773186
-# tornado (9446.0)     feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.039822720343631504
-# tornado (9446.0)     feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.032309275402615086
-# tornado (9446.0)     feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.11624433417007461
-# tornado (9446.0)     feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.03983155452623281
-# tornado (9446.0)     feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.03231108262426286
-# wind (72111.0)       feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.20397678719531137
-# wind (72111.0)       feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.3834656173824258
-# wind (72111.0)       feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.15227293177135814
-# wind (72111.0)       feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.18899000884190237
-# wind (72111.0)       feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.2871189699820319
-# wind (72111.0)       feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.1232035272300651
-# wind (72111.0)       feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.19067429713597928
-# wind (72111.0)       feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.28719210932407674
-# wind (72111.0)       feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.12326955300059134
-# hail (31894.0)       feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.09099255929593081
-# hail (31894.0)       feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.09452327656751952
-# hail (31894.0)       feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.23064103438576106
-# hail (31894.0)       feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.08234931731140827
-# hail (31894.0)       feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.09955065202449667
-# hail (31894.0)       feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.188595511108089
-# hail (31894.0)       feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.0824502686306494
-# hail (31894.0)       feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.09958118472086727
-# hail (31894.0)       feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.1886802022992225
-# sig_tornado (1268.0) feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.05728594701652062
-# sig_tornado (1268.0) feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.011385789618738
-# sig_tornado (1268.0) feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.005588672134719318
-# sig_tornado (1268.0) feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.09451181604245633
-# sig_tornado (1268.0) feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.008881777469212735
-# sig_tornado (1268.0) feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.005321406702197539
-# sig_tornado (1268.0) feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.09363142784066525
-# sig_tornado (1268.0) feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.008882564887699068
-# sig_tornado (1268.0) feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.005324294230821452
-# sig_wind (8732.0)    feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.03572679857698384
-# sig_wind (8732.0)    feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.05250853163761901
-# sig_wind (8732.0)    feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.03161747330844581
-# sig_wind (8732.0)    feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.034007477644701585
-# sig_wind (8732.0)    feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.07854469228892626
-# sig_wind (8732.0)    feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.028783730365721183
-# sig_wind (8732.0)    feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.03429306032063456
-# sig_wind (8732.0)    feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.07855136828846834
-# sig_wind (8732.0)    feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.02879889359659011
-# sig_hail (4478.0)    feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                       AU-PR-curve: 0.01798515458351701
-# sig_hail (4478.0)    feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.013479598274345111
-# sig_hail (4478.0)    feature 3 hail HAILPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.06589495461034388
-# sig_hail (4478.0)    feature 4 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                  AU-PR-curve: 0.014544889120801473
-# sig_hail (4478.0)    feature 5 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.01836176630607075
-# sig_hail (4478.0)    feature 6 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.0691045922967536
-# sig_hail (4478.0)    feature 7 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado AU-PR-curve: 0.01464675890085453
-# sig_hail (4478.0)    feature 8 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind          AU-PR-curve: 0.018365716755777285
-# sig_hail (4478.0)    feature 9 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail          AU-PR-curve: 0.06912157017181443
-
+# tornado (20606.0)     feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.1562636 ***best tor***
+# tornado (20606.0)     feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.043532312
+# tornado (20606.0)     feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.02481927
+# tornado (20606.0)     feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.035571136
+# tornado (20606.0)     feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.12339083
+# tornado (20606.0)     feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.04694929
+# tornado (20606.0)     feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.02226341
+# tornado (20606.0)     feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.03144813
+# tornado (20606.0)     feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.12253535
+# tornado (20606.0)     feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.046951354
+# tornado (20606.0)     feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.022343898
+# tornado (20606.0)     feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.0314522
+# wind (148934.0)       feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.21884723
+# wind (148934.0)       feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.40284145 ***best wind***
+# wind (148934.0)       feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.2584484
+# wind (148934.0)       feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.16652994
+# wind (148934.0)       feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.20128852
+# wind (148934.0)       feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.3097344
+# wind (148934.0)       feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.21550208
+# wind (148934.0)       feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.1342677
+# wind (148934.0)       feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.20174475
+# wind (148934.0)       feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.30975288
+# wind (148934.0)       feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.21603344
+# wind (148934.0)       feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.13430235
+# wind_adj (53051.0)    feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.058999192
+# wind_adj (53051.0)    feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.10225016
+# wind_adj (53051.0)    feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.24262798 ***best wind_adj***
+# wind_adj (53051.0)    feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.085828975
+# wind_adj (53051.0)    feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.05999237
+# wind_adj (53051.0)    feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.16412897
+# wind_adj (53051.0)    feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.2267024
+# wind_adj (53051.0)    feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.079858676
+# wind_adj (53051.0)    feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.060000226
+# wind_adj (53051.0)    feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.16413383
+# wind_adj (53051.0)    feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.22707203
+# wind_adj (53051.0)    feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.07986895
+# hail (67838.0)        feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.10647426
+# hail (67838.0)        feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.10877037
+# hail (67838.0)        feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.10454446
+# hail (67838.0)        feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.26647338 ***best hail***
+# hail (67838.0)        feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.09519305
+# hail (67838.0)        feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.11641565
+# hail (67838.0)        feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.089664355
+# hail (67838.0)        feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.2156373
+# hail (67838.0)        feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.094946325
+# hail (67838.0)        feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.11642344
+# hail (67838.0)        feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.08992765
+# hail (67838.0)        feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.21564318
+# sig_tornado (2681.0)  feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.08047178
+# sig_tornado (2681.0)  feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.0105957985
+# sig_tornado (2681.0)  feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.0038604557
+# sig_tornado (2681.0)  feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.006307488
+# sig_tornado (2681.0)  feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.090377256 *** best sigtor***
+# sig_tornado (2681.0)  feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.01017822
+# sig_tornado (2681.0)  feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.0035990349
+# sig_tornado (2681.0)  feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.0047108326
+# sig_tornado (2681.0)  feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.086182915 (not best sigtor)
+# sig_tornado (2681.0)  feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.010178301
+# sig_tornado (2681.0)  feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.0036122631
+# sig_tornado (2681.0)  feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.004711013
+# sig_wind (17640.0)    feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.03967122
+# sig_wind (17640.0)    feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.055467352
+# sig_wind (17640.0)    feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.08614578
+# sig_wind (17640.0)    feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.034115303
+# sig_wind (17640.0)    feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.03795299
+# sig_wind (17640.0)    feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.08896147
+# sig_wind (17640.0)    feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.09034605
+# sig_wind (17640.0)    feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.030208504
+# sig_wind (17640.0)    feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.038092896
+# sig_wind (17640.0)    feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.088962585 (not best sigwind)
+# sig_wind (17640.0)    feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.09047847 ***best sigwind***
+# sig_wind (17640.0)    feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.030211626
+# sig_wind_adj (6669.0) feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.008668457
+# sig_wind_adj (6669.0) feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.016446035
+# sig_wind_adj (6669.0) feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.07514209
+# sig_wind_adj (6669.0) feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.01625834
+# sig_wind_adj (6669.0) feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.009581744
+# sig_wind_adj (6669.0) feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.04095978
+# sig_wind_adj (6669.0) feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.09988912
+# sig_wind_adj (6669.0) feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.015817167
+# sig_wind_adj (6669.0) feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.009581198
+# sig_wind_adj (6669.0) feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.040960137
+# sig_wind_adj (6669.0) feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.099981256 ***best sigwind_adj***
+# sig_wind_adj (6669.0) feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.015818216
+# sig_hail (9334.0)     feature 1 tornado TORPROB:calculated:hour fcst:calculated_prob:                                           AU-PR-curve: 0.021061353
+# sig_hail (9334.0)     feature 2 wind WINDPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.016394684
+# sig_hail (9334.0)     feature 3 wind_adj WINDPROB:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.019656738
+# sig_hail (9334.0)     feature 4 hail HAILPROB:calculated:hour fcst:calculated_prob:                                             AU-PR-curve: 0.07716082
+# sig_hail (9334.0)     feature 5 sig_tornado STORPROB:calculated:hour fcst:calculated_prob:                                      AU-PR-curve: 0.018596077
+# sig_hail (9334.0)     feature 6 sig_wind SWINDPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.026459418
+# sig_hail (9334.0)     feature 7 sig_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:                                     AU-PR-curve: 0.01787866
+# sig_hail (9334.0)     feature 8 sig_hail SHAILPRO:calculated:hour fcst:calculated_prob:                                         AU-PR-curve: 0.08331046
+# sig_hail (9334.0)     feature 9 sig_tornado_gated_by_tornado STORPROB:calculated:hour fcst:calculated_prob:gated by tornado     AU-PR-curve: 0.018399393
+# sig_hail (9334.0)     feature 10 sig_wind_gated_by_wind SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind             AU-PR-curve: 0.026460137
+# sig_hail (9334.0)     feature 11 sig_wind_adj_gated_by_wind_adj SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.017912706
+# sig_hail (9334.0)     feature 12 sig_hail_gated_by_hail SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail             AU-PR-curve: 0.083310924 ***best sighail***
 
 
 # test y vs ŷ
+event_names = map(m -> m[1], HREFPrediction.models_with_gated)
+model_names = map(m -> m[3], HREFPrediction.models_with_gated)
+Metrics.reliability_curves_midpoints(20, X, Ys, event_names, weights, model_names)
+# ŷ_tornado,y_tornado,ŷ_wind,y_wind,ŷ_wind_adj,y_wind_adj,ŷ_hail,y_hail,ŷ_sig_tornado,y_sig_tornado,ŷ_sig_wind,y_sig_wind,ŷ_sig_wind_adj,y_sig_wind_adj,ŷ_sig_hail,y_sig_hail,ŷ_sig_tornado_gated_by_tornado,y_sig_tornado_gated_by_tornado,ŷ_sig_wind_gated_by_wind,y_sig_wind_gated_by_wind,ŷ_sig_wind_adj_gated_by_wind_adj,y_sig_wind_adj_gated_by_wind_adj,ŷ_sig_hail_gated_by_hail,y_sig_hail_gated_by_hail,
+# 0.00011889208,0.00011867229,0.0008131319,0.00087078015,0.0002889879,0.00030152575,0.00037449508,0.0003831146,1.2998527e-5,1.4771842e-5,9.50439e-5,0.00010120271,3.4510555e-5,3.6910937e-5,4.5306107e-5,5.0902956e-5,1.2996232e-5,1.477153e-5,9.478991e-5,0.000101197395,3.440451e-5,3.6891775e-5,4.525614e-5,5.0902745e-5,
+# 0.0025425232,0.0029419851,0.02241872,0.022558777,0.007767146,0.008228998,0.01282629,0.013905334,0.0005095983,0.0011977841,0.0022598708,0.002730501,0.0010920194,0.0008828687,0.0027855157,0.002711769,0.0005095808,0.0011972922,0.0022599676,0.002733507,0.001092299,0.0008895582,0.0027854447,0.00271207,
+# 0.006280865,0.0051744217,0.0421905,0.042060122,0.015162765,0.015129829,0.023605391,0.024025073,0.0016429224,0.0010543535,0.0045290333,0.004942742,0.0025406713,0.002304841,0.005627138,0.0060957097,0.0016427174,0.0010561689,0.004529033,0.004944459,0.0025408585,0.0023162046,0.0056271534,0.006096304,
+# 0.011003303,0.011740553,0.063175865,0.06121251,0.023668904,0.024482608,0.034828246,0.03586223,0.0041858004,0.00389026,0.007562285,0.0059392103,0.0040040184,0.0055436753,0.008375404,0.0093152765,0.0041861087,0.0038918417,0.0075624026,0.0059402627,0.004003963,0.005565349,0.008375471,0.009316067,
+# 0.015415692,0.017903777,0.0862857,0.08062688,0.033387594,0.033224992,0.046554014,0.046197318,0.006386066,0.0076766275,0.011197518,0.011531105,0.005852346,0.0051616086,0.011333972,0.011903674,0.0063860207,0.0076763593,0.011197474,0.011531711,0.005852511,0.005188265,0.011333939,0.011903998,
+# 0.020695614,0.020229997,0.111288995,0.104979165,0.04414147,0.047070723,0.05947211,0.05650269,0.008907415,0.0075256405,0.014975402,0.014900326,0.008722808,0.007916866,0.014832607,0.013400663,0.0089072855,0.0075231525,0.014975468,0.014902139,0.008722804,0.007954687,0.014832543,0.013401072,
+# 0.02752036,0.026117474,0.13662523,0.13938235,0.05555065,0.05623249,0.07378093,0.069163494,0.012388628,0.011451016,0.01989036,0.017735135,0.011577186,0.014872413,0.018724523,0.018274529,0.012388699,0.011444545,0.019890405,0.01773646,0.011578408,0.014939325,0.018724542,0.018277574,
+# 0.035524398,0.03829976,0.16283424,0.16516429,0.068407536,0.06643024,0.08903005,0.08741153,0.016763192,0.019254943,0.025997434,0.022330683,0.013886181,0.019358344,0.022798512,0.02381495,0.016764838,0.0192366,0.025997426,0.022330683,0.01388581,0.019462002,0.022798644,0.023814946,
+# 0.045094907,0.04435019,0.19052139,0.19439262,0.08202841,0.0792736,0.10437473,0.10729696,0.022311522,0.026577353,0.032626506,0.03250867,0.01641229,0.017747588,0.027637914,0.026307857,0.022309026,0.026534533,0.032626506,0.03250867,0.016412508,0.017781403,0.027638001,0.026309436,
+# 0.057168424,0.053338945,0.21955998,0.22973585,0.09631717,0.09195609,0.12011737,0.1251812,0.031543516,0.024622161,0.03954217,0.041032963,0.020200819,0.015515409,0.033947866,0.032053493,0.031531814,0.024457267,0.03954217,0.041032963,0.020200804,0.015545636,0.033947866,0.032053493,
+# 0.07256332,0.06717904,0.25059497,0.25078857,0.11126653,0.11244005,0.13763468,0.14219716,0.045757595,0.033072922,0.04666395,0.0471961,0.025288496,0.02082508,0.042148232,0.038434736,0.045373693,0.03405337,0.04666395,0.0471961,0.025288712,0.020878078,0.042148232,0.038434736,
+# 0.08858901,0.09274736,0.28282484,0.27689162,0.12844913,0.120925196,0.15773332,0.1630101,0.061199002,0.057137042,0.054052092,0.055491604,0.031314157,0.034457814,0.051082037,0.052602403,0.059323248,0.06310514,0.054052092,0.055491604,0.03131388,0.034551755,0.051082022,0.052602403,
+# 0.10420568,0.10806544,0.3145093,0.3134728,0.14968893,0.15004152,0.17927237,0.18475817,0.07605492,0.074114695,0.061624505,0.06574845,0.039085634,0.034767285,0.060060542,0.05909109,0.07240866,0.07668635,0.061624505,0.06574845,0.039120834,0.034608956,0.060060542,0.05909109,
+# 0.12102106,0.116944864,0.34563428,0.3520341,0.1753036,0.17692542,0.20370498,0.198593,0.09061565,0.10950221,0.070276044,0.06753287,0.0485961,0.04838453,0.069849335,0.07071624,0.08605136,0.1024641,0.070276044,0.06753287,0.04865595,0.04891964,0.069849335,0.07071624,
+# 0.13717742,0.14863971,0.37697667,0.3844238,0.20726584,0.21075964,0.23179689,0.21961693,0.10403954,0.13000391,0.08053277,0.08011808,0.059703775,0.05533395,0.07951998,0.08549333,0.09893788,0.14085607,0.08053277,0.08011808,0.059738368,0.05540278,0.07951998,0.08549333,
+# 0.15673207,0.17233202,0.41393113,0.40401843,0.24682249,0.23460913,0.26593435,0.2570302,0.11527834,0.15493634,0.091891035,0.09318738,0.07649539,0.057900287,0.089045234,0.10612989,0.11031457,0.15078272,0.091891035,0.09318738,0.07654044,0.057872884,0.089045234,0.10612989,
+# 0.1803576,0.19112791,0.4603577,0.468584,0.29203388,0.27901834,0.30709186,0.30743837,0.12577787,0.17912082,0.10428671,0.10322924,0.09859661,0.104420014,0.10036062,0.10987321,0.120829545,0.15991935,0.10428671,0.10322924,0.09862872,0.1049091,0.10036062,0.10987321,
+# 0.21512035,0.2046197,0.51799875,0.5224018,0.34211114,0.34451497,0.35592264,0.378745,0.13941431,0.20499559,0.120035976,0.1238735,0.12749632,0.11876565,0.11489148,0.12838237,0.13368374,0.20913896,0.120035976,0.1238735,0.12758304,0.11876325,0.11489148,0.12838237,
+# 0.27166343,0.3318058,0.597714,0.5817142,0.4128675,0.40471217,0.42256165,0.42708427,0.15993898,0.19850257,0.14353691,0.14725763,0.18346079,0.1727036,0.13573161,0.14228083,0.15210858,0.17331935,0.14353691,0.14725763,0.18380527,0.17298263,0.13573161,0.14228083,
+# 0.3821813,0.3331822,0.74548006,0.7467022,0.53086144,0.5622761,0.5678906,0.5656451,0.22346582,0.121664494,0.20223112,0.19897026,0.281509,0.4406937,0.18268217,0.14665508,0.21655422,0.109833695,0.20223112,0.19897026,0.28208202,0.44411442,0.18268217,0.14665508,
 
-function test_calibration(forecasts, X, Ys, weights)
-  inventory = Forecasts.inventory(forecasts[1])
-
-  total_weight = sum(Float64.(weights))
-
-  println("event_name\tmean_y\tmean_ŷ\tΣweight\tSR\tPOD\tbin_max")
-  for feature_i in 1:length(inventory)
-    prediction_i = feature_i
-    (event_name, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
-    y = Ys[event_name]
-    ŷ = @view X[:, feature_i]
-
-    total_pos_weight = sum(Float64.(y .* weights))
-
-    sort_perm      = Metrics.parallel_sort_perm(ŷ);
-    y_sorted       = Metrics.parallel_apply_sort_perm(y, sort_perm);
-    ŷ_sorted       = Metrics.parallel_apply_sort_perm(ŷ, sort_perm);
-    weights_sorted = Metrics.parallel_apply_sort_perm(weights, sort_perm);
-
-    bin_count = 20
-    per_bin_pos_weight = Float64(sum(y .* weights)) / bin_count
-
-    # bins = map(_ -> Int64[], 1:bin_count)
-    bins_Σŷ      = map(_ -> 0.0, 1:bin_count)
-    bins_Σy      = map(_ -> 0.0, 1:bin_count)
-    bins_Σweight = map(_ -> 0.0, 1:bin_count)
-    bins_max     = map(_ -> 1.0f0, 1:bin_count)
-
-    bin_i = 1
-    for i in 1:length(y_sorted)
-      if ŷ_sorted[i] > bins_max[bin_i]
-        bin_i += 1
-      end
-
-      bins_Σŷ[bin_i]      += Float64(ŷ_sorted[i] * weights_sorted[i])
-      bins_Σy[bin_i]      += Float64(y_sorted[i] * weights_sorted[i])
-      bins_Σweight[bin_i] += Float64(weights_sorted[i])
-
-      if bins_Σy[bin_i] >= per_bin_pos_weight
-        bins_max[bin_i] = ŷ_sorted[i]
-      end
-    end
-
-    for bin_i in 1:bin_count
-      Σŷ      = bins_Σŷ[bin_i]
-      Σy      = bins_Σy[bin_i]
-      Σweight = Float32(bins_Σweight[bin_i])
-
-      mean_ŷ = Float32(Σŷ / Σweight)
-      mean_y = Float32(Σy / Σweight)
-
-      pos_weight_in_and_after = sum(bins_Σy[bin_i:bin_count])
-      weight_in_and_after     = sum(bins_Σweight[bin_i:bin_count])
-
-      sr  = Float32(pos_weight_in_and_after / weight_in_and_after)
-      pod = Float32(pos_weight_in_and_after / total_pos_weight)
-
-      println("$model_name\t$mean_y\t$mean_ŷ\t$Σweight\t$sr\t$pod\t$(bins_max[bin_i])")
-    end
-  end
-end
-test_calibration(day_validation_forecasts_0z_12z, X, Ys, weights)
-
-# event_name                   mean_y        mean_ŷ        Σweight     SR            POD         bin_max
-# tornado                      9.700865e-5   9.9049845e-5  4.573599e6  0.0017090585  1.0         0.0008555745
-# tornado                      0.0018642666  0.00142832    237875.36   0.013719558   0.9499555   0.0023576757
-# tornado                      0.0031376549  0.0036643934  141532.73   0.02121991    0.89993536  0.005619943
-# tornado                      0.006996247   0.007203153   63402.914   0.032135308   0.84984547  0.009180412
-# tornado                      0.00960002    0.011391198   46223.64    0.04145316    0.79981184  0.014106784
-# tornado                      0.016310018   0.01626344    27224.174   0.053247765   0.74975955  0.018732127
-# tornado                      0.02485353    0.020887442   17840.715   0.06355       0.6996758   0.023426436
-# tornado                      0.028516073   0.026392281   15566.109   0.072204635   0.64966226  0.029872384
-# tornado                      0.031154005   0.034372345   14257.465   0.08279699    0.59959453  0.039933395
-# tornado                      0.041785702   0.046009205   10617.009   0.097539      0.54949385  0.053307083
-# tornado                      0.04763488    0.0617777     9316.975    0.112589985   0.4994538   0.07096115
-# tornado                      0.06391539    0.07893289    6942.6855   0.13275504    0.4493942   0.08757907
-# tornado                      0.11442482    0.09269282    3880.694    0.15347265    0.3993423   0.09807844
-# tornado                      0.14126927    0.10239867    3138.6887   0.16136983    0.3492562   0.10644376
-# tornado                      0.16568106    0.10938814    2675.5706   0.16530076    0.2992431   0.11252215
-# tornado                      0.1327265     0.11989863    3344.8777   0.16522467    0.24924229  0.12869819
-# tornado                      0.11034642    0.14242381    4017.9119   0.17606342    0.19916676  0.15996142
-# tornado                      0.13868733    0.18497059    3196.6716   0.21998936    0.14915797  0.21840203
-# tornado                      0.32516035    0.23600286    1364.0076   0.31233206    0.099151924 0.2564116
-# tornado                      0.3002684     0.3199752     1450.4642   0.3002684     0.049125206 1.0
-# wind                         0.0007333039  0.0006652036  4.5677065e6 0.012911272   1.0         0.011141602
-# wind                         0.017665606   0.017918272   189598.22   0.10266422    0.9499899   0.027255114
-# wind                         0.034650616   0.03490376    96670.13    0.14012814    0.89998204  0.044160966
-# wind                         0.05201806    0.05276521    64395.637   0.17070308    0.8499695   0.06265394
-# wind                         0.066318914   0.07287459    50508.055   0.19910471    0.79995614  0.0843732
-# wind                         0.08921028    0.09491389    37541.48    0.22978672    0.7499442   0.10652433
-# wind                         0.11898993    0.116981484   28143.969   0.25893623    0.6999405   0.12846802
-# wind                         0.14411765    0.13994569    23240.582   0.28469524    0.6499404   0.15250224
-# wind                         0.1720042     0.16488889    19471.506   0.30989215    0.5999324   0.17824909
-# wind                         0.19195645    0.19248405    17449.746   0.33425775    0.5499273   0.20799732
-# wind                         0.21295361    0.22392222    15728.158   0.36103234    0.49991605  0.24049737
-# wind                         0.2602031     0.25579062    12870.99    0.39127383    0.44990817  0.27177548
-# wind                         0.2981486     0.2870136     11232.168   0.41757473    0.39990473  0.30342957
-# wind                         0.3278786     0.31958458    10215.239   0.44292727    0.3499045   0.33644634
-# wind                         0.3542443     0.35344136    9454.063    0.47045377    0.29989678  0.3715729
-# wind                         0.3776399     0.39261442    8868.662    0.50350475    0.24989367  0.41578835
-# wind                         0.43711454    0.44158578    7661.592    0.5493044     0.19988889  0.47099006
-# wind                         0.52115136    0.50405425    6426.139    0.6007411     0.14988661  0.54199266
-# wind                         0.57601786    0.58847904    5814.9453   0.65047044    0.099884346 0.64767545
-# wind                         0.7473285     0.7519671     4469.818    0.7473285     0.049874317 1.0
-# hail                         0.00031078092 0.00030401986 4.7322955e6 0.005669666   1.0         0.006891266
-# hail                         0.01044888    0.011080333   140805.23   0.061384488   0.94999504  0.016829325
-# hail                         0.021978628   0.021263007   66916.24    0.0841986     0.8999713   0.026533825
-# hail                         0.03235512    0.031273644   45454.387   0.10102429    0.84996563  0.03663534
-# hail                         0.045308188   0.041578356   32474.467   0.11647665    0.7999615   0.04720469
-# hail                         0.055931125   0.052971583   26297.406   0.13011006    0.7499344   0.05915104
-# hail                         0.06446846    0.06542572    22810.768   0.14373004    0.6999247   0.07218698
-# hail                         0.078798346   0.07871479    18669.86    0.15874511    0.6499242   0.08571534
-# hail                         0.08890267    0.09247879    16542.453   0.17341526    0.59990406  0.09952751
-# hail                         0.10120925    0.10641503    14538.252   0.18982401    0.5499004   0.11399117
-# hail                         0.11987173    0.12220042    12273.574   0.20805569    0.49987164  0.13112558
-# hail                         0.13827227    0.14001511    10638.314   0.22659214    0.44984806  0.14941467
-# hail                         0.15829067    0.15864913    9296.101    0.24626866    0.39983365  0.16864169
-# hail                         0.18365733    0.17857906    8008.6064   0.26753646    0.34980217  0.18962103
-# hail                         0.19555932    0.20265509    7520.521    0.2896        0.29979268  0.2174353
-# hail                         0.2370742     0.23240577    6207.0747   0.32044885    0.24978767  0.24881782
-# hail                         0.28289422    0.26606965    5198.3096   0.35140282    0.19975445  0.2847625
-# hail                         0.3352303     0.30533865    4388.1494   0.3823156     0.14975406  0.328701
-# hail                         0.38238993    0.35775426    3847.2227   0.41128483    0.09973774  0.39531642
-# hail                         0.44512427    0.4873659     3285.0786   0.44512427    0.04971806  1.0
-# sig_tornado                  1.2047162e-5  1.4437429e-5  5.0279775e6 0.00023340616 1.0         0.00046008435
-# sig_tornado                  0.0015489991  0.000620892   39503.88    0.0072118156  0.94997233  0.0008245053
-# sig_tornado                  0.0012606728  0.0012867345  48650.09    0.009076222   0.89943373  0.0019798223
-# sig_tornado                  0.001833995   0.003183769   33270.344   0.014406291   0.8487792   0.0052594747
-# sig_tornado                  0.00690796    0.006452647   8801.481    0.025394725   0.79838413  0.0078367125
-# sig_tornado                  0.00995231    0.00908278    6115.261    0.03095475    0.74816865  0.010524806
-# sig_tornado                  0.01157955    0.012097383   5262.185    0.03650292    0.69790304  0.013926878
-# sig_tornado                  0.01346963    0.01593964    4508.503    0.04383515    0.6475773   0.018244676
-# sig_tornado                  0.024001416   0.019918984   2547.455    0.054068234   0.5974216   0.021780202
-# sig_tornado                  0.025120918   0.024143767   2422.7295   0.06113995    0.5469234   0.026980141
-# sig_tornado                  0.03003723    0.03010828    2039.1814   0.07151833    0.49665758  0.033948936
-# sig_tornado                  0.033580653   0.038780004   1817.3179   0.08479924    0.44606954  0.045137547
-# sig_tornado                  0.05013078    0.05185326    1221.1023   0.10524846    0.395667    0.059880484
-# sig_tornado                  0.080563776   0.06687405    760.7198    0.12545581    0.3451091   0.07437804
-# sig_tornado                  0.09334492    0.08271323    656.9288    0.13874404    0.29449207  0.09200536
-# sig_tornado                  0.11114166    0.10164373    552.5639    0.15433393    0.24384652  0.11262035
-# sig_tornado                  0.12330799    0.12747169    498.82028   0.17187674    0.19312507  0.14483048
-# sig_tornado                  0.14542684    0.1704235     417.73834   0.1999938     0.14232461  0.19986959
-# sig_tornado                  0.30896956    0.21962947    196.64925   0.25134343    0.09215033  0.23971567
-# sig_tornado                  0.20551312    0.27465805    247.26294   0.20551312    0.041969217 1.0
-# sig_wind                     8.762574e-5   7.956794e-5   4.615673e6  0.0015565632  1.0         0.0010795709
-# sig_wind                     0.0020825795  0.001814825   193981.45   0.013414203   0.94991076  0.0028963166
-# sig_wind                     0.0039179027  0.0039368668  103105.52   0.019232223   0.8998797   0.005224411
-# sig_wind                     0.005834378   0.006467304   69213.65    0.02498012    0.84985167  0.007945357
-# sig_wind                     0.008835517   0.009320285   45742.48    0.03142871    0.7998408   0.01091732
-# sig_wind                     0.011483245   0.012639817   35174.387   0.037897937   0.74978787  0.014694147
-# sig_wind                     0.01744931    0.01655319    23148.463   0.045356132   0.69976497  0.01871097
-# sig_wind                     0.020649865   0.021098858   19558.607   0.05172514    0.649741    0.02387907
-# sig_wind                     0.025003763   0.027136791   16180.071   0.059148967   0.5997222   0.031004418
-# sig_wind                     0.033851463   0.03475053    11945.531   0.06755926    0.5496192   0.038893435
-# sig_wind                     0.039434146   0.043058835   10251.556   0.07505133    0.4995396   0.047464754
-# sig_wind                     0.04473416    0.05181563    9045.808    0.08344653    0.44947395  0.056373745
-# sig_wind                     0.06492861    0.0598693     6231.9253   0.093612395   0.39935932  0.063569665
-# sig_wind                     0.065945596   0.06775919    6133.274    0.099947825   0.34924793  0.072085015
-# sig_wind                     0.08764464    0.07611215    4606.5415   0.10939199    0.29915738  0.08034126
-# sig_wind                     0.090064      0.08515918    4488.718    0.115124635   0.24915643  0.09031043
-# sig_wind                     0.09548842    0.096013896   4236.5854   0.12378663    0.19908945  0.102228664
-# sig_wind                     0.111371435   0.109113194   3625.3943   0.13748801    0.14898866  0.117370516
-# sig_wind                     0.1494803     0.12685496    2704.816    0.15596397    0.09898441  0.13964514
-# sig_wind                     0.16321121    0.18001986    2419.8394   0.16321121    0.04891188  1.0
-# sig_hail                     4.2421325e-5  3.220337e-5   4.924094e6  0.0008022721  1.0         0.001318197
-# sig_hail                     0.0025382582  0.0022416795  82272.734   0.015008614   0.9498081   0.0036093877
-# sig_hail                     0.0043337564  0.005106818   48057.76    0.020673798   0.89962995  0.006999807
-# sig_hail                     0.0067134313  0.008847184   31044.45    0.026576137   0.84958607  0.011068663
-# sig_hail                     0.010588703   0.012986053   19688.49    0.032621574   0.79950756  0.015182176
-# sig_hail                     0.017071232   0.016824745   12210.837   0.0378918     0.74941444  0.018555325
-# sig_hail                     0.021248048   0.02004428    9799.877    0.041518603   0.6993265   0.02158984
-# sig_hail                     0.026669838   0.022903282   7809.4185   0.04481297    0.6492928   0.02426124
-# sig_hail                     0.025347624   0.025871573   8213.022    0.047512285   0.5992477   0.027540982
-# sig_hail                     0.027341636   0.029312754   7630.691    0.051623642   0.54922545  0.031174533
-# sig_hail                     0.030267406   0.033157837   6887.0146   0.05667976    0.49909386  0.035307348
-# sig_hail                     0.037927397   0.03742463    5501.4717   0.0627922     0.4490064   0.039753683
-# sig_hail                     0.048469674   0.041902665   4302.0317   0.068431295   0.3988698   0.044243563
-# sig_hail                     0.0492872     0.04702346    4225.762    0.072734565   0.34876648  0.050134685
-# sig_hail                     0.056120433   0.0533297     3716.3848   0.0790335     0.2987213   0.056848884
-# sig_hail                     0.059499297   0.06103613    3501.9128   0.08612154    0.24860668  0.0658436
-# sig_hail                     0.085206375   0.069975354   2444.3845   0.09707439    0.198541    0.07495049
-# sig_hail                     0.095850974   0.08108813    2172.8608   0.10185565    0.14849555  0.088182054
-# sig_hail                     0.11374573    0.09691916    1830.0184   0.10520578    0.09845164  0.1077964
-# sig_hail                     0.09763601    0.1416834     2064.5598   0.09763601    0.04843512  1.0
-# sig_tornado_gated_by_tornado 1.2044688e-5  1.4464373e-5  5.02901e6   0.00023340616 1.0         0.00046008435
-# sig_tornado_gated_by_tornado 0.0015538402  0.00062055915 39380.8     0.0072588217  0.94997233  0.0008245053
-# sig_tornado_gated_by_tornado 0.0012766533  0.0012856277  48041.113   0.0091455635  0.89943373  0.0019798223
-# sig_tornado_gated_by_tornado 0.0018461995  0.0031905377  33050.406   0.014467288   0.8487792   0.0052594747
-# sig_tornado_gated_by_tornado 0.0069257417  0.006443854   8780.715    0.025448764   0.79838413  0.007811773
-# sig_tornado_gated_by_tornado 0.01077961    0.008947689   5649.973    0.03101798    0.74815816  0.010257343
-# sig_tornado_gated_by_tornado 0.01272586    0.011599156   4794.479    0.035872545   0.6978566   0.013152388
-# sig_tornado_gated_by_tornado 0.013809002   0.0149549795  4414.7456   0.041788157   0.64746463  0.017007226
-# sig_tornado_gated_by_tornado 0.022520622   0.018557316   2726.78     0.050398786   0.59711456  0.020294942
-# sig_tornado_gated_by_tornado 0.029579157   0.021911496   2063.1477   0.056941662   0.5463965   0.023793506
-# sig_tornado_gated_by_tornado 0.030604053   0.026178267   2002.1079   0.06284972    0.49599442  0.028877527
-# sig_tornado_gated_by_tornado 0.031029046   0.032508727   1955.7277   0.071397096   0.4453888   0.036711503
-# sig_tornado_gated_by_tornado 0.04090295    0.04133125    1495.6295   0.08550168    0.39526904  0.047611304
-# sig_tornado_gated_by_tornado 0.05159111    0.055509657   1186.4545   0.10176375    0.3447435   0.06523254
-# sig_tornado_gated_by_tornado 0.079230666   0.073610626   772.46344   0.1221827     0.29418918  0.083278306
-# sig_tornado_gated_by_tornado 0.08917256    0.09419476    687.0461    0.13766626    0.24364123  0.10639991
-# sig_tornado_gated_by_tornado 0.092989005   0.12223298    660.36676   0.16055223    0.19304135  0.14342135
-# sig_tornado_gated_by_tornado 0.15301146    0.16837253    396.83765   0.21664305    0.14232488  0.1984245
-# sig_tornado_gated_by_tornado 0.34620395    0.21400294    176.84094   0.279994      0.092175096 0.22993922
-# sig_tornado_gated_by_tornado 0.22719409    0.2585972     221.7547    0.22719409    0.041610427 1.0
-# sig_wind_gated_by_wind       8.759892e-5   7.887138e-5   4.617086e6  0.0015565632  1.0         0.0010795709
-# sig_wind_gated_by_wind       0.0020938707  0.0018146777  192935.42   0.013447442   0.94991076  0.0028963166
-# sig_wind_gated_by_wind       0.003926863   0.003937269   102870.26   0.019250939   0.8998797   0.005224411
-# sig_wind_gated_by_wind       0.0058410047  0.00646799    69135.125   0.024992133   0.84985167  0.007945357
-# sig_wind_gated_by_wind       0.008835756   0.009320174   45741.242   0.031436898   0.7998408   0.01091732
-# sig_wind_gated_by_wind       0.0114916805  0.012639401   35148.566   0.037910346   0.74978787  0.014694147
-# sig_wind_gated_by_wind       0.017467922   0.016553186   23123.799   0.04536577    0.69976497  0.01871097
-# sig_wind_gated_by_wind       0.020651773   0.021099042   19556.8     0.05172606    0.649741    0.02387907
-# sig_wind_gated_by_wind       0.024994126   0.027136952   16186.31    0.059148967   0.5997222   0.031004418
-# sig_wind_gated_by_wind       0.033828873   0.03475125    11953.508   0.06756567    0.5496192   0.038893435
-# sig_wind_gated_by_wind       0.039471738   0.04305987    10241.793   0.075071186   0.4995396   0.047464754
-# sig_wind_gated_by_wind       0.044756185   0.0518161     9041.356    0.08345507    0.44947395  0.056373745
-# sig_wind_gated_by_wind       0.06492861    0.0598693     6231.9253   0.093612395   0.39935932  0.063569665
-# sig_wind_gated_by_wind       0.065945596   0.06775919    6133.274    0.099947825   0.34924793  0.072085015
-# sig_wind_gated_by_wind       0.08764464    0.07611215    4606.5415   0.10939199    0.29915738  0.08034126
-# sig_wind_gated_by_wind       0.090064      0.08515918    4488.718    0.115124635   0.24915643  0.09031043
-# sig_wind_gated_by_wind       0.09548842    0.096013896   4236.5854   0.12378663    0.19908945  0.102228664
-# sig_wind_gated_by_wind       0.111371435   0.109113194   3625.3943   0.13748801    0.14898866  0.117370516
-# sig_wind_gated_by_wind       0.1494803     0.12685496    2704.816    0.15596397    0.09898441  0.13964514
-# sig_wind_gated_by_wind       0.16321121    0.18001986    2419.8394   0.16321121    0.04891188  1.0
-# sig_hail_gated_by_hail       4.241907e-5   3.2193075e-5  4.924356e6  0.0008022721  1.0         0.001318197
-# sig_hail_gated_by_hail       0.002543777   0.0022429482  82094.24    0.01502357    0.9498081   0.0036093877
-# sig_hail_gated_by_hail       0.0043354956  0.005106204   48038.484   0.020683357   0.89962995  0.006999807
-# sig_hail_gated_by_hail       0.0067161745  0.008847436   31031.768   0.02658901    0.84958607  0.011068663
-# sig_hail_gated_by_hail       0.010594521   0.012986352   19677.68    0.032638125   0.79950756  0.015182176
-# sig_hail_gated_by_hail       0.017215528   0.016809182   12091.6045  0.037910648   0.74941444  0.018515944
-# sig_hail_gated_by_hail       0.021046346   0.020027013   9907.607    0.041476414   0.6993964   0.02158984
-# sig_hail_gated_by_hail       0.026670078   0.022903148   7809.348    0.044834845   0.6492928   0.02426124
-# sig_hail_gated_by_hail       0.02535061    0.025872072   8212.055    0.047538865   0.5992477   0.027540982
-# sig_hail_gated_by_hail       0.027338756   0.029313533   7631.4946   0.051656753   0.54922545  0.031174533
-# sig_hail_gated_by_hail       0.030258834   0.033157654   6888.9653   0.056724932   0.49909386  0.035307348
-# sig_hail_gated_by_hail       0.037934076   0.03742634    5500.503    0.062857956   0.4490064   0.039753683
-# sig_hail_gated_by_hail       0.048634436   0.04190139    4287.4575   0.0685165     0.3988698   0.044243563
-# sig_hail_gated_by_hail       0.049389396   0.04702226    4217.0186   0.07279144    0.34876648  0.050134685
-# sig_hail_gated_by_hail       0.056194518   0.053331286   3711.485    0.07906792    0.2987213   0.056848884
-# sig_hail_gated_by_hail       0.059532415   0.061038014   3499.9646   0.08613551    0.24860668  0.0658436
-# sig_hail_gated_by_hail       0.085206375   0.069975354   2444.3845   0.09707439    0.198541    0.07495049
-# sig_hail_gated_by_hail       0.095850974   0.08108813    2172.8608   0.10185565    0.14849555  0.088182054
-# sig_hail_gated_by_hail       0.11374573    0.09691916    1830.0184   0.10520578    0.09845164  0.1077964
-# sig_hail_gated_by_hail       0.09763601    0.1416834     2064.5598   0.09763601    0.04843512  1.0
+# fewer bins
+Metrics.reliability_curves_midpoints(10, X, Ys, event_names, weights, model_names)
+# ŷ_tornado,y_tornado,ŷ_wind,y_wind,ŷ_wind_adj,y_wind_adj,ŷ_hail,y_hail,ŷ_sig_tornado,y_sig_tornado,ŷ_sig_wind,y_sig_wind,ŷ_sig_wind_adj,y_sig_wind_adj,ŷ_sig_hail,y_sig_hail,ŷ_sig_tornado_gated_by_tornado,y_sig_tornado_gated_by_tornado,ŷ_sig_wind_gated_by_wind,y_sig_wind_gated_by_wind,ŷ_sig_wind_adj_gated_by_wind_adj,y_sig_wind_adj_gated_by_wind_adj,ŷ_sig_hail_gated_by_hail,y_sig_hail_gated_by_hail,
+# 0.000212819,0.00022808871,0.0016160766,0.0016767154,0.00055331265,0.0005817321,0.00070827105,0.0007455945,1.9023551e-5,2.9031735e-5,0.0001723924,0.00019508279,7.697451e-5,7.088012e-5,9.558262e-5,9.97904e-5,1.9023308e-5,2.9030987e-5,0.00017206496,0.00019508056,7.6556214e-5,7.086619e-5,9.552656e-5,9.9790195e-5,
+# 0.007724952,0.0071809376,0.050734397,0.049859982,0.018411703,0.018702144,0.02810571,0.028768713,0.002183052,0.0016544504,0.0059034307,0.005394079,0.0029700806,0.0032516515,0.006700035,0.007356499,0.0021835053,0.0016568248,0.005903623,0.0053955186,0.0029705039,0.00326671,0.006700104,0.007357117,
+# 0.017891267,0.018991545,0.097139984,0.09119262,0.037837874,0.038954776,0.05236246,0.050828375,0.007616932,0.0076284963,0.012836787,0.012991045,0.006980982,0.006242102,0.012958078,0.012571867,0.007616961,0.0076272828,0.012836751,0.012992219,0.0069813556,0.0062733516,0.01295807,0.012572408,
+# 0.030762509,0.031044213,0.14861451,0.15115777,0.06144444,0.060907293,0.08051315,0.07722022,0.013917707,0.014114622,0.022583285,0.019757139,0.012550589,0.016918711,0.020470597,0.02062593,0.013918388,0.014104766,0.022583418,0.01975796,0.012550671,0.017001241,0.020470828,0.02062787,
+# 0.050557744,0.04843638,0.20381348,0.21066783,0.08864402,0.08514551,0.11163223,0.11556834,0.026689876,0.02585529,0.03566327,0.03627603,0.018343916,0.01661045,0.030444216,0.028868642,0.026697557,0.025736611,0.03566327,0.03627603,0.018344274,0.016642218,0.030444358,0.028869594,
+# 0.07925569,0.07781037,0.2658873,0.26309666,0.11954545,0.116508745,0.14698377,0.15186115,0.050699048,0.04051676,0.050017815,0.051044647,0.027431434,0.02555415,0.045850445,0.044330683,0.04954391,0.042582244,0.050017815,0.051044647,0.027430134,0.025620025,0.045850437,0.044330683,
+# 0.11224538,0.11235403,0.3291589,0.33158588,0.16142577,0.16244726,0.19103469,0.19136085,0.08149914,0.08766459,0.06583241,0.06651965,0.04299184,0.040226012,0.064425796,0.06432289,0.07778833,0.08684738,0.06583241,0.06651965,0.042991288,0.04028316,0.064425796,0.06432289,
+# 0.14612648,0.15980539,0.39498445,0.39398584,0.22595643,0.22191888,0.24751441,0.23686694,0.10872359,0.14110546,0.08573913,0.08588299,0.06782309,0.056608316,0.083652735,0.094560474,0.10392964,0.1460952,0.08573913,0.08588299,0.067827746,0.056646165,0.083652735,0.094560474,
+# 0.1969181,0.19722623,0.48758325,0.49407983,0.31443346,0.3083107,0.32894972,0.33934787,0.13146496,0.18976097,0.11141054,0.11262602,0.1117947,0.11093978,0.10684263,0.1182667,0.12567131,0.18081753,0.11141054,0.11262602,0.1117833,0.11110065,0.10684263,0.1182667,
+# 0.32620057,0.33200672,0.662326,0.65382564,0.46216524,0.47059765,0.4849712,0.4867182,0.19693235,0.15367857,0.16823643,0.16921006,0.20994672,0.24572918,0.15820777,0.1443478,0.18901423,0.13621844,0.16823643,0.16921006,0.20999658,0.24599668,0.15820777,0.1443478,
 
 
-
+# ...
 
 # Calibrate to SPC
 # The targets below are computing in and copied from models/spc_outlooks/Stats.jl
