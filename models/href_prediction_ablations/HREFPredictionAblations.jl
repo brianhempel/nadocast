@@ -341,6 +341,30 @@ function reload_forecasts()
 
   _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_day_bins, event_to_day_bins_logistic_coeffs, models; module_name = "HREFPredictionAblations", period_name = "day")
 
+  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
+    "tornadao_mean_58"                                           => [(0.02, 0.018461227), (0.05, 0.06462288),  (0.1, 0.15732765), (0.15, 0.29961205), (0.3, 0.42596245), (0.45, 0.5749607)],
+    "tornadao_prob_80"                                           => [(0.02, 0.017969131), (0.05, 0.072660446), (0.1, 0.16031837), (0.15, 0.27256584), (0.3, 0.35550117), (0.45, 0.43262672)],
+    "tornadao_mean_prob_138"                                     => [(0.02, 0.018060684), (0.05, 0.068006516), (0.1, 0.16544151), (0.15, 0.30457115), (0.3, 0.4305973),  (0.45, 0.54815865)],
+    "tornadao_mean_prob_computed_no_sv_219"                      => [(0.02, 0.017709732), (0.05, 0.06767845),  (0.1, 0.16807747), (0.15, 0.29662895), (0.3, 0.40353203), (0.45, 0.47664833)],
+    "tornadao_mean_prob_computed_220"                            => [(0.02, 0.017793655), (0.05, 0.068590164), (0.1, 0.16698647), (0.15, 0.29432106), (0.3, 0.40807152), (0.45, 0.5101414)],
+    "tornadao_mean_prob_computed_partial_climatology_227"        => [(0.02, 0.017900467), (0.05, 0.065675735), (0.1, 0.17772484), (0.15, 0.3134899),  (0.3, 0.45659447), (0.45, 0.56458473)],
+    "tornadao_mean_prob_computed_climatology_253"                => [(0.02, 0.018064499), (0.05, 0.06471443),  (0.1, 0.17611122), (0.15, 0.32598686), (0.3, 0.47203255), (0.45, 0.60515404)],
+    "tornadao_mean_prob_computed_climatology_blurs_910"          => [(0.02, 0.01799202),  (0.05, 0.06854057),  (0.1, 0.17239952), (0.15, 0.29992485), (0.3, 0.46686745), (0.45, 0.6732578)],
+    "tornadao_mean_prob_computed_climatology_grads_1348"         => [(0.02, 0.01742363),  (0.05, 0.06785774),  (0.1, 0.17230797), (0.15, 0.3162861),  (0.3, 0.45212746), (0.45, 0.59908485)],
+    "tornadao_mean_prob_computed_climatology_blurs_grads_2005"   => [(0.02, 0.017370224), (0.05, 0.06944466),  (0.1, 0.17526436), (0.15, 0.31707573), (0.3, 0.45667458), (0.45, 0.6287174)],
+    "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [(0.02, 0.017599106), (0.05, 0.06641579),  (0.1, 0.17908287), (0.15, 0.3228054),  (0.3, 0.49178123), (0.45, 0.6537876)],
+    "tornadao_mean_prob_computed_climatology_3hr_1567"           => [(0.02, 0.017438889), (0.05, 0.0646534),   (0.1, 0.18551826), (0.15, 0.3344822),  (0.3, 0.50450325), (0.45, 0.6276798)],
+    "tornado_full_13831"                                         => [(0.02, 0.016950607), (0.05, 0.06830406),  (0.1, 0.17817497), (0.15, 0.3255825),  (0.3, 0.4591999),  (0.45, 0.60011864)],
+  )
+
+  # ensure ordered the same as the features in the data
+  calibrations =
+    map(models) do (model_name, _, _)
+      spc_calibrations[model_name]
+    end
+
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPredictionAblations_day_severe_probabilities_calibrated_to_SPC_thresholds")
+
   ()
 end
 

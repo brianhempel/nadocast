@@ -522,6 +522,39 @@ function reload_forecasts()
   # _forecasts_fourhourly = [] # PredictionForecasts.period_forecasts_from_accumulators(_forecasts_fourhourly_accumulators, event_to_fourhourly_bins, event_to_fourhourly_bins_logistic_coeffs, models; module_name = "HREFPrediction", period_name = "four-hourly")
   # _forecasts_fourhourly_with_sig_gated = [] # PredictionForecasts.added_gated_predictions(_forecasts_fourhourly, models, gated_models; model_name = "HREFPrediction_four-hourly_severe_probabilities_with_sig_gated")
 
+  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
+    "tornado" => [
+      (0.02, 0.016950607),
+      (0.05, 0.06830406),
+      (0.1, 0.17817497),
+      (0.15, 0.3255825),
+      (0.3, 0.4591999),
+      (0.45, 0.60011864)
+    ],
+    "wind_adj" => [
+      (0.05, 0.011899948),
+      (0.15, 0.06845665),
+      (0.3, 0.24048424),
+      (0.45, 0.471941)
+    ],
+    "wind" => [
+      (0.05, 0.0479908),
+      (0.15, 0.21794319),
+      (0.3, 0.4940548),
+      (0.45, 0.7420559)
+    ],
+    "hail" => [
+      (0.05, 0.029951096),
+      (0.15, 0.123464584),
+      (0.3, 0.3763752),
+      (0.45, 0.6608143)
+    ],
+    "sig_tornado"  => [(0.1, 0.06202507)],
+    "sig_wind"     => [(0.1, 0.118608475)],
+    "sig_wind_adj" => [(0.1, 0.06686592)],
+    "sig_hail"     => [(0.1, 0.070280075)],
+  )
+
   # spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
   #   "tornado" => [
   #     (0.02, 0.017892838),
@@ -555,14 +588,14 @@ function reload_forecasts()
   #   "sig_hail"     => [(0.1, 0.057775497)],
   # )
 
-  # # ensure ordered the same as the features in the data
-  # calibrations = map(m -> spc_calibrations[m[1]], models)
+  # ensure ordered the same as the features in the data
+  calibrations = map(m -> spc_calibrations[m[1]], models)
 
-  # _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds")
-  # _forecasts_day_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds")
+  _forecasts_day_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
 
-  # _forecasts_day2_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day2, calibrations; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds")
-  # _forecasts_day2_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
+  _forecasts_day2_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day2, calibrations; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds")
+  _forecasts_day2_spc_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_day2_spc_calibrated, models, gated_models; model_name = "HREFPrediction_day2_severe_probabilities_calibrated_to_SPC_thresholds_with_sig_gated")
 
   ()
 end

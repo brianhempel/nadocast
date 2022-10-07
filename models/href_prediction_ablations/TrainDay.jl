@@ -522,154 +522,36 @@ Metrics.reliability_curves_midpoints(20, X, Ys, fill("tornado", size(X,2)), weig
 # Calibrate to SPC
 # The targets below are computing in and copied from models/spc_outlooks/Stats.jl
 
-target_success_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
-  "tornado" => [
-    (0.02, 0.050700042),
-    (0.05, 0.11771048),
-    (0.1,  0.22891627),
-    (0.15, 0.30348805),
-    (0.3,  0.32036155), # lol
-    (0.45, 0.5009283),
-  ],
-  "wind" => [
-    (0.05, 0.13740821),
-    (0.15, 0.26610714),
-    (0.3,  0.45119646),
-    (0.45, 0.64423746),
-  ],
-  "hail" => [
-    (0.05, 0.08125695),
-    (0.15, 0.16056664),
-    (0.3,  0.30656156),
-    (0.45, 0.56523347),
-  ],
-  "sig_tornado" => [(0.1, 0.09901425)],
-  "sig_wind"    => [(0.1, 0.13118134)],
-  "sig_hail"    => [(0.1, 0.08935113)],
-)
-
-target_PODs = Dict{String,Vector{Tuple{Float64,Float64}}}(
-  "tornado" => [
-    (0.02, 0.69082415),
-    (0.05, 0.424347),
-    (0.1,  0.1553744),
-    (0.15, 0.035544172),
-    (0.3,  0.008358953),
-    (0.45, 0.001138251),
-  ],
-  "wind" => [
-    (0.05, 0.7425363),
-    (0.15, 0.42171422),
-    (0.3,  0.11319263),
-    (0.45, 0.017438034),
-  ],
-  "hail" => [
-    (0.05, 0.7651715),
-    (0.15, 0.43377835),
-    (0.3,  0.083377354),
-    (0.45, 0.008335298),
-  ],
-  "sig_tornado" => [(0.1, 0.27615425)],
-  "sig_wind"    => [(0.1, 0.13106804)],
-  "sig_hail"    => [(0.1, 0.28429562)],
-)
-
 target_warning_ratios = Dict{String,Vector{Tuple{Float64,Float64}}}(
   "tornado" => [
-    (0.02, 0.019616714),
-    (0.05, 0.005190068),
-    (0.1,  0.0009771693),
-    (0.15, 0.00016861407),
-    (0.3,  3.7564576e-5),
-    (0.45, 3.271369e-6),
+    (0.02, 0.025348036),
+    (0.05, 0.007337035),
+    (0.1,  0.0014824796),
+    (0.15, 0.00025343563),
+    (0.3,  3.7446924e-5),
+    (0.45, 3.261123e-6),
   ],
   "wind" => [
-    (0.05, 0.058618702),
-    (0.15, 0.017190674),
-    (0.3,  0.0027213453),
-    (0.45, 0.000293618),
+    (0.05, 0.07039726),
+    (0.15, 0.021633422),
+    (0.3,  0.0036298542),
+    (0.45, 0.0004162882),
   ],
   "hail" => [
-    (0.05, 0.04349142),
-    (0.15, 0.012477219),
-    (0.3,  0.0012561331),
-    (0.45, 6.8108064e-5),
+    (0.05, 0.052633155),
+    (0.15, 0.015418012),
+    (0.3,  0.0015550428),
+    (0.45, 8.9432746e-5),
   ],
-  "sig_tornado" => [(0.1, 0.00060326053)],
-  "sig_wind"    => [(0.1, 0.0011946002)],
-  "sig_hail"    => [(0.1, 0.002233119)],
+  "sig_tornado" => [(0.1, 0.0009527993)],
+  "sig_wind"    => [(0.1, 0.0014686467)],
+  "sig_hail"    => [(0.1, 0.002794325)],
 )
-
-
-
-# Assumes weights are proportional to gridpoint areas
-# (here they are because we do not do any fancy subsetting)
-function spc_calibrate_sr_pod(prediction_i, X, Ys, weights)
-  event_name, _ = HREFPredictionAblations.models[prediction_i]
-  y = Ys[event_name]
-  ŷ = @view X[:, prediction_i]
-
-  # println("nominal_prob\tthreshold\tsuccess_ratio")
-
-  thresholds_to_match_success_ratio =
-    map(target_success_ratios[event_name]) do (nominal_prob, target_success_ratio)
-      # Can't binary search, not monotonic.
-      # Backtrack when SR exceeded
-      threshold = 0.0f0
-      step      = 0.02f0
-      while step > 0.000001f0
-        sr = Metrics.success_ratio(ŷ, y, weights, threshold)
-        if isnan(sr) || sr > target_success_ratio
-          step *= 0.5f0
-          threshold -= step
-        else
-          threshold += step
-        end
-      end
-      # println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
-      threshold
-    end
-
-  # println("nominal_prob\tthreshold\tPOD")
-
-  thresholds_to_match_POD =
-    map(target_PODs[event_name]) do (nominal_prob, target_POD)
-      threshold = 0.5f0
-      step = 0.25f0
-      while step > 0.000001f0
-        pod = Metrics.probability_of_detection(ŷ, y, weights, threshold)
-        if isnan(pod) || pod > target_POD
-          threshold += step
-        else
-          threshold -= step
-        end
-        step *= 0.5f0
-      end
-      # println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
-      threshold
-    end
-
-  thresholds = Tuple{Float32,Float32}[]
-  for i in 1:length(target_PODs[event_name])
-    nominal_prob, _ = target_PODs[event_name][i]
-    threshold_to_match_success_ratio = thresholds_to_match_success_ratio[i]
-    threshold_to_match_POD = thresholds_to_match_POD[i]
-    mean_threshold = (threshold_to_match_success_ratio + threshold_to_match_POD) * 0.5f0
-    sr  = Float32(Metrics.success_ratio(ŷ, y, weights, mean_threshold))
-    pod = Float32(Metrics.probability_of_detection(ŷ, y, weights, mean_threshold))
-    wr  = Float32(Metrics.warning_ratio(ŷ, weights, mean_threshold))
-    println("$event_name\t$nominal_prob\t$threshold_to_match_success_ratio\t$threshold_to_match_POD\t$mean_threshold\t$sr\t$pod\t$wr")
-    push!(thresholds, (Float32(nominal_prob), Float32(mean_threshold)))
-  end
-
-  thresholds
-end
 
 
 # Assumes weights are proportional to gridpoint areas
 # (here they are because we are not do any fancy subsetting)
-function spc_calibrate_warning_ratio(prediction_i, X, Ys, weights)
-  event_name, _ = HREFPredictionAblations.models[prediction_i]
+function spc_calibrate_warning_ratio(event_name, model_name, prediction_i, X, Ys, weights)
   y = Ys[event_name]
   ŷ = @view X[:, prediction_i]
 
@@ -691,187 +573,111 @@ function spc_calibrate_warning_ratio(prediction_i, X, Ys, weights)
     end
 
   wr_thresholds = Tuple{Float32,Float32}[]
-  for i in 1:length(target_PODs[event_name])
-    nominal_prob, _ = target_PODs[event_name][i]
+  for i in 1:length(target_warning_ratios[event_name])
+    nominal_prob, _ = target_warning_ratios[event_name][i]
     threshold_to_match_warning_ratio = thresholds_to_match_warning_ratio[i]
     sr  = Float32(Metrics.success_ratio(ŷ, y, weights, threshold_to_match_warning_ratio))
     pod = Float32(Metrics.probability_of_detection(ŷ, y, weights, threshold_to_match_warning_ratio))
     wr  = Float32(Metrics.warning_ratio(ŷ, weights, threshold_to_match_warning_ratio))
-    println("$event_name\t$nominal_prob\t$threshold_to_match_warning_ratio\t$sr\t$pod\t$wr")
+    println("$model_name\t$nominal_prob\t$threshold_to_match_warning_ratio\t$sr\t$pod\t$wr")
     push!(wr_thresholds, (Float32(nominal_prob), Float32(threshold_to_match_warning_ratio)))
   end
 
   wr_thresholds
 end
 
-# Assumes weights are proportional to gridpoint areas
-# (here they are because we are not do any fancy subsetting)
-function spc_calibrate_all(prediction_i, X, Ys, weights)
-  event_name, _ = HREFPredictionAblations.models[prediction_i]
-  y = Ys[event_name]
-  ŷ = @view X[:, prediction_i]
-
-  # println("nominal_prob\tthreshold\tsuccess_ratio")
-
-  thresholds_to_match_success_ratio =
-    map(target_success_ratios[event_name]) do (nominal_prob, target_success_ratio)
-      # Can't binary search, not monotonic.
-      # Backtrack when SR exceeded
-      threshold = 0.0f0
-      step      = 0.02f0
-      while step > 0.000001f0
-        sr = Metrics.success_ratio(ŷ, y, weights, threshold)
-        if isnan(sr) || sr > target_success_ratio
-          step *= 0.5f0
-          threshold -= step
-        else
-          threshold += step
-        end
-      end
-      # println("$nominal_prob\t$threshold\t$(success_ratio(ŷ, y, weights, threshold))")
-      threshold
-    end
-
-  # println("nominal_prob\tthreshold\tPOD")
-
-  thresholds_to_match_POD =
-    map(target_PODs[event_name]) do (nominal_prob, target_POD)
-      threshold = 0.5f0
-      step = 0.25f0
-      while step > 0.000001f0
-        pod = Metrics.probability_of_detection(ŷ, y, weights, threshold)
-        if isnan(pod) || pod > target_POD
-          threshold += step
-        else
-          threshold -= step
-        end
-        step *= 0.5f0
-      end
-      # println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
-      threshold
-    end
-
-  thresholds_to_match_warning_ratio =
-    map(target_warning_ratios[event_name]) do (nominal_prob, target_warning_ratio)
-      threshold = 0.5f0
-      step = 0.25f0
-      while step > 0.000001f0
-        wr = Metrics.warning_ratio(ŷ, weights, threshold)
-        if isnan(wr) || wr > target_warning_ratio
-          threshold += step
-        else
-          threshold -= step
-        end
-        step *= 0.5f0
-      end
-      # println("$nominal_prob\t$threshold\t$(probability_of_detection(ŷ, y, weights, threshold))")
-      threshold
-    end
-
-  thresholds = Tuple{Float32,Float32}[]
-  for i in 1:length(target_PODs[event_name])
-    nominal_prob, _ = target_PODs[event_name][i]
-    threshold_to_match_success_ratio = thresholds_to_match_success_ratio[i]
-    threshold_to_match_POD = thresholds_to_match_POD[i]
-    threshold_to_match_warning_ratio = thresholds_to_match_warning_ratio[i]
-    mean_threshold = (threshold_to_match_success_ratio + threshold_to_match_POD + threshold_to_match_warning_ratio) / 3f0
-    sr  = Float32(Metrics.success_ratio(ŷ, y, weights, mean_threshold))
-    pod = Float32(Metrics.probability_of_detection(ŷ, y, weights, mean_threshold))
-    wr  = Float32(Metrics.warning_ratio(ŷ, weights, mean_threshold))
-    println("$event_name\t$nominal_prob\t$threshold_to_match_success_ratio\t$threshold_to_match_POD\t$threshold_to_match_warning_ratio\t$mean_threshold\t$sr\t$pod\t$wr")
-    push!(thresholds, (Float32(nominal_prob), Float32(mean_threshold)))
-  end
-
-  thresholds
-end
-
-
-println("event_name\tnominal_prob\tthreshold_to_match_success_ratio\tthreshold_to_match_POD\tmean_threshold\tSR\tPOD\tWR")
-calibrations_sr_pod = Dict{String,Vector{Tuple{Float32,Float32}}}()
-for prediction_i in 1:length(HREFPredictionAblations.models)
-  event_name, _ = HREFPredictionAblations.models[prediction_i]
-  calibrations_sr_pod[event_name] = spc_calibrate_sr_pod(prediction_i, X, Ys, weights)
-end
-println("event_name\tnominal_prob\tthreshold_to_match_warning_ratio\tSR\tPOD\tWR")
+println("model_name\tnominal_prob\tthreshold_to_match_warning_ratio\tSR\tPOD\tWR")
 calibrations_wr = Dict{String,Vector{Tuple{Float32,Float32}}}()
 for prediction_i in 1:length(HREFPredictionAblations.models)
-  event_name, _ = HREFPredictionAblations.models[prediction_i]
-  calibrations_wr[event_name] = spc_calibrate_warning_ratio(prediction_i, X, Ys, weights)
-end
-println("event_name\tnominal_prob\tthreshold_to_match_success_ratio\tthreshold_to_match_POD\tthreshold_to_match_warning_ratio\tmean_threshold\tSR\tPOD\tWR")
-calibrations_all = Dict{String,Vector{Tuple{Float32,Float32}}}()
-for prediction_i in 1:length(HREFPredictionAblations.models)
-  event_name, _ = HREFPredictionAblations.models[prediction_i]
-  calibrations_all[event_name] = spc_calibrate_all(prediction_i, X, Ys, weights)
+  model_name, _, _, _, _ = HREFPredictionAblations.models[prediction_i]
+  calibrations_wr[model_name] = spc_calibrate_warning_ratio("tornado", model_name, prediction_i, X, Ys, weights)
 end
 
-# event_name  nominal_prob threshold_to_match_success_ratio threshold_to_match_POD mean_threshold SR          POD          WR
-# tornado     0.02         0.01297058                       0.019601822            0.016286202    0.05811968  0.7255002    0.02133395
-# tornado     0.05         0.05831237                       0.079683304            0.06899784     0.13066258  0.4559308    0.0059635467
-# tornado     0.1          0.16381283                       0.15509605             0.15945444     0.21934602  0.14991193   0.0011680551
-# tornado     0.15         0.21046689                       0.26961708             0.24004199     0.30903193  0.06797499   0.00037592635
-# tornado     0.3          0.3783576                        0.3603382              0.3693479      0.2993795   0.008200346  4.681306e-5
-# tornado     0.45         0.63601375                       0.5975361              0.6167749      0.54525286  0.0006632183 2.0788132e-6
-# wind        0.05         0.025938107                      0.0877018              0.056819953    0.19041657  0.8146683    0.05523891
-# wind        0.15         0.11240294                       0.25773048             0.18506671     0.34040433  0.5379147    0.020402689
-# wind        0.3          0.31343934                       0.521204               0.41732168     0.5510731   0.19818887   0.004643432
-# wind        0.45         0.5346906                        0.8000431              0.66736686     0.769832    0.042777162  0.0007174391
-# hail        0.05         0.015346069                      0.04394722             0.029646644    0.106049754 0.8351591    0.044649545
-# hail        0.15         0.07387878                       0.13708305             0.10548092     0.19760264  0.52892953   0.015176184
-# hail        0.3          0.20529476                       0.3468647              0.2760797      0.37571222  0.16215828   0.0024470412
-# hail        0.45         0.5594928                        0.59866524             0.57907903     0.58626467  0.009759113  9.437872e-5
-# sig_tornado 0.1          0.040588986                      0.07995033             0.06026966     0.12599954  0.3443003    0.0006377945
-# sig_wind    0.1          0.098119505                      0.106687546            0.10240352     0.13775808  0.14839154   0.0016767136
-# sig_hail    0.1          0.059057                         0.051927567            0.055492282    0.08464337  0.25743744   0.0024400598
-
-# this is the one we are using
-# event_name  nominal_prob threshold_to_match_warning_ratio SR          POD          WR
-# tornado     0.02         0.017892838                      0.06162817  0.7073454    0.019615944
-# tornado     0.05         0.07787514                       0.14183877  0.4307434    0.0051901583
-# tornado     0.1          0.17152214                       0.2464791   0.14091049   0.0009770577
-# tornado     0.15         0.2814541                        0.26955867  0.026589876  0.0001685854
-# tornado     0.3          0.3905239                        0.34836945  0.007654115  3.7550166e-5
-# tornado     0.45         0.6009083                        0.47030112  0.0008843078 3.213545e-6
-# wind        0.05         0.051660538                      0.18246952  0.8284546    0.058620222
-# wind        0.15         0.21513557                       0.3675667   0.48940307   0.017190937
-# wind        0.3          0.49578285                       0.6181463   0.13029508   0.0027214838
-# wind        0.45         0.78172493                       0.8917094   0.020278241  0.0002936135
-# hail        0.05         0.030927658                      0.108049504 0.8288017    0.04348959
-# hail        0.15         0.12172127                       0.21620022  0.47577965   0.012476915
-# hail        0.3          0.33656883                       0.41593274  0.09215542   0.0012561898
-# hail        0.45         0.61953926                       0.6029355   0.007252866  6.820187e-5
-# sig_tornado 0.1          0.063589096                      0.129504    0.33463305   0.00060311204
-# sig_wind    0.1          0.11205864                       0.15010695  0.11518542   0.0011944375
-# sig_hail    0.1          0.057775497                      0.08727195  0.242912     0.0022330375
-
-# event_name  nominal_prob threshold_to_match_success_ratio threshold_to_match_POD threshold_to_match_warning_ratio mean_threshold SR         POD          WR
-# tornado     0.02         0.01297058                       0.019601822            0.017892838                      0.016821748    0.05935366 0.7197565    0.020725023
-# tornado     0.05         0.05831237                       0.079683304            0.07787514                       0.07195694     0.13404815 0.44696563   0.0056986273
-# tornado     0.1          0.16381283                       0.15509605             0.17152214                       0.163477       0.22779244 0.1466783    0.0011004834
-# tornado     0.15         0.21046689                       0.26961708             0.2814541                        0.25384602     0.30016658 0.051623434  0.00029392834
-# tornado     0.3          0.3783576                        0.3603382              0.3905239                        0.37640658     0.31507045 0.007982044  4.3297554e-5
-# tornado     0.45         0.63601375                       0.5975361              0.6009083                        0.611486       0.4998252  0.0006632183 2.2677507e-6
-# wind        0.05         0.025938107                      0.0877018              0.051660538                      0.055100147    0.1878509  0.8194134    0.056319505
-# wind        0.15         0.11240294                       0.25773048             0.21513557                       0.19508965     0.349676   0.52065736   0.019224508
-# wind        0.3          0.31343934                       0.521204               0.49578285                       0.4434754      0.5752322  0.17310232   0.0038853372
-# wind        0.45         0.5346906                        0.8000431              0.78172493                       0.70548624     0.8269018  0.03264143   0.00050966436
-# hail        0.05         0.015346069                      0.04394722             0.030927658                      0.030073648    0.10670167 0.8331348    0.04426918
-# hail        0.15         0.07387878                       0.13708305             0.12172127                       0.11089436     0.20442617 0.509736     0.014137293
-# hail        0.3          0.20529476                       0.3468647              0.33656883                       0.29624274     0.38949108 0.13536102   0.0019703961
-# hail        0.45         0.5594928                        0.59866524             0.61953926                       0.5925658      0.58640826 0.008812057  8.519903e-5
-# sig_tornado 0.1          0.040588986                      0.07995033             0.063589096                      0.06137614     0.1267123  0.3394527    0.0006252775
-# sig_wind    0.1          0.098119505                      0.106687546            0.11205864                       0.1056219      0.14019963 0.13421097   0.0014900743
-# sig_hail    0.1          0.059057                         0.051927567            0.057775497                      0.056253355    0.0856354  0.25276944   0.002368061
-
-
-println(calibrations_sr_pod)
-# Dict{String, Vector{Tuple{Float32, Float32}}}("sig_hail" => [(0.1, 0.055492282)], "hail" => [(0.05, 0.029646644), (0.15, 0.10548092), (0.3, 0.2760797), (0.45, 0.57907903)], "tornado" => [(0.02, 0.016286202), (0.05, 0.06899784), (0.1, 0.15945444), (0.15, 0.24004199), (0.3, 0.3693479), (0.45, 0.6167749)], "sig_tornado" => [(0.1, 0.06026966)], "sig_wind" => [(0.1, 0.10240352)], "wind" => [(0.05, 0.056819953), (0.15, 0.18506671), (0.3, 0.41732168), (0.45, 0.66736686)])
+# event_name                                                 nominal_prob threshold_to_match_warning_ratio SR          POD           WR
+# tornadao_mean_58                                           0.02         0.018461227                      0.060353596 0.7140549     0.025349844
+# tornadao_mean_58                                           0.05         0.06462288                       0.12687075  0.4344617     0.0073373094
+# tornadao_mean_58                                           0.1          0.15732765                       0.23343594  0.16152214    0.0014825562
+# tornadao_mean_58                                           0.15         0.29961205                       0.34252933  0.040531665   0.0002535383
+# tornadao_mean_58                                           0.3          0.42596245                       0.503072    0.008781126   3.7399597e-5
+# tornadao_mean_58                                           0.45         0.5749607                        0.6667791   0.0010088343  3.2417893e-6
+# tornadao_prob_80                                           0.02         0.017969131                      0.061899357 0.7323091     0.025348669
+# tornadao_prob_80                                           0.05         0.072660446                      0.12734881  0.43605593    0.007336589
+# tornadao_prob_80                                           0.1          0.16031837                       0.22367981  0.15477388    0.0014825786
+# tornadao_prob_80                                           0.15         0.27256584                       0.34531942  0.040848665   0.00025345667
+# tornadao_prob_80                                           0.3          0.35550117                       0.44686568  0.007807553   3.74356e-5
+# tornadao_prob_80                                           0.45         0.43262672                       0.44603005  0.0006903442  3.3162592e-6
+# tornadao_mean_prob_138                                     0.02         0.018060684                      0.06216014  0.7353488     0.025347099
+# tornadao_mean_prob_138                                     0.05         0.068006516                      0.13396381  0.45875457    0.007337359
+# tornadao_mean_prob_138                                     0.1          0.16544151                       0.24346636  0.16844217    0.0014823772
+# tornadao_mean_prob_138                                     0.15         0.30457115                       0.3303532   0.03906655    0.00025338065
+# tornadao_mean_prob_138                                     0.3          0.4305973                        0.44296402  0.007753712   3.7504906e-5
+# tornadao_mean_prob_138                                     0.45         0.54815865                       0.48427862  0.00075647386 3.3469214e-6
+# tornadao_mean_prob_computed_no_sv_219                      0.02         0.017709732                      0.06253015  0.73969764    0.02534613
+# tornadao_mean_prob_computed_no_sv_219                      0.05         0.06767845                       0.1339838   0.4587967     0.0073369383
+# tornadao_mean_prob_computed_no_sv_219                      0.1          0.16807747                       0.24200656  0.16745506    0.0014825796
+# tornadao_mean_prob_computed_no_sv_219                      0.15         0.29662895                       0.30785885  0.03640122    0.0002533443
+# tornadao_mean_prob_computed_no_sv_219                      0.3          0.40353203                       0.43347666  0.007558801   3.736234e-5
+# tornadao_mean_prob_computed_no_sv_219                      0.45         0.47664833                       0.6001471   0.0009090007  3.2452888e-6
+# tornadao_mean_prob_computed_220                            0.02         0.017793655                      0.06276276  0.74256194    0.025349975
+# tornadao_mean_prob_computed_220                            0.05         0.068590164                      0.13312294  0.45586365    0.0073371762
+# tornadao_mean_prob_computed_220                            0.1          0.16698647                       0.23364866  0.16165       0.0014823792
+# tornadao_mean_prob_computed_220                            0.15         0.29432106                       0.3243835   0.0383803     0.0002535108
+# tornadao_mean_prob_computed_220                            0.3          0.40807152                       0.43061838  0.007547724   3.7555223e-5
+# tornadao_mean_prob_computed_220                            0.45         0.5101414                        0.59985024  0.00091232895 3.2587836e-6
+# tornadao_mean_prob_computed_partial_climatology_227        0.02         0.017900467                      0.06313051  0.74691       0.025349876
+# tornadao_mean_prob_computed_partial_climatology_227        0.05         0.065675735                      0.13676794  0.46833116    0.007336951
+# tornadao_mean_prob_computed_partial_climatology_227        0.1          0.17772484                       0.25096172  0.17363195    0.0014824125
+# tornadao_mean_prob_computed_partial_climatology_227        0.15         0.3134899                        0.34055257  0.04026637    0.0002533408
+# tornadao_mean_prob_computed_partial_climatology_227        0.3          0.45659447                       0.3983758   0.0069803614  3.7543246e-5
+# tornadao_mean_prob_computed_partial_climatology_227        0.45         0.56458473                       0.5016012   0.0007418342  3.1688023e-6
+# tornadao_mean_prob_computed_climatology_253                0.02         0.018064499                      0.06386594  0.75553435    0.025347305
+# tornadao_mean_prob_computed_climatology_253                0.05         0.06471443                       0.13714375  0.46963733    0.0073372526
+# tornadao_mean_prob_computed_climatology_253                0.1          0.17611122                       0.25220838  0.17450167    0.0014824736
+# tornadao_mean_prob_computed_climatology_253                0.15         0.32598686                       0.35081702  0.041498132   0.00025345144
+# tornadao_mean_prob_computed_climatology_253                0.3          0.47203255                       0.4024308   0.0070368825  3.746588e-5
+# tornadao_mean_prob_computed_climatology_253                0.45         0.60515404                       0.535088    0.0007972568  3.192419e-6
+# tornadao_mean_prob_computed_climatology_blurs_910          0.02         0.01799202                       0.06419382  0.75942755    0.025347784
+# tornadao_mean_prob_computed_climatology_blurs_910          0.05         0.06854057                       0.1377441   0.47169042    0.0073372093
+# tornadao_mean_prob_computed_climatology_blurs_910          0.1          0.17239952                       0.24644762  0.1705114     0.0014824349
+# tornadao_mean_prob_computed_climatology_blurs_910          0.15         0.29992485                       0.29077744  0.034393243   0.00025343074
+# tornadao_mean_prob_computed_climatology_blurs_910          0.3          0.46686745                       0.32967794  0.0057634856  3.7457794e-5
+# tornadao_mean_prob_computed_climatology_blurs_910          0.45         0.6732578                        0.4334652   0.00063932553 3.1602005e-6
+# tornadao_mean_prob_computed_climatology_grads_1348         0.02         0.01742363                       0.063572474 0.7520665     0.025347432
+# tornadao_mean_prob_computed_climatology_grads_1348         0.05         0.06785774                       0.13877265  0.47520727    0.0073371273
+# tornadao_mean_prob_computed_climatology_grads_1348         0.1          0.17230797                       0.25626767  0.17731273    0.0014824942
+# tornadao_mean_prob_computed_climatology_grads_1348         0.15         0.3162861                        0.32335854  0.038250607   0.00025345501
+# tornadao_mean_prob_computed_climatology_grads_1348         0.3          0.45212746                       0.40177268  0.0070315073  3.7498587e-5
+# tornadao_mean_prob_computed_climatology_grads_1348         0.45         0.59908485                       0.35197034  0.00054971856 3.346426e-6
+# tornadao_mean_prob_computed_climatology_blurs_grads_2005   0.02         0.017370224                      0.064065866 0.7578653     0.02534616
+# tornadao_mean_prob_computed_climatology_blurs_grads_2005   0.05         0.06944466                       0.14094351  0.48263273    0.0073370007
+# tornadao_mean_prob_computed_climatology_blurs_grads_2005   0.1          0.17526436                       0.2535033   0.17538975    0.0014824071
+# tornadao_mean_prob_computed_climatology_blurs_grads_2005   0.15         0.31707573                       0.33597314  0.03975551    0.000253536
+# tornadao_mean_prob_computed_climatology_blurs_grads_2005   0.3          0.45667458                       0.46627226  0.008150536   3.7453592e-5
+# tornadao_mean_prob_computed_climatology_blurs_grads_2005   0.45         0.6287174                        0.36439404  0.0005484284  3.2247463e-6
+# tornadao_mean_prob_computed_climatology_prior_next_hrs_691 0.02         0.017599106                      0.06391611  0.7561532     0.025348153
+# tornadao_mean_prob_computed_climatology_prior_next_hrs_691 0.05         0.06641579                       0.1386232   0.47470704    0.007337306
+# tornadao_mean_prob_computed_climatology_prior_next_hrs_691 0.1          0.17908287                       0.25438872  0.17601533    0.0014825164
+# tornadao_mean_prob_computed_climatology_prior_next_hrs_691 0.15         0.3228054                        0.36091423  0.04270103    0.0002535019
+# tornadao_mean_prob_computed_climatology_prior_next_hrs_691 0.3          0.49178123                       0.4895547   0.008574016   3.75258e-5
+# tornadao_mean_prob_computed_climatology_prior_next_hrs_691 0.45         0.6537876                        0.63721466  0.0009548305  3.2106086e-6
+# tornadao_mean_prob_computed_climatology_3hr_1567           0.02         0.017438889                      0.0639874   0.75698364    0.02534772
+# tornadao_mean_prob_computed_climatology_3hr_1567           0.05         0.0646534                        0.141945    0.48607287    0.0073371627
+# tornadao_mean_prob_computed_climatology_3hr_1567           0.1          0.18551826                       0.26718888  0.18487404    0.0014825333
+# tornadao_mean_prob_computed_climatology_3hr_1567           0.15         0.3344822                        0.38190585  0.045154948   0.00025333543
+# tornadao_mean_prob_computed_climatology_3hr_1567           0.3          0.50450325                       0.58447576  0.010206408   3.7415648e-5
+# tornadao_mean_prob_computed_climatology_3hr_1567           0.45         0.6276798                        0.71180487  0.0011086512  3.3371891e-6
+# tornado_full_13831                                         0.02         0.016950607                      0.064026326 0.7574176     0.025346832
+# tornado_full_13831                                         0.05         0.06830406                       0.14281912  0.48904803    0.0073368903
+# tornado_full_13831                                         0.1          0.17817497                       0.257954    0.17845055    0.0014822535
+# tornado_full_13831                                         0.15         0.3255825                        0.32377487  0.03830062    0.00025346005
+# tornado_full_13831                                         0.3          0.4591999                        0.48384824  0.008458492   3.7456797e-5
+# tornado_full_13831                                         0.45         0.60011864                       0.49274874  0.00073567254 3.1989384e-6
+# 2021v1_tornado                                             0.02         0.017892838                      0.06162817  0.7073454     0.019615944
+# 2021v1_tornado                                             0.05         0.07787514                       0.14183877  0.4307434     0.0051901583
+# 2021v1_tornado                                             0.1          0.17152214                       0.2464791   0.14091049    0.0009770577
+# 2021v1_tornado                                             0.15         0.2814541                        0.26955867  0.026589876   0.0001685854
+# 2021v1_tornado                                             0.3          0.3905239                        0.34836945  0.007654115   3.7550166e-5
+# 2021v1_tornado                                             0.45         0.6009083                        0.47030112  0.0008843078  3.213545e-6
 
 println(calibrations_wr)
-# Dict{String, Vector{Tuple{Float32, Float32}}}("sig_hail" => [(0.1, 0.057775497)], "hail" => [(0.05, 0.030927658), (0.15, 0.12172127), (0.3, 0.33656883), (0.45, 0.61953926)], "tornado" => [(0.02, 0.017892838), (0.05, 0.07787514), (0.1, 0.17152214), (0.15, 0.2814541), (0.3, 0.3905239), (0.45, 0.6009083)], "sig_tornado" => [(0.1, 0.063589096)], "sig_wind" => [(0.1, 0.11205864)], "wind" => [(0.05, 0.051660538), (0.15, 0.21513557), (0.3, 0.49578285), (0.45, 0.78172493)])
-
-println(calibrations_all)
-# Dict{String, Vector{Tuple{Float32, Float32}}}("sig_hail" => [(0.1, 0.056253355)], "hail" => [(0.05, 0.030073648), (0.15, 0.11089436), (0.3, 0.29624274), (0.45, 0.5925658)], "tornado" => [(0.02, 0.016821748), (0.05, 0.07195694), (0.1, 0.163477), (0.15, 0.25384602), (0.3, 0.37640658), (0.45, 0.611486)], "sig_tornado" => [(0.1, 0.06137614)], "sig_wind" => [(0.1, 0.1056219)], "wind" => [(0.05, 0.055100147), (0.15, 0.19508965), (0.3, 0.4434754), (0.45, 0.70548624)])
-
-
-# using the warning ratio calibrations rn
+# Dict{String, Vector{Tuple{Float32, Float32}}}("tornadao_mean_prob_computed_partial_climatology_227" => [(0.02, 0.017900467), (0.05, 0.065675735), (0.1, 0.17772484), (0.15, 0.3134899), (0.3, 0.45659447), (0.45, 0.56458473)], "tornadao_mean_58" => [(0.02, 0.018461227), (0.05, 0.06462288), (0.1, 0.15732765), (0.15, 0.29961205), (0.3, 0.42596245), (0.45, 0.5749607)], "tornadao_mean_prob_computed_climatology_prior_next_hrs_691" => [(0.02, 0.017599106), (0.05, 0.06641579), (0.1, 0.17908287), (0.15, 0.3228054), (0.3, 0.49178123), (0.45, 0.6537876)], "tornadao_prob_80" => [(0.02, 0.017969131), (0.05, 0.072660446), (0.1, 0.16031837), (0.15, 0.27256584), (0.3, 0.35550117), (0.45, 0.43262672)], "tornado_full_13831" => [(0.02, 0.016950607), (0.05, 0.06830406), (0.1, 0.17817497), (0.15, 0.3255825), (0.3, 0.4591999), (0.45, 0.60011864)], "tornadao_mean_prob_computed_no_sv_219" => [(0.02, 0.017709732), (0.05, 0.06767845), (0.1, 0.16807747), (0.15, 0.29662895), (0.3, 0.40353203), (0.45, 0.47664833)], "tornadao_mean_prob_computed_220" => [(0.02, 0.017793655), (0.05, 0.068590164), (0.1, 0.16698647), (0.15, 0.29432106), (0.3, 0.40807152), (0.45, 0.5101414)], "tornadao_mean_prob_computed_climatology_253" => [(0.02, 0.018064499), (0.05, 0.06471443), (0.1, 0.17611122), (0.15, 0.32598686), (0.3, 0.47203255), (0.45, 0.60515404)], "tornadao_mean_prob_138" => [(0.02, 0.018060684), (0.05, 0.068006516), (0.1, 0.16544151), (0.15, 0.30457115), (0.3, 0.4305973), (0.45, 0.54815865)], "tornadao_mean_prob_computed_climatology_grads_1348" => [(0.02, 0.01742363), (0.05, 0.06785774), (0.1, 0.17230797), (0.15, 0.3162861), (0.3, 0.45212746), (0.45, 0.59908485)], "tornadao_mean_prob_computed_climatology_blurs_910" => [(0.02, 0.01799202), (0.05, 0.06854057), (0.1, 0.17239952), (0.15, 0.29992485), (0.3, 0.46686745), (0.45, 0.6732578)], "tornadao_mean_prob_computed_climatology_blurs_grads_2005" => [(0.02, 0.017370224), (0.05, 0.06944466), (0.1, 0.17526436), (0.15, 0.31707573), (0.3, 0.45667458), (0.45, 0.6287174)], "tornadao_mean_prob_computed_climatology_3hr_1567" => [(0.02, 0.017438889), (0.05, 0.0646534), (0.1, 0.18551826), (0.15, 0.3344822), (0.3, 0.50450325), (0.45, 0.6276798)])
