@@ -451,21 +451,25 @@ function threshold_colorer(threshold_colors)
 end
 
 event_name_to_colorer = Dict(
-  "tornado"     => threshold_colorer(spc_tornado_colors),
-  "wind"        => threshold_colorer(spc_wind_hail_colors),
-  "hail"        => threshold_colorer(spc_wind_hail_colors),
-  "sig_tornado" => threshold_colorer(spc_sig_colors),
-  "sig_wind"    => threshold_colorer(spc_sig_colors),
-  "sig_hail"    => threshold_colorer(spc_sig_colors),
+  "tornado"      => threshold_colorer(spc_tornado_colors),
+  "wind"         => threshold_colorer(spc_wind_hail_colors),
+  "wind_adj"     => threshold_colorer(spc_wind_hail_colors),
+  "hail"         => threshold_colorer(spc_wind_hail_colors),
+  "sig_tornado"  => threshold_colorer(spc_sig_colors),
+  "sig_wind"     => threshold_colorer(spc_sig_colors),
+  "sig_wind_adj" => threshold_colorer(spc_sig_colors),
+  "sig_hail"     => threshold_colorer(spc_sig_colors),
 )
 
 event_name_to_colorer_more_sig_colors = Dict(
-  "tornado"     => threshold_colorer(spc_tornado_colors),
-  "wind"        => threshold_colorer(spc_wind_hail_colors),
-  "hail"        => threshold_colorer(spc_wind_hail_colors),
-  "sig_tornado" => threshold_colorer(spc_sig_tornado_more_colors),
-  "sig_wind"    => threshold_colorer(spc_sig_wind_hail_more_colors),
-  "sig_hail"    => threshold_colorer(spc_sig_wind_hail_more_colors),
+  "tornado"      => threshold_colorer(spc_tornado_colors),
+  "wind"         => threshold_colorer(spc_wind_hail_colors),
+  "wind_adj"     => threshold_colorer(spc_wind_hail_colors),
+  "hail"         => threshold_colorer(spc_wind_hail_colors),
+  "sig_tornado"  => threshold_colorer(spc_sig_tornado_more_colors),
+  "sig_wind"     => threshold_colorer(spc_sig_wind_hail_more_colors),
+  "sig_wind_adj" => threshold_colorer(spc_sig_wind_hail_more_colors),
+  "sig_hail"     => threshold_colorer(spc_sig_wind_hail_more_colors),
 )
 
 function conus_lines_href_5k_native_proj()
