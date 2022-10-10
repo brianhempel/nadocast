@@ -45,7 +45,7 @@ end
 
 GRID                 = Conus.href_cropped_5km_grid();
 CONUS_MASK           = Conus.conus_mask_href_cropped_5km_grid();
-VERIFIABLE_GRID_MASK = CONUS_MASK .&& TrainingShared.is_verifiable.(GRID.latlons) :: BitVector;
+VERIFIABLE_GRID_MASK = CONUS_MASK .&& is_verifiable.(GRID.latlons) :: BitVector;
 
 
 
