@@ -39,14 +39,14 @@ VERIFIABLE_GRID_MASK = CONUS_MASK .&& TrainingShared.is_verifiable.(GRID.latlons
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=1:2 DRAW_SPC_MAPS=true julia -t 16 --project=..
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=3:4 DRAW_SPC_MAPS=true julia -t 16 --project=..
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=5:6 DRAW_SPC_MAPS=false julia -t 16 --project=..
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=7:8 DRAW_SPC_MAPS=false julia -t 16 --project=..
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=9:10 DRAW_SPC_MAPS=false julia -t 16 --project=..
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=11:12 DRAW_SPC_MAPS=false julia -t 16 --project=..
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=1:2 DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=3:4 DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=5:6 DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=7:8 DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=9:10 DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=11:12 DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 
-TASKS = eval(Meta.parse(get(ENV, "TASKS", ""),","))
+TASKS = eval(Meta.parse(get(ENV, "TASKS", "")))
 if isnothing(TASKS)
   TASKS = typemin(Int64):typemax(Int64)
 end
