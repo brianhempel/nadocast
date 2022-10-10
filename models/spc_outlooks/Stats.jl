@@ -81,7 +81,7 @@ compute_forecast_labels(event_name, forecast) = begin
   StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-event_names          = collect(keys(event_name_to_events))
+event_names = collect(keys(event_name_to_events))
 
 function stats_for_run_hours(run_hours)
   total_areas          = Dict(map(event_name -> event_name => 0.0, event_names)) # should end up as CONUS_area * n_days
