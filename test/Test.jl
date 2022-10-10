@@ -35,10 +35,16 @@ CONUS_MASK = Conus.conus_mask_href_cropped_5km_grid();
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
+TASKS = eval(Meta.parse(get(ENV, "TASKS", ""),","))
+if isnothing(TASKS)
+  TASKS = typemin(Int64):typemax(Int64)
+end
 
 const ϵ = eps(1f0)
 
 function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix)
+
+  println("************ $(run_hour)z$(suffix) ************")
 
   println("$(length(spc_forecasts)) SPC forecasts available") #
 
@@ -475,49 +481,49 @@ end
 
 model_names = map(m -> m[3], CombinedHREFSREF.models)
 
-do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "")
+1 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "")
 # 1143 SPC forecasts available
 # 631 unfiltered test forecasts
 # 158 0z test forecasts
 # 133 0z test forecasts before the event data cutoff date
 
-do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated")
+2 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated")
 
-do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "")
+3 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "")
 # 1143 SPC forecasts available
 # 631 unfiltered test forecasts
 # 158 12z test forecasts
 # 133 12z test forecasts before the event data cutoff date
 
-do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated")
+4 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated")
 
 
 
 # HREF-only models
 
-do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only")
+5 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only")
 # 1143 SPC forecasts available
 # 679 unfiltered test forecasts
 # 170 0z test forecasts
 # 133 0z test forecasts before the event data cutoff date
 
-# do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated")
+6 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated")
 
-do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only")
+7 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only")
 # 1143 SPC forecasts available
 # 679 unfiltered test forecasts
 # 170 12z test forecasts
 # 133 12z test forecasts before the event data cutoff date
 
-# do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
+8 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
 
 
 ablation_model_names = map(m -> m[1], HREFPredictionAblations.models)
 
-do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day_spc_calibrated()), ablation_model_names; run_hour = 0, suffix = "")
-do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day()), ablation_model_names; run_hour = 0, suffix = "_absolutely_calibrated")
-do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day_spc_calibrated()), ablation_model_names; run_hour = 12, suffix = "")
-do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day()), ablation_model_names; run_hour = 12, suffix = "_absolutely_calibrated")
+9 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day_spc_calibrated()), ablation_model_names; run_hour = 0, suffix = "_href_ablations")
+10 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day()), ablation_model_names; run_hour = 0, suffix = "_href_ablations_absolutely_calibrated")
+11 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day_spc_calibrated()), ablation_model_names; run_hour = 12, suffix = "_href_ablations")
+12 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations.forecasts_day()), ablation_model_names; run_hour = 12, suffix = "_href_ablations_absolutely_calibrated")
 
 
 # scp -r nadocaster:/home/brian/nadocast_dev/test/ ./
