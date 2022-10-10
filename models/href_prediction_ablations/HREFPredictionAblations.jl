@@ -20,13 +20,14 @@ push!(LOAD_PATH, (@__DIR__) * "/../href_mid_2018_forward")
 import HREF
 
 
-_forecasts = [] # Raw, unblurred predictions
+_forecasts                              = [] # Raw, unblurred predictions
 _forecasts_with_blurs_and_forecast_hour = [] # For Train.jl
-_forecasts_blurred = [] # For downstream combination with other forecasts
-_forecasts_calibrated = []
+_forecasts_blurred                      = [] # For downstream combination with other forecasts
+_forecasts_calibrated                   = []
 
-_forecasts_day_accumulators                   = []
-_forecasts_day                                = []
+_forecasts_day_accumulators   = []
+_forecasts_day                = []
+_forecasts_day_spc_calibrated = []
 
 
 σ(x) = 1.0f0 / (1.0f0 + exp(-x))
@@ -102,6 +103,15 @@ function forecasts_day()
   end
 end
 
+function forecasts_day_spc_calibrated()
+  if isempty(_forecasts_day_spc_calibrated)
+    reload_forecasts()
+    _forecasts_day_spc_calibrated
+  else
+    _forecasts_day_spc_calibrated
+  end
+end
+
 
 # (event_name, grib2_var_name, gbdt_f2_to_f13, gbdt_f13_to_f24, gbdt_f24_to_f35)
 models = [
@@ -129,6 +139,7 @@ function reload_forecasts()
 
   global _forecasts_day_accumulators
   global _forecasts_day
+  global _forecasts_day_spc_calibrated
 
   _forecasts = []
 
