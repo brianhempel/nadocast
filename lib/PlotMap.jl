@@ -478,25 +478,44 @@ end
 
 # Hashed
 function shade_forecast_labels(labels, img)
-  orig_h, orig_w = size(img)
-  labels = permutedims(reshape(labels, (orig_w, orig_h)))
+  h, w = size(img)
+  labels = permutedims(reshape(labels, (w, h)))
   # Now flip vertically
-  for j in 1:(orig_h ÷ 2)
+  for j in 1:(h ÷ 2)
     row = labels[j,:]
-    labels[j,:] = labels[orig_h - j + 1,:]
-    labels[orig_h - j + 1,:] = row
+    labels[j,:] = labels[h - j + 1,:]
+    labels[h - j + 1,:] = row
   end
 
   out = deepcopy(img)
 
-  for i in 1:size(img,1)
-    for j in 1:size(img,2)
-      if mod(i + j, 2) == 0 && labels[i,j] > 0
-        gray = 1.0 - labels[i,j]
-        out[i,j] = RGB{N0f8}(gray, gray, gray)
+  # https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
+  label_dithering = deepcopy(labels)
+  for j in 1:h
+    for i in 1:w
+      if mod(i + j, 2) == 0
+        if label_dithering[j,i] > 0.5 && labels[j,i] > 0
+          out[j,i] = RGB{N0f8}(0.0, 0.0, 0.0)
+          error = label_dithering[j,i] - 1f0
+        else
+          error = label_dithering[j,i] - 0f0
+        end
+        # The original Floyd-Steinberg coeffs don't make sense since we are already cross-hatching.
+        i+2 <= w &&             (label_dithering[j,  i+2] += error * 1/3f0)
+        j+1 <= h && i-1 >= 1 && (label_dithering[j+1,i-1] += error * 1/3f0)
+        j+1 <= h && i+1 <= w && (label_dithering[j+1,i+1] += error * 1/3f0)
       end
     end
   end
+
+  # for i in 1:size(img,1)
+  #   for j in 1:size(img,2)
+  #     if mod(i + j, 2) == 0 && labels[i,j] > 0
+  #       gray = 1.0 - labels[i,j]
+  #       out[i,j] = RGB{N0f8}(gray, gray, gray)
+  #     end
+  #   end
+  # end
 
   out
 end
