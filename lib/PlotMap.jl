@@ -494,9 +494,12 @@ function shade_forecast_labels(labels, img)
   for j in 1:h
     for i in 1:w
       if mod(i + j, 2) == 0
-        if label_dithering[j,i] > 0.5 && labels[j,i] > 0
+        if label_dithering[j,i] > 0.75 && labels[j,i] > 0
           out[j,i] = RGB{N0f8}(0.0, 0.0, 0.0)
           error = label_dithering[j,i] - 1f0
+        elseif label_dithering[j,i] > 0.25 && labels[j,i] > 0
+          out[j,i] = RGB{N0f8}(0.5, 0.5, 0.5)
+          error = label_dithering[j,i] - 0.5f0
         else
           error = label_dithering[j,i] - 0f0
         end
