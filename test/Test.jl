@@ -529,10 +529,7 @@ ablation_model_names = map(m -> m[1], HREFPredictionAblations.models)
 
 # Redrawing the adjusted wind maps with dithering
 
-adj_model_names = map(m -> m[3], CombinedHREFSREF.models_with_gated)
-filter!(name -> occursin("adj", name), adj_model_names)
-
-function draw_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
+function draw_adj_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
 
   println("************ $(run_hour)z$(suffix) ************")
 
@@ -620,6 +617,7 @@ function draw_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
     ForecastCombinators.clear_cached_forecasts()
 
     for model_name in model_names
+      occursin("adj", model_name) || continue
       event_name   = model_name_to_event_name(model_name)
       spc_event_i  = findfirst(m -> m[1] == unadj_name(event_name), SPCOutlooks.models)
       test_event_i = findfirst(isequal(model_name), model_names)
@@ -650,15 +648,25 @@ function draw_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
 
 end
 
-13 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), adj_model_names; run_hour = 0, suffix = "")
-14 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), adj_model_names; run_hour = 0, suffix = "_absolutely_calibrated")
-15 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), adj_model_names; run_hour = 12, suffix = "")
-16 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), adj_model_names; run_hour = 12, suffix = "_absolutely_calibrated")
+13 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "")
+14 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated")
+15 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "")
+16 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated")
 
 
 # HREF-only models
 
-17 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), adj_model_names; run_hour = 0, suffix = "_href_only")
-18 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), adj_model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated")
-19 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), adj_model_names; run_hour = 12, suffix = "_href_only")
-20 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), adj_model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
+17 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only")
+18 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated")
+19 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only")
+20 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
+
+
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[13] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[15] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[14] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[16] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[17] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[18] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[19] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[20] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
