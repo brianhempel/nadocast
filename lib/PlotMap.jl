@@ -276,6 +276,22 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       valid_start = run_time_utc + Dates.Hour(forecast_hour_range.start)
       valid_stop  = run_time_utc + Dates.Hour(forecast_hour_range.stop)
 
+      function legend_title_command(title)
+        size =
+          if length(title) > 53
+            3
+          elseif length(title) > 42
+            4
+          elseif length(title) > 35
+            5
+          elseif length(title) > 30
+            6
+          else
+            7
+          end
+        "L $(size)pt,Helvetica-Bold C $title"
+      end
+
       if is_day_forecast
         # because we train ±30min to each hour...
         valid_start -= Dates.Minute(30)
@@ -284,9 +300,9 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
         is_day2_forecast = forecast_hour_range.start > 12
 
         if is_day2_forecast
-          println(f, "L 6pt,Helvetica-Bold C Nadocast $(event_title) $(Dates.format(run_time_utc, "H"))Z Day 2 for $(Dates.format(valid_start, "yyyy-m-d"))")
+          println(f, legend_title_command("Nadocast $(event_title) $(Dates.format(run_time_utc, "H"))Z Day 2 for $(Dates.format(valid_start, "yyyy-m-d"))"))
         else
-          println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z")
+          println(f, legend_title_command("Nadocast $(event_title) Day $(Dates.format(run_time_utc, "yyyy-m-d H"))Z"))
         end
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
         println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
@@ -294,14 +310,14 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
         valid_start -= Dates.Minute(30)
         valid_stop  += Dates.Minute(30)
 
-        println(f, "L 6pt,Helvetica-Bold C Nadocast $(event_title) $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$(forecast_hour_range.start)-$(forecast_hour_range.stop)")
+        println(f, legend_title_command("Nadocast $(event_title) $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$(forecast_hour_range.start)-$(forecast_hour_range.stop)"))
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_start, "yyyy-m-d H:MM")) UTC")
         println(f, "L 6pt,Helvetica C Through $(Dates.format(valid_stop, "yyyy-m-d H:MM")) UTC")
       else
         forecast_hour = forecast_hour_range.start
         valid_time    = valid_start
 
-        println(f, "L 7pt,Helvetica-Bold C Nadocast $(event_title) $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$forecast_hour")
+        println(f, legend_title_command("Nadocast $(event_title) $(Dates.format(run_time_utc, "yyyy-m-d H"))Z +$forecast_hour"))
         println(f, "L 6pt,Helvetica C Valid $(Dates.format(valid_time, "yyyy-m-d H:MM")) UTC")
 
         valid_pt = TimeZones.ZonedDateTime(valid_time, TimeZones.tz"America/Los_Angeles", from_utc = true)
