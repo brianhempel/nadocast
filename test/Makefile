@@ -20,3 +20,6 @@ day2_vs_day1.html:
 publish: index.html
 	cp -r maps maps_2021 plots plots_2021 *.html ../../test.nadocast.com/
 	cd ../../test.nadocast.com && git add .; git commit -m "Update"; git pull --rebase && git push
+
+notebook:
+	jupyter notebook
