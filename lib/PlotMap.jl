@@ -206,32 +206,38 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
     # gmt end
 
     colors_path = Dict(
-      "Tor"     => tornado_colors_path,
-      "Wind"    => wind_hail_colors_path,
-      "Hail"    => wind_hail_colors_path,
-      "Sigtor"  => sig_tornado_more_colors_path,
-      "Sigwind" => sig_wind_hail_more_colors_path,
-      "Sighail" => sig_wind_hail_more_colors_path,
+      "Tor"              => tornado_colors_path,
+      "Wind"             => wind_hail_colors_path,
+      "Wind Adjusted"    => wind_hail_colors_path,
+      "Hail"             => wind_hail_colors_path,
+      "Sigtor"           => sig_tornado_more_colors_path,
+      "Sigwind"          => sig_wind_hail_more_colors_path,
+      "Sigwind Adjusted" => sig_wind_hail_more_colors_path,
+      "Sighail"          => sig_wind_hail_more_colors_path,
     )[event_title]
 
     dark_colors_path = replace(colors_path, ".cpt" => "-dark.cpt")
 
     hazard_str = Dict(
-      "Tor"     => "a tornado",
-      "Wind"    => "50+ knot t-storm wind",
-      "Hail"    => "1+ inch hail",
-      "Sigtor"  => "an EF2+ tornado",
-      "Sigwind" => "65+ knot t-storm wind",
-      "Sighail" => "2+ inch hail",
+      "Tor"              => "a tornado",
+      "Wind"             => "50+ knot t-storm wind",
+      "Wind Adjusted"    => "50+ knot t-storm wind",
+      "Hail"             => "1+ inch hail",
+      "Sigtor"           => "an EF2+ tornado",
+      "Sigwind"          => "65+ knot t-storm wind",
+      "Sigwind Adjusted" => "65+ knot t-storm wind",
+      "Sighail"          => "2+ inch hail",
     )[event_title]
 
     sig_hazard_str = Dict(
-      "Tor"     => "EF2+",
-      "Wind"    => "65kt+",
-      "Hail"    => "2in+",
-      "Sigtor"  => "",
-      "Sigwind" => "",
-      "Sighail" => "",
+      "Tor"              => "EF2+",
+      "Wind"             => "65kt+",
+      "Wind Adjusted"    => "65kt+",
+      "Hail"             => "2in+",
+      "Sigtor"           => "",
+      "Sigwind"          => "",
+      "Sigwind Adjusted" => "",
+      "Sighail"          => "",
     )[event_title]
 
     println(f, "projection=-Jl-100/35/33/45/0.3")
