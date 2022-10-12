@@ -1,0 +1,269 @@
+<html>
+
+<head>
+  <title>Nadocast compared to SPC Outlooks</title>
+  <style>
+    body { margin: 0 }
+    .hidden { display: none }
+    *:not(h1) { font-size: 24px; font-weight: bold; color: darkblue; }
+    .desc { font-family: "DejaVu Sans", sans-serif; font-weight: normal; color: black; width: 50%; }
+    label, select option { font-weight: normal; }
+    label { cursor: pointer }
+    .options > span { display: inline-block; margin-right: 1em; }
+    img { min-height: 100px; max-width: 960px; } /* lazy load fewer images at once */
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+
+
+<body>
+  <div style="position:fixed; top:0; width: 100%; z-index: 1; background: white; border-bottom: solid 3px black; padding: 0.5em">
+    <h1>Nadocast "2022 Models" compared to SPC Outlooks, Objective Plots</h1>
+    <p>(Subjective maps <a href="index.html">here</a>.) Dates used are not in the training data. Only regions that produce >=1 tor and wind and hail report over 1998-2013 (view this mask <a href="https://github.com/brianhempel/nadocast/blob/293f8f2a33b4f4e53e98e39c108c8e05f036874b/climatological_background_1998-2013/verifiable_area_mask.pdf">here</a>) and are in the CONUS are used for verification.</p>
+    <p class="options">
+      <span>Plot:
+      <label><input type="checkbox" name="kind" value="performance">Performance</label>
+      <label><input type="checkbox" name="kind" value="reliability">Reliability</label>
+      <label><input type="checkbox" name="kind" value="roc">ROC</label>
+      </span>
+      <span>Filter:
+      
+        <label><input type="checkbox" name="hazard" value="tornado">Tor</label>
+      
+        <label><input type="checkbox" name="hazard" value="wind">Wind</label>
+      
+        <label><input type="checkbox" name="hazard" value="wind_adj">Wind_Adj</label>
+      
+        <label><input type="checkbox" name="hazard" value="hail">Hail</label>
+      
+        <label><input type="checkbox" name="hazard" value="sig_tornado">Sigtor</label>
+      
+        <label><input type="checkbox" name="hazard" value="sig_wind">Sigwind</label>
+      
+        <label><input type="checkbox" name="hazard" value="sig_wind_adj">Sigwind_Adj</label>
+      
+        <label><input type="checkbox" name="hazard" value="sig_hail">Sighail</label>
+      
+      </span>
+      <span>Version:
+      <label><input type="radio" name="version" value="2022" checked>"2022"</label>
+      <label><input type="radio" name="version" value="2021">"2021"</label>
+      </span>
+      <span>NWP:
+      <label><input type="radio" name="nwp" value="hrefsref" checked>HREF+SREF</label>
+      <label><input type="radio" name="nwp" value="href">HREF only</label>
+      </span>
+      <span>Time:
+      <label><input type="radio" name="run_time" value="0z" checked>0Z vs 0600</label>
+      <label><input type="radio" name="run_time" value="12z">12Z vs 1630</label>
+      </span>
+      <span>Calibration:
+      <label><input type="radio" name="calibration" value="spc-like" checked>SPC-like</label>
+      <label><input type="radio" name="calibration" value="absolute">Absolute</label>
+      </span>
+      <span>Sig models:
+      <label><input type="radio" name="sig_type" value="bounded" checked>Bounded by non-sig</label>
+      <label><input type="radio" name="sig_type" value="naive" disabled><strike>Independent of non-sig</strike></label>
+    </p>
+    <script>
+      function updateVisibility() {
+        const kindsToShow   = Array.from(document.querySelectorAll('input[name="kind"]')).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+        const hazardsToShow = Array.from(document.querySelectorAll('input[name="hazard"]')).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+        // console.log(hazardsToShow);
+        document.querySelectorAll('[data-kind-name]').forEach(elem => {
+          if( kindsToShow.length === 0 || kindsToShow.includes(elem.dataset.kindName) ) {
+            elem.classList.remove("hidden")
+          } else {
+            elem.classList.add("hidden")
+          }
+        });
+        document.querySelectorAll('[data-hazard-name]').forEach(elem => {
+          if( hazardsToShow.length === 0 || hazardsToShow.includes(elem.dataset.hazardName) ) {
+            elem.classList.remove("hidden")
+          } else {
+            elem.classList.add("hidden")
+          }
+        });
+      }
+      function updateVersion() {
+        const is_2022 = document.querySelector('input[name="version"][value="2022"]').checked;
+        const prefix = is_2022 ? "plots/" : "plots_2021/";
+        document.querySelectorAll('img').forEach(img => {
+          img.src = img.src.replace(/plots(_2021)?\//, prefix);
+        });
+        document.querySelectorAll('td a').forEach(a => {
+          a.href = a.href.replace(/plots(_2021)?\//, prefix);
+        });
+      }
+      function updateRunTime() {
+        const is12z = document.querySelector('input[name="run_time"][value="12z"]').checked;
+        const time_suffix_nc  = is12z ? "_t12z.png" : "_t00z.png";
+        // const time_suffix_spc = is12z ? "_t16z.png" : "_t06z.png";
+        const time_str_nc  = is12z ? "12Z"  : "0Z";
+        const time_str_spc = is12z ? "1630" : "0600";
+        document.querySelectorAll('img').forEach(img => {
+          img.src = img.src.replace(/_t\d+z\.png/, time_suffix_nc);
+        });
+        document.querySelectorAll('td a').forEach(a => {
+          a.href = a.href.replace(/_t\d+z\.png/, time_suffix_nc);
+        });
+        document.querySelectorAll('.nc_run_time').forEach(elem => { elem.innerText = time_str_nc; });
+        document.querySelectorAll('.spc_outlook_time').forEach(elem => { elem.innerText = time_str_spc; });
+      }
+      function updateNWP() {
+        const hrefsref = document.querySelector('input[name="nwp"][value="hrefsref"]').checked;
+        const sub = hrefsref ? "/$1$2_$4" : "/$1$2_href_only_$4";
+        document.querySelectorAll('img').forEach(img => {
+          img.src = img.src.replace(/\/([a-z]+)(_nadocast|_spc)?(_href_only|_href_ablations)?_(\w+.png)/, sub);
+        });
+        document.querySelectorAll('td a').forEach(a => {
+          a.href = a.href.replace(/\/([a-z]+)(_nadocast|_spc)?(_href_only|_href_ablations)?_(\w+.png)/, sub);
+        });
+      }
+      function updateCalibration() {
+        const absolutely_calibrated = document.querySelector('input[name="calibration"][value="absolute"]').checked;
+        const sub = absolutely_calibrated ? "/$1$2$3_absolutely_calibrated_$5" : "/$1$2$3_$5";
+        document.querySelectorAll('img').forEach(img => {
+          img.src = img.src.replace(/\/([a-z]+)(_nadocast|_spc)?(_href_only|_href_ablations)?(_absolutely_calibrated)?_(\w+.png)/, sub);
+        });
+        document.querySelectorAll('td a').forEach(a => {
+          a.href = a.href.replace(/\/([a-z]+)(_nadocast|_spc)?(_href_only|_href_ablations)?(_absolutely_calibrated)?_(\w+.png)/, sub);
+        });
+      }
+      document.querySelectorAll('input[name="hazard"],input[name="kind"]').forEach(checkbox => {
+        checkbox.onchange = updateVisibility;
+      })
+      document.querySelectorAll('[name=version]').forEach(radio => {
+        radio.onchange = updateVersion;
+      })
+      document.querySelectorAll('[name=nwp]').forEach(radio => {
+        radio.onchange = updateNWP;
+      })
+      document.querySelectorAll('[name=run_time]').forEach(radio => {
+        radio.onchange = updateRunTime;
+      })
+      document.querySelectorAll('[name=calibration]').forEach(radio => {
+        radio.onchange = updateCalibration;
+      })
+    </script>
+  </div>
+  
+  <div style="margin: 12em 0.5em" data-kind-name="performance">
+    <p class="desc">
+      <strong>Performance diagrams</strong> for Nadocast (NC) day 1 outlooks (triangles) compared to SPC day 1 outlooks (circles), for the 155 days (Sundays) not seen by the models during training and calibration throughout the Jan 2019-May 2021 period.
+      Lines of constant critical success index (CSI) are drawn as light gray curves.
+      The performance for the NC 1% threshold (2% wind and hail) is included as a gray triangle.
+      Significant severe (EF2+, 65kn+, 2in+) 10% thresholds are drawn as large black symbols.
+      The NC sig-severe models are bounded to never output probabilities higher than the NC non-sig probability.
+      To assess statistical significance, for each threshold the difference between the NC and SPC CSI is compared across 1 million bootstrap resamples of the 155 days.
+      The p value for NC CSI exceeding SPC SCI is shown; the NC triangle is drawn with solid fill when p<.05 (i.e. when NC is statistically more skillful).
+    </p>
+    <table>
+      <tr>
+        
+          <td data-hazard-name="tornado"><a href="plots/performance_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind"><a href="plots/performance_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind_adj"><a href="plots/performance_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="hail"><a href="plots/performance_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_hail_t00z.png"></a></td>
+        
+      </tr>
+      <tr>
+        
+          <td data-hazard-name="sig_tornado"><a href="plots/performance_sig_tornado_gated_by_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_sig_tornado_gated_by_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_wind"><a href="plots/performance_sig_wind_gated_by_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_sig_wind_gated_by_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_wind_adj"><a href="plots/performance_sig_wind_adj_gated_by_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_sig_wind_adj_gated_by_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_hail"><a href="plots/performance_sig_hail_gated_by_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/performance_sig_hail_gated_by_hail_t00z.png"></a></td>
+        
+      </tr>
+    </table>
+  </div>
+  <div style="margin: 12em 0.5em" data-kind-name="reliability">
+    <p class="desc">
+      <strong>Reliability diagrams</strong> for Nadocast (NC) day 1 outlooks (triangles) compared to SPC day 1 outlooks (circles), for the 155 days (Sundays) not seen by the models during training and calibration throughout the Jan 2019-May 2021 period.
+      The plots compare the forecast probability of an event to the observed frequency of at least one report within 25 miles.
+      The 95% confidence interval for each bin is shaded, computed by bootstrapping over the 155 days.
+      Ideal reliability is drawn as a dotted diagonal line; above the line is underforecasting, below is overforecasting.
+    </p>
+    <table>
+      <tr>
+        
+          <td data-hazard-name="tornado"><a href="plots/reliability_nadocast_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind"><a href="plots/reliability_nadocast_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind_adj"><a href="plots/reliability_nadocast_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="hail"><a href="plots/reliability_nadocast_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_hail_t00z.png"></a></td>
+        
+      </tr>
+      <tr>
+        
+          <td data-hazard-name="tornado"><a href="plots/reliability_spc_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind"><a href="plots/reliability_spc_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind_adj"><a href="plots/reliability_spc_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="hail"><a href="plots/reliability_spc_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_hail_t00z.png"></a></td>
+        
+      </tr>
+      <tr>
+        
+          <td data-hazard-name="sig_tornado"><a href="plots/reliability_nadocast_sig_tornado_gated_by_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_sig_tornado_gated_by_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_wind"><a href="plots/reliability_nadocast_sig_wind_gated_by_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_sig_wind_gated_by_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_wind_adj"><a href="plots/reliability_nadocast_sig_wind_adj_gated_by_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_sig_wind_adj_gated_by_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_hail"><a href="plots/reliability_nadocast_sig_hail_gated_by_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_nadocast_sig_hail_gated_by_hail_t00z.png"></a></td>
+        
+      </tr>
+      <tr>
+        
+          <td data-hazard-name="sig_tornado"><a href="plots/reliability_spc_sig_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_sig_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_wind"><a href="plots/reliability_spc_sig_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_sig_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_wind_adj"><a href="plots/reliability_spc_sig_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_sig_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="sig_hail"><a href="plots/reliability_spc_sig_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/reliability_spc_sig_hail_t00z.png"></a></td>
+        
+      </tr>
+    </table>
+  </div>
+  <div style="margin: 12em 0.5em" data-kind-name="roc">
+    <p class="desc">
+      <strong>Receiver operator characteristic (ROC) curves</strong> for Nadocast (NC) day 1 outlooks (triangles) compared to SPC day 1 outlooks (circles), for the 155 days (Sundays) not seen by the models during training and calibration throughout the Jan 2019-May 2021 period.
+      Area under the curve (AUC) is shown. For rare events (as here), AUC is dominated by POD at the lowest threshold.
+    </p>
+    <table>
+      <tr>
+        
+          <td data-hazard-name="tornado"><a href="plots/roc_tornado_t00z.png" target="_blank"><img loading="lazy" src="plots/roc_tornado_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind"><a href="plots/roc_wind_t00z.png" target="_blank"><img loading="lazy" src="plots/roc_wind_t00z.png"></a></td>
+        
+          <td data-hazard-name="wind_adj"><a href="plots/roc_wind_adj_t00z.png" target="_blank"><img loading="lazy" src="plots/roc_wind_adj_t00z.png"></a></td>
+        
+          <td data-hazard-name="hail"><a href="plots/roc_hail_t00z.png" target="_blank"><img loading="lazy" src="plots/roc_hail_t00z.png"></a></td>
+        
+      </tr>
+    </table>
+  </div>
+  <script>
+    updateVisibility(); // this will also sort
+    updateVersion();
+    updateNWP();
+    updateRunTime();
+    updateCalibration();
+  </script>
+</body>
+
+</html>
