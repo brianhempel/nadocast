@@ -11,7 +11,6 @@ test_plots/
 *.binfeatures
 *.binweights
 *.binlabels
-*.ipynb
 *.model
 gmt.history
 .ipynb_checkpoints/

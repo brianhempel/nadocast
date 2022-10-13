@@ -5,12 +5,34 @@
   <style>
     body { margin: 0 }
     .hidden { display: none }
-    *:not(h1) { font-size: 24px; font-weight: bold; color: darkblue; }
+    *:not(h1) { font-size: 24px; }
     .desc { font-family: "DejaVu Sans", sans-serif; font-weight: normal; color: black; width: 50%; }
     label, select option { font-weight: normal; }
     label { cursor: pointer }
     .options > span { display: inline-block; margin-right: 1em; }
     img { min-height: 100px; max-width: 960px; } /* lazy load fewer images at once */
+    .perf_stats {
+      border-collapse: collapse;
+    }
+    .perf_stats td,
+    .perf_stats th {
+      text-align: center;
+      padding: 0.2em 0.4em;
+      color: black;
+    }
+    .perf_stats th {
+      vertical-align: bottom;
+    }
+    .perf_stats td {
+      font-weight: normal;
+    }
+    .border_below th,
+    .border_below td {
+      border-bottom: 1px solid black;
+    }
+    .border_left {
+      border-left: 1px solid black;
+    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -18,9 +40,10 @@
 
 
 <body>
-  <div style="position:fixed; top:0; width: 100%; z-index: 1; background: white; border-bottom: solid 3px black; padding: 0.5em">
+  <div id="top" style="position:fixed; top:0; width: 100%; z-index: 1; background: white; border-bottom: solid 3px black; padding: 0.5em; font-weight: bold; color: darkblue;">
     <h1>Nadocast "2022 Models" compared to SPC Outlooks, Objective Plots</h1>
-    <p>(Subjective maps <a href="index.html">here</a>.) Dates used are not in the training data. Only regions that produce >=1 tor and wind and hail report over 1998-2013 (view this mask <a href="https://github.com/brianhempel/nadocast/blob/293f8f2a33b4f4e53e98e39c108c8e05f036874b/climatological_background_1998-2013/verifiable_area_mask.pdf">here</a>) and are in the CONUS are used for verification.</p>
+    <p>(Subjective maps <a href="index.html">here</a>.) Dates used are not in the training data. Only regions that produce >=1 tor and wind and hail report over 1998-2013 (view this mask <a href="https://github.com/brianhempel/nadocast/blob/293f8f2a33b4f4e53e98e39c108c8e05f036874b/climatological_background_1998-2013/verifiable_area_mask.pdf">here</a>) and are in the CONUS are used for verification.
+    "2022" models are trained on data through May 2022; "2021" models through Dec 2021. "2021" models were used for the 2022 SFE and are used by current realtime Nadocast (as of 2022-10-13).</p>
     <p class="options">
       <span>Plot:
       <label><input type="checkbox" name="kind" value="performance">Performance</label>
@@ -149,7 +172,7 @@
     </script>
   </div>
   
-  <div style="margin: 12em 0.5em" data-kind-name="performance">
+  <div style="margin: 14em 0.5em" data-kind-name="performance">
     <p class="desc">
       <strong>Performance diagrams</strong> for Nadocast (NC) day 1 outlooks (triangles) compared to SPC day 1 outlooks (circles), for the 155 days (Sundays) not seen by the models during training and calibration throughout the Jan 2019-May 2021 period.
       Lines of constant critical success index (CSI) are drawn as light gray curves.
@@ -183,8 +206,21 @@
         
       </tr>
     </table>
+    <br><br>
+    <table class="perf_stats">
+    <tr><th colspan="16">Area to the Left of the Performance Diagram (Stairstep geometry, SPC thresholds only)</th></tr>
+    <tr class="border_below"><th></th><th class="border_left">0600 SPC</th><th>0Z NC</th><th>0Z NC<br>HREF Only</th><th>0Z NC 2021</th><th>0Z NC 2021<br>HREF Only</th><th class="border_left">1630 SPC</th><th>12Z NC</th><th>12Z NC<br>HREF Only</th><th>12Z NC 2021</th><th>12Z NC 2021<br>HREF Only</th><th class="border_left">Mean SPC</th><th>Mean NC</th><th>Mean NC<br>HREF Only</th><th>Mean NC<br>2021</th><th>Mean NC 2021<br>HREF</th></tr>
+    <tr><th>Tornado</th><td class="border_left">0.105</td><td><b>0.150</b></td><td>0.148</td><td>0.138</td><td>0.139</td><td class="border_left">0.136</td><td><b>0.171</b></td><td>0.170</td><td>0.162</td><td>0.167</td><td class="border_left">0.120</td><td><b>0.161</b></td><td>0.159</td><td>0.150</td><td>0.153</td></tr>
+    <tr><th>Wind</th><td class="border_left">0.196</td><td>0.308</td><td><b>0.312</b></td><td>0.300</td><td>0.305</td><td class="border_left">0.237</td><td>0.334</td><td>0.340</td><td>0.340</td><td><b>0.344</b></td><td class="border_left">0.216</td><td>0.321</td><td><b>0.326</b></td><td>0.320</td><td>0.324</td></tr>
+    <tr><th>Wind Adjusted</th><td class="border_left">0.0763</td><td>0.139</td><td><b>0.144</b></td><td></td><td></td><td class="border_left">0.0928</td><td><b>0.167</b></td><td>0.166</td><td></td><td></td><td class="border_left">0.0845</td><td>0.153</td><td><b>0.155</b></td><td></td><td></td></tr>
+    <tr class="border_below"><th>Hail</th><td class="border_left">0.102</td><td>0.195</td><td><b>0.196</b></td><td>0.193</td><td>0.193</td><td class="border_left">0.129</td><td><b>0.224</b></td><td><b>0.224</b></td><td>0.221</td><td>0.223</td><td class="border_left">0.116</td><td><b>0.210</b></td><td><b>0.210</b></td><td>0.207</td><td>0.208</td></tr>
+    <tr><th>Sig. Tornado</th><td class="border_left">0.0434</td><td>0.0634</td><td><b>0.0655</b></td><td>0.0588</td><td>0.0578</td><td class="border_left">0.0527</td><td><b>0.0809</b></td><td>0.0764</td><td>0.0679</td><td>0.0726</td><td class="border_left">0.048</td><td><b>0.0722</b></td><td>0.0710</td><td>0.0633</td><td>0.0652</td></tr>
+    <tr><th>Sig. Wind</th><td class="border_left">0.0113</td><td><b>0.0267</b></td><td>0.0239</td><td>0.0258</td><td>0.0255</td><td class="border_left">0.0221</td><td>0.0416</td><td>0.0435</td><td><b>0.0460</b></td><td>0.0447</td><td class="border_left">0.0167</td><td>0.0342</td><td>0.0337</td><td><b>0.0359</b></td><td>0.0351</td></tr>
+    <tr><th>Sig. Wind Adjusted</th><td class="border_left">0.00703</td><td>0.0111</td><td><b>0.0115</b></td><td></td><td></td><td class="border_left">0.0121</td><td>0.0105</td><td><b>0.0166</b></td><td></td><td></td><td class="border_left">0.00958</td><td>0.0108</td><td><b>0.0141</b></td><td></td><td></td></tr>
+    <tr><th>Sig. Hail</th><td class="border_left">0.0111</td><td>0.0378</td><td><b>0.0428</b></td><td>0.0336</td><td>0.0346</td><td class="border_left">0.0272</td><td>0.0493</td><td><b>0.0529</b></td><td>0.0406</td><td>0.0423</td><td class="border_left">0.0191</td><td>0.0435</td><td><b>0.0478</b></td><td>0.0371</td><td>0.0385</td></tr>
+    </table>
   </div>
-  <div style="margin: 12em 0.5em" data-kind-name="reliability">
+  <div style="margin: 14em 0.5em" data-kind-name="reliability">
     <p class="desc">
       <strong>Reliability diagrams</strong> for Nadocast (NC) day 1 outlooks (triangles) compared to SPC day 1 outlooks (circles), for the 155 days (Sundays) not seen by the models during training and calibration throughout the Jan 2019-May 2021 period.
       The plots compare the forecast probability of an event to the observed frequency of at least one report within 25 miles.
@@ -238,7 +274,7 @@
       </tr>
     </table>
   </div>
-  <div style="margin: 12em 0.5em" data-kind-name="roc">
+  <div style="margin: 14em 0.5em" data-kind-name="roc">
     <p class="desc">
       <strong>Receiver operator characteristic (ROC) curves</strong> for Nadocast (NC) day 1 outlooks (triangles) compared to SPC day 1 outlooks (circles), for the 155 days (Sundays) not seen by the models during training and calibration throughout the Jan 2019-May 2021 period.
       Area under the curve (AUC) is shown. For rare events (as here), AUC is dominated by POD at the lowest threshold.
