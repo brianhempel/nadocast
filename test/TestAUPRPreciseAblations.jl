@@ -5,6 +5,7 @@ import Serialization
 import Statistics
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/shared")
+import Metrics
 import TrainingShared
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
