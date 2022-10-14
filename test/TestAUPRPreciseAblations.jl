@@ -104,8 +104,8 @@ function do_it(forecasts; suffix = "")
   rng = Random.MersenneTwister(12345)
   bootstrap_forecast_iss = map(_ -> rand(rng, 1:nforecasts, nforecasts), 1:nbootstraps)
 
-  data_is = Vector{Int64}(undef, length(size(X,2)))
-  for prediction_i in 1:size(X,2)
+  data_is = Vector{Int64}(undef, length(size(X_0z,2)))
+  for prediction_i in 1:size(X_0z,2)
     model_name = HREFPredictionAblations.models[prediction_i]
 
     au_pr_bootstraps = map(1:nbootstraps) do bootstrap_i
