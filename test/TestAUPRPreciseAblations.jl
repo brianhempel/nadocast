@@ -122,7 +122,7 @@ function do_it(forecasts; suffix = "")
       (au_pr_0z, au_pr_12z, au_pr_mean)
     end
 
-    au_pr_bootstraps_0z, au_pr_bootstraps_12z, au_pr_bootstraps_mean = unzip3(triples)
+    au_pr_bootstraps_0z, au_pr_bootstraps_12z, au_pr_bootstraps_mean = unzip3(au_pr_bootstraps)
 
     au_pr_0z   = Metrics.area_under_pr_curve_fast(view(X_0z,  :, prediction_i), y_0z,  weights_0z;  bin_count = 1000)
     au_pr_12z  = Metrics.area_under_pr_curve_fast(view(X_12z, :, prediction_i), y_12z, weights_12z; bin_count = 1000)
