@@ -34,7 +34,7 @@ const nbootstraps = parse(Int64, get(ENV, "NBOOTSTRAPS", "10000"))
 
 function do_it(forecasts; suffix = "")
 
-  println("************ $(run_hour)z$(suffix) ************")
+  println("************ ablations(suffix) ************")
 
   (train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_train_validation_test(
