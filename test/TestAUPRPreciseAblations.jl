@@ -81,14 +81,13 @@ function do_it(forecasts; suffix = "")
   @assert length(unique(run_times_12z)) == length(test_forecasts_12z)
   @assert sort(unique(run_times_12z)) == sort(map(Forecasts.run_utc_datetime, test_forecasts_12z))
 
-  @assert run_times_0z == run_times_12z
-  run_times = run_times_0z
+  @assert run_times_0z == (run_times_12z .- Dates.Hour(12))
 
-  println(sort(unique(run_times)))
+  println(sort(unique(run_times_0z)))
 
   y_0z, y_12z = Ys_0z["tornado"], Ys_12z["tornado"]
 
-  nforecasts = length(unique(run_times))
+  nforecasts = length(unique(run_times_0z))
 
   @assert size(X_0z) == size(X_12z)
   @assert size(y_0z) == size(y_12z)
@@ -97,8 +96,8 @@ function do_it(forecasts; suffix = "")
   @assert length(y_0z) == size(X_0z,2)
   @assert length(y_0z) / nforecasts == round(length(y_0z) / nforecasts)
   ndata_per_forecast = length(y_0z) ÷ nforecasts
-  @assert run_times[ndata_per_forecast*10] == run_times[ndata_per_forecast*10 - 1]
-  @assert run_times[ndata_per_forecast*10] != run_times[ndata_per_forecast*10 + 1]
+  @assert run_times_0z[ndata_per_forecast*10] == run_times_0z[ndata_per_forecast*10 - 1]
+  @assert run_times_0z[ndata_per_forecast*10] != run_times_0z[ndata_per_forecast*10 + 1]
 
   # Use same bootstraps across all predictors
   # Unnecessary for large nbootstraps, but increases the validity of comparisons for smaller nbootstraps
