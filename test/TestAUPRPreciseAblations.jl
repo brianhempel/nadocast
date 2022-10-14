@@ -107,7 +107,10 @@ end
 
 # Going to use all the HREF forecasts
 
-ablation_model_names = map(m -> m[1], HREFPredictionAblations.models)
+TASKS = eval(Meta.parse(get(ENV, "TASKS", "")))
+if isnothing(TASKS)
+  TASKS = typemin(Int64):typemax(Int64)
+end
 
 1 in TASKS && do_it(HREFPredictionAblations.forecasts_day_spc_calibrated(); run_hour = 0)
 2 in TASKS && do_it(HREFPredictionAblations.forecasts_day_spc_calibrated(); run_hour = 12)
@@ -117,7 +120,8 @@ ablation_model_names = map(m -> m[1], HREFPredictionAblations.models)
 4 in TASKS && do_it(HREFPredictionAblations.forecasts_day(); run_hour = 12, suffix = "_absolutely_calibrated")
 
 
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[13] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[1] julia -t 16 --project=.. TestAUPRPreciseAblations.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[2] julia -t 16 --project=.. TestAUPRPreciseAblations.jl
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[15] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[14] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[16] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
