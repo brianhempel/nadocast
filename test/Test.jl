@@ -35,7 +35,7 @@ VERIFIABLE_GRID_MASK = CONUS_MASK .&& TrainingShared.is_verifiable.(GRID.latlons
 
 
 
-# Run below is 2019-1-7 through 2021-12-31, but we are missing lots of HREFs between Nov 2020 and mid-March 2021
+# Run below is 2019-1-7 through 2022-5-31, but we are missing lots of HREFs between Nov 2020 and mid-March 2021
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
