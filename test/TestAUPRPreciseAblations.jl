@@ -111,7 +111,7 @@ function do_it(forecasts; suffix = "")
     au_pr_bootstraps = map(1:nbootstraps) do bootstrap_i
       bootstrap_forecast_is = bootstrap_forecast_iss[bootstrap_i]
       Threads.@threads for fcst_i in 1:nforecasts
-        bs_fcst_i = bootstrap_forecast_iss[fcst_i]
+        bs_fcst_i = bootstrap_forecast_is[fcst_i]
         data_is[fcst_i*(nforecasts-1)+1 : fcst_i*nforecasts] = bs_fcst_i*(nforecasts-1)+1 : bs_fcst_i*nforecasts
       end
 
