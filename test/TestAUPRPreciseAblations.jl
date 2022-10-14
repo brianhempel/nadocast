@@ -107,7 +107,7 @@ function do_it(forecasts; suffix = "")
 
   data_is = Vector{Int64}(undef, size(X_0z,1))
   for prediction_i in 1:size(X_0z,2)
-    model_name = HREFPredictionAblations.models[prediction_i]
+    model_name = HREFPredictionAblations.models[prediction_i][1]
 
     au_pr_bootstraps = map(1:nbootstraps) do bootstrap_i
       bootstrap_forecast_is = bootstrap_forecast_iss[bootstrap_i]
