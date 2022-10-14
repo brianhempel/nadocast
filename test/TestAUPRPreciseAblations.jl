@@ -112,7 +112,7 @@ function do_it(forecasts; suffix = "")
       bootstrap_forecast_is = bootstrap_forecast_iss[bootstrap_i]
       Threads.@threads for fcst_i in 1:nforecasts
         bs_fcst_i = bootstrap_forecast_is[fcst_i]
-        data_is[nforecasts*(fcst_i-1)+1 : nforecasts*fcst_i] = nforecasts*(bs_fcst_i-1)+1 : nforecasts*bs_fcst_i
+        data_is[ndata_per_forecast*(fcst_i-1)+1 : ndata_per_forecast*fcst_i] = ndata_per_forecast*(bs_fcst_i-1)+1 : ndata_per_forecast*bs_fcst_i
       end
 
       au_pr_0z  = Metrics.area_under_pr_curve_fast(view(X_0z,  prediction_i, data_is), view(y_0z,  data_is), view(weights_0z,  data_is); bin_count = 1000)
