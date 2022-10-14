@@ -93,7 +93,7 @@ function do_it(forecasts; suffix = "")
   @assert size(y_0z) == size(y_12z)
   @assert weights_0z == weights_12z
 
-  @assert length(y_0z) == size(X_0z,2)
+  @assert length(y_0z) == size(X_0z,1)
   @assert length(y_0z) / nforecasts == round(length(y_0z) / nforecasts)
   ndata_per_forecast = length(y_0z) ÷ nforecasts
   @assert run_times_0z[ndata_per_forecast*10] == run_times_0z[ndata_per_forecast*10 - 1]
