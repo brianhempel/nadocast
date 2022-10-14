@@ -68,7 +68,7 @@ function do_it(forecasts; suffix = "")
   # We're just looking at Day 1 forecasts, so run times will be unique between forecasts.
   run_times_0z = Serialization.deserialize("day_ablation_$(length(test_forecasts_0z))_test_forecasts$(suffix)_0z/run_times.serialized")
   @assert length(unique(run_times_0z)) == length(test_forecasts_0z)
-  @assert sort(unique(run_times_0z)) == sort(map(Forecast.run_utc_datetime, test_forecasts_0z))
+  @assert sort(unique(run_times_0z)) == sort(map(Forecasts.run_utc_datetime, test_forecasts_0z))
 
   X_12z, Ys_12z, weights_12z =
     TrainingShared.get_data_labels_weights(
@@ -79,7 +79,7 @@ function do_it(forecasts; suffix = "")
   # We're just looking at Day 1 forecasts, so run times will be unique between forecasts.
   run_times_12z = Serialization.deserialize("day_ablation_$(length(test_forecasts_12z))_test_forecasts$(suffix)_12z/run_times.serialized")
   @assert length(unique(run_times_12z)) == length(test_forecasts_12z)
-  @assert sort(unique(run_times_12z)) == sort(map(Forecast.run_utc_datetime, test_forecasts_12z))
+  @assert sort(unique(run_times_12z)) == sort(map(Forecasts.run_utc_datetime, test_forecasts_12z))
 
   @assert run_times_0z == run_times_12z
   run_times = run_times_0z
@@ -159,8 +159,8 @@ end
 
 1 in TASKS && do_it(HREFPredictionAblations.forecasts_day_spc_calibrated())
 # 807 unfiltered test forecasts
-# 202 0z test forecasts
 # 183 0z test forecasts before the event data cutoff date
+# 183 12z test forecasts before the event data cutoff date
 
 # Absolutely calibrated should produce the same result
 2 in TASKS && do_it(HREFPredictionAblations.forecasts_day(); suffix = "_absolutely_calibrated")
