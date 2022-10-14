@@ -115,16 +115,16 @@ function do_it(forecasts; suffix = "")
         data_is[ndata_per_forecast*(fcst_i-1)+1 : ndata_per_forecast*fcst_i] = ndata_per_forecast*(bs_fcst_i-1)+1 : ndata_per_forecast*bs_fcst_i
       end
 
-      au_pr_0z  = Metrics.area_under_pr_curve_fast(view(X_0z,  prediction_i, data_is), view(y_0z,  data_is), view(weights_0z,  data_is); bin_count = 1000)
-      au_pr_12z = Metrics.area_under_pr_curve_fast(view(X_12z, prediction_i, data_is), view(y_12z, data_is), view(weights_12z, data_is); bin_count = 1000)
+      au_pr_0z  = Metrics.area_under_pr_curve_fast(view(X_0z,  data_is, prediction_i), view(y_0z,  data_is), view(weights_0z,  data_is); bin_count = 1000)
+      au_pr_12z = Metrics.area_under_pr_curve_fast(view(X_12z, data_is, prediction_i), view(y_12z, data_is), view(weights_12z, data_is); bin_count = 1000)
       au_pr_mean = (au_pr_0z + au_pr_12z) / 2
       (au_pr_0z, au_pr_12z, au_pr_mean)
     end
 
     au_pr_bootstraps_0z, au_pr_bootstraps_12z, au_pr_bootstraps_mean = unzip3(triples)
 
-    au_pr_0z   = Metrics.area_under_pr_curve_fast(view(X_0z, prediction_i, :), y_0z, weights_0z; bin_count = 1000)
-    au_pr_12z  = Metrics.area_under_pr_curve_fast(view(X_12z, prediction_i, :), y_12z, weights_12z; bin_count = 1000)
+    au_pr_0z   = Metrics.area_under_pr_curve_fast(view(X_0z,  :, prediction_i), y_0z,  weights_0z;  bin_count = 1000)
+    au_pr_12z  = Metrics.area_under_pr_curve_fast(view(X_12z, :, prediction_i), y_12z, weights_12z; bin_count = 1000)
     au_pr_mean = (au_pr_0z + au_pr_12z) / 2
     row = Any[
       model_name,
