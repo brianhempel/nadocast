@@ -31,7 +31,15 @@ function unzip3(triples)
   )
 end
 
-const nbootstraps = parse(Int64, get(ENV, "NBOOTSTRAPS", "10000"))
+const nbootstraps = parse(Int64, get(ENV, "NBOOTSTRAPS", "10000")) # 10,000 takes ~10hr
+
+function two_sided_bootstrap_p_value_paired(bootstraps_1, bootstraps_2)
+  nbootstraps = length(bootstraps_1)
+  min(
+    count(bootstraps_1 .<= bootstraps_2) / (nbootstraps / 2),
+    count(bootstraps_1 .>= bootstraps_2) / (nbootstraps / 2),
+  )
+end
 
 function do_it(forecasts; suffix = "")
 
@@ -96,34 +104,57 @@ function do_it(forecasts; suffix = "")
 
   @assert length(y_0z) == size(X_0z,1)
   @assert length(y_0z) / nforecasts == round(length(y_0z) / nforecasts)
-  ndata_per_forecast = length(y_0z) ÷ nforecasts
+  ndata = length(y_0z)
+  ndata_per_forecast = ndata ÷ nforecasts
   @assert run_times_0z[ndata_per_forecast*10] == run_times_0z[ndata_per_forecast*10 - 1]
   @assert run_times_0z[ndata_per_forecast*10] != run_times_0z[ndata_per_forecast*10 + 1]
 
   # Use same bootstraps across all predictors
-  # Unnecessary for large nbootstraps, but increases the validity of comparisons for smaller nbootstraps
   rng = Random.MersenneTwister(12345)
   bootstrap_forecast_iss = map(_ -> rand(rng, 1:nforecasts, nforecasts), 1:nbootstraps)
 
-  data_is = Vector{Int64}(undef, size(X_0z,1))
-  for prediction_i in 1:size(X_0z,2)
-    model_name = HREFPredictionAblations.models[prediction_i][1]
+  nmodels = size(X_0z,2)
+  model_au_pr_bootstraps_0z   = map(_ -> Float32[], 1:nmodels)
+  model_au_pr_bootstraps_12z  = map(_ -> Float32[], 1:nmodels)
+  model_au_pr_bootstraps_mean = map(_ -> Float32[], 1:nmodels)
 
-    au_pr_bootstraps = map(1:nbootstraps) do bootstrap_i
-      bootstrap_forecast_is = bootstrap_forecast_iss[bootstrap_i]
-      Threads.@threads for fcst_i in 1:nforecasts
-        bs_fcst_i = bootstrap_forecast_is[fcst_i]
-        data_is[ndata_per_forecast*(fcst_i-1)+1 : ndata_per_forecast*fcst_i] = ndata_per_forecast*(bs_fcst_i-1)+1 : ndata_per_forecast*bs_fcst_i
-      end
+  data_is = Vector{Int64}(undef, ndata)
+  for bootstrap_i in 1:nbootstraps
+    bootstrap_forecast_is = bootstrap_forecast_iss[bootstrap_i]
+    Threads.@threads for fcst_i in 1:nforecasts
+      bs_fcst_i = bootstrap_forecast_is[fcst_i]
+      data_is[ndata_per_forecast*(fcst_i-1)+1 : ndata_per_forecast*fcst_i] = ndata_per_forecast*(bs_fcst_i-1)+1 : ndata_per_forecast*bs_fcst_i
+    end
 
+    for prediction_i in 1:nmodels
       au_pr_0z  = Metrics.area_under_pr_curve_fast(view(X_0z,  data_is, prediction_i), view(y_0z,  data_is), view(weights_0z,  data_is); bin_count = 1000)
       au_pr_12z = Metrics.area_under_pr_curve_fast(view(X_12z, data_is, prediction_i), view(y_12z, data_is), view(weights_12z, data_is); bin_count = 1000)
       au_pr_mean = (au_pr_0z + au_pr_12z) / 2
-      (au_pr_0z, au_pr_12z, au_pr_mean)
+
+      push!(model_au_pr_bootstraps_0z[prediction_i],   au_pr_0z)
+      push!(model_au_pr_bootstraps_12z[prediction_i],  au_pr_12z)
+      push!(model_au_pr_bootstraps_mean[prediction_i], au_pr_mean)
     end
+    print(".")
+    flush(stdout)
+  end
+  println()
 
-    au_pr_bootstraps_0z, au_pr_bootstraps_12z, au_pr_bootstraps_mean = unzip3(au_pr_bootstraps)
-
+  row = Any[
+    "model_name",
+    "au_pr_0z",
+    "au_pr_12z",
+    "au_pr_mean",
+    "p au_pr_mean > au_pr_model_1 (one-sided)",
+    "p au_pr_mean > au_pr_model_2 (one-sided)",
+    "p au_pr_mean > au_pr_model_3 (one-sided)",
+    "p au_pr_mean ≠ au_pr_model_1 (two-sided)",
+    "p au_pr_mean ≠ au_pr_model_2 (two-sided)",
+    "p au_pr_mean ≠ au_pr_model_3 (two-sided)",
+  ]
+  println(join(row, ","))
+  for prediction_i in 1:nmodels
+    model_name = HREFPredictionAblations.models[prediction_i][1]
     au_pr_0z   = Metrics.area_under_pr_curve_fast(view(X_0z,  :, prediction_i), y_0z,  weights_0z;  bin_count = 1000)
     au_pr_12z  = Metrics.area_under_pr_curve_fast(view(X_12z, :, prediction_i), y_12z, weights_12z; bin_count = 1000)
     au_pr_mean = (au_pr_0z + au_pr_12z) / 2
@@ -132,12 +163,12 @@ function do_it(forecasts; suffix = "")
       au_pr_0z,
       au_pr_12z,
       au_pr_mean,
-      Statistics.quantile(au_pr_bootstraps_0z, 0.025),
-      Statistics.quantile(au_pr_bootstraps_0z, 0.975),
-      Statistics.quantile(au_pr_bootstraps_12z, 0.025),
-      Statistics.quantile(au_pr_bootstraps_12z, 0.975),
-      Statistics.quantile(au_pr_bootstraps_mean, 0.025),
-      Statistics.quantile(au_pr_bootstraps_mean, 0.975),
+      Float32(count(model_au_pr_bootstraps_mean[prediction_i] .<= model_au_pr_bootstraps_mean[1]) / nbootstraps), # One-sided test https://blogs.sas.com/content/iml/2011/11/02/how-to-compute-p-values-for-a-bootstrap-distribution.html
+      Float32(count(model_au_pr_bootstraps_mean[prediction_i] .<= model_au_pr_bootstraps_mean[2]) / nbootstraps), # One-sided test https://blogs.sas.com/content/iml/2011/11/02/how-to-compute-p-values-for-a-bootstrap-distribution.html
+      Float32(count(model_au_pr_bootstraps_mean[prediction_i] .<= model_au_pr_bootstraps_mean[3]) / nbootstraps), # One-sided test https://blogs.sas.com/content/iml/2011/11/02/how-to-compute-p-values-for-a-bootstrap-distribution.html
+      two_sided_bootstrap_p_value_paired(model_au_pr_bootstraps_mean[prediction_i], model_au_pr_bootstraps_mean[1]),
+      two_sided_bootstrap_p_value_paired(model_au_pr_bootstraps_mean[prediction_i], model_au_pr_bootstraps_mean[2]),
+      two_sided_bootstrap_p_value_paired(model_au_pr_bootstraps_mean[prediction_i], model_au_pr_bootstraps_mean[3]),
     ]
     println(join(row, ","))
   end
@@ -150,7 +181,7 @@ end
 # end
 
 
-# Going to use all the HREF forecasts
+# Going to use all the HREF forecasts, 2018-7-1 to 2022-5-31.
 
 TASKS = eval(Meta.parse(get(ENV, "TASKS", "")))
 if isnothing(TASKS)
@@ -163,6 +194,7 @@ end
 # 183 12z test forecasts before the event data cutoff date
 
 # Absolutely calibrated should produce the same result
+# I checked and it does match (some off-by-ones in the 4th sig fig)
 2 in TASKS && do_it(HREFPredictionAblations.forecasts_day(); suffix = "_absolutely_calibrated")
 
 
