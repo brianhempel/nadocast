@@ -35,10 +35,11 @@ const nbootstraps = parse(Int64, get(ENV, "NBOOTSTRAPS", "10000")) # 10,000 take
 
 function two_sided_bootstrap_p_value_paired(bootstraps_1, bootstraps_2)
   nbootstraps = length(bootstraps_1)
-  min(
+  Float32(min(
     count(bootstraps_1 .<= bootstraps_2) / (nbootstraps / 2),
     count(bootstraps_1 .>= bootstraps_2) / (nbootstraps / 2),
-  )
+    1.0
+  ))
 end
 
 function do_it(forecasts; suffix = "")
