@@ -218,6 +218,8 @@ function do_it_hourly(forecasts; suffix = "")
 
   y_0z, y_12z = Ys_0z["tornado"], Ys_12z["tornado"]
 
+  nmodels = size(X_0z,2)
+
   row = Any[
     "model_name",
     "au_pr_0z",
