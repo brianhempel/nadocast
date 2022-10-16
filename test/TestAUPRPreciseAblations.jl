@@ -44,7 +44,7 @@ end
 
 function do_it(forecasts; suffix = "")
 
-  println("************ ablations(suffix) ************")
+  println("************ ablations$(suffix) ************")
 
   (train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_train_validation_test(
@@ -175,6 +175,71 @@ function do_it(forecasts; suffix = "")
   end
 end
 
+function do_it_hourly(forecasts; suffix = "")
+
+  println("************ ablations$(suffix) ************")
+
+  (train_forecasts, validation_forecasts, test_forecasts) =
+    TrainingShared.forecasts_train_validation_test(
+      ForecastCombinators.resample_forecasts(forecasts, Grids.get_upsampler, GRID);
+      just_hours_near_storm_events = false
+    );
+
+  # We don't have storm events past this time.
+  cutoff = Dates.DateTime(2022, 6, 1, 12)
+
+  println("$(length(test_forecasts)) unfiltered test forecasts")
+  test_forecasts_0z  = filter(forecast -> forecast.run_hour == 0  && Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
+  test_forecasts_12z = filter(forecast -> forecast.run_hour == 12 && Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
+  test_forecasts = []
+  println("$(length(test_forecasts_0z)) 0z test forecasts before the event data cutoff date") #
+  println("$(length(test_forecasts_12z)) 12z test forecasts before the event data cutoff date") #
+
+  event_name_to_labeler = Dict(
+    "tornado" => TrainingShared.event_name_to_labeler["tornado"]
+  )
+
+  # rm("hourly_ablation_$(length(test_forecasts_0z))_test_forecasts$(suffix)_0z"; recursive = true)
+  # rm("hourly_ablation_$(length(test_forecasts_12z))_test_forecasts$(suffix)_12z"; recursive = true)
+
+  X_0z, Ys_0z, weights_0z =
+    TrainingShared.get_data_labels_weights(
+      test_forecasts_0z;
+      event_name_to_labeler = event_name_to_labeler,
+      save_dir = "hourly_ablation_$(length(test_forecasts_0z))_test_forecasts$(suffix)_0z",
+    );
+
+  X_12z, Ys_12z, weights_12z =
+    TrainingShared.get_data_labels_weights(
+      test_forecasts_12z;
+      event_name_to_labeler = event_name_to_labeler,
+      save_dir = "hourly_ablation_$(length(test_forecasts_12z))_test_forecasts$(suffix)_12z",
+    );
+
+  y_0z, y_12z = Ys_0z["tornado"], Ys_12z["tornado"]
+
+  row = Any[
+    "model_name",
+    "au_pr_0z",
+    "au_pr_12z",
+    "au_pr_mean",
+  ]
+  println(join(row, ","))
+  for prediction_i in 1:nmodels
+    model_name = HREFPredictionAblations.models[prediction_i][1]
+    au_pr_0z   = Metrics.area_under_pr_curve_fast(view(X_0z,  :, prediction_i), y_0z,  weights_0z;  bin_count = 1000)
+    au_pr_12z  = Metrics.area_under_pr_curve_fast(view(X_12z, :, prediction_i), y_12z, weights_12z; bin_count = 1000)
+    au_pr_mean = (au_pr_0z + au_pr_12z) / 2
+    row = Any[
+      model_name,
+      au_pr_0z,
+      au_pr_12z,
+      au_pr_mean,
+    ]
+    println(join(row, ","))
+  end
+end
+
 # function only_forecasts_with_runtimes(reference_forecasts, forecasts_to_filter)
 #   reference_runtimes = Set(Forecasts.run_utc_datetime.(reference_forecasts))
 
@@ -197,6 +262,8 @@ end
 # Absolutely calibrated should produce the same result
 # I checked and it does match (some off-by-ones in the 4th sig fig)
 2 in TASKS && do_it(HREFPredictionAblations.forecasts_day(); suffix = "_absolutely_calibrated")
+
+3 in TASKS && do_it_hourly(HREFPredictionAblations.forecasts_calibrated())
 
 
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[1] NBOOTSTRAPS=10 julia -t 16 --project=.. TestAUPRPreciseAblations.jl
