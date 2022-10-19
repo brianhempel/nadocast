@@ -53,10 +53,10 @@ VERIFIABLE_GRID_MASK = CONUS_MASK .&& is_verifiable.(GRID.latlons) :: BitVector;
 
 # conus_area = sum(GRID.point_areas_sq_miles[CONUS_MASK))
 
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[1] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[2] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[3] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[4] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# sleep 10000 && FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[1] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# sleep 10000 && FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[2] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# sleep 10000 && FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[3] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# sleep 10000 && FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[4] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[5] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[6] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[7] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
@@ -526,4 +526,143 @@ model_names = map(m -> m[3], CombinedHREFSREF.models_with_gated)
 8 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
 
 
-# scp -r nadocaster:/home/brian/nadocast_dev/test/ ./
+
+
+function draw_only(spc_forecasts, forecasts, model_names; run_hour, suffix, start = Dates.DateTime(2000, 1, 1, 1), cutoff = Dates.DateTime(2022, 6, 1, 12), only_models = model_names, all_days_of_week = false)
+
+  println("************ $(run_hour)z$(suffix) ************")
+
+  println("$(length(spc_forecasts)) SPC forecasts available") #
+
+  (train_forecasts, validation_forecasts, test_forecasts) =
+    TrainingShared.forecasts_train_validation_test(
+      ForecastCombinators.resample_forecasts(forecasts, Grids.get_upsampler, GRID);
+      just_hours_near_storm_events = false
+    );
+
+  if all_days_of_week
+    test_forecasts = vcat(train_forecasts, validation_forecasts, test_forecasts)
+  end
+
+  println("$(length(test_forecasts)) unfiltered test forecasts") # 627
+  test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts") # 157
+
+  # We don't have storm events past this time.
+
+  test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= start, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
+
+  event_name_to_unadj_events = Dict(
+    "tornado"     => StormEvents.conus_tornado_events(),
+    "wind"        => StormEvents.conus_severe_wind_events(),
+    "hail"        => StormEvents.conus_severe_hail_events(),
+    "sig_tornado" => StormEvents.conus_sig_tornado_events(),
+    "sig_wind"    => StormEvents.conus_sig_wind_events(),
+    "sig_hail"    => StormEvents.conus_sig_hail_events(),
+  )
+
+  # is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\Atornado_.+_\d+\z" => "tornado")
+  unadj_name(event_name) = replace(event_name, r"_adj\z" => "")
+
+  # Use non-sig colors (i.e. not just 10%)
+  model_name_to_colorer(model_name) = PlotMap.event_name_to_colorer_more_sig_colors[model_name_to_event_name(model_name)]
+
+  compute_forecast_labels(model_name, spc_forecast) = begin
+    # Annoying that we have to recalculate this.
+    start_seconds =
+      if spc_forecast.run_hour == 6
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast) + 6*HOUR
+      elseif spc_forecast.run_hour == 13
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast)
+      elseif spc_forecast.run_hour == 16
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast) + 30*MINUTE
+      end
+    end_seconds = Forecasts.valid_time_in_seconds_since_epoch_utc(spc_forecast) + HOUR
+    println(Forecasts.yyyymmdd_thhz_fhh(spc_forecast))
+    utc_datetime = Dates.unix2datetime(start_seconds)
+    println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+    println(Forecasts.valid_yyyymmdd_hhz(spc_forecast))
+    window_half_size = (end_seconds - start_seconds) ÷ 2
+    window_mid_time  = (end_seconds + start_seconds) ÷ 2
+    event_name = model_name_to_event_name(model_name)
+    if endswith(event_name, "wind_adj")
+      measured_events, estimated_events, gridded_normalization =
+        if event_name == "wind_adj"
+          StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), TrainingShared.day_estimated_wind_gridded_normalization()
+        elseif event_name == "sig_wind_adj"
+          StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), TrainingShared.day_estimated_sig_wind_gridded_normalization()
+        else
+          error("unknown adj event $event_name")
+        end
+      measured_labels  = StormEvents.grid_to_event_neighborhoods(measured_events, spc_forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+      estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, spc_forecast.grid, Grid130.GRID_130_CROPPED, gridded_normalization, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+      max.(measured_labels, estimated_labels)
+    else
+      events = event_name_to_unadj_events[event_name]
+      StormEvents.grid_to_event_neighborhoods(events, spc_forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+    end
+  end
+
+
+  for spc_forecast in spc_forecasts
+    test_forecast_i = findfirst(forecast -> (forecast.run_year, forecast.run_month, forecast.run_day) == (spc_forecast.run_year, spc_forecast.run_month, spc_forecast.run_day), test_forecasts)
+    if isnothing(test_forecast_i)
+      continue
+    end
+    test_forecast = test_forecasts[test_forecast_i]
+
+    spc_data  = Forecasts.data(spc_forecast)
+    ForecastCombinators.turn_forecast_caching_on()
+    test_data = Forecasts.data(test_forecast)
+    ForecastCombinators.clear_cached_forecasts()
+
+    for model_name in model_names
+      model_name in only_models || continue
+      event_name   = model_name_to_event_name(model_name)
+      spc_event_i  = findfirst(m -> m[1] == unadj_name(event_name), SPCOutlooks.models)
+      test_event_i = findfirst(isequal(model_name), model_names)
+
+      spc_event_probs  = @view spc_data[:, spc_event_i]
+      test_event_probs = @view test_data[:, test_event_i]
+
+      forecast_labels = compute_forecast_labels(model_name, spc_forecast) :: Vector{Float32}
+
+      map_root = ((@__DIR__) * "/maps/$(Forecasts.yyyymmdd(spc_forecast))")
+      mkpath(map_root)
+
+      post_process(img) = PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img))
+
+      make_plot(file_name, data) = begin
+        path = map_root * "/" * file_name
+        println(file_name)
+        PlotMap.plot_fast(path, GRID, data .* CONUS_MASK; val_to_color=model_name_to_colorer(model_name), post_process=post_process)
+        PlotMap.optimize_png(path; wait = false)
+      end
+
+      if !isnothing(spc_event_i) && DRAW_SPC_MAPS
+        make_plot("spc_day_1_$(event_name)_$(Forecasts.yyyymmdd_thhz(spc_forecast))", spc_event_probs)
+      end
+      make_plot("nadocast$(suffix)_$(model_name)_$(Forecasts.yyyymmdd_thhz(test_forecast))", test_event_probs)
+    end
+  end
+
+end
+
+start  = Dates.DateTime(2022, 6, 1, 12)
+cutoff = Dates.DateTime(2022, 8, 1, 12)
+
+13 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "", start = start, cutoff = cutoff, all_days_of_week = true)
+14 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
+15 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "", start = start, cutoff = cutoff, all_days_of_week = true)
+16 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
+
+
+# HREF-only models
+
+17 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only", start = start, cutoff = cutoff, all_days_of_week = true)
+18 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
+19 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only", start = start, cutoff = cutoff, all_days_of_week = true)
+20 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
+
