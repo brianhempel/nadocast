@@ -529,7 +529,7 @@ ablation_model_names = map(m -> m[1], HREFPredictionAblations.models)
 
 # Redrawing the adjusted wind maps with dithering
 
-function draw_adj_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
+function draw_only(spc_forecasts, forecasts, model_names; run_hour, suffix, start = Dates.DateTime(2000, 1, 1, 1), cutoff = Dates.DateTime(2022, 6, 1, 12), only_models = model_names, all_days_of_week = false)
 
   println("************ $(run_hour)z$(suffix) ************")
 
@@ -541,14 +541,17 @@ function draw_adj_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
       just_hours_near_storm_events = false
     );
 
+  if all_days_of_week
+    test_forecasts = vcat(train_forecasts, validation_forecasts, test_forecasts)
+  end
+
   println("$(length(test_forecasts)) unfiltered test forecasts") # 627
   test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
   println("$(length(test_forecasts)) $(run_hour)z test forecasts") # 157
 
   # We don't have storm events past this time.
-  cutoff = Dates.DateTime(2022, 6, 1, 12)
 
-  test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
+  test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= start, test_forecasts);
   println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
 
   event_name_to_unadj_events = Dict(
@@ -617,7 +620,7 @@ function draw_adj_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
     ForecastCombinators.clear_cached_forecasts()
 
     for model_name in model_names
-      occursin("adj", model_name) || continue
+      model_name in only_models || continue
       event_name   = model_name_to_event_name(model_name)
       spc_event_i  = findfirst(m -> m[1] == unadj_name(event_name), SPCOutlooks.models)
       test_event_i = findfirst(isequal(model_name), model_names)
@@ -648,18 +651,21 @@ function draw_adj_only(spc_forecasts, forecasts, model_names; run_hour, suffix)
 
 end
 
-13 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "")
-14 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated")
-15 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "")
-16 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated")
+start  = Dates.DateTime(2022, 6, 1, 12)
+cutoff = Dates.DateTime(2022, 8, 1, 12)
+
+13 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0, suffix = "", start = start, cutoff = cutoff, all_days_of_week = true)
+14 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 0, suffix = "_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
+15 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "", start = start, cutoff = cutoff, all_days_of_week = true)
+16 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), CombinedHREFSREF.forecasts_day_with_sig_gated(), model_names; run_hour = 12, suffix = "_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
 
 
 # HREF-only models
 
-17 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only")
-18 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated")
-19 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only")
-20 in TASKS && draw_adj_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated")
+17 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only", start = start, cutoff = cutoff, all_days_of_week = true)
+18 in TASKS && draw_only(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 0, suffix = "_href_only_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
+19 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only", start = start, cutoff = cutoff, all_days_of_week = true)
+20 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
 
 
 # FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[13] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
