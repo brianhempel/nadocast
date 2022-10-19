@@ -269,8 +269,6 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
     [
       row["EVENT_TYPE"],
       (row["MAGNITUDE"].to_s)[/[\d\.]+/] || "-1", # Hail size
-      # row["TOR_LENGTH"].to_f,
-      # row["TOR_WIDTH"].to_i,
     ] +
     row_to_lat_lon_cells(row)
   end
@@ -340,7 +338,9 @@ if ARGV[3] == "--add_spc_storm_reports"
 
       begin_end_time_cells(time, time) +
       [
-        "-1" # f_scale
+        "-1", # f_scale
+        "-1", # length
+        "-1", # width
       ] +
       row_to_lat_lon_cells(row)
     end
