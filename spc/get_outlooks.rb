@@ -10,7 +10,7 @@ require 'date'
 # DATES = (Date.new(2018,6,29)..Date.new(2019,1,7)).to_a
 # DATES = (Date.new(2019,1,7)..Date.new(2022,2,22)).to_a
 # DATES = (Date.new(2021,12,31)..Date.new(2022,2,22)).to_a
-DATES = (Date.new(2022,2,22)..Date.new(2022,5,31)).to_a
+DATES = (Date.new(2022,6,1)..Date.new(2022,7,31)).to_a
 HOURS_TO_GET = %w[1200 1300 1630] # 0600Z 1300Z and 1630Z SPC outlooks, corresponding to 0Z 10Z and 14Z Nadocast forecasts.
 
 class Date
