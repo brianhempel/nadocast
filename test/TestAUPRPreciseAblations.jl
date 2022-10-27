@@ -4,6 +4,8 @@ import Printf
 import Serialization
 import Statistics
 
+import MemoryConstrainedTreeBoosting
+
 push!(LOAD_PATH, (@__DIR__) * "/../models/shared")
 import Metrics
 import TrainingShared
