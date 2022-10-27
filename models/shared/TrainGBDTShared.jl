@@ -196,9 +196,9 @@ function train_with_coordinate_descent_hyperparameter_search(
   end
 
   # Returns (X_binned, Ys, weights)
-  get_data_labels_weights_binned(forecasts, save_suffix) = begin
+  get_data_labels_weights_binned(forecasts, save_suffix; only_features) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, event_name_to_labeler = event_name_to_labeler, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, event_name_to_labeler = event_name_to_labeler, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor, only_features = only_features)
   end
 
   prepare_data_labels_weights_binned(forecasts, save_suffix) = begin
@@ -234,9 +234,9 @@ function train_with_coordinate_descent_hyperparameter_search(
       rank == root && println("Loading validation data")
       validation_X_binned, validation_Ys, validation_weights =
         if must_load_from_disk
-          TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count)
+          TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count, only_features = only_features)
         else
-          get_data_labels_weights_binned(validation_forecasts, "validation")
+          get_data_labels_weights_binned(validation_forecasts, "validation", only_features = only_features)
         end
       print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
 
@@ -253,9 +253,9 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank == root && println("Loading training data")
     X_binned, Ys, weights =
       if must_load_from_disk
-        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count)
+        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count, only_features = only_features)
       else
-        get_data_labels_weights_binned(train_forecasts, "training")
+        get_data_labels_weights_binned(train_forecasts, "training", only_features = only_features)
       end
     print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
 
@@ -281,34 +281,46 @@ function train_with_coordinate_descent_hyperparameter_search(
   feature_file_path = joinpath(specific_save_dir("training"), "features.txt")
   feature_names = readlines(feature_file_path)
 
+  feature_i_to_orig_feature_i =
+    if isnothing(only_features)
+      1:length(feature_names)
+    else
+      map(feat_name -> findfirst(isequal(feat_name), feature_names), only_features)
+    end
+
+  function restore_orig_feature_is(tree) :: MemoryConstrainedTreeBoosting.Tree
+    if isa(tree, MemoryConstrainedTreeBoosting.Node)
+      left  = restore_orig_feature_is(tree.left)
+      right = restore_orig_feature_is(tree.right)
+      MemoryConstrainedTreeBoosting.Node(feature_i_to_orig_feature_i[tree.feature_i], tree.split_i, left, right, [])
+    else
+      MemoryConstrainedTreeBoosting.Leaf(tree.Δscore)
+    end
+  end
+
   print_mpi(str) = rank == root && print(str)
 
   for event_name in event_types
-    labels            = Ys[event_name]
+    labels = Ys[event_name]
     if isnothing(validation_server)
       validation_labels = validation_Ys[event_name]
     end
 
-    print("Training for $event_name with $(count(labels .> 0.5f0)) positive and $(count(labels .<= 0.5f0)) negative labels\n")
+    print("Training for $event_name with $(sum(labels)) positive and $(sum(1f0 .- labels)) negative labels\n")
 
-    exclude_features =
-      if isnothing(only_features)
-        []
-      else
-        findall(feat_name -> !(feat_name in only_features), feature_names)
+    if !isnothing(only_features)
+      for i in eachindex(only_features)
+        print_mpi("Using $i $(only_features[i])\n")
       end
-
-    for (feature_i, feature_name) in zip(exclude_features, feature_names[exclude_features])
-      print_mpi("Excluding $feature_i $feature_name\n")
     end
 
     best_model_path = nothing
     best_loss       = Inf32
     prefix =
-      if exclude_features == []
+      if isnothing(only_features)
         "$(model_prefix)_$(event_name)"
       else
-        "$(model_prefix)_$(event_name)_excluding_$(length(exclude_features))_features_$(hash(sort(unique(exclude_features))))"
+        "$(model_prefix)_$(event_name)_only_$(length(only_features))_features_$(hash(sort(unique(only_features))))"
       end
 
     # Returns path
@@ -318,6 +330,7 @@ function train_with_coordinate_descent_hyperparameter_search(
         mkdir(prefix)
       catch
       end
+      trees = map(restore_orig_feature_is, trees) # deep copy
       model_path = MemoryConstrainedTreeBoosting.save("$(prefix)/$(length(trees))_trees_loss_$(validation_loss).model", bin_splits, trees)
       print("done.\t")
       model_path
@@ -363,7 +376,6 @@ function train_with_coordinate_descent_hyperparameter_search(
         iteration_count    = Int64(round(50 / config[:learning_rate])),
         iteration_callback = iteration_callback,
         mpi_comm           = mpi_comm,
-        exclude_features   = exclude_features,
         config...
       )
 

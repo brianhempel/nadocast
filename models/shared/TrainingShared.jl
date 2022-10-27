@@ -298,14 +298,14 @@ function finished_loading(save_dir)
 end
 
 # labels are return as a dictionary of event_name_to_labels
-function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler)
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler, only_features = nothing)
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
   if !finished_loading(save_dir)
     load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, event_name_to_labeler = event_name_to_labeler)
   end
-  read_data_labels_weights_from_disk(save_dir)
+  read_data_labels_weights_from_disk(save_dir; only_features = only_features)
 end
 
 # Loads the data to disk but does not read it back.
@@ -491,7 +491,7 @@ function chunk_range(chunk_i, n_chunks, array_len)
 end
 
 # If using MPI for data-parallel distributed learning, chunk_i = rank+1, chunk_count = rank_count
-function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count = 1)
+function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count = 1, only_features = nothing)
   save_path(path) = joinpath(save_dir, path)
 
   weights_full = Serialization.deserialize(save_path("weights.serialized"))
@@ -509,8 +509,13 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
 
   forecast_data_1 = Serialization.deserialize(save_path(data_file_names[1]))
 
-  feature_count = size(forecast_data_1, 2)
-  feature_type  = eltype(forecast_data_1)
+  feature_names   = readlines(save_path("features.txt"))
+  @assert isnothing(only_features) || all(feat_name -> feat_name in feature_names, only_features)
+  only_feature_is = isnothing(only_features) ? (1:raw_feature_count) : map(feat_name -> findfirst(isequal(feat_name), feature_names), only_features)
+
+  raw_feature_count = size(forecast_data_1, 2)
+  feature_count     = length(only_feature_is)
+  feature_type      = eltype(forecast_data_1)
 
   forecast_data_1 = nothing # free
 
@@ -522,7 +527,7 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
   for data_file_name in data_file_names
     forecast_row_count, forecast_feature_count = parse.(Int64, match(r"data_\d+_(\d+)x(\d+).serialized", data_file_name))
 
-    @assert feature_count == forecast_feature_count
+    @assert raw_feature_count == forecast_feature_count
 
     file_full_range = full_i:(full_i + forecast_row_count - 1)
 
@@ -531,8 +536,8 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
     if length(my_part) > 0
       forecast_data = Serialization.deserialize(save_path(data_file_name))
       @assert forecast_row_count == size(forecast_data, 1)
-      @assert feature_count      == size(forecast_data, 2)
-      data[my_part .- (my_range.start - 1), :] = forecast_data[my_part .- (full_i - 1), :]
+      @assert raw_feature_count  == size(forecast_data, 2)
+      data[my_part .- (my_range.start - 1), :] = forecast_data[my_part .- (full_i - 1), only_feature_is]
       rows_filled += length(my_part)
     end
 
