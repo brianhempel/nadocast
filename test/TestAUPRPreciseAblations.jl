@@ -152,13 +152,21 @@ function do_it(forecasts; suffix = "")
     "p au_pr_mean ≠ au_pr_model_1 (two-sided)",
     "p au_pr_mean ≠ au_pr_model_2 (two-sided)",
     "p au_pr_mean ≠ au_pr_model_3 (two-sided)",
+    "logloss_0z",
+    "logloss_12z",
+    "logloss_mean",
   ]
   println(join(row, ","))
+  total_0z_weight  = sum(weights_0z)
+  total_12z_weight = sum(weights_12z)
   for prediction_i in 1:nmodels
     model_name = HREFPredictionAblations.models[prediction_i][1]
     au_pr_0z   = Metrics.area_under_pr_curve_fast(view(X_0z,  :, prediction_i), y_0z,  weights_0z;  bin_count = 1000)
     au_pr_12z  = Metrics.area_under_pr_curve_fast(view(X_12z, :, prediction_i), y_12z, weights_12z; bin_count = 1000)
     au_pr_mean = (au_pr_0z + au_pr_12z) / 2
+    logloss_0z   = sum(MemoryConstrainedTreeBoosting.logloss.(y_0z,  view(X_0z,  :, prediction_i)) .* weights_0z)  / total_0z_weight
+    logloss_12z  = sum(MemoryConstrainedTreeBoosting.logloss.(y_12z, view(X_12z, :, prediction_i)) .* weights_12z) / total_12z_weight
+    logloss_mean = (logloss_0z + logloss_12z) / 2
     row = Any[
       model_name,
       au_pr_0z,
@@ -170,6 +178,9 @@ function do_it(forecasts; suffix = "")
       two_sided_bootstrap_p_value_paired(model_au_pr_bootstraps_mean[prediction_i], model_au_pr_bootstraps_mean[1]),
       two_sided_bootstrap_p_value_paired(model_au_pr_bootstraps_mean[prediction_i], model_au_pr_bootstraps_mean[2]),
       two_sided_bootstrap_p_value_paired(model_au_pr_bootstraps_mean[prediction_i], model_au_pr_bootstraps_mean[3]),
+      logloss_0z,
+      logloss_12z,
+      logloss_mean,
     ]
     println(join(row, ","))
   end
