@@ -157,4 +157,51 @@ month_tornado_day_given_severe_day_probability_feature(grid) = month_probability
 month_wind_day_given_severe_day_probability_feature(grid)    = month_probability_given_severe_day_feature("wind",    month_i_to_wind_day_prob,    grid)
 month_hail_day_given_severe_day_probability_feature(grid)    = month_probability_given_severe_day_feature("hail",    month_i_to_hail_day_prob,    grid)
 
+
+function climatology_features(grid; run_datetime_to_simulation_version)
+  [
+    hail_day_spatial_probability_feature(grid),
+    hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    hail_day_given_severe_day_spatial_probability_feature(grid),
+    severe_day_spatial_probability_feature(grid),
+    sig_hail_day_spatial_probability_feature(grid),
+    sig_hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    sig_hail_day_given_severe_day_spatial_probability_feature(grid),
+    sig_severe_day_spatial_probability_feature(grid),
+    sig_severe_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    sig_severe_day_given_severe_day_spatial_probability_feature(grid),
+    sig_tornado_day_spatial_probability_feature(grid),
+    sig_tornado_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    sig_tornado_day_given_severe_day_spatial_probability_feature(grid),
+    sig_wind_day_spatial_probability_feature(grid),
+    sig_wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    sig_wind_day_given_severe_day_spatial_probability_feature(grid),
+    tornado_day_spatial_probability_feature(grid),
+    tornado_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    tornado_day_given_severe_day_spatial_probability_feature(grid),
+    wind_day_spatial_probability_feature(grid),
+    wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
+    wind_day_given_severe_day_spatial_probability_feature(grid),
+
+    asos_gust_days_per_year_feature(grid),
+    asos_sig_gust_days_per_year_feature(grid),
+
+    hour_in_day_severe_probability_feature(grid), # this feature is constant for the day-long experiments
+
+    month_tornado_day_probability_feature(grid),
+    month_wind_day_probability_feature(grid),
+    month_hail_day_probability_feature(grid),
+    month_severe_day_probability_feature(grid),
+    month_tornado_day_given_severe_day_probability_feature(grid),
+    month_wind_day_given_severe_day_probability_feature(grid),
+    month_hail_day_given_severe_day_probability_feature(grid),
+
+    population_density_feature(grid),
+
+    ("simulation_version", forecast -> fill_grid(run_datetime_to_simulation_version(Forecasts.run_utc_datetime(forecast)), grid))
+  ]
+end
+
+
+
 end # module Climatology

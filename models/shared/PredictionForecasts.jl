@@ -205,57 +205,7 @@ end
 function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name)
   event_types_count = length(models)
 
-  run_time_seconds_to_hourly_prediction_forecasts = Forecasts.run_time_seconds_to_forecasts(hourly_prediction_forecasts)
-
-  run_ymdhs = sort(unique(map(Forecasts.run_year_month_day_hour, hourly_prediction_forecasts)), alg=MergeSort)
-
-  associated_fourhourly_forecasts = []
-  associated_forecasts_in_day  = []
-  associated_forecasts_in_day2 = []
-  for (run_year, run_month, run_day, run_hour) in run_ymdhs
-    run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
-
-    forecasts_for_run_time = get(run_time_seconds_to_hourly_prediction_forecasts, run_time_seconds, Forecasts.Forecast[])
-
-    forecast_hours = map(f -> f.forecast_hour, forecasts_for_run_time)
-    min_forecast_hour = minimum(forecast_hours)
-    max_forecast_hour = maximum(forecast_hours)
-    for forecast_hour in (min_forecast_hour+3):max_forecast_hour
-      forecast_hours_in_fourhourly_period = forecast_hour-3 : forecast_hour
-      forecasts_for_fourhourly_period = filter(forecast -> forecast.forecast_hour in forecast_hours_in_fourhourly_period, forecasts_for_run_time)
-      if length(forecasts_for_fourhourly_period) == 4
-        push!(associated_fourhourly_forecasts, forecasts_for_fourhourly_period)
-      end
-    end
-
-    forecast_hours_in_convective_day  = max(12-run_hour,2) : 35-run_hour
-    forecast_hours_in_convective_day2 = forecast_hours_in_convective_day.stop+1 : forecast_hours_in_convective_day.stop+24
-
-    forecasts_for_convective_day = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day, forecasts_for_run_time)
-    if length(forecast_hours_in_convective_day) == length(forecasts_for_convective_day)
-      push!(associated_forecasts_in_day, forecasts_for_convective_day)
-    end
-    forecasts_for_convective_day2 = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day2, forecasts_for_run_time)
-    if length(forecast_hours_in_convective_day2) == length(forecasts_for_convective_day2)
-      push!(associated_forecasts_in_day2, forecasts_for_convective_day2)
-    end
-  end
-
-  # Which run time and forecast hour to use for the set.
-  # Namely: latest run time, then longest forecast hour
-  choose_canonical_forecast(associated_hourlies) = begin
-    canonical = associated_hourlies[1]
-    for forecast in associated_hourlies
-      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
-        canonical = forecast
-      end
-    end
-    canonical
-  end
-
-  day_hourly_predictions  = ForecastCombinators.concat_forecasts(associated_forecasts_in_day,     forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
-  day2_hourly_predictions = ForecastCombinators.concat_forecasts(associated_forecasts_in_day2,    forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
-  fourhourly_predictions  = ForecastCombinators.concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day_hourly_predictions, day2_hourly_predictions, fourhourly_predictions = ForecastCombinators.gather_daily_and_fourhourly(hourly_prediction_forecasts)
 
   hourlies_to_accs_inventory_transformer(day_or_four_hour_str) = (base_forecast, base_inventory) -> begin
     out = Inventories.InventoryLine[]

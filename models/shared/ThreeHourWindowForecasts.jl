@@ -208,121 +208,14 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_
 
     Forecasts.Forecast(join(model_names, "|"), canonical_forecast.run_year, canonical_forecast.run_month, canonical_forecast.run_day, canonical_forecast.run_hour, canonical_forecast.forecast_hour, forecasts_array, canonical_forecast.grid, get_inventory, get_data, preload_paths)
   end
-
-
-  # inventory_transformer(base_forecast, base_inventory) = begin
-  #   single_hour_feature_count = div(length(base_inventory),3)
-
-  #   forecast_hour_inventory = base_inventory[(single_hour_feature_count + 1):(2*single_hour_feature_count)]
-
-  #   min_inventory   = add_misc_suffix_to_inventory_lines(forecast_hour_inventory, " 3hr min")
-  #   mean_inventory  = add_misc_suffix_to_inventory_lines(forecast_hour_inventory, " 3hr mean")
-  #   max_inventory   = add_misc_suffix_to_inventory_lines(forecast_hour_inventory, " 3hr max")
-  #   delta_inventory = add_misc_suffix_to_inventory_lines(forecast_hour_inventory, " 3hr delta")
-
-  #   new_features_post_lines =
-  #     map(new_features_post) do feature_name_and_compute_function
-  #       Inventories.InventoryLine(
-  #         "",                                   # message_dot_submessage
-  #         "",                                   # position_str
-  #         base_inventory[1].date_str,
-  #         feature_name_and_compute_function[1], # abbrev
-  #         "calculated",                         # level
-  #         "hour fcst",                          # forecast_hour_str
-  #         "",                                   # misc
-  #         ""                                    # feature_engineering
-  #       )
-  #     end
-
-  #   vcat(base_inventory, min_inventory, mean_inventory, max_inventory, delta_inventory, new_features_post_lines)
-  # end
-
-  # data_transformer(base_forecast, base_data) = begin
-  #   point_count               = size(base_data, 1)
-  #   single_hour_feature_count = div(size(base_data, 2),3)
-  #   hours_feature_count       = 7*single_hour_feature_count
-
-  #   # print("Computing min mean max delta + climatology")
-  #   # 1.6s out of 15s. minimal allocations, albeit LARGE
-  #   begin
-  #     out = Array{Float32}(undef, (point_count, hours_feature_count + length(new_features_post)))
-
-  #     Threads.@threads for feature_i in 1:(3*single_hour_feature_count)
-  #       out[:, feature_i] = @view base_data[:, feature_i]
-  #     end
-
-  #     prior_hour_data    = @view out[:, (0*single_hour_feature_count + 1):(1*single_hour_feature_count)]
-  #     forecast_hour_data = @view out[:, (1*single_hour_feature_count + 1):(2*single_hour_feature_count)]
-  #     next_hour_data     = @view out[:, (2*single_hour_feature_count + 1):(3*single_hour_feature_count)]
-  #     window_min_data    = @view out[:, (3*single_hour_feature_count + 1):(4*single_hour_feature_count)]
-  #     window_mean_data   = @view out[:, (4*single_hour_feature_count + 1):(5*single_hour_feature_count)]
-  #     window_max_data    = @view out[:, (5*single_hour_feature_count + 1):(6*single_hour_feature_count)]
-  #     window_delta_data  = @view out[:, (6*single_hour_feature_count + 1):(7*single_hour_feature_count)]
-
-  #     compute_min_mean_max_delta!(prior_hour_data, forecast_hour_data, next_hour_data, window_min_data, window_mean_data, window_max_data, window_delta_data)
-
-  #     Threads.@threads for new_post_feature_i in 1:length(new_features_post)
-  #       new_feature_name, compute_new_feature_post = new_features_post[new_post_feature_i]
-  #       out[:, hours_feature_count + new_post_feature_i] = compute_new_feature_post(base_forecast)
-  #     end
-
-  #     out
-  #   end
-  # end
-
-  # forecasts_tuple_to_canonical_forecast(forecasts_tuple) = forecasts_tuple[2]
-
-  # ForecastCombinators.map_forecasts(window_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer)
 end
 
 function three_hour_window_and_min_mean_max_delta_forecasts_with_climatology_etc(forecasts; run_datetime_to_simulation_version)
   grid = forecasts[1].grid
 
-  new_features_post = [
-    Climatology.hail_day_spatial_probability_feature(grid),
-    Climatology.hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.hail_day_given_severe_day_spatial_probability_feature(grid),
-    Climatology.severe_day_spatial_probability_feature(grid),
-    Climatology.sig_hail_day_spatial_probability_feature(grid),
-    Climatology.sig_hail_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.sig_hail_day_given_severe_day_spatial_probability_feature(grid),
-    Climatology.sig_severe_day_spatial_probability_feature(grid),
-    Climatology.sig_severe_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.sig_severe_day_given_severe_day_spatial_probability_feature(grid),
-    Climatology.sig_tornado_day_spatial_probability_feature(grid),
-    Climatology.sig_tornado_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.sig_tornado_day_given_severe_day_spatial_probability_feature(grid),
-    Climatology.sig_wind_day_spatial_probability_feature(grid),
-    Climatology.sig_wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.sig_wind_day_given_severe_day_spatial_probability_feature(grid),
-    Climatology.tornado_day_spatial_probability_feature(grid),
-    Climatology.tornado_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.tornado_day_given_severe_day_spatial_probability_feature(grid),
-    Climatology.wind_day_spatial_probability_feature(grid),
-    Climatology.wind_day_geomean_absolute_and_conditional_spatial_probability_feature(grid),
-    Climatology.wind_day_given_severe_day_spatial_probability_feature(grid),
-
-    Climatology.asos_gust_days_per_year_feature(grid),
-    Climatology.asos_sig_gust_days_per_year_feature(grid),
-
-    Climatology.hour_in_day_severe_probability_feature(grid),
-
-    Climatology.month_tornado_day_probability_feature(grid),
-    Climatology.month_wind_day_probability_feature(grid),
-    Climatology.month_hail_day_probability_feature(grid),
-    Climatology.month_severe_day_probability_feature(grid),
-    Climatology.month_tornado_day_given_severe_day_probability_feature(grid),
-    Climatology.month_wind_day_given_severe_day_probability_feature(grid),
-    Climatology.month_hail_day_given_severe_day_probability_feature(grid),
-
-    Climatology.population_density_feature(grid),
-
-    ("simulation_version", forecast -> Climatology.fill_grid(run_datetime_to_simulation_version(Forecasts.run_utc_datetime(forecast)), grid))
-  ]
-
   three_hour_window_and_min_mean_max_delta_forecasts(
     forecasts;
-    new_features_post = new_features_post
+    new_features_post = Climatology.climatology_features(grid; run_datetime_to_simulation_version = run_datetime_to_simulation_version)
   )
 end
 

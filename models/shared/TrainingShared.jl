@@ -272,6 +272,14 @@ function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gri
   max.(measured_labels, estimated_labels)
 end
 
+function compute_is_near_day_storm_event(forecast) :: Array{Float32,1}
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  StormEvents.grid_to_event_neighborhoods(StormEvents.conus_events(), forecast.grid, NEAR_EVENT_RADIUS_MILES, window_mid_time, window_half_size)
+end
+
 event_name_to_day_labeler = Dict(
   "tornado"      => (forecast -> grid_to_day_labels(StormEvents.conus_tornado_events(),     forecast)),
   "wind"         => (forecast -> grid_to_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
@@ -390,7 +398,6 @@ function load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = i
     # PlotMap.plot_debug_map("near_events_$(Forecasts.valid_yyyymmdd_hhz(forecast))", grid, compute_is_near_storm_event(forecast))
 
     if !isnothing(calc_inclusion_probabilities)
-      # is_near_storm_event = compute_is_near_storm_event(forecast)[verifiable_grid_bitmask] :: Array{Float32,1}
       probabilities       = Float32.(calc_inclusion_probabilities(forecast, forecast_label_layers_full_grid)[verifiable_grid_bitmask])
       probabilities       = clamp.(probabilities, 0f0, 1f0)
       mask                = map(p -> p > 0f0 && rand(rng, Float32) <= p, probabilities)

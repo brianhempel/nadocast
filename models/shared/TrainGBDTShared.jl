@@ -75,9 +75,12 @@ function train_with_coordinate_descent_hyperparameter_search(
     forecasts;
     forecast_hour_range = 1:10000,
     event_types = nothing,
+    just_hours_near_storm_events = true,
 
-    data_subset_ratio = data_subset_ratio,
-    near_storm_ratio  = near_storm_ratio,
+    data_subset_ratio = 1.0,
+    near_storm_ratio  = 1.0,
+    event_name_to_labeler       = TrainingShared.event_name_to_labeler,
+    compute_is_near_storm_event = TrainingShared.compute_is_near_storm_event,
 
     load_only = false,
     must_load_from_disk = false, # e.g. on a machine with no forecasts
@@ -94,13 +97,12 @@ function train_with_coordinate_descent_hyperparameter_search(
     configs...
   )
 
-  event_name_to_labeler = TrainingShared.event_name_to_labeler
 
   specific_save_dir(suffix) = save_dir * "_" * suffix
 
   if !must_load_from_disk
     (train_forecasts, validation_forecasts, test_forecasts) =
-      TrainingShared.forecasts_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range)
+      TrainingShared.forecasts_train_validation_test(forecasts, forecast_hour_range = forecast_hour_range, just_hours_near_storm_events = just_hours_near_storm_events)
 
     forecasts_stats_str(forecasts) = begin
       sorted = sort(forecasts, alg=MergeSort, by=(fc -> (Forecasts.run_utc_datetime(fc), Forecasts.valid_utc_datetime(fc))))
@@ -191,7 +193,7 @@ function train_with_coordinate_descent_hyperparameter_search(
   # Probability of near_storm_ratio if within 100mi or 90min of a storm event
   # Probability of data_subset_ratio otherwise
   calc_inclusion_probabilities(forecast, label_layers) = begin
-    is_near_storm_event_layer = TrainingShared.compute_is_near_storm_event(forecast)
+    is_near_storm_event_layer = compute_is_near_storm_event(forecast)
     max.(data_subset_ratio, near_storm_ratio .* is_near_storm_event_layer, map(y -> y .> 0f0, label_layers)...)
   end
 

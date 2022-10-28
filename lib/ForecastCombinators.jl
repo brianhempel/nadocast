@@ -110,6 +110,70 @@ function filter_features_forecasts(old_forecasts, predicate; model_name = nothin
   map_forecasts(old_forecasts; inventory_transformer = inventory_transformer, data_transformer = data_transformer, model_name = model_name)
 end
 
+# Concat the features from all the appropriate hourly forecasts in a day/fourhourly together.
+# Note that for a runtime during the convective day there may be less that 24 forecasts, so the data width will vary.
+# Returns:
+# (
+#   day1_hourlies_concated,
+#   day2_hourlies_concated,
+#   fourhourlies_concated
+# )
+function gather_daily_and_fourhourly(hourly_forecasts)
+  run_time_seconds_to_hourly_forecasts = Forecasts.run_time_seconds_to_forecasts(hourly_forecasts)
+
+  run_ymdhs = sort(unique(map(Forecasts.run_year_month_day_hour, hourly_forecasts)), alg=MergeSort)
+
+  associated_fourhourly_forecasts = []
+  associated_forecasts_in_day1  = []
+  associated_forecasts_in_day2 = []
+  for (run_year, run_month, run_day, run_hour) in run_ymdhs
+    run_time_seconds = Forecasts.time_in_seconds_since_epoch_utc(run_year, run_month, run_day, run_hour)
+
+    forecasts_for_run_time = get(run_time_seconds_to_hourly_forecasts, run_time_seconds, Forecasts.Forecast[])
+
+    forecast_hours = map(f -> f.forecast_hour, forecasts_for_run_time)
+    min_forecast_hour = minimum(forecast_hours)
+    max_forecast_hour = maximum(forecast_hours)
+    for forecast_hour in (min_forecast_hour+3):max_forecast_hour
+      forecast_hours_in_fourhourly_period = forecast_hour-3 : forecast_hour
+      forecasts_for_fourhourly_period = filter(forecast -> forecast.forecast_hour in forecast_hours_in_fourhourly_period, forecasts_for_run_time)
+      if length(forecasts_for_fourhourly_period) == 4
+        push!(associated_fourhourly_forecasts, forecasts_for_fourhourly_period)
+      end
+    end
+
+    forecast_hours_in_convective_day1 = max(12-run_hour,2) : 35-run_hour
+    forecast_hours_in_convective_day2 = forecast_hours_in_convective_day1.stop+1 : forecast_hours_in_convective_day1.stop+24
+
+    forecasts_for_convective_day1 = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day1, forecasts_for_run_time)
+    if length(forecast_hours_in_convective_day1) == length(forecasts_for_convective_day1)
+      push!(associated_forecasts_in_day1, forecasts_for_convective_day1)
+    end
+    forecasts_for_convective_day2 = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day2, forecasts_for_run_time)
+    if length(forecast_hours_in_convective_day2) == length(forecasts_for_convective_day2)
+      push!(associated_forecasts_in_day2, forecasts_for_convective_day2)
+    end
+  end
+
+  # Which run time and forecast hour to use for the set.
+  # Namely: latest run time, then longest forecast hour
+  choose_canonical_forecast(associated_hourlies) = begin
+    canonical = associated_hourlies[1]
+    for forecast in associated_hourlies
+      if (Forecasts.run_time_in_seconds_since_epoch_utc(forecast), Forecasts.valid_time_in_seconds_since_epoch_utc(forecast)) > (Forecasts.run_time_in_seconds_since_epoch_utc(canonical), Forecasts.valid_time_in_seconds_since_epoch_utc(canonical))
+        canonical = forecast
+      end
+    end
+    canonical
+  end
+
+  day1_hourlies_concated = concat_forecasts(associated_forecasts_in_day1,    forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  day2_hourlies_concated = concat_forecasts(associated_forecasts_in_day2,    forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+  fourhourlies_concated  = concat_forecasts(associated_fourhourly_forecasts, forecasts_tuple_to_canonical_forecast = choose_canonical_forecast)
+
+  ( day1_hourlies_concated, day2_hourlies_concated, fourhourlies_concated )
+end
+
 
 # Create a bunch of Forecast structs whose data is the data from
 # some original Forecast structs, but resampled to a new grid.
