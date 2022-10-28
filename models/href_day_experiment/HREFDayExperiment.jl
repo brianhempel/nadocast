@@ -110,7 +110,7 @@ function min_mean_max_forecasts_with_climatology_etc()
     compute_min_mean_max!(nhours, nfeatures_per_hour, concated_data, out)
 
     Threads.@threads for clim_feature_i in 1:length(climatology_features)
-      _feature_name, compute_feature = new_features_post[clim_feature_i]
+      _feature_name, compute_feature = climatology_features[clim_feature_i]
       out[:, 3*nfeatures_per_hour + clim_feature_i] = compute_feature(concated_forecast)
     end
 
