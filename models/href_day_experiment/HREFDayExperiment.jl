@@ -120,4 +120,36 @@ function min_mean_max_forecasts_with_climatology_etc()
   ForecastCombinators.map_forecasts(day1_hourlies_concated; inventory_transformer = day_inventory, data_transformer = day_min_mean_max, model_name = "HREFDayExperiment_Day1")
 end
 
+
+# grid = HREFDayExperiment.grid
+
+# import Conus
+# import Forecasts
+# import Inventories
+# import PlotMap
+
+# function debug_plot(forecast)
+#   inventory = Forecasts.inventory(forecast)
+#   conus_mask = Conus.is_in_conus.(grid().latlons)
+#   data = Forecasts.data(forecast)
+#   for base_i in rand(1:length(inventory)÷3, 100)
+#     for layer_i in 3*base_i-2 : 3*base_i
+#       layer_data = @view data[:, layer_i]
+#       lo, hi = extrema(@view layer_data[conus_mask])
+
+#       str = Inventories.inventory_line_description(inventory[layer_i])
+#       base_path = "feature_$(layer_i)_$(replace(str, r"[: ]" => "_"))_$(lo)_$(hi)"
+#       println(base_path)
+
+#       range = hi - lo
+#       if range > 0
+#         PlotMap.plot_fast(base_path, grid(), clamp.((layer_data .- lo) ./ range, 0f0, 1f0))
+#       else
+#         PlotMap.plot_fast(base_path, grid(), clamp.(layer_data .- lo, 0f0, 1f0))
+#       end
+#     end
+#   end
+# end
+
+
 end # module HREFDayExperiment

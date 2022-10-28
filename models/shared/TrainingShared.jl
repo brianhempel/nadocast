@@ -516,13 +516,13 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
 
   forecast_data_1 = Serialization.deserialize(save_path(data_file_names[1]))
 
-  feature_names   = readlines(save_path("features.txt"))
-  @assert isnothing(only_features) || all(feat_name -> feat_name in feature_names, only_features)
-  only_feature_is = isnothing(only_features) ? (1:raw_feature_count) : map(feat_name -> findfirst(isequal(feat_name), feature_names), only_features)
-
   raw_feature_count = size(forecast_data_1, 2)
   feature_count     = length(only_feature_is)
   feature_type      = eltype(forecast_data_1)
+
+  feature_names   = readlines(save_path("features.txt"))
+  @assert isnothing(only_features) || all(feat_name -> feat_name in feature_names, only_features)
+  only_feature_is = isnothing(only_features) ? (1:raw_feature_count) : map(feat_name -> findfirst(isequal(feat_name), feature_names), only_features)
 
   forecast_data_1 = nothing # free
 
