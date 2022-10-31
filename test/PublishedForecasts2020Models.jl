@@ -32,7 +32,7 @@ end
 is_grib2_path(file_name)   = endswith(file_name, ".grb2") || endswith(file_name, ".grib2")
 is_float16_path(file_name) = endswith(file_name, ".float16.bin")
 
-const root = "~/nadocast_operational_2020/forecasts"
+const root = "/home/brian/nadocast_operational_2020/forecasts"
 const yyyymmdd_regex = r"_conus_tornado_(\d\d\d\d)(\d\d)(\d\d)_"
 
 function grid()
