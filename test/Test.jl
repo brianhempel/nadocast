@@ -677,7 +677,11 @@ cutoff = Dates.DateTime(2022, 8, 1, 12)
 
 
 (21 in TASKS || 22 in TASKS || 23 in TASKS || 24 in TASKS) && begin
-  # tornado only
+  push!(LOAD_PATH, (@__DIR__))
+  import PublishedForecasts2020Models
+  import PublishedForecasts2021Models
+
+# tornado only
   forecasts_2020_14z = PublishedForecasts2020Models.forecasts_14z()
   forecasts_2021_12z = PublishedForecasts2021Models.forecasts_12z()
 
