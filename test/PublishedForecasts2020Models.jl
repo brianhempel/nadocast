@@ -2,11 +2,11 @@ module PublishedForecasts2020Models
 
 import Dates
 
-push!(LOAD_PATH, (@__DIR__) * "../lib")
+push!(LOAD_PATH, (@__DIR__) * "/../lib")
 
 import Forecasts
 import Grib2
-import Grid
+import Grids
 import Inventories
 import HREF15KMGrid
 
