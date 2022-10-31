@@ -90,7 +90,7 @@ function forecasts_14z()
       [path] # preload paths
     )
 
-    push!(forecast, forecasts)
+    push!(forecasts, forecast)
   end
 
   sort!(forecasts, alg=MergeSort, by=Forecasts.run_utc_datetime)
