@@ -42,6 +42,8 @@ end
 function forecasts_12z()
   forecasts = Forecasts.Forecast[]
   for path in all_matching_file_paths_in(name -> contains(name, "nadocast_conus_tornado_") && contains(name, "_t12z_f02-23.") && (is_grib2_path(name) || is_float16_path(name)), root)
+    !contains(path, "_abs_calib_") || continue
+
     run_year_str, run_month_str, run_day_str = match(yyyymmdd_regex, path).captures
     run_year, run_month, run_day             = parse.(Int64, (run_year_str, run_month_str, run_day_str))
 
