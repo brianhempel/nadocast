@@ -32,18 +32,20 @@ end
 is_grib2_path(file_name)   = endswith(file_name, ".grb2") || endswith(file_name, ".grib2")
 is_float16_path(file_name) = endswith(file_name, ".float16.bin")
 
-const root = "/home/brian/nadocast_operational_2020/forecasts"
+const root = "/home/brian/nadocast_operational_2021/forecasts"
 const yyyymmdd_regex = r"_conus_tornado_(\d\d\d\d)(\d\d)(\d\d)_"
 
 function grid()
   HREF15KMGrid.HREF_CROPPED_15KM_GRID
 end
 
-function forecasts_14z()
+function forecasts_12z()
   forecasts = Forecasts.Forecast[]
-  for path in all_matching_file_paths_in(name -> contains(name, "nadocast_2020_models_") && contains(name, "_t14z_f02-21.") && (is_grib2_path(name) || is_float16_path(name)), root)
+  for path in all_matching_file_paths_in(name -> contains(name, "nadocast_conus_tornado_") && contains(name, "_t12z_f02-23.") && (is_grib2_path(name) || is_float16_path(name)), root)
     run_year_str, run_month_str, run_day_str = match(yyyymmdd_regex, path).captures
     run_year, run_month, run_day             = parse.(Int64, (run_year_str, run_month_str, run_day_str))
+
+    (run_year, run_month, run_day) >= (2022, 4, 29) || continue
 
     function get_inventory()
       if is_grib2_path(path)
@@ -53,10 +55,10 @@ function forecasts_14z()
           Inventories.InventoryLine(
             "",
             "",
-            "d=$(run_year_str)$(run_month_str)$(run_day_str)14",
+            "d=$(run_year_str)$(run_month_str)$(run_day_str)12",
             "TORPROB",
             "surface",
-            "2-21 hour ave fcst",
+            "2-23 hour ave fcst",
             "prob >0",
             "prob fcst 1/1"
           )
@@ -84,10 +86,10 @@ function forecasts_14z()
     end
 
     forecast = Forecasts.Forecast(
-      "Published2020Models",
+      "Published2021Models",
       run_year, run_month, run_day,
-      14, # run_hour
-      21, # forecast_hour
+      12, # run_hour
+      23, # forecast_hour
       [], # based_on,
       grid(),
       get_inventory,
