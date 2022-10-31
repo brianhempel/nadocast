@@ -68,8 +68,8 @@ function forecasts_14z()
         )
       ]
       get_data() = begin
-        @assert filesize(float16_path) == 2*length(grid().latlons)
-        data = Float32.(read!(float16_path, Vector{Float16}(undef, length(grid.latlons))))
+        @assert filesize(path) == 2*length(grid().latlons)
+        data = Float32.(read!(path, Vector{Float16}(undef, length(grid.latlons))))
         @assert maximum(data) <= 1
         @assert minimum(data) >= 0
         data
