@@ -165,6 +165,11 @@ function forecasts_train_validation_test(all_forecasts; forecast_hour_range = 1:
       end
     end
 
+  # Look for last storm event. Ignore any forecasts after that convective day.
+  last_convective_day = maximum(StormEvents.start_time_in_convective_days_since_epoch_utc, StormEvents.conus_events())
+  cutoff = Dates.unix2datetime(StormEvents.convective_days_since_epoch_to_seconds_utc(last_convective_day)) + Dates.Hour(24)
+  filter!(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, forecasts);
+
   train_forecasts      = filter(is_train, forecasts)
   validation_forecasts = filter(is_validation, forecasts)
   test_forecasts       = filter(is_test, forecasts)
