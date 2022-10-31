@@ -45,37 +45,42 @@ function forecasts_14z()
     run_year_str, run_month_str, run_day_str = match(yyyymmdd_regex, path).captures
     run_year, run_month, run_day             = parse.(Int64, (run_year_str, run_month_str, run_day_str))
 
-    if is_grib2_path(path)
-      get_inventory() = Grib2.read_inventory(path)
-      get_data()      = begin
+    function get_inventory()
+      if is_grib2_path(path)
+        Grib2.read_inventory(path)
+      elseif is_float16_path(path)
+        Inventories.InventoryLine[
+          Inventories.InventoryLine(
+            "",
+            "",
+            "d=$(run_year_str)$(run_month_str)$(run_day_str)14",
+            "TORPROB",
+            "surface",
+            "2-21 hour ave fcst",
+            "prob >0",
+            "prob fcst 1/1"
+          )
+        ]
+      else
+        error("bad path $path")
+      end
+    end
+
+    function get_data()
+      if is_grib2_path(path)
         data = 0.01f0 .* Grib2.read_layers_data_raw(path, get_inventory())
         @assert size(data,1) == length(grid().latlons)
         @assert maximum(data) <= 1
         @assert minimum(data) >= 0
-        data
-      end
-    elseif is_float16_path(path)
-      get_inventory() = Inventories.InventoryLine[
-        Inventories.InventoryLine(
-          "",
-          "",
-          "d=$(run_year_str)$(run_month_str)$(run_day_str)14",
-          "TORPROB",
-          "surface",
-          "2-21 hour ave fcst",
-          "prob >0",
-          "prob fcst 1/1"
-        )
-      ]
-      get_data() = begin
+      elseif is_float16_path(path)
         @assert filesize(path) == 2*length(grid().latlons)
         data = Float32.(read!(path, Vector{Float16}(undef, length(grid.latlons))))
         @assert maximum(data) <= 1
         @assert minimum(data) >= 0
-        data
+      else
+        error("bad path $path")
       end
-    else
-      error("bad path $path")
+      data
     end
 
     forecast = Forecasts.Forecast(
