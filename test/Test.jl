@@ -54,7 +54,7 @@ DRAW_SPC_MAPS = get(ENV, "DRAW_SPC_MAPS", "true") == "true"
 
 const ϵ = eps(1f0)
 
-function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix)
+function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff = Dates.DateTime(2022, 6, 1, 12), use_train_validation_too = false)
 
   println("************ $(run_hour)z$(suffix) ************")
 
@@ -66,15 +66,18 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix)
       just_hours_near_storm_events = false
     );
 
-  println("$(length(test_forecasts)) unfiltered test forecasts") # 627
-  test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
-  println("$(length(test_forecasts)) $(run_hour)z test forecasts") # 157
+  if use_train_validation_too
+    test_forecasts = vcat(train_forecasts, validation_forecasts, test_forecasts)
+    sort!(test_forecasts, by = Forecasts.run_utc_datetime, alg = MergeSort)
+  end
 
-  # We don't have storm events past this time.
-  cutoff = Dates.DateTime(2022, 6, 1, 12)
+  println("$(length(test_forecasts)) unfiltered test forecasts")
+  test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts")
+
 
   test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-  println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date $cutoff") #
 
   # If you want to augment the test set with all the days after training
 
@@ -667,12 +670,29 @@ cutoff = Dates.DateTime(2022, 8, 1, 12)
 19 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only", start = start, cutoff = cutoff, all_days_of_week = true)
 20 in TASKS && draw_only(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day_with_sig_gated()), model_names; run_hour = 12, suffix = "_href_only_absolutely_calibrated", start = start, cutoff = cutoff, all_days_of_week = true)
 
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[13] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl; FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[16,19,20] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[15] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl; FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[14,17,18] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false TASKS=[13,14,17,18] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false TASKS=[15,16,19,20] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[13] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[15] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[14] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[16] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[17] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[18] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[19] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECASTS_ROOT=~/nadocaster2 FORECAST_DISK_PREFETCH=false TASKS=[20] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+
+(21 in TASKS || 22 in TASKS || 23 in TASKS || 24 in TASKS) && begin
+  # tornado only
+  forecasts_2020_14z = PublishedForecasts2020Models.forecasts_14z()
+  forecasts_2021_12z = PublishedForecasts2021Models.forecasts_12z()
+
+  forecasts_2020_14z_runtimes = Set(Forecasts.run_utc_datetime.(forecasts_2020_14z))
+  forecasts_2021_12z_runtimes = Set(Forecasts.run_utc_datetime.(forecasts_2021_12z))
+
+  filter!(fcst -> Forecasts.run_utc_datetime(fcst) - Dates.Hour(2) in forecasts_2021_12z_runtimes, forecasts_2020_14z)
+  filter!(fcst -> Forecasts.run_utc_datetime(fcst) + Dates.Hour(2) in forecasts_2020_14z_runtimes, forecasts_2021_12z)
+
+  21 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), forecasts_2020_14z, ["tornado"]; run_hour = 14, suffix = "_2020_models_tornado_with_hrrr",                   cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
+  22 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), forecasts_2021_12z, ["tornado"]; run_hour = 12, suffix = "_2021_models_tornado_href_sref",                   cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
+  23 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_2020_14z, ["tornado"]; run_hour = 14, suffix = "_2020_models_tornado_with_hrrr_vs_1630_tornadoes", cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
+  24 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_2021_12z, ["tornado"]; run_hour = 12, suffix = "_2021_models_tornado_href_sref_vs_1630_tornadoes", cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
+end
+
+# TASKS=[21] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# TASKS=[22] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# TASKS=[21,22] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
