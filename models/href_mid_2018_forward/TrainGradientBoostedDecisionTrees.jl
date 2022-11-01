@@ -33,6 +33,7 @@ near_storm_ratio   = parse(Float32, get(ENV, "NEAR_STORM_RATIO", "0.4"))
 load_only          = parse(Bool,    get(ENV, "LOAD_ONLY", "false"))
 distributed        = parse(Bool, get(ENV, "DISTRIBUTED", "false"))
 only_features_path = get(ENV, "ONLY_FEATURES_PATH", "")
+only_before        = Dates.DateTime(map(str -> parse(Int64, str), split(get(ENV, "ONLY_BEFORE", "2099-1-1"), "-"))...) + Dates.Hour(12)
 
 hour_range_str = "f$(forecast_hour_range.start)-$(forecast_hour_range.stop)"
 
@@ -52,6 +53,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     near_storm_ratio  = near_storm_ratio,
 
     only_features     = (only_features_path !=  "" ? readlines(only_features_path) : nothing), # can vary this without reloading the data
+    only_before       = only_before,  # can vary this without reloading the data
 
     bin_split_forecast_sample_count    = 400, # will be divided among the label types
     max_iterations_without_improvement = 30,

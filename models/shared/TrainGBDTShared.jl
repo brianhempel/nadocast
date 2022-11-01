@@ -93,7 +93,8 @@ function train_with_coordinate_descent_hyperparameter_search(
     bin_splits_calc_inclusion_probabilities = (forecast, label_layers) -> max.(0.01f0, map(y -> y .> 0f0, label_layers)...),
     max_iterations_without_improvement = 20,
     save_dir,
-    only_features, # nothing or ["CAPE:90-0 mb above ground:hour fcst:wt ens mean -1hr:", "CAPE:180-0 mb above ground:hour fcst:wt ens mean -1hr:", ...]
+    only_features = nothing, # nothing or ["CAPE:90-0 mb above ground:hour fcst:wt ens mean -1hr:", "CAPE:180-0 mb above ground:hour fcst:wt ens mean -1hr:", ...], can vary this without reloading the data
+    only_before = Dates.DateTime(2099,1,1,12), # can vary this without reloading the data
     configs...
   )
 
@@ -198,9 +199,9 @@ function train_with_coordinate_descent_hyperparameter_search(
   end
 
   # Returns (X_binned, Ys, weights)
-  get_data_labels_weights_binned(forecasts, save_suffix; only_features) = begin
+  get_data_labels_weights_binned(forecasts, save_suffix; only_features, only_before) = begin
     transformer(X) = MemoryConstrainedTreeBoosting.apply_bins(X, bin_splits)
-    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, event_name_to_labeler = event_name_to_labeler, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor, only_features = only_features)
+    TrainingShared.get_data_labels_weights(forecasts, X_transformer = transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, event_name_to_labeler = event_name_to_labeler, save_dir = specific_save_dir(save_suffix), prior_predictor = prior_predictor, only_features = only_features, only_before = only_before)
   end
 
   prepare_data_labels_weights_binned(forecasts, save_suffix) = begin
@@ -236,9 +237,9 @@ function train_with_coordinate_descent_hyperparameter_search(
       rank == root && println("Loading validation data")
       validation_X_binned, validation_Ys, validation_weights =
         if must_load_from_disk
-          TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count, only_features = only_features)
+          TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("validation"); chunk_i = rank+1, chunk_count = rank_count, only_features = only_features, only_before = only_before)
         else
-          get_data_labels_weights_binned(validation_forecasts, "validation", only_features = only_features)
+          get_data_labels_weights_binned(validation_forecasts, "validation", only_features = only_features, only_before = only_before)
         end
       print("done. $(size(validation_X_binned,1)) datapoints with $(size(validation_X_binned,2)) features each.\n")
 
@@ -255,11 +256,15 @@ function train_with_coordinate_descent_hyperparameter_search(
     rank == root && println("Loading training data")
     X_binned, Ys, weights =
       if must_load_from_disk
-        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count, only_features = only_features)
+        TrainingShared.read_data_labels_weights_from_disk(specific_save_dir("training"); chunk_i = rank+1, chunk_count = rank_count, only_features = only_features, only_before = only_before)
       else
-        get_data_labels_weights_binned(train_forecasts, "training", only_features = only_features)
+        get_data_labels_weights_binned(train_forecasts, "training", only_features = only_features, only_before = only_before)
       end
     print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
+
+    if only_before < Dates.now()
+      println("Ignoring data after $only_before")
+    end
 
     event_types = isnothing(event_types) ? collect(keys(Ys)) : event_types
 

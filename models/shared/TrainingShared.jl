@@ -311,14 +311,14 @@ function finished_loading(save_dir)
 end
 
 # labels are return as a dictionary of event_name_to_labels
-function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler, only_features = nothing)
+function get_data_labels_weights(forecasts; save_dir = nothing, X_transformer = identity, calc_inclusion_probabilities = nothing, prior_predictor = nothing, event_name_to_labeler, only_features = nothing, only_before = Dates.DateTime(2099,1,1,12))
   if isnothing(save_dir)
     save_dir = "data_labels_weights_$(Random.rand(Random.RandomDevice(), UInt64))" # ignore random seed, which we may have set elsewhere to ensure determinism
   end
   if !finished_loading(save_dir)
     load_data_labels_weights_to_disk(save_dir, forecasts; X_transformer = X_transformer, calc_inclusion_probabilities = calc_inclusion_probabilities, prior_predictor = prior_predictor, event_name_to_labeler = event_name_to_labeler)
   end
-  read_data_labels_weights_from_disk(save_dir; only_features = only_features)
+  read_data_labels_weights_from_disk(save_dir; only_features = only_features, only_before = only_before)
 end
 
 # Loads the data to disk but does not read it back.
@@ -503,23 +503,25 @@ function chunk_range(chunk_i, n_chunks, array_len)
 end
 
 # If using MPI for data-parallel distributed learning, chunk_i = rank+1, chunk_count = rank_count
-function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count = 1, only_features = nothing)
-  save_path(path) = joinpath(save_dir, path)
+function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count = 1, only_features = nothing, only_before = Dates.DateTime(2099,1,1,12))
+  save_path(path)   = joinpath(save_dir, path)
+  deserialize(path) = Serialization.deserialize(save_path(path))
 
-  weights_full = Serialization.deserialize(save_path("weights.serialized"))
-  full_length  = length(weights_full)
+  valid_times = deserialize("run_times.serialized") .+ Dates.Hour.(deserialize("forecast_hours.serialized"))
 
-  my_range = chunk_range(chunk_i, chunk_count, full_length)
+  is_to_use = findall(t -> t < only_before, valid_times)
 
-  weights = weights_full[my_range]
+  my_is = is_to_use[chunk_range(chunk_i, chunk_count, length(is_to_use))]
 
-  weights_full = nothing # free
+  # free
+  is_to_use    = nothing
+  valid_times  = nothing
 
-  data_count = length(my_range)
+  data_count = length(my_is)
 
   data_file_names = sort(filter(file_name -> startswith(file_name, "data_"), readdir(save_dir)), by=(name -> parse(Int64, split(name, r"_|\.|-")[2])))
 
-  forecast_data_1 = Serialization.deserialize(save_path(data_file_names[1]))
+  forecast_data_1 = deserialize(data_file_names[1])
 
   raw_feature_count = size(forecast_data_1, 2)
 
@@ -544,18 +546,14 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
 
     file_full_range = full_i:(full_i + forecast_row_count - 1)
 
-    my_part = intersect(file_full_range, my_range)
+    my_part = filter(i -> i in file_full_range, my_is)
 
     if length(my_part) > 0
-      forecast_data = Serialization.deserialize(save_path(data_file_name))
+      forecast_data = deserialize(data_file_name)
       @assert forecast_row_count == size(forecast_data, 1)
       @assert raw_feature_count  == size(forecast_data, 2)
-      data[my_part .- (my_range.start - 1), :] = forecast_data[my_part .- (full_i - 1), only_feature_is]
+      data[rows_filled .+ (1:length(my_part)), :] = forecast_data[my_part .- (full_i - 1), only_feature_is]
       rows_filled += length(my_part)
-    end
-
-    if file_full_range.start > my_part.stop
-      break
     end
 
     full_i += forecast_row_count
@@ -563,17 +561,20 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
 
   @assert rows_filled == data_count
 
+  all_weights = deserialize("weights.serialized")
+
   if chunk_i == chunk_count
-    @assert full_i - 1 == full_length
+    @assert full_i - 1 == length(all_weights)
   end
+
+  weights = all_weights[my_is]
 
   label_file_names = sort(filter(file_name -> startswith(file_name, "labels-"), readdir(save_dir)))
 
   Ys = Dict(
     map(label_file_names) do label_file_name
       event_name = split(label_file_name, r"-|\.")[2]
-      Y = Serialization.deserialize(save_path(label_file_name))[my_range]
-      @assert length(Y) == length(weights)
+      Y = deserialize(label_file_name)[my_is]
       event_name => Y
     end
   )
