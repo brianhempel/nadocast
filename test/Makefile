@@ -13,6 +13,9 @@ index.html: index.html.erb maps/*/*.png
 plots.html: plots.html.erb plots/*.png
 	erb plots.html.erb > plots.html
 
+ablations.html: ablations.html.erb maps/*/*ablation*.png
+	erb ablations.html.erb > ablations.html
+
 .PHONY: day2_vs_day1.html
 day2_vs_day1.html:
 	erb day2_vs_day1.html.erb > day2_vs_day1.html

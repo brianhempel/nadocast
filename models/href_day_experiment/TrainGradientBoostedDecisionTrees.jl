@@ -72,4 +72,10 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
   )
 
 
-# $ USE_ALT_DISK=true LOAD_ONLY=true FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.5 NEAR_STORM_RATIO=1.0 make train_gradient_boosted_decision_trees
+# Day1 0Z is 35:35
+# $ FORECASTS_ROOT=~/nadocaster2 LOAD_ONLY=true FORECAST_HOUR_RANGE=35:35 DATA_SUBSET_RATIO=0.5 NEAR_STORM_RATIO=1.0 make train_gradient_boosted_decision_trees
+
+
+
+# Day1 12Z is 23:23
+# $ FORECASTS_ROOT=~/nadocaster2 LOAD_ONLY=true FORECAST_HOUR_RANGE=23:23 DATA_SUBSET_RATIO=0.5 NEAR_STORM_RATIO=1.0 make train_gradient_boosted_decision_trees

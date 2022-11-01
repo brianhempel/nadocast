@@ -132,6 +132,12 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
 
 
 
+# cd ~/hd
+# FORECASTS_ROOT=~/nadocaster2/ JULIA_NUM_THREADS=$CORE_COUNT ONLY_FEATURES_PATH=~/nadocast_dev/models/href_mid_2018_forward/features_2021v2_mean_prob_computed_climatology_blurs_n=910.txt EVENT_TYPES=wind,wind_adj,hail MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 time julia --project=~/nadocast_dev ~/nadocast_dev/models/href_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl > href_f2-13_wind_wind_adj_hail_mean_prob_computed_climatology_blurs_n=910_stdout.txt
+
+# JULIA_NUM_THREADS=$CORE_COUNT ONLY_FEATURES_PATH=~/nadocast_dev/models/href_mid_2018_forward/features_2021v2_mean_prob_computed_climatology_blurs_n=910.txt EVENT_TYPES=wind,wind_adj,hail MUST_LOAD_FROM_DISK=true FORECAST_HOUR_RANGE=13:24 DATA_SUBSET_RATIO=0.03 NEAR_STORM_RATIO=0.4 time julia --project=~/nadocast_dev ~/nadocast_dev/models/href_mid_2018_forward/TrainGradientBoostedDecisionTrees.jl > href_f13-24_wind_wind_adj_hail_mean_prob_computed_climatology_blurs_n=910_stdout.txt
+
+
 
 # on nadocaster2:
 # mkdir ~/hd

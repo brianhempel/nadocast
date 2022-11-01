@@ -695,8 +695,23 @@ cutoff = Dates.DateTime(2022, 8, 1, 12)
   22 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), forecasts_2021_12z, ["tornado"]; run_hour = 12, suffix = "_2021_models_tornado_href_sref",                   cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
   23 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_2020_14z, ["tornado"]; run_hour = 14, suffix = "_2020_models_tornado_with_hrrr_vs_1630_tornadoes", cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
   24 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_2021_12z, ["tornado"]; run_hour = 12, suffix = "_2021_models_tornado_href_sref_vs_1630_tornadoes", cutoff = Dates.DateTime(2022, 8, 1, 12), use_train_validation_too = true)
+
+  # scp nadocaster2:~/nadocast_dev/test/stats_12z_2021_models_tornado_href_sref.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/stats_12z_2021_models_tornado_href_sref_vs_1630_tornadoes.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/stats_14z_2020_models_tornado_with_hrrr.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/stats_14z_2020_models_tornado_with_hrrr_vs_1630_tornadoes.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_12z_2021_models_tornado_href_sref.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_12z_2021_models_tornado_href_sref_vs_1630_tornadoes.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_14z_2020_models_tornado_with_hrrr.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_14z_2020_models_tornado_with_hrrr_vs_1630_tornadoes.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_2021_models_tornado_href_sref.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_2021_models_tornado_href_sref_vs_1630_tornadoes.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_reliability_14z_2020_models_tornado_with_hrrr.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_reliability_14z_2020_models_tornado_with_hrrr_vs_1630_tornadoes.csv ./
 end
 
 # TASKS=[21] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 # TASKS=[22] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 # TASKS=[21,22] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+
+
