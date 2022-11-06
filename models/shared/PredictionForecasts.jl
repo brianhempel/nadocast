@@ -255,8 +255,8 @@ end
 
 # Turn the total and max period (day or four-hourly) probs into a combined calibrated prob, based on bins and logistic regression across overlapping bin-pairs
 #
-# models is array of (event_name, var_name, ...) tuples
-function period_forecasts_from_accumulators(forecasts_period_accumulators, event_to_bins, event_to_bins_logistic_coeffs, models; module_name, period_name)
+# models is array of (model_name, var_name, ...) tuples
+function period_forecasts_from_accumulators(forecasts_period_accumulators, model_name_to_bins, model_name_to_bins_logistic_coeffs, models; module_name, period_name)
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
@@ -264,9 +264,9 @@ function period_forecasts_from_accumulators(forecasts_period_accumulators, event
 
   logit(p) = log(p / (one(p) - p))
 
-  # array of (event_name, var_name, predict)
+  # array of (model_name, var_name, predict)
   period_models = map(1:length(models)) do model_i
-    event_name, var_name = models[model_i]
+    model_name, var_name = models[model_i]
 
     predict(forecast, data) = begin
       total_prob_ŷs = @view data[:, model_i*2 - 1]
@@ -274,8 +274,8 @@ function period_forecasts_from_accumulators(forecasts_period_accumulators, event
 
       out = Array{Float32}(undef, length(total_prob_ŷs))
 
-      bin_maxes            = event_to_bins[event_name]
-      bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
+      bin_maxes            = model_name_to_bins[model_name]
+      bins_logistic_coeffs = model_name_to_bins_logistic_coeffs[model_name]
 
       @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
@@ -307,7 +307,7 @@ function period_forecasts_from_accumulators(forecasts_period_accumulators, event
       out
     end
 
-    (event_name, var_name, predict)
+    (model_name, var_name, predict)
   end
 
   PredictionForecasts.simple_prediction_forecasts(forecasts_period_accumulators, period_models; model_name = "$(module_name)_$(period_name)_severe_probabilities")
