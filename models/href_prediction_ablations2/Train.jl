@@ -69,7 +69,6 @@ function find_ŷ_bin_splits(model_name, ŷ, y, weights, bin_count)
   total_positive_weight = sum(Float64.(y .* weights))
   per_bin_pos_weight = total_positive_weight / bin_count
 
-  ŷ              = ; # HREF prediction for event_name
   sort_perm      = Metrics.parallel_sort_perm(ŷ);
   y_sorted       = Metrics.parallel_apply_sort_perm(y, sort_perm);
   ŷ_sorted       = Metrics.parallel_apply_sort_perm(ŷ, sort_perm);
