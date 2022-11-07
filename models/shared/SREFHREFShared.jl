@@ -41,7 +41,15 @@ function mean_prob_grib2s_to_forecast(
             grid
           ) :: Forecasts.Forecast
 
-  year_str, month_str, day_str, run_hour_str = match(r"/\w+_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_mean_\w+.gri?b2", mean_grib2_path).captures
+  fname_match = match(r"/\w+_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_mean_\w+.gri?b2", mean_grib2_path)
+  if isnothing(fname_match)
+    # "href.t00z.conus.mean.f01.grib2"
+    # Need to query via wgrib2
+    date_str = read(`wgrib2 $mean_grib2_path -end -t`, String) # "1:0:d=2022110700\n"
+    year_str, month_str, day_str, run_hour_str = match(r"d=(\d\d\d\d)(\d\d)(\d\d)(\d\d)\n", date_str).captures
+  else
+    year_str, month_str, day_str, run_hour_str = fname_match.captures
+  end
 
   run_year  = parse(Int64, year_str)
   run_month = parse(Int64, month_str)
@@ -49,7 +57,7 @@ function mean_prob_grib2s_to_forecast(
   run_hour  = parse(Int64, run_hour_str)
 
   if isnothing(forecast_hour)
-    forecast_hour_str, = match( r"_mean_f(\d+)\.grib2", mean_grib2_path).captures
+    forecast_hour_str, = match( r"f(\d+)\.grib2", mean_grib2_path).captures
     forecast_hour      = parse(Int64, forecast_hour_str)
   end
 

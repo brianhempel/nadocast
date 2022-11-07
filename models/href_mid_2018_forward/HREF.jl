@@ -38,8 +38,15 @@ const crop = ((1+214):(1473 - 99), (1+119):(1025-228))
 # $ wgrib2 href_one_field_for_grid.grib2 -new_grid_winds grid -new_grid lambert:265.000000:25.000000:25.000000:25.000000 234.906000:387:15237.000000 19.858000:226:15237.000000 href_one_field_for_grid_cropped_3x_downsampled.grib2
 # $ wgrib2 href_one_field_for_grid_cropped_3x_downsampled.grib2 -gridout cropped_downsampled.csv
 
+function grib2_file_paths_in(subdirs...)
+  forecasts_root_exact = get(ENV, "FORECASTS_ROOT_EXACT", nothing)
+  isnothing(forecasts_root_exact) || return Grib2.all_grib2_file_paths_in(forecasts_root_exact)
 
-forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
+  forecasts_root = get(ENV, "FORECASTS_ROOT", "/Volumes")
+  pathss = map(subdir -> Grib2.all_grib2_file_paths_in("$forecasts_root/$subdir"), subdirs)
+  vcat(pathss...)
+end
+
 
 const layer_blocks_to_make = FeatureEngineeringShared.fewer_grad_blocks
 
@@ -340,7 +347,7 @@ function original_grid_cropped()
   global _original_grid_cropped
 
   if isnothing(_original_grid_cropped)
-    href_paths = Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_1/href")
+    href_paths = grib2_file_paths_in("SREF_HREF_1/href")
     _original_grid_cropped = Grib2.read_grid(href_paths[1], crop = crop)
   end
 
@@ -398,15 +405,9 @@ function reload_forecasts()
   href_paths =
     if get(ENV, "USE_ALT_DISK", "false") == "true"
       println("Using SREF_HREF_2 and SREF_HREF_4")
-      vcat(
-        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_2/href"),
-        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_4/href")
-      )
+      grib2_file_paths_in("SREF_HREF_2/href", "SREF_HREF_4/href")
     else
-      vcat(
-        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_1/href"),
-        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_3/href")
-      )
+      grib2_file_paths_in("SREF_HREF_1/href", "SREF_HREF_3/href")
     end
 
   global _forecasts
@@ -422,9 +423,9 @@ function reload_forecasts()
       grid = Grib2.read_grid(href_path, crop = crop, downsample = downsample) # mean and prob better have the same grid!
     end
 
-    if occursin("z_mean_f", href_path)
+    if occursin("z_mean_f", href_path) || occursin(".mean.f", href_path)
       mean_href_path = href_path
-      prob_href_path = replace(mean_href_path, "z_mean_f" => "z_prob_f")
+      prob_href_path = replace(mean_href_path, "z_mean_f" => "z_prob_f", ".mean.f" => ".prob.f")
 
       forecast = SREFHREFShared.mean_prob_grib2s_to_forecast("HREF", mean_href_path, prob_href_path, common_layers_mean, common_layers_prob, mean_layers_to_compute_from_prob, grid = grid)
 
