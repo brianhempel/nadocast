@@ -322,6 +322,11 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
 
   _, validation_forecasts, _ = TrainingShared.forecasts_train_validation_test(forecasts; just_hours_near_storm_events = false)
 
+  # for testing
+  if get(ENV, "ONLY_N_FORECASTS", "") != ""
+    validation_forecasts = validation_forecasts[1:parse(Int64, ENV["ONLY_N_FORECASTS"])]
+  end
+
   valid_times = Forecasts.valid_utc_datetime.(validation_forecasts)
   println("$(length(validation_forecasts)) validation forecasts from $(minimum(valid_times)) to $(maximum(valid_times))")
 

@@ -267,6 +267,9 @@ function reload_forecasts()
     (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_mean_prob_computed_climatology_blurs_910
     (blur_25mi_grid_is, blur_25mi_grid_is), # wind_mean_prob_computed_climatology_blurs_910
     (blur_15mi_grid_is, blur_25mi_grid_is), # hail_mean_prob_computed_climatology_blurs_910
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_mean_prob_computed_climatology_blurs_910_before_20200523
+    (blur_25mi_grid_is, blur_25mi_grid_is), # wind_mean_prob_computed_climatology_blurs_910_before_20200523
+    (blur_15mi_grid_is, blur_25mi_grid_is), # hail_mean_prob_computed_climatology_blurs_910_before_20200523
     (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_full_13831
     (blur_25mi_grid_is, blur_25mi_grid_is), # wind_full_13831
     (blur_15mi_grid_is, blur_25mi_grid_is), # hail_full_13831
