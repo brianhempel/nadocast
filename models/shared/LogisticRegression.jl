@@ -5,7 +5,7 @@ import LinearAlgebra
 function parallel_iterate(f, count)
   thread_results = Vector{Any}(undef, Threads.nthreads())
 
-  Threads.@threads for thread_i in 1:Threads.nthreads()
+  Threads.@threads :static for thread_i in 1:Threads.nthreads()
   # for thread_i in 1:Threads.nthreads()
     start = div((thread_i-1) * count, Threads.nthreads()) + 1
     stop  = div( thread_i    * count, Threads.nthreads())

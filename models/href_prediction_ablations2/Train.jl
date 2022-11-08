@@ -130,7 +130,7 @@ function find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, bins_
 
     bin_X_features = Array{Float32}(undef, (length(bin_y), 1))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_href = logit(bin_href_x[i])
 
       bin_X_features[i,1] = logit_href
@@ -200,7 +200,7 @@ function find_two_predictor_logistic_coeffs(model_name, ŷ1, ŷ2, y, weights, bi
     # logit(total), logit(max)
     bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_total_prob = logit(bin_ŷ1[i])
       logit_max_hourly = logit(bin_ŷ2[i])
 

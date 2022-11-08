@@ -740,7 +740,7 @@ for prediction_i in 1:length(HREFPrediction.models)
     for blur_i_hi in 1:length(blur_radii)
       X_blurred = zeros(Float32, length(y))
 
-      Threads.@threads for i in 1:length(y)
+      Threads.@threads :static for i in 1:length(y)
         forecast_ratio = (X[i,forecast_hour_j] - 2f0) * (1f0/(35f0-2f0))
         X_blurred[i] = X[i,prediction_i_base+blur_i_lo] * (1f0 - forecast_ratio) + X[i,prediction_i_base+blur_i_hi] * forecast_ratio
       end
@@ -1460,7 +1460,7 @@ function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
     # logit(HREF), logit(SREF)
     bin_X_features = Array{Float32}(undef, (length(bin_y), 1))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_href = logit(bin_href_x[i])
 
       bin_X_features[i,1] = logit_href

@@ -53,7 +53,7 @@ end
 function compute_min_mean_max!(nhours, nfeatures_per_hour, concated_data, out)
   nhours_f32 = Float32(nhours)
 
-  Threads.@threads for feature_i in 1:nfeatures_per_hour
+  Threads.@threads :static for feature_i in 1:nfeatures_per_hour
     for i in 1:size(concated_data,1)
       min_val = Inf32
       total   = 0f0
@@ -109,7 +109,7 @@ function min_mean_max_forecasts_with_climatology_etc()
 
     compute_min_mean_max!(nhours, nfeatures_per_hour, concated_data, out)
 
-    Threads.@threads for clim_feature_i in 1:length(climatology_features)
+    Threads.@threads :static for clim_feature_i in 1:length(climatology_features)
       _feature_name, compute_feature = climatology_features[clim_feature_i]
       out[:, 3*nfeatures_per_hour + clim_feature_i] = compute_feature(concated_forecast)
     end

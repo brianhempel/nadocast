@@ -282,7 +282,7 @@ function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
     # logit(HREF), logit(SREF)
     bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_href = logit(bin_href_x[i])
       logit_sref = logit(bin_sref_x[i])
 

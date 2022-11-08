@@ -230,7 +230,7 @@ function platt_calibrate(x, y, weights)
 end
 
 function apply_platt_calibrate(x, a, b; out = Vector{eltype(x)}(undef, length(x)))
-  Threads.@threads for i in eachindex(out)
+  Threads.@threads :static for i in eachindex(out)
     out[i] = σ(logit(x[i]) * a + b)
   end
   out
@@ -460,7 +460,7 @@ function find_logistic_coeffs(model_name, event_name, prediction_i, X, Ys, weigh
     # logit(HREF), logit(SREF)
     bin_X_features = Array{Float32}(undef, (length(bin_y), 1))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_href = logit(bin_href_x[i])
 
       bin_X_features[i,1] = logit_href

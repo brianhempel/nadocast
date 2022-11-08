@@ -338,7 +338,7 @@ end
 function mask_rows_threaded(data, mask; final_row_count=count(mask))
   out = Array{Float32}(undef, (final_row_count, size(data, 2)))
 
-  Threads.@threads for col_i in 1:size(data, 2)
+  Threads.@threads :static for col_i in 1:size(data, 2)
     out[:, col_i] = @view data[mask, col_i]
   end
 

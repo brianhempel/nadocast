@@ -208,7 +208,7 @@ for bin_i in 1:(bin_count - 1)
 
   bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
 
-  Threads.@threads for i in 1:length(bin_y)
+  Threads.@threads :static for i in 1:length(bin_y)
     bin_X_features[i,1] = logit(bin_X[i,1])
     bin_X_features[i,2] = logit(bin_X[i,2])
     # bin_X_features[i,3] = logit(sqrt.(bin_X[i,1] .* bin_X[i,2] .* max_hour_multipler))

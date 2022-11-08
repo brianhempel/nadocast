@@ -100,7 +100,7 @@ function try_it(factor)
       abs_devs = zeros(length(latlons))
       weights  = zeros(length(latlons))
 
-      Threads.@threads for j in 1:height
+      Threads.@threads :static for j in 1:height
         for i in 1:width
           flat_i = width*(j-1) + i
 

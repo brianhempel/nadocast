@@ -100,7 +100,7 @@ function stats_for_run_hours(run_hours)
     # global false_negative_areas
     data = Forecasts.data(forecast)
 
-    Threads.@threads for model_i in 1:length(SPCOutlooks.models)
+    Threads.@threads :static for model_i in 1:length(SPCOutlooks.models)
       event_name, _, _ = SPCOutlooks.models[model_i]
 
       forecast_labels = compute_forecast_labels(event_name, forecast) .> 0.5

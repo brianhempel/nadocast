@@ -38,7 +38,7 @@ function calibrated_forecasts(base_forecasts, calibrations; model_name = nothing
 
   # Mutates out
   function calibrate!(out, base_data, thresholds, feature_i)
-    Threads.@threads for i in 1:size(base_data,1)
+    Threads.@threads :static for i in 1:size(base_data,1)
       x = base_data[i,feature_i]
       for k in 2:length(thresholds)
         lo_spc, lo_thres = thresholds[k-1]
@@ -190,7 +190,7 @@ function blurred(prediction_forecasts, forecast_hour_range, blur_grid_is; model_
       forecast_ratio = clamp(forecast_ratio, 0f0, 1f0)
       one_minus_forecast_ratio = 1f0 - forecast_ratio
 
-      Threads.@threads for i in 1:point_count
+      Threads.@threads :static for i in 1:point_count
         out[i, prediction_i] = blur_lo_data[i] * one_minus_forecast_ratio + blur_hi_data[i] * forecast_ratio
       end
     end
@@ -224,7 +224,7 @@ function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; 
 
     out = Array{Float32}(undef, (point_count, 2 * event_types_count))
 
-    Threads.@threads for i in 1:point_count
+    Threads.@threads :static for i in 1:point_count
       for event_i in 1:event_types_count
         prob_no_tor = 1.0
         for hour_i in 1:hours_count
@@ -282,7 +282,7 @@ function period_forecasts_from_accumulators(forecasts_period_accumulators, model
 
       predict_one(coeffs, total_prob_ŷ, max_hourly_ŷ) = σ(coeffs[1]*logit(total_prob_ŷ) + coeffs[2]*logit(max_hourly_ŷ) + coeffs[3])
 
-      Threads.@threads for i in 1:length(total_prob_ŷs)
+      Threads.@threads :static for i in 1:length(total_prob_ŷs)
         total_prob_ŷ = total_prob_ŷs[i]
         max_hourly_ŷ = max_hourly_ŷs[i]
         if total_prob_ŷ <= bin_maxes[1]
@@ -350,11 +350,11 @@ function added_gated_predictions(base_forecasts, orig_models, gated_models; mode
     feature_count = length(orig_models) + length(gated_models)
     out = Array{Float32}(undef, (data_count, feature_count))
 
-    @inbounds Threads.@threads for i in 1:length(base_data)
+    @inbounds Threads.@threads :static for i in 1:length(base_data)
       out[i] = base_data[i]
     end
 
-    Threads.@threads for j in 1:length(gated_models)
+    Threads.@threads :static for j in 1:length(gated_models)
       gated_event_name, orig_event_name, gate_event_name = gated_models[j]
       orig_model_i = findfirst(m -> m[1] == orig_event_name, orig_models)
       gate_model_i = findfirst(m -> m[1] == gate_event_name, orig_models)

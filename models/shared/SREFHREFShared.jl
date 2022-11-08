@@ -11,8 +11,8 @@ import Inventories
 function convert_probs_to_mean(prob_layers)
   out = Vector{Float32}(undef, length(prob_layers[1][1]))
 
-  # @inbounds Threads.@threads for i in 1:length(out)
-  Threads.@threads for i in 1:length(out)
+  # @inbounds Threads.@threads :static for i in 1:length(out)
+  Threads.@threads :static for i in 1:length(out)
     out_x     = 0f0
     last_prob = 0f0
     for (layer_probs, x) in prob_layers

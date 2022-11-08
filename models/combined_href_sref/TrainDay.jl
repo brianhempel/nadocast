@@ -285,7 +285,7 @@ function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
     # logit(HREF), logit(SREF)
     bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_total_prob = logit(bin_total_prob_x[i])
       logit_max_hourly = logit(bin_max_hourly_x[i])
 

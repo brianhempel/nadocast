@@ -187,7 +187,7 @@ end
 function meanify(in, mean_is)
   out = zeros(Float32, size(in))
 
-  Threads.@threads for grid_i in 1:length(in)
+  Threads.@threads :static for grid_i in 1:length(in)
     val = 0f0
 
     @inbounds for near_i in mean_is[grid_i]

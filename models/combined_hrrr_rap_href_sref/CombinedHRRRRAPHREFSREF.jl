@@ -191,7 +191,7 @@ function make_combined_prediction(data; first_guess_feature_i, bin_maxes, bins_l
 
   bcs = bins_logistic_coeffs
 
-  Threads.@threads for i in 1:length(first_guess_ŷs)
+  Threads.@threads :static for i in 1:length(first_guess_ŷs)
     first_guess_ŷ = first_guess_ŷs[i]
     ŷs_i = @view data[i,:]
     if first_guess_ŷ <= bin_maxes[1]
@@ -433,7 +433,7 @@ function reload_forecasts()
   day_data_transformer(base_forecast, base_data) = begin
     point_count, hours_count = size(base_data)
     out = Array{Float32}(undef, (point_count, 2))
-    Threads.@threads for i in 1:point_count
+    Threads.@threads :static for i in 1:point_count
       # sorted_probs = sort((@view base_data[i,:]); rev = true)
       prob_no_tor = 1.0
       for hour_i in 1:hours_count

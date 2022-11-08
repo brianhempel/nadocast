@@ -179,7 +179,7 @@ X_blurred = Array{Float32}(undef, length(y))
 
 # Mutates X_blurred
 function does_this_need_to_be_a_function_to_be_fast(X_blurred, X, blur_i_lo, blur_i_hi, forecast_hour_j)
-  Threads.@threads for i in 1:length(y)
+  Threads.@threads :static for i in 1:length(y)
     forecast_ratio = (X[i,forecast_hour_j] - 2f0) * (1f0/(17f0-2f0))
     X_blurred[i] = X[i,blur_i_lo] * (1f0 - forecast_ratio) + X[i,blur_i_hi] * forecast_ratio
   end

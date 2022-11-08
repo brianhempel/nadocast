@@ -8,7 +8,7 @@ using Random
 function parallel_iterate(f, count)
   thread_results = Vector{Any}(undef, Threads.nthreads())
 
-  Threads.@threads for thread_i in 1:Threads.nthreads()
+  Threads.@threads :static for thread_i in 1:Threads.nthreads()
   # for thread_i in 1:Threads.nthreads()
     start = div((thread_i-1) * count, Threads.nthreads()) + 1
     stop  = div( thread_i    * count, Threads.nthreads())
@@ -37,7 +37,7 @@ function parallel_sort_perm_i64(arr)
   bin_splits = map(thread_i -> samples[Int64(round(thread_i/Threads.nthreads()*sample_count))], 1:(Threads.nthreads() - 1))
 
   thread_bins_bins = map(_ -> map(_ -> Int64[], 1:Threads.nthreads()), 1:Threads.nthreads())
-  Threads.@threads for i in 1:length(arr)
+  Threads.@threads :static for i in 1:length(arr)
     thread_bins = thread_bins_bins[Threads.threadid()]
 
     x = arr[i]
@@ -54,7 +54,7 @@ function parallel_sort_perm_i64(arr)
 
   outs = map(_ -> Int64[], 1:Threads.nthreads())
 
-  Threads.@threads for _ in 1:Threads.nthreads()
+  Threads.@threads :static for _ in 1:Threads.nthreads()
     my_thread_bins = map(thread_i -> thread_bins_bins[thread_i][Threads.threadid()], 1:Threads.nthreads())
 
     my_out = Vector{Int64}(undef, sum(length.(my_thread_bins)))
@@ -74,7 +74,7 @@ function parallel_sort_perm_i64(arr)
 
   out = Vector{Int64}(undef, length(arr))
 
-  Threads.@threads for _ in 1:Threads.nthreads()
+  Threads.@threads :static for _ in 1:Threads.nthreads()
     my_out = outs[Threads.threadid()]
 
     start_i = sum(length.(outs)[1:Threads.threadid()-1]) + 1
@@ -99,7 +99,7 @@ function parallel_sort_perm_u32(arr)
   bin_splits = map(thread_i -> samples[Int64(round(thread_i/Threads.nthreads()*sample_count))], 1:(Threads.nthreads() - 1))
 
   thread_bins_bins = map(_ -> map(_ -> UInt32[], 1:Threads.nthreads()), 1:Threads.nthreads())
-  Threads.@threads for i in 1:length(arr)
+  Threads.@threads :static for i in 1:length(arr)
     thread_bins = thread_bins_bins[Threads.threadid()]
 
     x = arr[i]
@@ -116,7 +116,7 @@ function parallel_sort_perm_u32(arr)
 
   outs = map(_ -> UInt32[], 1:Threads.nthreads())
 
-  Threads.@threads for _ in 1:Threads.nthreads()
+  Threads.@threads :static for _ in 1:Threads.nthreads()
     my_thread_bins = map(thread_i -> thread_bins_bins[thread_i][Threads.threadid()], 1:Threads.nthreads())
 
     my_out = Vector{UInt32}(undef, sum(length.(my_thread_bins)))
@@ -136,7 +136,7 @@ function parallel_sort_perm_u32(arr)
 
   out = Vector{UInt32}(undef, length(arr))
 
-  Threads.@threads for _ in 1:Threads.nthreads()
+  Threads.@threads :static for _ in 1:Threads.nthreads()
     my_out = outs[Threads.threadid()]
 
     start_i = sum(length.(outs)[1:Threads.threadid()-1]) + 1
@@ -154,7 +154,7 @@ end
 function parallel_apply_sort_perm(arr, perm)
   out = Vector{eltype(arr)}(undef, length(arr))
 
-  @inbounds Threads.@threads for i in 1:length(perm)
+  @inbounds Threads.@threads :static for i in 1:length(perm)
     out[i] = arr[perm[i]]
   end
 

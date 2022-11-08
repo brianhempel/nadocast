@@ -74,7 +74,7 @@ function concat_forecasts(associated_forecasts; forecasts_tuple_to_canonical_for
       begin
         out = Array{Float32}(undef, (point_count, feature_count))
 
-        Threads.@threads for feature_i in 1:feature_count
+        Threads.@threads :static for feature_i in 1:feature_count
           out_data_i         = findfirst(n -> feature_i <= n, aggregate_sizes)
           out_data           = out_datas[out_data_i]
           out_data_feature_i = out_data_i == 1 ? feature_i : feature_i - aggregate_sizes[out_data_i - 1]
@@ -193,7 +193,7 @@ function resample_forecasts(old_forecasts, get_layer_resampler, new_grid; model_
     grid_point_count = new_grid.height * new_grid.width
     resampled = Array{Float32}(undef, (grid_point_count, feature_count))
 
-    Threads.@threads for feature_i in 1:feature_count
+    Threads.@threads :static for feature_i in 1:feature_count
       resampled[:, feature_i] = layer_resampler(@view old_data[:, feature_i])
     end
 

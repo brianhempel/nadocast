@@ -330,7 +330,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
 
   count_after_crop_before_downsample = isa(crop_mask, Colon) ? expected_layer_raw_value_count : count(crop_mask)
 
-  Threads.@threads for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
+  Threads.@threads :static for layer_is in map(thread_i -> thread_range(thread_i, layer_count), 1:Threads.nthreads())
 
     out_path = thread_wgrib2_out_path(Threads.threadid())
 

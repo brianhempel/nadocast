@@ -222,7 +222,7 @@ function make_mean_layers2!(
 
   calc_lens(grid_is2) = begin
     lens = Array{Int64}(undef, length(grid_is2))
-    Threads.@threads for grid_i in 1:length(grid_is2)
+    Threads.@threads :static for grid_i in 1:length(grid_is2)
       len = 0
       for (_, range) in grid_is2[grid_i]
         len += length(range)
@@ -238,7 +238,7 @@ function make_mean_layers2!(
 
   thread_row_cumsums = map(_ -> Array{Float64}(undef, (grid.width+1, grid.height)), 1:Threads.nthreads())
 
-  Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
+  Threads.@threads :static for pre_layer_feature_i in 1:pre_feature_count
 
     twenty_five_mi_mean_feature_i = pre_layer_feature_i - 1 + twenty_five_mi_mean_features_range.start
     fifty_mi_mean_feature_i       = pre_layer_feature_i - 1 + fifty_mi_mean_features_range.start
@@ -274,7 +274,7 @@ end
 function normalize_uvs!(us, vs)
   @assert length(us) == length(vs)
 
-  @inbounds Threads.@threads for flat_i in 1:length(us)
+  @inbounds Threads.@threads :static for flat_i in 1:length(us)
     normalized_u, normalized_v = @inbounds uv_normalize(us[flat_i], vs[flat_i])
     us[flat_i] = normalized_u
     vs[flat_i] = normalized_v
@@ -295,7 +295,7 @@ function compute_directional_is!(
     fifty_mi_forward_is,       fifty_mi_backward_is,       fifty_mi_leftward_is,       fifty_mi_rightward_is,
     hundred_mi_forward_is,     hundred_mi_backward_is,     hundred_mi_leftward_is,     hundred_mi_rightward_is
   )
-  Threads.@threads for j in 1:height
+  Threads.@threads :static for j in 1:height
     @inbounds for i in 1:width
       flat_i = width*(j-1) + i
 
@@ -452,7 +452,7 @@ function compute_divergence_threaded!(grid, out, u_data, v_data)
 
   width = grid.width
 
-  Threads.@threads for j in 2:(grid.height - 1)
+  Threads.@threads :static for j in 2:(grid.height - 1)
     row_offset = width*(j-1)
 
     @inbounds for i in 2:(width - 1)
@@ -491,7 +491,7 @@ function compute_abs_vorticity_threaded!(grid, out, u_data, v_data)
 
   width = grid.width
 
-  Threads.@threads for j in 2:(grid.height - 1)
+  Threads.@threads :static for j in 2:(grid.height - 1)
     row_offset = width*(j-1)
 
     @inbounds for i in 2:(width - 1)
@@ -582,7 +582,7 @@ function compute_upstream_mean_threaded(; grid, u_data, v_data, feature_data, ho
 
   n_steps = 1 + hours*60*60÷step_size
 
-  Threads.@threads for j in 1:height
+  Threads.@threads :static for j in 1:height
     for i in 1:width
       flat_i = width*(j-1) + i
       out[flat_i] = compute_upstream_mean(Float32(j), Float32(i), n_steps, width, height, u_steps, v_steps, feature_data)
@@ -596,7 +596,7 @@ end
 function meanify_threaded(feature_data, mean_is)
   out = zeros(Float32, size(feature_data))
 
-  Threads.@threads for grid_i in 1:length(feature_data)
+  Threads.@threads :static for grid_i in 1:length(feature_data)
     val = 0f0
 
     @inbounds for near_i in mean_is[grid_i]
@@ -618,7 +618,7 @@ function meanify_threaded2(grid, feature_data, mean_is2)
 
   width = grid.width
 
-  Threads.@threads for j in 1:grid.height
+  Threads.@threads :static for j in 1:grid.height
     row_offset = width*(j-1)
 
     row_sum = 0.0
@@ -631,7 +631,7 @@ function meanify_threaded2(grid, feature_data, mean_is2)
     end
   end
 
-  Threads.@threads for grid_i in 1:length(feature_data)
+  Threads.@threads :static for grid_i in 1:length(feature_data)
     val = 0f0
     len = 0f0
 
@@ -685,7 +685,7 @@ function make_data(
   # out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count + 1 + feature_interaction_terms_count))
   out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count))
 
-  Threads.@threads for j in 1:raw_feature_count
+  Threads.@threads :static for j in 1:raw_feature_count
     out[:,j] = @view data[:,j]
   end
 
@@ -878,7 +878,7 @@ function make_data(
     )
 
   if should_make_twenty_five_mi_mean_block
-    Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
+    Threads.@threads :static for pre_layer_feature_i in 1:pre_feature_count
     # for pre_layer_feature_i in 1:pre_feature_count
       twenty_five_mi_mean_feature_i = pre_layer_feature_i + twenty_five_mi_mean_features_range.start - 1
 
@@ -908,7 +908,7 @@ function make_data(
   end
 
   if should_make_fifty_mi_mean_block
-    Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
+    Threads.@threads :static for pre_layer_feature_i in 1:pre_feature_count
     # for pre_layer_feature_i in 1:pre_feature_count
       fifty_mi_mean_feature_i = pre_layer_feature_i + fifty_mi_mean_features_range.start - 1
 
@@ -938,7 +938,7 @@ function make_data(
   end
 
   if should_make_hundred_mi_mean_block
-    Threads.@threads for pre_layer_feature_i in 1:pre_feature_count
+    Threads.@threads :static for pre_layer_feature_i in 1:pre_feature_count
     # for pre_layer_feature_i in 1:pre_feature_count
       hundred_mi_mean_feature_i = pre_layer_feature_i + hundred_mi_mean_features_range.start - 1
 
@@ -967,7 +967,7 @@ function make_data(
     end
   end
 
-  Threads.@threads for wind_layer_key in vector_wind_layers
+  Threads.@threads :static for wind_layer_key in vector_wind_layers
   # for wind_layer_key in vector_wind_layers
     if wind_layer_key == "VCSH:6000-0 m above ground:hour fcst:"
       layer_key_u = "VUCSH:6000-0 m above ground:hour fcst:"

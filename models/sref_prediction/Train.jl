@@ -738,7 +738,7 @@ for prediction_i in 1:length(SREFPrediction.models)
     for blur_i_hi in 1:length(blur_radii)
       X_blurred = zeros(Float32, length(y))
 
-      Threads.@threads for i in 1:length(y)
+      Threads.@threads :static for i in 1:length(y)
         forecast_ratio = (X[i,forecast_hour_j] - 2f0) * (1f0/(38f0-2f0))
         X_blurred[i] = X[i,prediction_i_base+blur_i_lo] * (1f0 - forecast_ratio) + X[i,prediction_i_base+blur_i_hi] * forecast_ratio
       end

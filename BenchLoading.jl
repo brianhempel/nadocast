@@ -60,7 +60,7 @@ if hash.((data, labels, weights)) != (0xe476246de6fc1e1b, 0x7ad97045e5aa04f0, 0x
     normalized_diffs      = Array{Float64,2}(undef, size(data_ref))
     normalized_diff_maxes = Array{Float64,1}(undef, size(data_ref,2))
 
-    Threads.@threads for feature_i in 1:size(data_ref,2)
+    Threads.@threads :static for feature_i in 1:size(data_ref,2)
       ref_feature = Float64.(@view data_ref[:,feature_i])
       feature     = Float64.(@view data[:,feature_i])
       # mean        = Statistics.mean(ref_feature)

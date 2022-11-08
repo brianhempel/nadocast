@@ -440,7 +440,7 @@ function reload_forecasts()
 
         predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
 
-        Threads.@threads for i in 1:length(href_ŷs)
+        Threads.@threads :static for i in 1:length(href_ŷs)
           href_ŷ = href_ŷs[i]
           if href_ŷ <= bin_maxes[1]
             # Bin 1-2 predictor only

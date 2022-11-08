@@ -332,7 +332,7 @@ function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid
 
   out = Vector{Float32}(undef, length(grid.latlons))
 
-  Threads.@threads for grid_i in 1:length(grid.latlons)
+  Threads.@threads :static for grid_i in 1:length(grid.latlons)
     out[grid_i] = is_near_event(grid.latlons[grid_i]) ? 1.0f0 : 0.0f0
   end
 
@@ -358,7 +358,7 @@ function grid_to_adjusted_event_neighborhoods(events :: Vector{Event}, grid :: G
 
   out = Vector{Float32}(undef, length(grid.latlons))
 
-  Threads.@threads for grid_i in 1:length(grid.latlons)
+  Threads.@threads :static for grid_i in 1:length(grid.latlons)
     pt_out = 0f0
 
     latlon = grid.latlons[grid_i]
@@ -391,7 +391,7 @@ end
 function parallel_iterate(f, count)
   thread_results = Vector{Any}(undef, Threads.nthreads())
 
-  Threads.@threads for thread_i in 1:Threads.nthreads()
+  Threads.@threads :static for thread_i in 1:Threads.nthreads()
   # for thread_i in 1:Threads.nthreads()
     start = div((thread_i-1) * count, Threads.nthreads()) + 1
     stop  = div( thread_i    * count, Threads.nthreads())

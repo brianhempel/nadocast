@@ -65,7 +65,7 @@ end
 # function compute_min_mean_max_delta!(prior_hour_data, forecast_hour_data, next_hour_data, window_min_data, window_mean_data, window_max_data, window_delta_data)
 function compute_min_mean_max_delta!(prior_hour_data, forecast_hour_data, next_hour_data, out)
   single_hour_length = length(forecast_hour_data)
-  Threads.@threads for i in 1:length(prior_hour_data)
+  Threads.@threads :static for i in 1:length(prior_hour_data)
     @inbounds begin
       prior_hour_value    = prior_hour_data[i]
       forecast_hour_value = forecast_hour_data[i]
@@ -145,7 +145,7 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_
       # begin
       #   out = Array{Float32}(undef, (point_count, feature_count))
 
-      #   Threads.@threads for feature_i in 1:feature_count
+      #   Threads.@threads :static for feature_i in 1:feature_count
       #     out_data_i         = findfirst(n -> feature_i <= n, aggregate_sizes)
       #     out_data           = out_datas[out_data_i]
       #     out_data_feature_i = out_data_i == 1 ? feature_i : feature_i - aggregate_sizes[out_data_i - 1]
@@ -171,13 +171,13 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_
       # forecast_hour_data = @view out[:, (1*single_hour_feature_count + 1):(2*single_hour_feature_count)]
       # next_hour_data     = @view out[:, (2*single_hour_feature_count + 1):(3*single_hour_feature_count)]
 
-      # Threads.@threads for feature_i in 1:single_hour_feature_count
+      # Threads.@threads :static for feature_i in 1:single_hour_feature_count
       #   prior_hour_data[:, feature_i] = @view prior_data[:, feature_i]
       # end
-      # Threads.@threads for feature_i in 1:single_hour_feature_count
+      # Threads.@threads :static for feature_i in 1:single_hour_feature_count
       #   forecast_hour_data[:, feature_i] = @view hour_data[:, feature_i]
       # end
-      # Threads.@threads for feature_i in 1:single_hour_feature_count
+      # Threads.@threads :static for feature_i in 1:single_hour_feature_count
       #   next_hour_data[:, feature_i] = @view next_data[:, feature_i]
       # end
       # prior_data, hour_data, next_data = nothing, nothing, nothing # free
@@ -190,7 +190,7 @@ function three_hour_window_and_min_mean_max_delta_forecasts(base_forecasts; new_
       # compute_min_mean_max_delta!(prior_hour_data, forecast_hour_data, next_hour_data, window_min_data, window_mean_data, window_max_data, window_delta_data)
       compute_min_mean_max_delta!(prior_hour_data, forecast_hour_data, next_hour_data, out)
 
-      Threads.@threads for new_post_feature_i in 1:length(new_features_post)
+      Threads.@threads :static for new_post_feature_i in 1:length(new_features_post)
         new_feature_name, compute_new_feature_post = new_features_post[new_post_feature_i]
         out[:, hours_feature_count + new_post_feature_i] = compute_new_feature_post(hour_forecast)
       end

@@ -124,7 +124,7 @@ function do_it(forecasts; suffix = "")
   data_is = Vector{Int64}(undef, ndata)
   for bootstrap_i in 1:nbootstraps
     bootstrap_forecast_is = bootstrap_forecast_iss[bootstrap_i]
-    Threads.@threads for fcst_i in 1:nforecasts
+    Threads.@threads :static for fcst_i in 1:nforecasts
       bs_fcst_i = bootstrap_forecast_is[fcst_i]
       data_is[ndata_per_forecast*(fcst_i-1)+1 : ndata_per_forecast*fcst_i] = ndata_per_forecast*(bs_fcst_i-1)+1 : ndata_per_forecast*bs_fcst_i
     end
