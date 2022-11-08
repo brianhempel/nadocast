@@ -1,4 +1,4 @@
-#  source $HOME/.bash_profile > $HOME/nadocast/forecaster.log 2>&1 && RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
+#  source $HOME/.bash_profile > $HOME/nadocast/forecaster.log 2>&1 && FORECASTS_ROOT_EXACT=... RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
 #
 # To predict the past, also set RUN_DATE and RUN_HOUR in the environment.
 
@@ -117,7 +117,7 @@ function do_forecast(forecast)
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), HREFPrediction.models)
 
-  function output_forecast(forecast; is_hourly, is_fourhourly, is_absolutely_calibrated = false, grib2 = true)
+  function output_forecast(forecast; is_hourly, is_fourhourly, is_absolutely_calibrated = false)
 
     @assert !(is_hourly && is_fourhourly)
 
@@ -146,7 +146,8 @@ function do_forecast(forecast)
       end
     mkpath(out_dir)
 
-    draw = get(ENV, "DRAW_PNG", "false") == "true"
+    grib2 = get(ENV, "OUTPUT_GRIB2", "true")  == "true"
+    draw  = get(ENV, "DRAW_PNG",     "false") == "true"
 
     for model_i in 1:non_sig_model_count
       event_name, _, _     = HREFPrediction.models[model_i]
