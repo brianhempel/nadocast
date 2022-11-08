@@ -198,7 +198,7 @@ function do_forecast(forecast)
     if is_day1
       2:forecast.forecast_hour
     else
-      (forecast.forecast_hour - 23):forecast.forecast_hour
+      (forecast.forecast_hour - 23):47
     end
 
   for hourly_forecast in hourly_forecasts
