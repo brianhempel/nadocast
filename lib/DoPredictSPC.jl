@@ -17,8 +17,8 @@ import HREFPrediction
 
 hourly_forecasts, fourhourly_forecasts, day1_forecasts, day1_absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_calibrated_forecasts =
   (
-    HREFPrediction.forecasts_href_newer_combined_with_sig_gated(),
-    HREFPrediction.forecasts_fourhourly_with_sig_gated(),
+    HREFPrediction.forecasts_calibrated_with_sig_gated(),
+    Forecasts.Forecast[], # HREFPrediction.forecasts_fourhourly_with_sig_gated(), # I didn't calibrate them yet...!
     HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(),
     HREFPrediction.forecasts_day_with_sig_gated(),
     HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(),
