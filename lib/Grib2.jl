@@ -12,6 +12,10 @@ import GeoUtils
 import Grids
 import Inventories
 
+function wgrib2_path()
+  get(ENV, "WGRIB2", "wgrib2")
+end
+
 # Deeply traverse root_path to find grib2 file paths
 function all_grib2_file_paths_in(root_path)
   grib2_paths = []
@@ -50,7 +54,7 @@ function read_grid(grib2_path; crop = nothing, downsample = 1) :: Grids.Grid
     #
     # -end means stop after first (sub)message.
     # -inv /dev/null redirects the inventory listing. Otherwise it goes to stdout and there's otherwise no way to turn it off.
-    all_pts = open(grid_csv -> DelimitedFiles.readdlm(grid_csv, ',', Float64; header=false), `wgrib2 $grib2_path -end -inv /dev/null -gridout -`)
+    all_pts = open(grid_csv -> DelimitedFiles.readdlm(grid_csv, ',', Float64; header=false), `$(wgrib2_path()) $grib2_path -end -inv /dev/null -gridout -`)
     all_pts[:, 4] = [lon > 180 ? lon - 360 : lon for lon in all_pts[:, 4]]
 
     raw_height = Int64(maximum(all_pts[:,2]))
@@ -175,7 +179,7 @@ function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
     # -s indicates "simple inventory"
     # -n indicates to add the inventory number
     table =
-      open(`wgrib2 $grib2_path -s -n`) do inv
+      open(`$(wgrib2_path()) $grib2_path -s -n`) do inv
         # c.f. find_common_layers.rb
         normalized_raw_inventory = read(inv, String)
         for (old, replacement) in layer_name_normalization_substitutions
@@ -275,7 +279,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # Establish the number of expected values per layer and the output array.
 
   # "1:0:npts=1905141\n"
-  expected_layer_raw_value_count = parse(Int64, split(read(`wgrib2 $grib2_path -npts -end`, String), "=")[2])
+  expected_layer_raw_value_count = parse(Int64, split(read(`$(wgrib2_path()) $grib2_path -npts -end`, String), "=")[2])
 
   if isnothing(crop_downsample_grid)
     crop_downsampled_value_count = expected_layer_raw_value_count
@@ -308,7 +312,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
     # Okay it turns out wgrib2 is already multithreaded in this case.
     # But outputing separate files will allow us to downsample in threads.
 
-    wgrib2 = open(`wgrib2 $grib2_path -i -header -inv /dev/null -bin $out_path -ncpu 1`, "r+")
+    wgrib2 = open(`$(wgrib2_path()) $grib2_path -i -header -inv /dev/null -bin $out_path -ncpu 1`, "r+")
 
     # print("asking for layers...")
     # Tell wgrib2 which layers we want.
@@ -453,7 +457,7 @@ function write_15km_HREF_probs_grib2(probs :: AbstractVector; run_time :: Dates.
   grib2_template_path = (@__DIR__) * "/href_one_field_for_grid_cropped_3x_downsampled.grib2"
 
   # e.g. wgrib2 href_one_field_for_grid_cropped_3x_downsampled.grib2 -no_header -import_bin probs.float32 -set_var "TORPROB" -set_date 2022041300 -set_ftime "12-35 hour ave fcst" -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out probs.grib2; du -h probs.grib2; wgrib2 probs.grib2 -v2 -packing
-  run(`wgrib2 $grib2_template_path -no_header -import_bin $tmp_path -set_var $var_name -set_date $date_str -set_ftime $fcst_str -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out $out_name`)
+  run(`$(wgrib2_path()) $grib2_template_path -no_header -import_bin $tmp_path -set_var $var_name -set_date $date_str -set_ftime $fcst_str -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out $out_name`)
 
   rm(tmp_path)
 

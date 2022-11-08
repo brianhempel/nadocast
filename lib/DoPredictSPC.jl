@@ -1,4 +1,4 @@
-#  source $HOME/.bash_profile > $HOME/nadocast/forecaster.log 2>&1 && FORECASTS_ROOT_EXACT=... RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
+#  source $HOME/.bash_profile > $HOME/nadocast/forecaster.log 2>&1 && FORECASTS_ROOT_EXACT=... RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true WGRIB2=/usr/bin/wgrib2 JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
 #
 # To predict the past, also set RUN_DATE and RUN_HOUR in the environment.
 

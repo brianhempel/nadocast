@@ -45,7 +45,7 @@ function mean_prob_grib2s_to_forecast(
   if isnothing(fname_match)
     # "href.t00z.conus.mean.f01.grib2"
     # Need to query via wgrib2
-    date_str = read(`wgrib2 $mean_grib2_path -end -t`, String) # "1:0:d=2022110700\n"
+    date_str = read(`$(Grib2.wgrib2_path()) $mean_grib2_path -end -t`, String) # "1:0:d=2022110700\n"
     year_str, month_str, day_str, run_hour_str = match(r"d=(\d\d\d\d)(\d\d)(\d\d)(\d\d)\n", date_str).captures
   else
     year_str, month_str, day_str, run_hour_str = fname_match.captures
