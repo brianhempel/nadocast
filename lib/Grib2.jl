@@ -439,12 +439,12 @@ function write_15km_HREF_probs_grib2(probs :: AbstractVector; run_time :: Dates.
   )[event_type]
 
   date_str = Printf.@sprintf "%04d%02d%02d%02d" Dates.year(run_time) Dates.month(run_time) Dates.day(run_time) Dates.hour(run_time)
-  ftime_flag, fcst_str =
+  fcst_str =
     if isa(forecast_hour, Int64)
-      ("-set_ftime", "$forecast_hour hour fcst")
+      "$forecast_hour hour fcst"
     else
       near_hr, far_hr = forecast_hour
-      ("-set_ave", "$near_hr-$far_hr hour ave fcst")
+      "$near_hr-$far_hr hour ave fcst"
     end
 
   tmp_path = tempname()
@@ -452,8 +452,8 @@ function write_15km_HREF_probs_grib2(probs :: AbstractVector; run_time :: Dates.
 
   grib2_template_path = (@__DIR__) * "/href_one_field_for_grid_cropped_3x_downsampled.grib2"
 
-  # e.g. wgrib2 href_one_field_for_grid_cropped_3x_downsampled.grib2 -no_header -import_bin probs.float32 -set_var "TORPROB" -set_date 2022041300 -set_ave "12-35 hour ave fcst" -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out probs.grib2; du -h probs.grib2; wgrib2 probs.grib2 -v2 -packing
-  run(`wgrib2 $grib2_template_path -no_header -import_bin $tmp_path -set_var $var_name -set_date $date_str $ftime_flag $fcst_str -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out $out_name`)
+  # e.g. wgrib2 href_one_field_for_grid_cropped_3x_downsampled.grib2 -no_header -import_bin probs.float32 -set_var "TORPROB" -set_date 2022041300 -set_ftime "12-35 hour ave fcst" -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out probs.grib2; du -h probs.grib2; wgrib2 probs.grib2 -v2 -packing
+  run(`wgrib2 $grib2_template_path -no_header -import_bin $tmp_path -set_var $var_name -set_date $date_str -set_ftime $fcst_str -set_prob 1 1 3 0 100 -set_grib_type jpeg -grib_out $out_name`)
 
   rm(tmp_path)
 
