@@ -120,6 +120,54 @@ function min_mean_max_forecasts_with_climatology_etc()
   ForecastCombinators.map_forecasts(day1_hourlies_concated; inventory_transformer = day_inventory, data_transformer = day_min_mean_max, model_name = "HREFDayExperiment_Day1")
 end
 
+# Best hyperparameters:
+# Dict{Symbol, Real}(:max_depth => 4, :max_delta_score => 3.2,  :learning_rate => 0.04, :max_leaves => 8,  :l2_regularization => 100.0,  :normalize_second_opinion => true,  :feature_fraction => 0.032, :second_opinion_weight => 0.033, :bagging_temperature => 0.25, :min_data_weight_in_leaf => 464.0)    gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T06.28.46.943_tornado/587_trees_loss_0.008584802.model
+# Dict{Symbol, Real}(:max_depth => 8, :max_delta_score => 3.2,  :learning_rate => 0.04, :max_leaves => 20, :l2_regularization => 1.0,    :normalize_second_opinion => true,  :feature_fraction => 0.1,   :second_opinion_weight => 0.0,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 215000.0) gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T07.23.03.252_tornado/200_trees_loss_0.009353732.model
+# Dict{Symbol, Real}(:max_depth => 7, :max_delta_score => 1.0,  :learning_rate => 0.04, :max_leaves => 30, :l2_regularization => 100.0,  :normalize_second_opinion => false, :feature_fraction => 0.32,  :second_opinion_weight => 0.1,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 2150.0)   gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T06.28.46.943_wind/658_trees_loss_0.040234573.model
+# Dict{Symbol, Real}(:max_depth => 8, :max_delta_score => 0.56, :learning_rate => 0.04, :max_leaves => 30, :l2_regularization => 10.0,   :normalize_second_opinion => true,  :feature_fraction => 0.056, :second_opinion_weight => 1.0,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 100000.0) gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T07.23.03.252_wind/781_trees_loss_0.04287363.model
+# Dict{Symbol, Real}(:max_depth => 8, :max_delta_score => 3.2,  :learning_rate => 0.04, :max_leaves => 25, :l2_regularization => 1.0,    :normalize_second_opinion => true,  :feature_fraction => 0.056, :second_opinion_weight => 0.0,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 215000.0) gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T07.12.14.796_hail/516_trees_loss_0.021882312.model
+# Dict{Symbol, Real}(:max_depth => 8, :max_delta_score => 0.56, :learning_rate => 0.04, :max_leaves => 30, :l2_regularization => 1000.0, :normalize_second_opinion => true,  :feature_fraction => 0.056, :second_opinion_weight => 1.0,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 100000.0) gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T08.11.17.582_hail/760_trees_loss_0.02368946.model
+# Dict{Symbol, Real}(:max_depth => 8, :max_delta_score => 3.2,  :learning_rate => 0.04, :max_leaves => 20, :l2_regularization => 1.0,    :normalize_second_opinion => true,  :feature_fraction => 0.1,   :second_opinion_weight => 0.0,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 215000.0) gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T07.12.14.796_sig_tornado/182_trees_loss_0.0013368124.model
+# Dict{Symbol, Real}(:max_depth => 4, :max_delta_score => 1.0,  :learning_rate => 0.04, :max_leaves => 25, :l2_regularization => 1.0,    :normalize_second_opinion => true,  :feature_fraction => 0.018, :second_opinion_weight => 1.0,   :bagging_temperature => 0.25, :min_data_weight_in_leaf => 215.0)    gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T08.11.17.582_sig_tornado/219_trees_loss_0.0015899849.model
+
+
+
+# (event_name, grib2_var_name, gbdt_0Z_day1, gbdt_12Z_day1)
+# sig_tor was trained by accident...include it anyway
+const models = [
+  ("tornado",     "TORPROB",  "gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T07.23.03.252_tornado/200_trees_loss_0.009353732.model",      "gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T06.28.46.943_tornado/587_trees_loss_0.008584802.model"),
+  ("wind",        "WINDPROB", "gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T07.23.03.252_wind/781_trees_loss_0.04287363.model",          "gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T06.28.46.943_wind/658_trees_loss_0.040234573.model"),
+  ("hail",        "HAILPROB", "gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T08.11.17.582_hail/760_trees_loss_0.02368946.model",          "gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T07.12.14.796_hail/516_trees_loss_0.021882312.model"),
+  ("sig_tornado", "STORPROB", "gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T08.11.17.582_sig_tornado/219_trees_loss_0.0015899849.model", "gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T07.12.14.796_sig_tornado/182_trees_loss_0.0013368124.model"),
+]
+
+function uncalibrated_day_prediction_forecasts()
+  predictors = map(models) do (event_name, grib2_var_name, gbdt_0z_day1, gbdt_12z_day1)
+    predict_0z  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/" * gbdt_0z_day1)
+    predict_12z = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/" * gbdt_12z_day1)
+
+    predict(forecast, data) = begin
+      if forecast.forecast_hour == 35 # 0Z
+        predict_0z(data)
+      elseif forecast.forecast_hour == 29 # 6Z, use the mean of the two
+        0.5f0 .* (predict_0z(data) .+ predict_12z(data))
+      elseif forecast.forecast_hour == 23  # 12Z
+        predict_12z(data)
+      elseif forecast.forecast_hour == 17 # 18Z
+        predict_12z(data)
+      else
+        error("Forecast hour $(forecast.forecast_hour) is not a sensible HREF-based day 1 forecast hour!")
+      end
+    end
+
+    (event_name, grib2_var_name, predict)
+  end
+
+  ForecastCombinators.disk_cache_forecasts(
+    PredictionForecasts.simple_prediction_forecasts(min_mean_max_forecasts_with_climatology_etc(), predictors),
+    "href_day_experiment_prediction_raw_2022_models_$(hash(models))"
+  )
+end
 
 # grid = HREFDayExperiment.grid
 

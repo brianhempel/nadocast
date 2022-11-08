@@ -187,6 +187,7 @@ function blurred(prediction_forecasts, forecast_hour_range, blur_grid_is; model_
       lo_hour = Float32(forecast_hour_range.start)
       hi_hour = Float32(forecast_hour_range.stop)
       forecast_ratio = (forecast_hour - lo_hour) * (1f0/(hi_hour-lo_hour))
+      forecast_ratio = clamp(forecast_ratio, 0f0, 1f0)
       one_minus_forecast_ratio = 1f0 - forecast_ratio
 
       Threads.@threads for i in 1:point_count
