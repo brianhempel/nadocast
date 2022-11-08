@@ -21,7 +21,7 @@ HOUR   = 60*MINUTE
 (_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(CombinedHREFSREF.forecasts_fourhourly_accumulators(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, validation_forecasts);
 
 length(validation_forecasts) # 16328
@@ -242,7 +242,7 @@ function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
     # logit(HREF), logit(SREF)
     bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
 
-    Threads.@threads for i in 1:length(bin_y)
+    Threads.@threads :static for i in 1:length(bin_y)
       logit_total_prob = logit(bin_total_prob_x[i])
       logit_max_hourly = logit(bin_max_hourly_x[i])
 
@@ -355,7 +355,7 @@ HOUR   = 60*MINUTE
 length(fourhourly_validation_forecasts) # 19676
 
 # # We don't have storm events past this time.
-cutoff = Dates.DateTime(2022, 1, 1, 0)
+cutoff = Dates.DateTime(2022, 6, 1, 12)
 fourhourly_validation_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, fourhourly_validation_forecasts);
 
 length(fourhourly_validation_forecasts) # 16328
