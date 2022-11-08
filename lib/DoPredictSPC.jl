@@ -182,8 +182,8 @@ function do_forecast(forecast)
         end
 
         if draw
-          @async plot_fast(period_path,     forecast.grid, prediction;     val_to_color=PlotMap.event_name_to_colorer_more_sig_colors[event_name])
-          @async plot_fast(sig_period_path, forecast.grid, sig_prediction; val_to_color=PlotMap.event_name_to_colorer_more_sig_colors[sig_event_name])
+          @async PlotMap.plot_fast(period_path,     forecast.grid, prediction;     val_to_color=PlotMap.event_name_to_colorer_more_sig_colors[event_name])
+          @async PlotMap.plot_fast(sig_period_path, forecast.grid, sig_prediction; val_to_color=PlotMap.event_name_to_colorer_more_sig_colors[sig_event_name])
         end
       end
     end
