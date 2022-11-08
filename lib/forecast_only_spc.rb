@@ -2,9 +2,9 @@
 #
 # Default forecast date / run hour is based on current UTC time.
 #
-# Usage: RUN_DATE=2021-12-10 RUN_HOUR=10 HRRR_RAP=true TWEET=true ruby download_and_forecast.rb
+# Usage: RUN_DATE=2021-12-10 RUN_HOUR=12 JULIA_NUM_THREADS=16 ruby forecast_only_spc.rb
 #
-# Defaults to today and current UTC hour with HRRR_RAP=true (and TWEET=false for DoPredict.jl)
+# Defaults to today and current UTC hour
 
 require "date"
 require "fileutils"
@@ -24,15 +24,15 @@ loop do
     FileUtils.cd lib_dir
 
     # DoPredict.jl will fail if the forecasts are not all downloaded.
-    if system("JULIA_NUM_THREADS=#{ENV["CORE_COUNT"]} RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} time #{JULIA} --project DoPredict.jl")
+    if system("RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} time #{JULIA} --project DoPredictSPC.jl")
       exit 0
     end
   end
 
-  if Time.now - start_time > 10*HOUR
-    STDERR.puts("RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} 10hr timeout")
+  if Time.now - start_time > 6*HOUR
+    STDERR.puts("RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} 6hr timeout")
     exit(1)
   end
 
-  sleep(5*MINUTE)
+  sleep(2*MINUTE)
 end
