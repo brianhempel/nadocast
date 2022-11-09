@@ -48,7 +48,8 @@ end
 function read_grid(grib2_path; crop = nothing, downsample = 1) :: Grids.Grid
   # print("Reading grid $grib2_path...")
 
-  out = Cache.cached([grib2_path], "read_grid_downsample_$(downsample)x") do
+  out = Cache.cached([grib2_path, mtime(grib2_path)], "read_grid_downsample_$(downsample)x") do
+    print("Reading $grib2_path grid...")
 
     # Read the grid from the grib file. Returns four columns: row_index, col_index, lat, lon
     #
@@ -155,6 +156,8 @@ function read_grid(grib2_path; crop = nothing, downsample = 1) :: Grids.Grid
 
     point_weights = point_areas_sq_miles / maximum(point_areas_sq_miles)
 
+    println("done.")
+
     Grids.Grid(height, width, crop, crop_mask, crop_height, crop_width, downsample, raw_height, raw_width, min_lat, max_lat, min_lon, max_lon, latlons, point_areas_sq_miles, point_weights, point_heights_miles, point_widths_miles)
   end
 
@@ -174,26 +177,20 @@ layer_name_normalization_substitutions = JSON.parse(open((@__DIR__) * "/layer_na
 function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
   # print("Reading inventory $grib2_path...")
 
-  out = Cache.cached([grib2_path], "read_inventory") do
-
-    # -s indicates "simple inventory"
-    # -n indicates to add the inventory number
-    table =
-      open(`$(wgrib2_path()) $grib2_path -s -n`) do inv
-        # c.f. find_common_layers.rb
-        normalized_raw_inventory = read(inv, String)
-        for (old, replacement) in layer_name_normalization_substitutions
-          normalized_raw_inventory = replace(normalized_raw_inventory, old => replacement)
-        end
-
-        DelimitedFiles.readdlm(IOBuffer(normalized_raw_inventory), ':', String; header=false, use_mmap=false, quotes=false)
+  # -s indicates "simple inventory"
+  # -n indicates to add the inventory number
+  table =
+    open(`$(wgrib2_path()) $grib2_path -s -n`) do inv
+      # c.f. find_common_layers.rb
+      normalized_raw_inventory = read(inv, String)
+      for (old, replacement) in layer_name_normalization_substitutions
+        normalized_raw_inventory = replace(normalized_raw_inventory, old => replacement)
       end
 
-    mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7], ""), table, dims = [2])[:,1]
-  end
+      DelimitedFiles.readdlm(IOBuffer(normalized_raw_inventory), ':', String; header=false, use_mmap=false, quotes=false)
+    end
 
-  # println("done.")
-  out
+  mapslices(row -> Inventories.InventoryLine(row[1], row[2], row[3], row[4], row[5], row[6], row[7], ""), table, dims = [2])[:,1]
 end
 
 # Set undefineds to 0 instead of 9.999f20
