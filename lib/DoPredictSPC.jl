@@ -1,4 +1,4 @@
-#  source $HOME/.bash_profile > $HOME/nadocast/forecaster.log 2>&1 && FORECASTS_ROOT_EXACT=... RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true WGRIB2=/usr/bin/wgrib2 JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
+#  FORECASTS_ROOT_EXACT=... FORECASTS_OUTPUT_DIR=... RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true WGRIB2=/usr/bin/wgrib2 JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
 #
 # To predict the past, also set RUN_DATE and RUN_HOUR in the environment.
 
@@ -90,30 +90,16 @@ function do_forecast(forecast)
     Forecasts.run_year_month_day_hour_forecast_hour(f) == run_year_month_day_hour_forecast_hour
   end;
 
-  # day2_forecast = find(day2_forecasts) do f
-  #   Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
-  # end;
-  # day2_absolutely_calibrated_forecast = find(day2_absolutely_calibrated_forecasts) do f
-  #   Forecasts.run_year_month_day_hour(f) == run_year_month_day_hour && f.forecast_hour == forecast.forecast_hour + 24
-  # end;
-
-  plotting_paths = []
-  daily_paths_to_perhaps_tweet = []
-  rsync_dirs = []
-
   forecasts_dir = get(ENV, "FORECASTS_OUTPUT_DIR", "$this_file_dir/../forecasts")
   # absolute file paths are too long for GMT, make them shorter by cd-ing
   cd(forecasts_dir)
 
-  nadocast_run_time_utc      = Forecasts.run_utc_datetime(forecast)
-  nadocast_run_hour          = forecast.run_hour
+  nadocast_run_time_utc = Forecasts.run_utc_datetime(forecast)
+  nadocast_run_hour     = forecast.run_hour
 
-  out_dir_daily      = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/"
-  out_dir_hourly     = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/hourly/"
-  out_dir_fourhourly = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))/$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/t$(nadocast_run_hour)z/four-hourly/"
-
-  rsync_dir = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
-  push!(rsync_dirs, rsync_dir)
+  out_dir_daily      = "$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/"
+  out_dir_hourly     = "$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/hourly/"
+  out_dir_fourhourly = "$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))/four-hourly/"
 
   non_sig_model_count = count(m -> !occursin("sig_", m[1]), HREFPrediction.models)
 
@@ -201,15 +187,15 @@ function do_forecast(forecast)
       (forecast.forecast_hour - 23):47
     end
 
-  for hourly_forecast in hourly_forecasts
-    if Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour && hourly_forecast.forecast_hour in hourly_fourhourly_forecast_hour_range
-      output_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true)
-    end
-  end
-
   for fourhourly_forecast in fourhourly_forecasts
     if Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour && fourhourly_forecast.forecast_hour in hourly_fourhourly_forecast_hour_range
       output_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true)
+    end
+  end
+
+  for hourly_forecast in hourly_forecasts
+    if Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour && hourly_forecast.forecast_hour in hourly_fourhourly_forecast_hour_range
+      output_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true)
     end
   end
 end
