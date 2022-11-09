@@ -180,7 +180,7 @@ function read_inventory(grib2_path) :: Vector{Inventories.InventoryLine}
   # -s indicates "simple inventory"
   # -n indicates to add the inventory number
   table =
-    open(`$(wgrib2_path()) $grib2_path -s -n`) do inv
+    open(`$(wgrib2_path()) $grib2_path -s -n -ncpu 1`) do inv
       # c.f. find_common_layers.rb
       normalized_raw_inventory = read(inv, String)
       for (old, replacement) in layer_name_normalization_substitutions
@@ -276,7 +276,7 @@ function read_layers_data_raw(grib2_path, inventory; crop_downsample_grid = noth
   # Establish the number of expected values per layer and the output array.
 
   # "1:0:npts=1905141\n"
-  expected_layer_raw_value_count = parse(Int64, split(read(`$(wgrib2_path()) $grib2_path -npts -end`, String), "=")[2])
+  expected_layer_raw_value_count = parse(Int64, split(read(`$(wgrib2_path()) $grib2_path -npts -end -ncpu 1`, String), "=")[2])
 
   if isnothing(crop_downsample_grid)
     crop_downsampled_value_count = expected_layer_raw_value_count
