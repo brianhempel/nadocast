@@ -107,9 +107,7 @@ function do_forecast(forecast)
 
     @assert !(is_hourly && is_fourhourly)
 
-    ForecastCombinators.turn_forecast_caching_on()
     predictions = Forecasts.data(forecast);
-    ForecastCombinators.clear_cached_forecasts()
 
     period_stop_forecast_hour  = forecast.forecast_hour
     period_start_forecast_hour =
@@ -175,8 +173,11 @@ function do_forecast(forecast)
     end
   end
 
+  ForecastCombinators.turn_forecast_caching_on()
   output_forecast(forecast;                       is_hourly = false, is_fourhourly = false)
+  ForecastCombinators.clear_cached_forecasts()
   output_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true)
+  ForecastCombinators.clear_cached_forecasts()
 
   is_day1 = forecast.forecast_hour <= 35
 
@@ -192,12 +193,14 @@ function do_forecast(forecast)
       output_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true)
     end
   end
+  ForecastCombinators.clear_cached_forecasts()
 
   for hourly_forecast in hourly_forecasts
     if Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour && hourly_forecast.forecast_hour in hourly_fourhourly_forecast_hour_range
       output_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true)
     end
   end
+  ForecastCombinators.clear_cached_forecasts()
 end
 
 for forecast in forecasts
