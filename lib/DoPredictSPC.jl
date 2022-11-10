@@ -77,6 +77,7 @@ if !haskey(ENV, "RUN_DATES")
   forecasts = [last(forecasts)]
 end;
 
+hourlies_through_forecast_hour = parse(Int64, get(ENV, "HOURLIES_THROUGH_FORECAST_HOUR", "-1")) # Fail unless we render all hourlies out this far
 
 if forecasts == []
   exit(1)
@@ -209,9 +210,8 @@ function do_forecast(forecast)
   end
   ForecastCombinators.clear_cached_forecasts()
 
-  # Flag to retry if we couldn't draw all the hourlies out to f47 when generating a day 2 forecast.
-  is_day2 = forecast.forecast_hour > 36
-  if is_day2 && nhourlies < length(2:47)
+  # Flag to retry if we couldn't draw all the hourlies out to e.g. f47
+  if nhourlies < length(2:hourlies_through_forecast_hour)
     global couldnt_do_everything
     couldnt_do_everything = true
   end
