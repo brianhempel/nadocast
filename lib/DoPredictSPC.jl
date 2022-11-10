@@ -10,7 +10,11 @@ import Forecasts
 import ForecastCombinators
 import Grids
 import Grib2
-import PlotMap
+
+grib2 = get(ENV, "OUTPUT_GRIB2", "true")  == "true"
+draw  = get(ENV, "DRAW_PNG",     "false") == "true"
+
+draw && import PlotMap # Was having trouble loading this on the SPC machine
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction")
 import HREFPrediction
@@ -129,9 +133,6 @@ function do_forecast(forecast)
         out_dir_daily
       end
     mkpath(out_dir)
-
-    grib2 = get(ENV, "OUTPUT_GRIB2", "true")  == "true"
-    draw  = get(ENV, "DRAW_PNG",     "false") == "true"
 
     for model_i in 1:non_sig_model_count
       event_name, _, _     = HREFPrediction.models[model_i]
