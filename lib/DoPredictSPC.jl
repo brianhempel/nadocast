@@ -1,6 +1,8 @@
 #  FORECASTS_ROOT_EXACT=... FORECASTS_OUTPUT_DIR=... RUN_HOUR=12 DAY1OR2=1 DRAW_PNG=true WGRIB2=/usr/bin/wgrib2 JULIA_NUM_THREADS=16 JULIA=/usr/local/julia/bin/julia ruby $HOME/nadocast/lib/forecast_only_spc.rb >> $HOME/nadocast/forecaster.log 2>&1
 #
 # To predict the past, also set RUN_DATE and RUN_HOUR in the environment.
+#
+# Will not overwrite non-empty files that exist, unless you pass OVERWRITE=true
 
 import Dates
 using Printf
@@ -11,8 +13,9 @@ import ForecastCombinators
 import Grids
 import Grib2
 
-grib2 = get(ENV, "OUTPUT_GRIB2", "true")  == "true"
-draw  = get(ENV, "DRAW_PNG",     "false") == "true"
+overwrite = get(ENV, "OVERWRITE",    "false") == "true"
+grib2     = get(ENV, "OUTPUT_GRIB2", "true")  == "true"
+draw      = get(ENV, "DRAW_PNG",     "false") == "true"
 
 draw && import PlotMap # Was having trouble loading this on the SPC machine
 
@@ -86,6 +89,8 @@ function find(pred, arr)
   isnothing(i) ? nothing : arr[i]
 end
 
+couldnt_do_everything = false
+
 function do_forecast(forecast)
 
   run_year_month_day_hour               = Forecasts.run_year_month_day_hour(forecast)
@@ -111,8 +116,6 @@ function do_forecast(forecast)
 
     @assert !(is_hourly && is_fourhourly)
 
-    predictions = Forecasts.data(forecast);
-
     period_stop_forecast_hour  = forecast.forecast_hour
     period_start_forecast_hour =
       if is_hourly
@@ -134,7 +137,9 @@ function do_forecast(forecast)
       end
     mkpath(out_dir)
 
-    for model_i in 1:non_sig_model_count
+    predictions = nothing
+
+    @sync for model_i in 1:non_sig_model_count
       event_name, _, _     = HREFPrediction.models[model_i]
       sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", HREFPrediction.models_with_gated)
       sig_event_name, _, _ = HREFPrediction.models_with_gated[sig_model_i]
@@ -144,11 +149,16 @@ function do_forecast(forecast)
       sig_out_path_prefix  = out_dir * "nadocast_2022_models_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       period_path          = out_path_prefix     * "_f$(f_str)"
       sig_period_path      = sig_out_path_prefix * "_f$(f_str)"
-      # write(period_path * ".float16.bin", Float16.(prediction))
-      prediction           = @view predictions[:, model_i]
-      sig_prediction       = @view predictions[:, sig_model_i]
 
-      @sync begin
+      need_to_do_something =
+        overwrite ||
+        (grib2 && (filesize(period_path * ".grib2") < 100 || filesize(sig_period_path * ".grib2") < 100)) ||
+        (draw  && (filesize(period_path * ".png")   < 100 || filesize(sig_period_path * ".png")   < 100))
+
+      if need_to_do_something
+        predictions    = isnothing(predictions) ? Forecasts.data(forecast) : predictions
+        prediction     = @view predictions[:, model_i]
+        sig_prediction = @view predictions[:, sig_model_i]
         if grib2
           @async Grib2.write_15km_HREF_probs_grib2(
             prediction;
@@ -180,30 +190,37 @@ function do_forecast(forecast)
   output_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true)
   ForecastCombinators.clear_cached_forecasts()
 
-  is_day1 = forecast.forecast_hour <= 35
-
-  hourly_fourhourly_forecast_hour_range =
-    if is_day1
-      2:forecast.forecast_hour
-    else
-      (forecast.forecast_hour - 23):47
-    end
+  # Just make all the hourly/fourhourlies we can (based on immediately available forecasts).
+  # It's fast and it's okay to remake outputs that already exist.
 
   for fourhourly_forecast in fourhourly_forecasts
-    if Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour && fourhourly_forecast.forecast_hour in hourly_fourhourly_forecast_hour_range
+    if Forecasts.run_year_month_day_hour(fourhourly_forecast) == run_year_month_day_hour
       output_forecast(fourhourly_forecast; is_hourly = false, is_fourhourly = true, is_absolutely_calibrated = true)
     end
   end
   ForecastCombinators.clear_cached_forecasts()
 
+  nhourlies = 0
   for hourly_forecast in hourly_forecasts
-    if Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour && hourly_forecast.forecast_hour in hourly_fourhourly_forecast_hour_range
+    if Forecasts.run_year_month_day_hour(hourly_forecast) == run_year_month_day_hour
       output_forecast(hourly_forecast; is_hourly = true, is_fourhourly = false, is_absolutely_calibrated = true)
+      nhourlies += 1
     end
   end
   ForecastCombinators.clear_cached_forecasts()
+
+  # Flag to retry if we couldn't draw all the hourlies out to f47 when generating a day 2 forecast.
+  is_day2 = forecast.forecast_hour > 36
+  if is_day2 && nhourlies < length(2:47)
+    global couldnt_do_everything
+    couldnt_do_everything = true
+  end
 end
 
 for forecast in forecasts
   do_forecast(forecast)
+end
+
+if couldnt_do_everything
+  exit(1)
 end
