@@ -145,7 +145,6 @@ function do_forecast(forecast)
       sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", HREFPrediction.models_with_gated)
       sig_event_name, _, _ = HREFPrediction.models_with_gated[sig_model_i]
       calibration_blurb    = is_absolutely_calibrated ? "_abs_calib" : ""
-      println("outputting$(grib2 ? " grib2" : "")$(draw ? " png" : "") for (sig_)$(event_name)$(calibration_blurb) f$(f_str)...")
       out_path_prefix      = out_dir *     "nadocast_2022_models_conus_$(event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       sig_out_path_prefix  = out_dir * "nadocast_2022_models_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       period_path          = out_path_prefix     * "_f$(f_str)"
@@ -157,6 +156,7 @@ function do_forecast(forecast)
         (draw  && (filesize(period_path * ".png")   < 100 || filesize(sig_period_path * ".png")   < 100))
 
       if need_to_do_something
+        println("outputting$(grib2 ? " grib2" : "")$(draw ? " png" : "") for (sig_)$(event_name)$(calibration_blurb) f$(f_str)...")
         predictions    = isnothing(predictions) ? Forecasts.data(forecast) : predictions
         prediction     = @view predictions[:, model_i]
         sig_prediction = @view predictions[:, sig_model_i]
