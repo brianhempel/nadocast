@@ -224,11 +224,11 @@ function blurred_calibrated_day_prediction_forecasts()
   # best_blur_radius_12z = [15, 25, 15, 70]
   # best_blur_radius_0z  = [50, 25, 15, 100]
 
-  blur_15mi_grid_is  = Grids.radius_grid_is(grid, 15.0)
-  blur_25mi_grid_is  = Grids.radius_grid_is(grid, 25.0)
-  blur_50mi_grid_is  = Grids.radius_grid_is(grid, 50.0)
-  blur_70mi_grid_is  = Grids.radius_grid_is(grid, 70.0)
-  blur_100mi_grid_is = Grids.radius_grid_is(grid, 100.0)
+  blur_15mi_grid_is  = Grids.radius_grid_is(grid(), 15.0)
+  blur_25mi_grid_is  = Grids.radius_grid_is(grid(), 25.0)
+  blur_50mi_grid_is  = Grids.radius_grid_is(grid(), 50.0)
+  blur_70mi_grid_is  = Grids.radius_grid_is(grid(), 70.0)
+  blur_100mi_grid_is = Grids.radius_grid_is(grid(), 100.0)
 
   # Needs to be the same order as models
   blur_grid_is = [
