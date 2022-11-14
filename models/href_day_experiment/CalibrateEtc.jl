@@ -435,7 +435,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
 end
 
 model_names = first.(HREFDayExperiment.models)
-event_names = map(name -> split(name, "_")[1], model_names)
+event_names = model_names
 println("model_names = $model_names")
 println("event_names = $event_names")
 
