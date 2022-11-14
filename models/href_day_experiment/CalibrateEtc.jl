@@ -350,9 +350,6 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     end
   end
 
-  blur_0z_grid_is  = Grids.radius_grid_is(grid,  best_blur_radius_0z)
-  blur_12z_grid_is = Grids.radius_grid_is(grid, best_blur_radius_12z)
-
   # Needs to be the same order as models
   blur_grid_is = map(enumerate(model_names)) do (prediction_i, _)
     burrer_0z_i  = findfirst(blurrer -> blurrer[1] == best_blur_radius_0z[prediction_i],  blurrers)
