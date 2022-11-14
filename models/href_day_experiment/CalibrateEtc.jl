@@ -367,7 +367,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
 
   println("\nLoading blurred daily forecasts...")
 
-  X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "validation_forecasts_blurred");
+  X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_blurred");
 
   println("\nChecking the daily blurred forecast performance...")
 
@@ -402,7 +402,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   X, Ys, weights =
     TrainingShared.get_data_labels_weights(
       validation_day_forecasts_0z_12z_calibrated;
-      event_name_to_labeler = event_name_to_day_labeler,
+      event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
       save_dir = "validation_day_forecasts_0z_12z_calibrated",
     );
 
