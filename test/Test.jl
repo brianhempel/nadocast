@@ -17,6 +17,9 @@ import HREFPrediction
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
 import HREFPredictionAblations
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_day_experiment")
+import HREFDayExperiment
+
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 import Conus
 import Forecasts
@@ -715,3 +718,14 @@ end
 # TASKS=[21,22] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 
 
+# Day experiment models
+
+# FORECAST_DISK_PREFETCH=false TASKS=[25,27] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false TASKS=[26,28] julia -t 16 --project=.. Test.jl
+
+day_experiment_model_names = first.(HREFDayExperiment.models)
+
+25 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFDayExperiment.blurred_spc_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 0, suffix = "_href_day_experiment")
+26 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFDayExperiment.blurred_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 0, suffix = "_href_day_experiment_absolutely_calibrated")
+27 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFDayExperiment.blurred_spc_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 12, suffix = "_href_day_experiment")
+28 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFDayExperiment.blurred_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 12, suffix = "_href_day_experiment_absolutely_calibrated")

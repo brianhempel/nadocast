@@ -220,6 +220,43 @@ function uncalibrated_day_prediction_forecasts()
   )
 end
 
+function blurred_calibrated_day_prediction_forecasts()
+  # best_blur_radius_12z = [15, 25, 15, 70]
+  # best_blur_radius_0z  = [50, 25, 15, 100]
+
+  blur_15mi_grid_is  = Grids.radius_grid_is(grid, 15.0)
+  blur_25mi_grid_is  = Grids.radius_grid_is(grid, 25.0)
+  blur_50mi_grid_is  = Grids.radius_grid_is(grid, 50.0)
+  blur_70mi_grid_is  = Grids.radius_grid_is(grid, 70.0)
+  blur_100mi_grid_is = Grids.radius_grid_is(grid, 100.0)
+
+  # Needs to be the same order as models
+  blur_grid_is = [
+    (blur_15mi_grid_is, blur_50mi_grid_is),  # tornado
+    (blur_25mi_grid_is, blur_25mi_grid_is),  # wind
+    (blur_15mi_grid_is, blur_15mi_grid_is),  # hail
+    (blur_70mi_grid_is, blur_100mi_grid_is), # sig_tornado
+  ]
+
+  forecasts_blurred = PredictionForecasts.blurred(uncalibrated_day_prediction_forecasts(), 23:35, blur_grid_is)
+
+  model_name_to_day_bins = Dict{String, Vector{Float32}}("hail" => [0.048839394, 0.11616666, 0.22025906, 1.0], "tornado" => [0.017779902, 0.056085516, 0.11559871, 1.0], "sig_tornado" => [0.007377854, 0.022638915, 0.047667596, 1.0], "wind" => [0.08978425, 0.19696076, 0.335077, 1.0])
+  model_name_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("hail" => [[1.0227455, 0.17348957], [0.92801446, -0.09182161], [1.0785028, 0.16131271]], "tornado" => [[1.0015056, 0.016357854], [1.1276554, 0.43491325], [0.93115807, -0.062422168]], "sig_tornado" => [[1.0351814, 0.035491165], [1.2383188, 0.8401045], [1.4964094, 1.6581587]], "wind" => [[1.0421747, 0.15582056], [1.0635164, 0.21312958], [1.0056635, 0.14828795]])
+  calib_day_models = make_calibrated_models(model_name_to_day_bins, model_name_to_day_bins_logistic_coeffs)
+
+  PredictionForecasts.simple_prediction_forecasts(forecasts_blurred, calib_day_models; model_name = "HREFDayExperiment_calibrated")
+end
+
+function blurred_spc_calibrated_day_prediction_forecasts()
+  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}("hail" => [(0.05, 0.03102684), (0.15, 0.12537575), (0.3, 0.35396385), (0.45, 0.56297874)], "tornado" => [(0.02, 0.018529892), (0.05, 0.071611404), (0.1, 0.16732597), (0.15, 0.27986336), (0.3, 0.41645622), (0.45, 0.5810032)], "sig_tornado" => [(0.1, 0.046430588)], "wind" => [(0.05, 0.052114487), (0.15, 0.2152462), (0.3, 0.4713688), (0.45, 0.67717934)])
+
+  # ensure ordered the same as the features in the data
+  calibrations = map(m -> spc_calibrations[m[1]], models)
+
+  PredictionForecasts.calibrated_forecasts(blurred_calibrated_day_prediction_forecasts(), calibrations; model_name = "HREFDayExperiment_spc_calibrated")
+end
+
+
 # grid = HREFDayExperiment.grid
 
 # import Conus

@@ -1,0 +1,266 @@
+model_names = ["tornado", "wind", "hail", "sig_tornado"]
+event_names = ["tornado", "wind", "hail", "sig_tornado"]
+computing radius ranges...done
+Loading tornadoes...
+Event starting 2020-08-14T20:30:00 ending 2020-08-15T20:34:00 is 24.066666666666666 hours long! discarding
+Loading wind events...
+Event starting 2014-07-02T19:50:00 ending 2014-07-16T19:54:00 is 336.06666666666666 hours long! discarding
+Event starting 2015-06-24T19:10:00 ending 2015-06-27T19:18:00 is 72.13333333333334 hours long! discarding
+Event starting 2015-07-14T04:55:00 ending 2015-07-15T04:57:00 is 24.033333333333335 hours long! discarding
+Event starting 2016-02-15T22:24:00 ending 2016-02-16T22:25:00 is 24.016666666666666 hours long! discarding
+Event starting 2016-05-20T06:30:00 ending 2016-05-27T06:30:00 is 168.0 hours long! discarding
+Event starting 2016-06-18T00:37:00 ending 2016-06-18T06:37:00 is 6.0 hours long! discarding
+Event starting 2016-07-12T04:56:00 ending 2016-07-13T05:05:00 is 24.15 hours long! discarding
+Event starting 2016-10-14T11:00:00 ending 2016-10-14T19:30:00 is 8.5 hours long! discarding
+Event starting 2017-05-04T23:00:00 ending 2017-05-05T04:00:00 is 5.0 hours long! discarding
+Event starting 2017-06-13T21:22:00 ending 2017-06-22T21:22:00 is 216.0 hours long! discarding
+Event starting 2017-06-16T13:20:00 ending 2017-06-16T23:20:00 is 10.0 hours long! discarding
+Event starting 2017-06-16T22:38:00 ending 2017-06-28T22:38:00 is 288.0 hours long! discarding
+Event starting 2017-06-17T00:15:00 ending 2017-06-28T00:15:00 is 264.0 hours long! discarding
+Event starting 2017-07-03T21:05:00 ending 2017-07-04T21:05:00 is 24.0 hours long! discarding
+Event starting 2019-05-11T20:30:00 ending 2019-05-15T20:35:00 is 96.08333333333333 hours long! discarding
+Event starting 2019-11-28T20:00:00 ending 2019-11-29T02:00:00 is 6.0 hours long! discarding
+Event starting 2020-05-04T13:03:00 ending 2020-05-05T13:04:00 is 24.016666666666666 hours long! discarding
+Event starting 2020-05-04T14:06:00 ending 2020-05-05T14:07:00 is 24.016666666666666 hours long! discarding
+Event starting 2020-06-19T00:18:00 ending 2020-06-20T00:19:00 is 24.016666666666666 hours long! discarding
+Event starting 2020-06-25T00:00:00 ending 2020-06-25T04:00:00 is 4.0 hours long! discarding
+Event starting 2020-06-28T01:00:00 ending 2020-06-28T05:00:00 is 4.0 hours long! discarding
+Event starting 2020-07-13T02:30:00 ending 2020-07-20T02:31:00 is 168.01666666666668 hours long! discarding
+Event starting 2020-09-17T08:15:00 ending 2020-09-18T08:15:00 is 24.0 hours long! discarding
+Event starting 2021-06-05T01:24:00 ending 2021-06-25T01:29:00 is 480.0833333333333 hours long! discarding
+Event starting 2021-08-12T21:15:00 ending 2021-08-16T21:18:00 is 96.05 hours long! discarding
+Event starting 2022-04-23T01:24:00 ending 2022-04-23T08:00:00 is 6.6 hours long! discarding
+Loading hail events...
+Event starting 2015-08-04T20:00:00 ending 2015-08-14T20:04:00 is 240.06666666666666 hours long! discarding
+Event starting 2016-06-22T02:00:00 ending 2016-06-26T02:05:00 is 96.08333333333333 hours long! discarding
+Event starting 2017-03-24T22:15:00 ending 2017-03-29T22:18:00 is 120.05 hours long! discarding
+Event starting 2017-06-05T04:45:00 ending 2017-06-23T04:46:00 is 432.01666666666665 hours long! discarding
+Event starting 2017-06-13T00:05:00 ending 2017-06-18T00:20:00 is 120.25 hours long! discarding
+Event starting 2017-07-12T17:36:00 ending 2017-07-13T17:36:00 is 24.0 hours long! discarding
+Event starting 2018-05-09T00:30:00 ending 2018-05-19T00:32:00 is 240.03333333333333 hours long! discarding
+Event starting 2018-06-01T17:30:00 ending 2018-06-10T17:38:00 is 216.13333333333333 hours long! discarding
+Event starting 2018-08-05T19:55:00 ending 2018-08-06T00:45:00 is 4.833333333333333 hours long! discarding
+Event starting 2019-08-10T06:57:00 ending 2019-08-11T07:07:00 is 24.166666666666668 hours long! discarding
+Event starting 2020-07-05T20:33:00 ending 2020-07-25T20:36:00 is 480.05 hours long! discarding
+Event starting 2021-03-11T22:00:00 ending 2021-03-12T02:00:00 is 4.0 hours long! discarding
+Event starting 2021-06-17T03:02:00 ending 2021-07-01T03:04:00 is 336.03333333333336 hours long! discarding
+Event starting 2021-08-21T20:54:00 ending 2021-08-22T20:56:00 is 24.033333333333335 hours long! discarding
+Event starting 2022-05-17T23:22:00 ending 2022-05-24T23:22:00 is 168.0 hours long! discarding
+358 validation forecasts from 2018-07-01T11:00:00 to 2022-05-29T11:00:00
+computing 0.0mi radius indices...done
+computing 15.0mi radius indices...done
+computing 25.0mi radius indices...done
+computing 35.0mi radius indices...done
+computing 50.0mi radius indices...done
+computing 70.0mi radius indices...done
+computing 100.0mi radius indices...done
+computing 15.0mi radius indices...done
+computing 25.0mi radius indices...done
+computing 35.0mi radius indices...done
+computing 50.0mi radius indices...done
+computing 70.0mi radius indices...done
+computing 100.0mi radius indices...done
+0Z 12Z pooled performance
+tornado (20606.0) feature 1 TORPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.14018686
+tornado (20606.0) feature 2 TORPROB:calculated:hour fcst:calculated_prob:15mi mean	AU-PR-curve: 0.14102323
+tornado (20606.0) feature 3 TORPROB:calculated:hour fcst:calculated_prob:25mi mean	AU-PR-curve: 0.14110582
+tornado (20606.0) feature 4 TORPROB:calculated:hour fcst:calculated_prob:35mi mean	AU-PR-curve: 0.14068407
+tornado (20606.0) feature 5 TORPROB:calculated:hour fcst:calculated_prob:50mi mean	AU-PR-curve: 0.13901867
+tornado (20606.0) feature 6 TORPROB:calculated:hour fcst:calculated_prob:70mi mean	AU-PR-curve: 0.13549756
+tornado (20606.0) feature 7 TORPROB:calculated:hour fcst:calculated_prob:100mi mean	AU-PR-curve: 0.1273891
+wind (148934.0) feature 8 WINDPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.37053993
+wind (148934.0) feature 9 WINDPROB:calculated:hour fcst:calculated_prob:15mi mean	AU-PR-curve: 0.37258855
+wind (148934.0) feature 10 WINDPROB:calculated:hour fcst:calculated_prob:25mi mean	AU-PR-curve: 0.3729874
+wind (148934.0) feature 11 WINDPROB:calculated:hour fcst:calculated_prob:35mi mean	AU-PR-curve: 0.3721309
+wind (148934.0) feature 12 WINDPROB:calculated:hour fcst:calculated_prob:50mi mean	AU-PR-curve: 0.36946478
+wind (148934.0) feature 13 WINDPROB:calculated:hour fcst:calculated_prob:70mi mean	AU-PR-curve: 0.36428082
+wind (148934.0) feature 14 WINDPROB:calculated:hour fcst:calculated_prob:100mi mean	AU-PR-curve: 0.35388184
+hail (67838.0) feature 15 HAILPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.23734981
+hail (67838.0) feature 16 HAILPROB:calculated:hour fcst:calculated_prob:15mi mean	AU-PR-curve: 0.2386961
+hail (67838.0) feature 17 HAILPROB:calculated:hour fcst:calculated_prob:25mi mean	AU-PR-curve: 0.23829855
+hail (67838.0) feature 18 HAILPROB:calculated:hour fcst:calculated_prob:35mi mean	AU-PR-curve: 0.23575334
+hail (67838.0) feature 19 HAILPROB:calculated:hour fcst:calculated_prob:50mi mean	AU-PR-curve: 0.22981334
+hail (67838.0) feature 20 HAILPROB:calculated:hour fcst:calculated_prob:70mi mean	AU-PR-curve: 0.22028948
+hail (67838.0) feature 21 HAILPROB:calculated:hour fcst:calculated_prob:100mi mean	AU-PR-curve: 0.2032604
+sig_tornado (2681.0) feature 22 STORPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.07332687
+sig_tornado (2681.0) feature 23 STORPROB:calculated:hour fcst:calculated_prob:15mi mean	AU-PR-curve: 0.07403898
+sig_tornado (2681.0) feature 24 STORPROB:calculated:hour fcst:calculated_prob:25mi mean	AU-PR-curve: 0.07383876
+sig_tornado (2681.0) feature 25 STORPROB:calculated:hour fcst:calculated_prob:35mi mean	AU-PR-curve: 0.0734625
+sig_tornado (2681.0) feature 26 STORPROB:calculated:hour fcst:calculated_prob:50mi mean	AU-PR-curve: 0.073323175
+sig_tornado (2681.0) feature 27 STORPROB:calculated:hour fcst:calculated_prob:70mi mean	AU-PR-curve: 0.078422
+sig_tornado (2681.0) feature 28 STORPROB:calculated:hour fcst:calculated_prob:100mi mean	AU-PR-curve: 0.0821713
+feature_i model_name run_time radius_mi au_pr
+1 tornado 0Z 0 0.12786487
+1 tornado 12Z 0 0.1544998
+2 tornado 0Z 15 0.1294705
+2 tornado 12Z 15 0.15537526
+3 tornado 0Z 25 0.13067819
+3 tornado 12Z 25 0.15519707
+4 tornado 0Z 35 0.13217057
+4 tornado 12Z 35 0.15416709
+5 tornado 0Z 50 0.1333855
+5 tornado 12Z 50 0.15124844
+6 tornado 0Z 70 0.13233377
+6 tornado 12Z 70 0.14585833
+7 tornado 0Z 100 0.12627704
+7 tornado 12Z 100 0.13463569
+8 wind 0Z 0 0.35702384
+8 wind 12Z 0 0.38482037
+9 wind 0Z 15 0.35877413
+9 wind 12Z 15 0.38711163
+10 wind 0Z 25 0.35916543
+10 wind 12Z 25 0.3875034
+11 wind 0Z 35 0.35859838
+11 wind 12Z 35 0.3863866
+12 wind 0Z 50 0.35683402
+12 wind 12Z 50 0.38295773
+13 wind 0Z 70 0.35336804
+13 wind 12Z 70 0.37633815
+14 wind 0Z 100 0.34662548
+14 wind 12Z 100 0.36276436
+15 hail 0Z 0 0.21235014
+15 hail 12Z 0 0.2620384
+16 hail 0Z 15 0.2131384
+16 hail 12Z 15 0.26411107
+17 hail 0Z 25 0.21267323
+17 hail 12Z 25 0.26393855
+18 hail 0Z 35 0.21038839
+18 hail 12Z 35 0.2612414
+19 hail 0Z 50 0.20564729
+19 hail 12Z 50 0.25439882
+20 hail 0Z 70 0.19790818
+20 hail 12Z 70 0.24344759
+21 hail 0Z 100 0.18567652
+21 hail 12Z 100 0.2217629
+22 sig_tornado 0Z 0 0.054310996
+22 sig_tornado 12Z 0 0.09374113
+23 sig_tornado 0Z 15 0.055438574
+23 sig_tornado 12Z 15 0.09401861
+24 sig_tornado 0Z 25 0.056356583
+24 sig_tornado 12Z 25 0.09252274
+25 sig_tornado 0Z 35 0.057655033
+25 sig_tornado 12Z 35 0.090497285
+26 sig_tornado 0Z 50 0.05928553
+26 sig_tornado 12Z 50 0.08868729
+27 sig_tornado 0Z 70 0.061797563
+27 sig_tornado 12Z 70 0.09670891
+28 sig_tornado 0Z 100 0.07501501
+28 sig_tornado 12Z 100 0.090316735
+best_blur_radius_0z  = [50, 25, 15, 100]
+best_blur_radius_12z = [15, 25, 15, 70]
+
+Loading blurred daily forecasts...
+Blurred 1 should match blurs 5 for 0Z
+Blurred 1 should match blurs 2 for 12Z
+Blurred 2 should match blurs 10 for 0Z
+Blurred 2 should match blurs 10 for 12Z
+Blurred 3 should match blurs 16 for 0Z
+Blurred 3 should match blurs 16 for 12Z
+Blurred 4 should match blurs 28 for 0Z
+Blurred 4 should match blurs 27 for 12Z
+
+Checking the daily blurred forecast performance...
+tornado (20606.0) feature 1 TORPROB:calculated:hour fcst:calculated_prob:blurred	AU-PR-curve: 0.14098175
+wind (148934.0) feature 2 WINDPROB:calculated:hour fcst:calculated_prob:blurred	AU-PR-curve: 0.3729874
+hail (67838.0) feature 3 HAILPROB:calculated:hour fcst:calculated_prob:blurred	AU-PR-curve: 0.2386961
+sig_tornado (2681.0) feature 4 STORPROB:calculated:hour fcst:calculated_prob:blurred	AU-PR-curve: 0.077359244
+
+Finding 4 bins of equal positive weight, to bin the probs for calibrating dailies....
+model_name	mean_y	mean_ŷ	Σweight	bin_max
+tornado	0.0005500241804774725	0.0005369805288177626	8.790871373489559e6	0.017779902
+tornado	0.03145649235376229	0.03161041028395532	153710.28380143642	0.056085516
+tornado	0.08921990419281871	0.07882750970527863	54185.09851181507	0.11559871
+tornado	0.18330057841333006	0.18273992318938512	26365.09276086092	1.0
+model_name	mean_y	mean_ŷ	Σweight	bin_max
+wind	0.0040284560090752455	0.004039647483909972	8.594173634453237e6	0.08978425
+wind	0.1453945610920795	0.13457977141449937	238114.38466775417	0.19696076
+wind	0.28618142588908096	0.2562145123893205	120974.60549122095	0.335077
+wind	0.4816993460701437	0.4501644666340919	71869.22395145893	1.0
+model_name	mean_y	mean_ŷ	Σweight	bin_max
+hail	0.0018050343646954354	0.001640066169903731	8.691274674825251e6	0.048839394
+hail	0.08309066550617629	0.07607029885958908	188799.26752007008	0.11616666
+hail	0.1606428085651753	0.15851887998951678	97656.18107324839	0.22025906
+hail	0.330909793222472	0.30596047094156564	47401.72514510155	1.0
+model_name	mean_y	mean_ŷ	Σweight	bin_max
+sig_tornado	7.141125176418434e-5	8.10414766964188e-5	8.939867256696284e6	0.007377854
+sig_tornado	0.010848778877185968	0.012951453213153974	58865.149409770966	0.022638915
+sig_tornado	0.03244699148122466	0.03145710372269796	19661.17999511957	0.047667596
+sig_tornado	0.0943811467809371	0.06957126364446617	6738.2624624967575	1.0
+model_name_to_day_bins = Dict{String, Vector{Float32}}("hail" => [0.048839394, 0.11616666, 0.22025906, 1.0], "tornado" => [0.017779902, 0.056085516, 0.11559871, 1.0], "sig_tornado" => [0.007377854, 0.022638915, 0.047667596, 1.0], "wind" => [0.08978425, 0.19696076, 0.335077, 1.0])
+Float32[0.0043241614, -1.9515828]Float32[0.01388953, -2.9799066]Float32[0.038942758, -3.7437482]Float32[0.100423865, -4.0770288]Float32[0.22872087, -3.6821244]Float32[0.42382216, -2.6333127]Float32[0.63267493, -1.5623192]Float32[0.8222185, -0.7077777]Float32[0.95226693, -0.17374325]Float32[0.9973146, 0.00056758523]Float32[1.0014704, 0.01622319]Float32[1.0015056, 0.016357712]Float32[1.0015056, 0.016357854]
+model_name	bin	input_ŷ_min	input_ŷ_max	count	pos_count	weight	mean_input_ŷ	mean_y	input_logloss	input_au_pr	mean_logistic_ŷ	logistic_logloss	logistic_au_pr	logistic_coeffs
+tornado	1-2	-1.0	0.056085516	9707078	10413.0	8.944582e6	0.0010709693	0.0010811437	0.005866548	0.03158136	0.0010811436	0.0058664964	0.031581346	Float32[1.0015056, 0.016357854]
+Float32[0.20721857, -1.1473827]Float32[0.5344446, -0.8892484]Float32[0.9234371, -0.06385529]Float32[1.1070423, 0.38421762]Float32[1.1274414, 0.43438908]Float32[1.1276553, 0.43491316]Float32[1.1276554, 0.43491325]
+tornado	2-3	0.017779902	0.11559871	221744	10319.0	207895.38	0.043916903	0.04651174	0.17983219	0.088792324	0.046511732	0.17964691	0.08879232	Float32[1.1276554, 0.43491325]
+Float32[0.46192884, -0.5152098]Float32[0.8116573, -0.2049106]Float32[0.9242151, -0.07086465]Float32[0.93113434, -0.062451057]Float32[0.93115807, -0.06242217]Float32[0.93115807, -0.062422168]
+tornado	3-4	0.056085516	1.0	84938	10193.0	80550.19	0.112839356	0.1200137	0.35172924	0.21909066	0.1200137	0.35137722	0.21909064	Float32[0.93115807, -0.062422168]
+Float32[0.020928388, -1.7817993]Float32[0.06401123, -2.4711566]Float32[0.15863913, -2.5532277]Float32[0.317761, -2.0260868]Float32[0.51119304, -1.3216425]Float32[0.71625805, -0.6855931]Float32[0.9049783, -0.17496663]Float32[1.01568, 0.09521863]Float32[1.0411168, 0.15346391]Float32[1.0421729, 0.15581648]Float32[1.0421747, 0.15582056]
+model_name	bin	input_ŷ_min	input_ŷ_max	count	pos_count	weight	mean_input_ŷ	mean_y	input_logloss	input_au_pr	mean_logistic_ŷ	logistic_logloss	logistic_au_pr	logistic_coeffs
+wind	1-2	-1.0	0.19696076	9584620	74571.0	8.832288e6	0.007558949	0.00783962	0.028688313	0.14068365	0.007839621	0.028673481	0.14068362	Float32[1.0421747, 0.15582056]
+Float32[0.663152, -0.15897402]Float32[1.0042678, 0.1498321]Float32[1.0623662, 0.2118914]Float32[1.0635159, 0.2131291]Float32[1.0635164, 0.21312958]
+wind	2-3	0.08978425	0.335077	385802	74488.0	359088.97	0.17555769	0.19282469	0.47333708	0.2806192	0.19282469	0.47223735	0.28061917	Float32[1.0635164, 0.21312958]
+Float32[0.9182305, 0.12495646]Float32[1.004084, 0.14777888]Float32[1.005663, 0.14828777]Float32[1.0056635, 0.14828795]
+wind	3-4	0.19696076	1.0	207396	74363.0	192843.83	0.32849598	0.35904726	0.6246096	0.51263994	0.35904726	0.6223894	0.5126399	Float32[1.0056635, 0.14828795]
+Float32[0.012857808, -1.8608652]Float32[0.040236525, -2.7007794]Float32[0.10530798, -3.0473645]Float32[0.2320031, -2.731909]Float32[0.40670568, -1.9818276]Float32[0.59191, -1.2483828]Float32[0.7780941, -0.59336585]Float32[0.93420327, -0.0913347]Float32[1.0102091, 0.13727608]Float32[1.0224785, 0.17272788]Float32[1.0227454, 0.17348902]Float32[1.0227455, 0.17348957]
+model_name	bin	input_ŷ_min	input_ŷ_max	count	pos_count	weight	mean_input_ŷ	mean_y	input_logloss	input_au_pr	mean_logistic_ŷ	logistic_logloss	logistic_au_pr	logistic_coeffs
+hail	1-2	-1.0	0.11616666	9635114	33963.0	8.880074e6	0.0032225274	0.0035332483	0.014940207	0.07859565	0.0035332488	0.014923536	0.078595735	Float32[1.0227455, 0.17348957]
+Float32[0.36752266, -0.7384424]Float32[0.73473805, -0.3897427]Float32[0.9108673, -0.11998269]Float32[0.92789614, -0.092016414]Float32[0.92801446, -0.091821626]Float32[0.92801446, -0.09182161]
+hail	2-3	0.048839394	0.22025906	309916	33903.0	286455.44	0.104178034	0.109529145	0.33623746	0.1660837	0.10952915	0.33602694	0.16608356	Float32[0.92801446, -0.09182161]
+Float32[0.78259593, -0.03231755]Float32[1.0495659, 0.14037658]Float32[1.0782242, 0.16110788]Float32[1.0785028, 0.1613127]Float32[1.0785028, 0.16131271]
+hail	3-4	0.11616666	1.0	156902	33875.0	145057.9	0.20669954	0.2162823	0.4983232	0.34015056	0.2162823	0.49790654	0.34015054	Float32[1.0785028, 0.16131271]
+Float32[0.0013532339, -1.9832423]Float32[0.004374004, -3.0811734]Float32[0.012498142, -4.0240917]Float32[0.033880368, -4.774928]Float32[0.08682969, -5.126915]Float32[0.19958448, -4.744883]Float32[0.37381127, -3.6356483]Float32[0.55508375, -2.4944873]Float32[0.7240946, -1.5422412]Float32[0.87680435, -0.74307793]Float32[0.9865417, -0.19801158]Float32[1.0298568, 0.010110021]Float32[1.0350817, 0.03498361]Float32[1.0351807, 0.035486724]Float32[1.0351814, 0.035491165]
+model_name	bin	input_ŷ_min	input_ŷ_max	count	pos_count	weight	mean_input_ŷ	mean_y	input_logloss	input_au_pr	mean_logistic_ŷ	logistic_logloss	logistic_au_pr	logistic_coeffs
+sig_tornado	1-2	-1.0	0.022638915	9764598	1356.0	8.998732e6	0.0001652332	0.00014191134	0.00092006614	0.011236978	0.00014191133	0.0009180771	0.011236974	Float32[1.0351814, 0.035491165]
+Float32[0.083181396, -1.5897164]Float32[0.24824513, -1.9045875]Float32[0.5764835, -1.2780364]Float32[0.99080193, 0.00022149086]Float32[1.2088746, 0.7397517]Float32[1.2378877, 0.83863777]Float32[1.2383186, 0.8401036]Float32[1.2383188, 0.8401045]
+sig_tornado	2-3	0.007377854	0.047667596	82679	1340.0	78526.33	0.017584842	0.016256474	0.079973266	0.03764813	0.016256472	0.079801075	0.037648115	Float32[1.2383188, 0.8401045]
+Float32[0.3348732, -0.72209346]Float32[0.817973, 0.05026257]Float32[1.3002086, 1.177689]Float32[1.4804271, 1.6194248]Float32[1.4962926, 1.6578765]Float32[1.4964094, 1.6581587]Float32[1.4964094, 1.6581587]
+sig_tornado	3-4	0.022638915	1.0	27418	1325.0	26399.441	0.04118546	0.04825523	0.18335064	0.13141018	0.04825523	0.18136714	0.13141017	Float32[1.4964094, 1.6581587]
+model_name_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("hail" => [[1.0227455, 0.17348957], [0.92801446, -0.09182161], [1.0785028, 0.16131271]], "tornado" => [[1.0015056, 0.016357854], [1.1276554, 0.43491325], [0.93115807, -0.062422168]], "sig_tornado" => [[1.0351814, 0.035491165], [1.2383188, 0.8401045], [1.4964094, 1.6581587]], "wind" => [[1.0421747, 0.15582056], [1.0635164, 0.21312958], [1.0056635, 0.14828795]])
+
+Checking calibrated performance...
+tornado (20606.0) feature 1 TORPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.14098173
+wind (148934.0) feature 2 WINDPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.37298736
+hail (67838.0) feature 3 HAILPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.23869608
+sig_tornado (2681.0) feature 4 STORPROB:calculated:hour fcst:calculated_prob:	AU-PR-curve: 0.07735924
+
+Plotting calibrated reliability...
+ŷ_tornado,y_tornado,ŷ_wind,y_wind,ŷ_hail,y_hail,ŷ_sig_tornado,y_sig_tornado,
+0.00013134995,0.00011843994,0.000818266,0.00087598583,0.00038657084,0.00038366142,1.4345453e-5,1.4710603e-5,
+0.0027048204,0.003187759,0.022334035,0.02145594,0.012939246,0.013542846,0.00086865656,0.0011092217,
+0.0057206415,0.006294886,0.04208846,0.042164184,0.023673184,0.024223622,0.002080959,0.0019258133,
+0.009810605,0.009814919,0.06195004,0.059982035,0.035156403,0.036733776,0.0038074732,0.003786738,
+0.014941979,0.0141764525,0.08313135,0.07951022,0.047281053,0.04699608,0.005575609,0.0067118937,
+0.020897264,0.01924385,0.10541627,0.10438638,0.06060659,0.05843306,0.0076126023,0.0061904085,
+0.027446182,0.027920142,0.1284696,0.12732504,0.073981665,0.076691754,0.009832607,0.012335022,
+0.034723256,0.036330532,0.15270855,0.15037367,0.08672153,0.09371921,0.0118676815,0.014308246,
+0.043405697,0.042489573,0.1776858,0.18387905,0.09993577,0.100554995,0.014494701,0.014190837,
+0.053925585,0.04993584,0.20357351,0.2055122,0.11429911,0.10622752,0.018629482,0.013384952,
+0.06585663,0.065290116,0.23028484,0.2413093,0.13000187,0.12049526,0.023288963,0.02356218,
+0.07769836,0.08230266,0.25791505,0.26947764,0.14760502,0.14141887,0.027746085,0.025068555,
+0.08999903,0.08934192,0.28701305,0.29204297,0.16716824,0.1696269,0.034989152,0.02618188,
+0.10283678,0.10877207,0.31779006,0.30529642,0.18921308,0.19202818,0.04311108,0.055242956,
+0.11636499,0.12191817,0.35051364,0.3429442,0.21562018,0.2155577,0.051687784,0.06818374,
+0.13422783,0.12399165,0.38741848,0.36651364,0.24612023,0.25238943,0.06573757,0.05042573,
+0.15889733,0.14902608,0.43135116,0.41420168,0.2804574,0.30427223,0.086884215,0.08361463,
+0.1906426,0.178466,0.48734456,0.48547402,0.3215229,0.33664262,0.112039365,0.113936454,
+0.23545957,0.24517012,0.5569721,0.580798,0.37718174,0.36918792,0.15571903,0.13341472,
+0.3444305,0.36027357,0.6713607,0.6873694,0.48697594,0.45890474,0.20019063,0.26925153,
+Determining SPC-like calibration curve...
+model_name	nominal_prob	threshold_to_match_warning_ratio	SR	POD	WR
+tornado	0.02	0.018529892	0.06301025	0.74537677	0.025346119
+tornado	0.05	0.071611404	0.13199824	0.45200795	0.0073371064
+tornado	0.1	0.16732597	0.23433603	0.16214712	0.0014825762
+tornado	0.15	0.27986336	0.36170173	0.042768326	0.0002533486
+tornado	0.3	0.41645622	0.52410316	0.009176224	3.7514063e-5
+tornado	0.45	0.5810032	0.7332181	0.0011121558	3.24997e-6
+wind	0.05	0.052114487	0.18543418	0.8507414	0.07039584
+wind	0.15	0.2152462	0.35734016	0.5038089	0.021633327
+wind	0.3	0.4713688	0.58470845	0.13831793	0.0036297638
+wind	0.45	0.67717934	0.72756493	0.019737555	0.00041625634
+hail	0.05	0.03102684	0.111510806	0.84417415	0.05263421
+hail	0.15	0.12537575	0.22053955	0.4890614	0.015418065
+hail	0.3	0.35396385	0.41604617	0.09305421	0.0015550613
+hail	0.45	0.56297874	0.5660734	0.007285849	8.94871e-5
+sig_tornado	0.1	0.046430588	0.08917182	0.3005327	0.00095259794
+spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}("hail" => [(0.05, 0.03102684), (0.15, 0.12537575), (0.3, 0.35396385), (0.45, 0.56297874)], "tornado" => [(0.02, 0.018529892), (0.05, 0.071611404), (0.1, 0.16732597), (0.15, 0.27986336), (0.3, 0.41645622), (0.45, 0.5810032)], "sig_tornado" => [(0.1, 0.046430588)], "wind" => [(0.05, 0.052114487), (0.15, 0.2152462), (0.3, 0.4713688), (0.45, 0.67717934)])
+Now copy-paste the appropriate bits from the above into the Prediction.jl forecast files
