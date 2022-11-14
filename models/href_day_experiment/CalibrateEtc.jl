@@ -348,7 +348,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
       end
       y_12z       = view(Ys[event_name], is_12z)
       x_12z       = @view X[is_12z, col_i]
-      weights_12z = @view weights[is_0z]
+      weights_12z = @view weights[is_12z]
       au_pr_12z   = Metrics.area_under_pr_curve(x_12z, y_12z, weights_12z)
       if au_pr_12z > best_blur_au_pr_12z[prediction_i]
         best_blur_au_pr_12z[prediction_i]  = au_pr_12z
@@ -365,7 +365,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   blur_grid_is = map(enumerate(model_names)) do (prediction_i, _)
     burrer_0z_i  = findfirst(blurrer -> blurrer[1] == best_blur_radius_0z[prediction_i],  blurrers)
     burrer_12z_i = findfirst(blurrer -> blurrer[1] == best_blur_radius_12z[prediction_i], blurrers)
-    _, blur_0z_grid_is = blurrers[burrer_0z_i]
+    _, blur_0z_grid_is  = blurrers[burrer_0z_i]
     _, blur_12z_grid_is = blurrers[burrer_12z_i]
 
     (blur_12z_grid_is, blur_0z_grid_is)
