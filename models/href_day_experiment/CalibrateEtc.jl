@@ -287,11 +287,11 @@ end
 # rm("validation_forecasts_calibrated"; recursive=true)
 # rm("validation_day_accumulators_forecasts_0z_12z"; recursive=true)
 # rm("validation_day_forecasts_0z_12z"; recursive=true)
-function do_it_all(forecasts, forecast_hour_range, model_names, event_names, make_calibrated_hourly_models)
+function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_models)
   @assert length(model_names) == length(event_names)
   nmodels = length(model_names)
 
-  forecasts = filter(f -> f.forecast_hour in forecast_hour_range, forecasts)
+  forecasts = filter(f -> f.forecast_hour in [23, 35], forecasts)
 
   _, validation_forecasts, _ = TrainingShared.forecasts_train_validation_test(forecasts; just_hours_near_storm_events = false)
 
@@ -305,18 +305,12 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
 
   grid = validation_forecasts[1].grid
 
-  blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
-  blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
-  blur_25mi_grid_is = Grids.radius_grid_is(grid, 25.0)
-  blur_35mi_grid_is = Grids.radius_grid_is(grid, 35.0)
-  blur_50mi_grid_is = Grids.radius_grid_is(grid, 50.0)
-
   blurrers = [
-    (0,  blur_0mi_grid_is),
-    (15, blur_15mi_grid_is),
-    (25, blur_25mi_grid_is),
-    (35, blur_35mi_grid_is),
-    (50, blur_50mi_grid_is),
+    (0,  Grids.radius_grid_is(grid, 0.0)),
+    (15, Grids.radius_grid_is(grid, 15.0)),
+    (25, Grids.radius_grid_is(grid, 25.0)),
+    (35, Grids.radius_grid_is(grid, 35.0)),
+    (50, Grids.radius_grid_is(grid, 50.0)),
   ]
   blur_radii = [15, 25, 35, 50]
 
@@ -324,7 +318,10 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
 
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_with_blurs; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_with_blurs");
 
-  exit(1)
+  run_times = Serialization.deserialize("validation_forecasts_with_blurs/run_times.serialzed")
+
+  is_0z  = findall(t -> Dates.hour(t) == 0,  run_times)
+  is_12z = findall(t -> Dates.hour(t) == 12, run_times)
 
   best_blur_radius_0z  = map(_ -> 0,   model_names)
   best_blur_au_pr_0z   = map(_ -> 0f0, model_names)
@@ -333,28 +330,40 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
   nradii = length([0; blur_radii])
   for (radius_i, radius_mi) in enumerate([0; blur_radii])
     for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
-      col_i = (prediction_i - 1) * nradii + radius_i
-      is_0z = "START HERE"
-      y = Ys[event_name]
-      x = @view X[:, col_i]
-      au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
+      col_i       = (prediction_i - 1) * nradii + radius_i
+      y_0z        = view(Ys[event_name], is_0z)
+      x_0z        = @view X[is_0z, col_i]
+      weights_0z  = @view weights[is_0z]
+      au_pr_0z    = Metrics.area_under_pr_curve(x_0z, y_0z, weights_0z)
+      if au_pr_0z > best_blur_au_pr_0z[prediction_i]
+        best_blur_au_pr_0z[prediction_i]  = au_pr_0z
+        best_blur_radius_0z[prediction_i] = radius_mi
+      end
+      y_12z       = view(Ys[event_name], is_12z)
+      x_12z       = @view X[is_12z, col_i]
+      weights_12z = @view weights[is_0z]
+      au_pr_12z   = Metrics.area_under_pr_curve(x_12z, y_12z, weights_12z)
+      if au_pr_12z > best_blur_au_pr_12z[prediction_i]
+        best_blur_au_pr_12z[prediction_i]  = au_pr_12z
+        best_blur_radius_12z[prediction_i] = radius_mi
+      end
     end
   end
 
-  # Needs to be the same order as models
-  blur_grid_is = [
-    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_mean_prob_computed_climatology_blurs_910
-    (blur_25mi_grid_is, blur_25mi_grid_is), # wind_mean_prob_computed_climatology_blurs_910
-    (blur_15mi_grid_is, blur_25mi_grid_is), # hail_mean_prob_computed_climatology_blurs_910
-    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_mean_prob_computed_climatology_blurs_910_before_20200523
-    (blur_25mi_grid_is, blur_25mi_grid_is), # wind_mean_prob_computed_climatology_blurs_910_before_20200523
-    (blur_15mi_grid_is, blur_25mi_grid_is), # hail_mean_prob_computed_climatology_blurs_910_before_20200523
-    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado_full_13831
-    (blur_25mi_grid_is, blur_25mi_grid_is), # wind_full_13831
-    (blur_15mi_grid_is, blur_25mi_grid_is), # hail_full_13831
-  ]
+  blur_0z_grid_is  = Grids.radius_grid_is(grid,  best_blur_radius_0z)
+  blur_12z_grid_is = Grids.radius_grid_is(grid, best_blur_radius_12z)
 
-  validation_forecasts_blurred = PredictionForecasts.blurred(validation_forecasts, forecast_hour_range, blur_grid_is)
+  # Needs to be the same order as models
+  blur_grid_is = map(enumerate(model_names)) do (prediction_i, _)
+    burrer_0z_i  = findfirst(blurrer -> blurrer[1] == best_blur_radius_0z[prediction_i],  blurrers)
+    burrer_12z_i = findfirst(blurrer -> blurrer[1] == best_blur_radius_12z[prediction_i], blurrers)
+    _, blur_0z_grid_is = blurrers[burrer_0z_i]
+    _, blur_12z_grid_is = blurrers[burrer_12z_i]
+
+    (blur_12z_grid_is, blur_0z_grid_is)
+  end
+
+  validation_forecasts_blurred = PredictionForecasts.blurred(validation_forecasts, 23:35, blur_grid_is)
 
   # Make sure a forecast loads
   @assert nmodels <= size(Forecasts.data(validation_forecasts_blurred[1]), 2)
@@ -528,7 +537,6 @@ println("event_names = $event_names")
 
 do_it_all(
   HREFDayExperiment.uncalibrated_day_prediction_forecasts(),
-  [23, 35],
   model_names,
   event_names,
   (_ -> ())
