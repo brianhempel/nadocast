@@ -284,10 +284,9 @@ function spc_calibrate_warning_ratio(event_name, model_name, ŷ, y, weights)
 end
 
 
+# rm("validation_forecasts_with_blurs"; recursive=true)
 # rm("validation_forecasts_blurred"; recursive=true)
-# rm("validation_forecasts_calibrated"; recursive=true)
-# rm("validation_day_accumulators_forecasts_0z_12z"; recursive=true)
-# rm("validation_day_forecasts_0z_12z"; recursive=true)
+# rm("validation_day_forecasts_0z_12z_calibrated"; recursive=true)
 function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_models)
   @assert length(model_names) == length(event_names)
   nmodels = length(model_names)
@@ -319,7 +318,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
 
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_with_blurs; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_with_blurs");
 
-  run_times = Serialization.deserialize("validation_forecasts_with_blurs/run_times.serialzed")
+  run_times = Serialization.deserialize("validation_forecasts_with_blurs/run_times.serialized")
 
   is_0z  = findall(t -> Dates.hour(t) == 0,  run_times)
   is_12z = findall(t -> Dates.hour(t) == 12, run_times)
@@ -369,116 +368,21 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   # Make sure a forecast loads
   @assert nmodels <= size(Forecasts.data(validation_forecasts_blurred[1]), 2)
 
-  println("\nLoading blurred hourly forecasts...")
+  println("\nLoading blurred daily forecasts...")
 
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "validation_forecasts_blurred");
 
-  println("\nChecking the hourly blurred forecast performance...")
+  println("\nChecking the daily blurred forecast performance...")
 
   inspect_predictive_power(validation_forecasts_blurred, X, Ys, weights, model_names, event_names)
 
-  bin_count = 6
-  println("\nFinding $bin_count bins of equal positive weight, for calibrating the hourlies....")
-
-  model_name_to_bins = Dict{String,Vector{Float32}}()
-  for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
-    ŷ = @view X[:, prediction_i]
-    y = Ys[event_name]
-    model_name_to_bins[model_name] = find_ŷ_bin_splits(model_name, ŷ, y, weights, bin_count)
-  end
-  println("model_name_to_bins = $model_name_to_bins")
-
-  println("\nFinding logistic coefficients for the $(bin_count-1) overlapping bin pairs, for calibrating the hourlies....")
-
-  model_name_to_bins_logistic_coeffs = Dict{String,Vector{Vector{Float32}}}()
-  for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
-    ŷ = @view X[:, prediction_i]
-    y = Ys[event_name]
-
-    model_name_to_bins_logistic_coeffs[model_name] = find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, model_name_to_bins[model_name])
-  end
-  println("model_name_to_bins_logistic_coeffs = $model_name_to_bins_logistic_coeffs")
-
-  println("\nCopy model_name_to_bins and model_name_to_bins_logistic_coeffs into the prediction model.")
-  # println("\nYou can stop the process now if you want.")
-
-  println("\nChecking the calibration...")
-
-  hour_models = make_calibrated_hourly_models(model_name_to_bins, model_name_to_bins_logistic_coeffs)
-  validation_forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(validation_forecasts_blurred, hour_models)
-
-  X, Ys, weights = nothing, nothing, nothing # free
-  X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_calibrated; event_name_to_labeler = TrainingShared.event_name_to_labeler, save_dir = "validation_forecasts_calibrated");
-
-  println("\nChecking the hourly calibrated blurred forecast performance (should be the same if calibration was monotonic)...")
-  inspect_predictive_power(validation_forecasts_calibrated, X, Ys, weights, model_names, event_names)
-
-  println("\nPlotting reliability...")
-  Metrics.reliability_curves_midpoints(20, X, Ys, event_names, weights, model_names)
-
-  X, Ys, weights = nothing, nothing, nothing # free
-
-  println("\nLoading 0Z and 12Z daily accumulators...")
-
-  # vec of (model_name, var_name)
-  models = map(m -> (m[1], m[2]), hour_models)
-
-  validation_forecasts_day_accumulators, validation_forecasts_day2_accumulators, validation_forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(validation_forecasts_calibrated, models; module_name = "daily_accs")
-
-  # ensure we don't accidentally use these
-  validation_forecasts = nothing
-  validation_forecasts_blurred = nothing
-  validation_forecasts_calibrated = nothing
-
-  _, validation_day_acc_forecasts, _ = TrainingShared.forecasts_train_validation_test(validation_forecasts_day_accumulators; just_hours_near_storm_events = false)
-
-  validation_day_acc_forecasts_0z_12z = filter(forecast -> forecast.run_hour == 0 || forecast.run_hour == 12, validation_day_acc_forecasts)
-
-  @time Forecasts.data(validation_day_acc_forecasts_0z_12z[1]); # Check if a forecast loads
-
-  # Two features per model, total and max, have to double the column names
-  acc_model_names = map(i -> model_names[div(i - 1, 2) + 1] * (isodd(i) ? "_tot" : "_max"), 1:size(X,2))
-  acc_event_names = vcat(map(name -> [name, name], event_names)...)
-
-  println("Drawing Dec 11 to check...")
-
-  dec11 = filter(f -> Forecasts.time_title(f) == "2021-12-11 00Z +35", validation_day_acc_forecasts_0z_12z)[1];
-  dec11_data = Forecasts.data(dec11);
-  for i in 1:size(dec11_data,2)
-    model_name = acc_model_names[i]
-    PlotMap.plot_debug_map("dec11_0z_12z_day_accs_$(i)_$model_name", dec11.grid, dec11_data[:,i]);
-  end
-  for event_name in unique(acc_event_names)
-    labeler = TraingShared.event_name_to_day_labeler[event_name]
-    PlotMap.plot_debug_map("dec11_0z_12z_day_$event_name", dec11.grid, labeler(dec11));
-  end
-
-  # scp nadocaster2:/home/brian/nadocast_dev/models/href_prediction_ablations/dec11_0z_12z_day_accs_1.pdf ./
-  # scp nadocaster2:/home/brian/nadocast_dev/models/href_prediction_ablations/dec11_0z_12z_day_tornado.pdf ./
-
-  X, Ys, weights =
-    TrainingShared.get_data_labels_weights(
-      validation_day_acc_forecasts_0z_12z;
-      event_name_to_labeler = TraingShared.event_name_to_day_labeler,
-      save_dir = "validation_day_accumulators_forecasts_0z_12z",
-    );
-
-
-  println("\nChecking daily accumulator performance...")
-
-  inspect_predictive_power(validation_day_acc_forecasts_0z_12z, X, Ys, weights, acc_model_names, acc_event_names)
-
-  println("\nPlotting daily accumulators reliability...")
-
-  Metrics.reliability_curves_midpoints(20, X, Ys, acc_event_names, weights, acc_model_names)
-
 
   bin_count = 4
-  println("\nFinding $bin_count bins of equal positive weight, to bin the total_prob accs for calibrating the dailies....")
+  println("\nFinding $bin_count bins of equal positive weight, to bin the probs for calibrating dailies....")
 
   model_name_to_day_bins = Dict{String,Vector{Float32}}()
   for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
-    ŷ = @view X[:,(prediction_i*2) - 1]; # total prob acc
+    ŷ = @view X[:,prediction_i]
     y = Ys[event_name]
     model_name_to_day_bins[model_name] = find_ŷ_bin_splits(model_name, ŷ, y, weights, bin_count)
   end
@@ -487,31 +391,30 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
 
   model_name_to_day_bins_logistic_coeffs = Dict{String,Vector{Vector{Float32}}}()
   for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
-
-    ŷ1 = @view X[:, (prediction_i*2) - 1] # total prob acc
-    ŷ2 = @view X[:, (prediction_i*2)]     # max prob acc
-    y  = Ys[event_name]
-
-    model_name_to_day_bins_logistic_coeffs[model_name] = find_two_predictor_logistic_coeffs(model_name, ŷ1, ŷ2, y, weights, model_name_to_day_bins[model_name])
+    ŷ = @view X[:,prediction_i]
+    y = Ys[event_name]
+    model_name_to_day_bins_logistic_coeffs[model_name] = find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, model_name_to_day_bins[model_name])
   end
   println("model_name_to_day_bins_logistic_coeffs = $model_name_to_day_bins_logistic_coeffs")
 
-  validation_day_forecasts_0z_12z = PredictionForecasts.period_forecasts_from_accumulators(validation_day_acc_forecasts_0z_12z, model_name_to_day_bins, model_name_to_day_bins_logistic_coeffs, models; module_name = "daily", period_name = "day")
+  calib_day_models = HREFDayExperiment.make_calibrated_models(model_name_to_day_bins, model_name_to_day_bins_logistic_coeffs)
+
+  validation_day_forecasts_0z_12z_calibrated = PredictionForecasts.simple_prediction_forecasts(validation_forecasts_blurred, calib_day_models; model_name = "HREFDayExperiment_calibrated")
 
   X, Ys, weights = nothing, nothing, nothing # free
   X, Ys, weights =
     TrainingShared.get_data_labels_weights(
-      validation_day_forecasts_0z_12z;
+      validation_day_forecasts_0z_12z_calibrated;
       event_name_to_labeler = event_name_to_day_labeler,
-      save_dir = "validation_day_forecasts_0z_12z",
+      save_dir = "validation_day_forecasts_0z_12z_calibrated",
     );
 
 
-  println("\nChecking daily performance...")
+  println("\nChecking calibrated performance...")
 
-  inspect_predictive_power(validation_day_forecasts_0z_12z, X, Ys, weights, model_names, event_names)
+  inspect_predictive_power(validation_day_forecasts_0z_12z_calibrated, X, Ys, weights, model_names, event_names)
 
-  println("\nPlotting daily accumulators reliability...")
+  println("\nPlotting calibrated reliability...")
 
   Metrics.reliability_curves_midpoints(20, X, Ys, event_names, weights, model_names)
 

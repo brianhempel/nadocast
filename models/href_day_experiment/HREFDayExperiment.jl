@@ -141,6 +141,57 @@ const models = [
   ("sig_tornado", "STORPROB", "gbdt_day_experiment_min_mean_max_f35-35_2022-11-04T08.11.17.582_sig_tornado/219_trees_loss_0.0015899849.model", "gbdt_day_experiment_min_mean_max_f23-23_2022-11-04T07.12.14.796_sig_tornado/182_trees_loss_0.0013368124.model"),
 ]
 
+# Returns array of (model_name, var_name, predict)
+# similar code is duplicated across various models but i don't want to introduce bugs by refactoring rn
+function make_calibrated_models(model_name_to_bins, model_name_to_bins_logistic_coeffs)
+  σ(x) = 1.0f0 / (1.0f0 + exp(-x))
+  logit(p) = log(p / (1f0 - p))
+  ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+
+  map(1:length(models)) do model_i
+    model_name, var_name, _, _ = models[model_i]
+
+    predict(_forecast, data) = begin
+      uncalib_ŷs = @view data[:,model_i]
+
+      out = Array{Float32}(undef, length(uncalib_ŷs))
+
+      bin_maxes            = model_name_to_bins[model_name]
+      bins_logistic_coeffs = model_name_to_bins_logistic_coeffs[model_name]
+
+      @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+
+      predict_one(coeffs, uncalib_ŷ) = σ(coeffs[1]*logit(uncalib_ŷ) + coeffs[2])
+
+      Threads.@threads :static for i in 1:length(uncalib_ŷs)
+        uncalib_ŷ = uncalib_ŷs[i]
+        if uncalib_ŷ <= bin_maxes[1]
+          # Bin 1-2 predictor only
+          ŷ = predict_one(bins_logistic_coeffs[1], uncalib_ŷ)
+        elseif uncalib_ŷ > bin_maxes[length(bin_maxes) - 1]
+          # Bin 3-4 predictor only
+          ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], uncalib_ŷ)
+        else
+          # Overlapping bins
+          higher_bin_i = findfirst(bin_max -> uncalib_ŷ <= bin_max, bin_maxes)
+          lower_bin_i  = higher_bin_i - 1
+          coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+          coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+
+          # Bin 1-2 and 2-3 predictors
+          ratio = ratio_between(uncalib_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+          ŷ = ratio*predict_one(coeffs_higher_bin, uncalib_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, uncalib_ŷ)
+        end
+        out[i] = ŷ
+      end
+
+      out
+    end
+
+    (model_name, var_name, predict)
+  end
+end
+
 function uncalibrated_day_prediction_forecasts()
   predictors = map(models) do (event_name, grib2_var_name, gbdt_0z_day1, gbdt_12z_day1)
     predict_0z  = MemoryConstrainedTreeBoosting.load_unbinned_predictor((@__DIR__) * "/" * gbdt_0z_day1)
