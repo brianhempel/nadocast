@@ -328,6 +328,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   best_blur_radius_12z = map(_ -> 0,   model_names)
   best_blur_au_pr_12z  = map(_ -> 0f0, model_names)
   nradii = length([0; blur_radii])
+  println("model_name run_time radius_mi au_pr")
   for (radius_i, radius_mi) in enumerate([0; blur_radii])
     for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
       col_i       = (prediction_i - 1) * nradii + radius_i
@@ -335,6 +336,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
       x_0z        = @view X[is_0z, col_i]
       weights_0z  = @view weights[is_0z]
       au_pr_0z    = Metrics.area_under_pr_curve(x_0z, y_0z, weights_0z)
+      println("$model_name 0Z $radius_mi $au_pr_0z")
       if au_pr_0z > best_blur_au_pr_0z[prediction_i]
         best_blur_au_pr_0z[prediction_i]  = au_pr_0z
         best_blur_radius_0z[prediction_i] = radius_mi
@@ -347,8 +349,12 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
         best_blur_au_pr_12z[prediction_i]  = au_pr_12z
         best_blur_radius_12z[prediction_i] = radius_mi
       end
+      println("$model_name 12Z $radius_mi $au_pr_12z")
     end
   end
+
+  println("best_blur_radius_0z  = $best_blur_radius_0z")
+  println("best_blur_radius_12z = $best_blur_radius_12z")
 
   # Needs to be the same order as models
   blur_grid_is = map(enumerate(model_names)) do (prediction_i, _)
