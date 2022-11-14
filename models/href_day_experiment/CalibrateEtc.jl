@@ -370,7 +370,8 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     _, blur_0z_grid_is  = blurrers[burrer_0z_i]
     _, blur_12z_grid_is = blurrers[burrer_12z_i]
 
-    (blur_12z_grid_is, blur_0z_grid_is)
+    # (blur_12z_grid_is, blur_0z_grid_is)
+    (blur_0z_grid_is, blur_12z_grid_is) # this is wrong
   end
 
   validation_forecasts_blurred = PredictionForecasts.blurred(validation_forecasts, 23:35, blur_grid_is)
