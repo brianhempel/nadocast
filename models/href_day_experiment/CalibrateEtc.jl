@@ -328,20 +328,22 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   is_0z  = findall(t -> Dates.hour(t) == 0,  run_times)
   is_12z = findall(t -> Dates.hour(t) == 12, run_times)
 
+  run_times = nothing # free
+
   best_blur_radius_0z  = map(_ -> 0,   model_names)
   best_blur_au_pr_0z   = map(_ -> 0f0, model_names)
   best_blur_radius_12z = map(_ -> 0,   model_names)
   best_blur_au_pr_12z  = map(_ -> 0f0, model_names)
   nradii = length([0; blur_radii])
-  println("model_name run_time radius_mi au_pr")
-  for (radius_i, radius_mi) in enumerate([0; blur_radii])
-    for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
+  println("feature_i model_name run_time radius_mi au_pr")
+  for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
+    for (radius_i, radius_mi) in enumerate([0; blur_radii])
       col_i       = (prediction_i - 1) * nradii + radius_i
       y_0z        = view(Ys[event_name], is_0z)
       x_0z        = @view X[is_0z, col_i]
       weights_0z  = @view weights[is_0z]
       au_pr_0z    = Metrics.area_under_pr_curve(x_0z, y_0z, weights_0z)
-      println("$model_name 0Z $radius_mi $au_pr_0z")
+      println("$col_i $model_name 0Z $radius_mi $au_pr_0z")
       if au_pr_0z > best_blur_au_pr_0z[prediction_i]
         best_blur_au_pr_0z[prediction_i]  = au_pr_0z
         best_blur_radius_0z[prediction_i] = radius_mi
@@ -354,7 +356,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
         best_blur_au_pr_12z[prediction_i]  = au_pr_12z
         best_blur_radius_12z[prediction_i] = radius_mi
       end
-      println("$model_name 12Z $radius_mi $au_pr_12z")
+      println("$col_i $model_name 12Z $radius_mi $au_pr_12z")
     end
   end
 
@@ -378,7 +380,21 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
 
   println("\nLoading blurred daily forecasts...")
 
+  X_blurs = X
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_blurred");
+
+  for (prediction_i, _) in enumerate(model_names)
+    burrer_0z_i  = findfirst(blurrer -> blurrer[1] == best_blur_radius_0z[prediction_i],  blurrers)
+    burrer_12z_i = findfirst(blurrer -> blurrer[1] == best_blur_radius_12z[prediction_i], blurrers)
+
+    blurs_col_0Z_i  = (prediction_i - 1) * nradii + burrer_0z_i
+    blurs_col_12Z_i = (prediction_i - 1) * nradii + burrer_12z_i
+
+    println("Blurred $prediction_i should match blurs $blurs_col_0Z_i for 0Z")
+    @assert X_blurs[is_0z, blurs_col_0Z_i]   ≈ X[is_0z, prediction_i]
+    println("Blurred $prediction_i should match blurs $blurs_col_12Z_i for 12Z")
+    @assert X_blurs[is_12z, blurs_col_12Z_i] ≈ X[is_12z, prediction_i]
+  end
 
   println("\nChecking the daily blurred forecast performance...")
 
