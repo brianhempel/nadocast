@@ -132,80 +132,10 @@ function find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, bins_
       ("mean_input_ŷ", sum(bin_href_x .* bin_weights) / bin_weight),
       ("mean_y", sum(bin_y .* bin_weights) / bin_weight),
       ("input_logloss", sum(logloss.(bin_y, bin_href_x) .* bin_weights) / bin_weight),
-      ("input_au_pr", Metrics.area_under_pr_curve_fast(bin_href_x, bin_y, bin_weights)),
+      ("input_au_pr", Metrics.area_under_pr_curve(bin_href_x, bin_y, bin_weights)),
       ("mean_logistic_ŷ", sum(logistic_ŷ .* bin_weights) / bin_weight),
       ("logistic_logloss", sum(logloss.(bin_y, logistic_ŷ) .* bin_weights) / bin_weight),
-      ("logistic_au_pr", Metrics.area_under_pr_curve_fast(logistic_ŷ, bin_y, bin_weights)),
-      ("logistic_coeffs", coeffs)
-    ]
-
-    headers = map(first, stuff)
-    row     = map(last, stuff)
-
-    bin_i == 1 && println(join(headers, "\t"))
-    println(join(row, "\t"))
-
-    push!(bins_logistic_coeffs, coeffs)
-  end
-
-  bins_logistic_coeffs
-end
-
-# ŷ1 is used as the first guess
-function find_two_predictor_logistic_coeffs(model_name, ŷ1, ŷ2, y, weights, bins_max)
-
-  bin_count = length(bins_max)
-  bins_logistic_coeffs = []
-
-  # Paired, overlapping bins
-  for bin_i in 1:(bin_count - 1)
-    bin_min = bin_i >= 2 ? bins_max[bin_i-1] : -1f0
-    bin_max = bins_max[bin_i+1]
-
-    bin_members = (ŷ1 .> bin_min) .* (ŷ1 .<= bin_max)
-
-    bin_ŷ1  = ŷ1[bin_members, prediction_i*2 - 1]
-    bin_ŷ2  = ŷ2[bin_members, prediction_i*2]
-    # bin_ŷ       = ŷ[bin_members]
-    bin_y       = y[bin_members]
-    bin_weights = weights[bin_members]
-    bin_weight  = sum(bin_weights)
-
-    # logit(total), logit(max)
-    bin_X_features = Array{Float32}(undef, (length(bin_y), 2))
-
-    Threads.@threads :static for i in 1:length(bin_y)
-      logit_total_prob = logit(bin_ŷ1[i])
-      logit_max_hourly = logit(bin_ŷ2[i])
-
-      bin_X_features[i,1] = logit_total_prob
-      bin_X_features[i,2] = logit_max_hourly
-    end
-
-    coeffs = LogisticRegression.fit(bin_X_features, bin_y, bin_weights; iteration_count = 300)
-
-    # println("Fit logistic coefficients: $(coeffs)")
-
-    logistic_ŷ = LogisticRegression.predict(bin_X_features, coeffs)
-
-    stuff = [
-      ("model_name", model_name),
-      ("bin", "$bin_i-$(bin_i+1)"),
-      ("ŷ1_min", bin_min),
-      ("ŷ1_max", bin_max),
-      ("count", length(bin_y)),
-      ("pos_count", sum(bin_y)),
-      ("weight", bin_weight),
-      ("mean_ŷ1", sum(bin_ŷ1 .* bin_weights) / bin_weight),
-      ("mean_ŷ2", sum(bin_ŷ2 .* bin_weights) / bin_weight),
-      ("mean_y", sum(bin_y .* bin_weights) / bin_weight),
-      ("ŷ1_logloss", sum(logloss.(bin_y, bin_ŷ1) .* bin_weights) / bin_weight),
-      ("ŷ2_logloss", sum(logloss.(bin_y, bin_ŷ2) .* bin_weights) / bin_weight),
-      ("ŷ1_au_pr", Float32(Metrics.area_under_pr_curve_fast(bin_ŷ1, bin_y, bin_weights))),
-      ("ŷ2_au_pr", Float32(Metrics.area_under_pr_curve_fast(bin_ŷ2, bin_y, bin_weights))),
-      ("mean_logistic_ŷ", sum(logistic_ŷ .* bin_weights) / bin_weight),
-      ("logistic_logloss", sum(logloss.(bin_y, logistic_ŷ) .* bin_weights) / bin_weight),
-      ("logistic_au_pr", Float32(Metrics.area_under_pr_curve_fast(logistic_ŷ, bin_y, bin_weights))),
+      ("logistic_au_pr", Metrics.area_under_pr_curve(logistic_ŷ, bin_y, bin_weights)),
       ("logistic_coeffs", coeffs)
     ]
 
@@ -360,8 +290,70 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     end
   end
 
+  # feature_i model_name  run_time radius_mi au_pr
+  # 1         tornado     0Z       0         0.12786487
+  # 1         tornado     12Z      0         0.1544998
+  # 2         tornado     0Z       15        0.1294705
+  # 2         tornado     12Z      15        0.15537526
+  # 3         tornado     0Z       25        0.13067819
+  # 3         tornado     12Z      25        0.15519707
+  # 4         tornado     0Z       35        0.13217057
+  # 4         tornado     12Z      35        0.15416709
+  # 5         tornado     0Z       50        0.1333855
+  # 5         tornado     12Z      50        0.15124844
+  # 6         tornado     0Z       70        0.13233377
+  # 6         tornado     12Z      70        0.14585833
+  # 7         tornado     0Z       100       0.12627704
+  # 7         tornado     12Z      100       0.13463569
+  # 8         wind        0Z       0         0.35702384
+  # 8         wind        12Z      0         0.38482037
+  # 9         wind        0Z       15        0.35877413
+  # 9         wind        12Z      15        0.38711163
+  # 10        wind        0Z       25        0.35916543
+  # 10        wind        12Z      25        0.3875034
+  # 11        wind        0Z       35        0.35859838
+  # 11        wind        12Z      35        0.3863866
+  # 12        wind        0Z       50        0.35683402
+  # 12        wind        12Z      50        0.38295773
+  # 13        wind        0Z       70        0.35336804
+  # 13        wind        12Z      70        0.37633815
+  # 14        wind        0Z       100       0.34662548
+  # 14        wind        12Z      100       0.36276436
+  # 15        hail        0Z       0         0.21235014
+  # 15        hail        12Z      0         0.2620384
+  # 16        hail        0Z       15        0.2131384
+  # 16        hail        12Z      15        0.26411107
+  # 17        hail        0Z       25        0.21267323
+  # 17        hail        12Z      25        0.26393855
+  # 18        hail        0Z       35        0.21038839
+  # 18        hail        12Z      35        0.2612414
+  # 19        hail        0Z       50        0.20564729
+  # 19        hail        12Z      50        0.25439882
+  # 20        hail        0Z       70        0.19790818
+  # 20        hail        12Z      70        0.24344759
+  # 21        hail        0Z       100       0.18567652
+  # 21        hail        12Z      100       0.2217629
+  # 22        sig_tornado 0Z       0         0.054310996
+  # 22        sig_tornado 12Z      0         0.09374113
+  # 23        sig_tornado 0Z       15        0.055438574
+  # 23        sig_tornado 12Z      15        0.09401861
+  # 24        sig_tornado 0Z       25        0.056356583
+  # 24        sig_tornado 12Z      25        0.09252274
+  # 25        sig_tornado 0Z       35        0.057655033
+  # 25        sig_tornado 12Z      35        0.090497285
+  # 26        sig_tornado 0Z       50        0.05928553
+  # 26        sig_tornado 12Z      50        0.08868729
+  # 27        sig_tornado 0Z       70        0.061797563
+  # 27        sig_tornado 12Z      70        0.09670891
+  # 28        sig_tornado 0Z       100       0.07501501
+  # 28        sig_tornado 12Z      100       0.090316735
+
   println("best_blur_radius_0z  = $best_blur_radius_0z")
   println("best_blur_radius_12z = $best_blur_radius_12z")
+
+  # best_blur_radius_0z  = [50, 25, 15, 100]
+  # best_blur_radius_12z = [15, 25, 15, 70]
+
 
   # Needs to be the same order as models
   blur_grid_is = map(enumerate(model_names)) do (prediction_i, _)
@@ -395,14 +387,43 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     println("Blurred $prediction_i should match blurs $blurs_col_12Z_i for 12Z")
     @assert X_blurs[is_12z, blurs_col_12Z_i] == X[is_12z, prediction_i]
   end
+  # Blurred 1 should match blurs 5 for 0Z
+  # Blurred 1 should match blurs 2 for 12Z
+  # Blurred 2 should match blurs 10 for 0Z
+  # Blurred 2 should match blurs 10 for 12Z
+  # Blurred 3 should match blurs 16 for 0Z
+  # Blurred 3 should match blurs 16 for 12Z
+  # Blurred 4 should match blurs 28 for 0Z
+  # Blurred 4 should match blurs 27 for 12Z
 
   println("\nChecking the daily blurred forecast performance...")
 
   inspect_predictive_power(validation_forecasts_blurred, X, Ys, weights, model_names, event_names)
-
+  # tornado     (20606.0)  feature 1 TORPROB:calculated:hour  fcst:calculated_prob:blurred AU-PR-curve: 0.14098175
+  # wind        (148934.0) feature 2 WINDPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.3729874
+  # hail        (67838.0)  feature 3 HAILPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.2386961
+  # sig_tornado (2681.0)   feature 4 STORPROB:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.077359244
 
   bin_count = 4
   println("\nFinding $bin_count bins of equal positive weight, to bin the probs for calibrating dailies....")
+
+  # model_name  mean_y                mean_ŷ                Σweight             bin_max
+  # tornado     0.0005500241804774725 0.0005369805288177626 8.790871373489559e6 0.017779902
+  # tornado     0.03145649235376229   0.03161041028395532   153710.28380143642  0.056085516
+  # tornado     0.08921990419281871   0.07882750970527863   54185.09851181507   0.11559871
+  # tornado     0.18330057841333006   0.18273992318938512   26365.09276086092   1.0
+  # wind        0.0040284560090752455 0.004039647483909972  8.594173634453237e6 0.08978425
+  # wind        0.1453945610920795    0.13457977141449937   238114.38466775417  0.19696076
+  # wind        0.28618142588908096   0.2562145123893205    120974.60549122095  0.335077
+  # wind        0.4816993460701437    0.4501644666340919    71869.22395145893   1.0
+  # hail        0.0018050343646954354 0.001640066169903731  8.691274674825251e6 0.048839394
+  # hail        0.08309066550617629   0.07607029885958908   188799.26752007008  0.11616666
+  # hail        0.1606428085651753    0.15851887998951678   97656.18107324839   0.22025906
+  # hail        0.330909793222472     0.30596047094156564   47401.72514510155   1.0
+  # sig_tornado 7.141125176418434e-5  8.10414766964188e-5   8.939867256696284e6 0.007377854
+  # sig_tornado 0.010848778877185968  0.012951453213153974  58865.149409770966  0.022638915
+  # sig_tornado 0.03244699148122466   0.03145710372269796   19661.17999511957   0.047667596
+  # sig_tornado 0.0943811467809371    0.06957126364446617   6738.2624624967575  1.0
 
   model_name_to_day_bins = Dict{String,Vector{Float32}}()
   for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
@@ -412,6 +433,8 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   end
   println("model_name_to_day_bins = $model_name_to_day_bins")
 
+  # model_name_to_day_bins = Dict{String, Vector{Float32}}("hail" => [0.048839394, 0.11616666, 0.22025906, 1.0], "tornado" => [0.017779902, 0.056085516, 0.11559871, 1.0], "sig_tornado" => [0.007377854, 0.022638915, 0.047667596, 1.0], "wind" => [0.08978425, 0.19696076, 0.335077, 1.0])
+
 
   model_name_to_day_bins_logistic_coeffs = Dict{String,Vector{Vector{Float32}}}()
   for (prediction_i, (model_name, event_name)) in enumerate(zip(model_names, event_names))
@@ -419,7 +442,25 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     y = Ys[event_name]
     model_name_to_day_bins_logistic_coeffs[model_name] = find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, model_name_to_day_bins[model_name])
   end
+
+  # model_name  bin input_ŷ_min input_ŷ_max count   pos_count weight     mean_input_ŷ mean_y        input_logloss input_au_pr mean_logistic_ŷ logistic_logloss logistic_au_pr logistic_coeffs
+  # tornado     1-2 -1.0        0.056085516 9707078 10413.0   8.944582e6 0.0010709693 0.0010811437  0.005866548   0.0313669   0.0010811436    0.0058664964     0.031041779    Float32[1.0015056,  0.016357854]
+  # tornado     2-3 0.017779902 0.11559871  221744  10319.0   207895.38  0.043916903  0.04651174    0.17983219    0.7896579   0.046511732     0.17964691       0.088456236    Float32[1.1276554,  0.43491325]
+  # tornado     3-4 0.056085516 1.0         84938   10193.0   80550.19   0.112839356  0.1200137     0.35172924    0.2189543   0.1200137       0.35137722       0.21894255     Float32[0.93115807, -0.062422168]
+  # wind        1-2 -1.0        0.19696076  9584620 74571.0   8.832288e6 0.007558949  0.00783962    0.028688313   0.14021821  0.007839621     0.028673481      0.1403992      Float32[1.0421747,  0.15582056]
+  # wind        2-3 0.08978425  0.335077    385802  74488.0   359088.97  0.17555769   0.19282469    0.47333708    0.28055453  0.19282469      0.47223735       0.28021997     Float32[1.0635164,  0.21312958]
+  # wind        3-4 0.19696076  1.0         207396  74363.0   192843.83  0.32849598   0.35904726    0.6246096     0.51262456  0.35904726      0.6223894        0.5126181      Float32[1.0056635,  0.14828795]
+  # hail        1-2 -1.0        0.11616666  9635114 33963.0   8.880074e6 0.0032225274 0.0035332483  0.014940207   0.07843486  0.0035332488    0.014923536      0.078175694    Float32[1.0227455,  0.17348957]
+  # hail        2-3 0.048839394 0.22025906  309916  33903.0   286455.44  0.104178034  0.109529145   0.33623746    0.1659416   0.10952915      0.33602694       0.16599362     Float32[0.92801446, -0.09182161]
+  # hail        3-4 0.11616666  1.0         156902  33875.0   145057.9   0.20669954   0.2162823     0.4983232     0.3401154   0.2162823       0.49790654       0.3401208      Float32[1.0785028,  0.16131271]
+  # sig_tornado 1-2 -1.0        0.022638915 9764598 1356.0    8.998732e6 0.0001652332 0.00014191134 0.00092006614 0.010165232 0.00014191133   0.0009180771     0.010149726    Float32[1.0351814,  0.035491165]
+  # sig_tornado 2-3 0.007377854 0.047667596 82679   1340.0    78526.33   0.017584842  0.016256474   0.079973266   0.036654618 0.016256472     0.079801075      0.036605194    Float32[1.2383188,  0.8401045]
+  # sig_tornado 3-4 0.022638915 1.0         27418   1325.0    26399.441  0.04118546   0.04825523    0.18335064    0.12913187  0.04825523      0.18136714       0.12961037     Float32[1.4964094,  1.6581587]
+
+
   println("model_name_to_day_bins_logistic_coeffs = $model_name_to_day_bins_logistic_coeffs")
+
+  # model_name_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("hail" => [[1.0227455, 0.17348957], [0.92801446, -0.09182161], [1.0785028, 0.16131271]], "tornado" => [[1.0015056, 0.016357854], [1.1276554, 0.43491325], [0.93115807, -0.062422168]], "sig_tornado" => [[1.0351814, 0.035491165], [1.2383188, 0.8401045], [1.4964094, 1.6581587]], "wind" => [[1.0421747, 0.15582056], [1.0635164, 0.21312958], [1.0056635, 0.14828795]])
 
   calib_day_models = HREFDayExperiment.make_calibrated_models(model_name_to_day_bins, model_name_to_day_bins_logistic_coeffs)
 
