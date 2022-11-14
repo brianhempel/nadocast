@@ -321,7 +321,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_with_blurs; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_with_blurs");
 
   println("0Z 12Z pooled performance")
-  inspect_predictive_power(validation_forecasts_with_blurs, X, Ys, weights, map(i -> model_names[i ÷ length(Ys) + 1], 0:size(X,2)-1), map(i -> event_names[i ÷ length(Ys) + 1], 0:size(X,2)-1))
+  inspect_predictive_power(validation_forecasts_with_blurs, X, Ys, weights, map(i -> model_names[i ÷ length(blurrers) + 1], 0:size(X,2)-1), map(i -> event_names[i ÷ length(blurrers) + 1], 0:size(X,2)-1))
 
   run_times = Serialization.deserialize("validation_forecasts_with_blurs/run_times.serialized")
 
