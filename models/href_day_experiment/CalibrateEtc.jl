@@ -370,8 +370,7 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     _, blur_0z_grid_is  = blurrers[burrer_0z_i]
     _, blur_12z_grid_is = blurrers[burrer_12z_i]
 
-    # (blur_12z_grid_is, blur_0z_grid_is)
-    (blur_0z_grid_is, blur_12z_grid_is) # this is wrong
+    (blur_12z_grid_is, blur_0z_grid_is)
   end
 
   validation_forecasts_blurred = PredictionForecasts.blurred(validation_forecasts, 23:35, blur_grid_is)
@@ -384,18 +383,18 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   X_blurs = X
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blurred; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_blurred");
 
-  # for (prediction_i, _) in enumerate(model_names)
-  #   burrer_0z_i  = findfirst(blurrer -> blurrer[1] == best_blur_radius_0z[prediction_i],  blurrers)
-  #   burrer_12z_i = findfirst(blurrer -> blurrer[1] == best_blur_radius_12z[prediction_i], blurrers)
+  for (prediction_i, _) in enumerate(model_names)
+    burrer_0z_i  = findfirst(blurrer -> blurrer[1] == best_blur_radius_0z[prediction_i],  blurrers)
+    burrer_12z_i = findfirst(blurrer -> blurrer[1] == best_blur_radius_12z[prediction_i], blurrers)
 
-  #   blurs_col_0Z_i  = (prediction_i - 1) * nradii + burrer_0z_i
-  #   blurs_col_12Z_i = (prediction_i - 1) * nradii + burrer_12z_i
+    blurs_col_0Z_i  = (prediction_i - 1) * nradii + burrer_0z_i
+    blurs_col_12Z_i = (prediction_i - 1) * nradii + burrer_12z_i
 
-  #   println("Blurred $prediction_i should match blurs $blurs_col_0Z_i for 0Z")
-  #   @assert X_blurs[is_0z, blurs_col_0Z_i]   == X[is_0z, prediction_i]
-  #   println("Blurred $prediction_i should match blurs $blurs_col_12Z_i for 12Z")
-  #   @assert X_blurs[is_12z, blurs_col_12Z_i] == X[is_12z, prediction_i]
-  # end
+    println("Blurred $prediction_i should match blurs $blurs_col_0Z_i for 0Z")
+    @assert X_blurs[is_0z, blurs_col_0Z_i]   == X[is_0z, prediction_i]
+    println("Blurred $prediction_i should match blurs $blurs_col_12Z_i for 12Z")
+    @assert X_blurs[is_12z, blurs_col_12Z_i] == X[is_12z, prediction_i]
+  end
 
   println("\nChecking the daily blurred forecast performance...")
 
