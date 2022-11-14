@@ -323,6 +323,7 @@ function _au_pr_curve_interploated(ŷ_sorted, y_sorted, weights_sorted, total_po
 
   i = 1
   @inbounds while i <= length(y_sorted)
+    @assert ŷ_sorted[i] > thresh
     thresh = ŷ_sorted[i]
     @inbounds while i <= length(y_sorted) && ŷ_sorted[i] == thresh
       true_pos_weight -= Float64(weights_sorted[i] * y_sorted[i])
@@ -330,10 +331,14 @@ function _au_pr_curve_interploated(ŷ_sorted, y_sorted, weights_sorted, total_po
       i += 1
     end
 
+    true_pos_weight      = max(0.0, true_pos_weight)
+    predicted_pos_weight = max(0.0, predicted_pos_weight)
+
     sr  = true_pos_weight / (predicted_pos_weight + ε)
     pod = true_pos_weight / total_pos_weight
 
     if pod != last_pod
+      @assert pod < last_pod
       area += (last_pod - pod) * (0.5 * sr + 0.5 * last_sr) # interpolated version
       # area += (last_pod - pod) * last_sr # stairstep version
     end
@@ -396,7 +401,7 @@ end
 # Bin the data instead of sorting it.
 function area_under_pr_curve_fast(ŷ, y, weights; bin_count = 1000)
   threads_bin_Σŷ, threads_bin_Σy, threads_bin_Σweights = Metrics.parallel_iterate(length(y)) do thread_range
-    bin_Σŷ       = zeros(Float64, bin_count)
+    bin_Σŷ       = map(bin_i -> (bin_i - 0.5) / bin_count * eps(Float64), 1:bin_count) # ensure empty bins still yield sorted ŷs
     bin_Σy       = zeros(Float64, bin_count)
     bin_Σweights = fill(eps(Float64), bin_count)
 
