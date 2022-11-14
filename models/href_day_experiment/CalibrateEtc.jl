@@ -306,13 +306,15 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
   grid = validation_forecasts[1].grid
 
   blurrers = [
-    (0,  Grids.radius_grid_is(grid, 0.0)),
-    (15, Grids.radius_grid_is(grid, 15.0)),
-    (25, Grids.radius_grid_is(grid, 25.0)),
-    (35, Grids.radius_grid_is(grid, 35.0)),
-    (50, Grids.radius_grid_is(grid, 50.0)),
+    (0,   Grids.radius_grid_is(grid, 0.0)),
+    (15,  Grids.radius_grid_is(grid, 15.0)),
+    (25,  Grids.radius_grid_is(grid, 25.0)),
+    (35,  Grids.radius_grid_is(grid, 35.0)),
+    (50,  Grids.radius_grid_is(grid, 50.0)),
+    (70,  Grids.radius_grid_is(grid, 70.0)),
+    (100, Grids.radius_grid_is(grid, 100.0)),
   ]
-  blur_radii = [15, 25, 35, 50]
+  blur_radii = [15, 25, 35, 50, 70, 100]
 
   validation_forecasts_with_blurs = PredictionForecasts.with_blurs_and_forecast_hour(validation_forecasts, blur_radii)
 
