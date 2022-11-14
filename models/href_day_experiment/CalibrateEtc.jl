@@ -320,6 +320,9 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
 
   X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_with_blurs; event_name_to_labeler = TrainingShared.event_name_to_day_labeler, save_dir = "validation_forecasts_with_blurs");
 
+  println("0Z 12Z pooled performance")
+  inspect_predictive_power(validation_forecasts_blurred, X, Ys, weights, model_names, event_names)
+
   run_times = Serialization.deserialize("validation_forecasts_with_blurs/run_times.serialized")
 
   is_0z  = findall(t -> Dates.hour(t) == 0,  run_times)
