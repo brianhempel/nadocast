@@ -391,9 +391,9 @@ function do_it_all(forecasts, model_names, event_names, make_calibrated_hourly_m
     blurs_col_12Z_i = (prediction_i - 1) * nradii + burrer_12z_i
 
     println("Blurred $prediction_i should match blurs $blurs_col_0Z_i for 0Z")
-    @assert X_blurs[is_0z, blurs_col_0Z_i]   ≈ X[is_0z, prediction_i]
+    @assert X_blurs[is_0z, blurs_col_0Z_i]   = X[is_0z, prediction_i]
     println("Blurred $prediction_i should match blurs $blurs_col_12Z_i for 12Z")
-    @assert X_blurs[is_12z, blurs_col_12Z_i] ≈ X[is_12z, prediction_i]
+    @assert X_blurs[is_12z, blurs_col_12Z_i] = X[is_12z, prediction_i]
   end
 
   println("\nChecking the daily blurred forecast performance...")
