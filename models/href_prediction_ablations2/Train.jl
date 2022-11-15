@@ -436,7 +436,7 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
     PlotMap.plot_debug_map("dec11_0z_12z_day_accs_$(i)_$model_name", dec11.grid, dec11_data[:,i]);
   end
   for event_name in unique(acc_event_names)
-    labeler = TraingShared.event_name_to_day_labeler[event_name]
+    labeler = TrainingShared.event_name_to_day_labeler[event_name]
     PlotMap.plot_debug_map("dec11_0z_12z_day_$event_name", dec11.grid, labeler(dec11));
   end
 
@@ -446,7 +446,7 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
   X, Ys, weights =
     TrainingShared.get_data_labels_weights(
       validation_day_acc_forecasts_0z_12z;
-      event_name_to_labeler = TraingShared.event_name_to_day_labeler,
+      event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
       save_dir = "validation_day_accumulators_forecasts_0z_12z",
     );
 
@@ -489,7 +489,7 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
   X, Ys, weights =
     TrainingShared.get_data_labels_weights(
       validation_day_forecasts_0z_12z;
-      event_name_to_labeler = event_name_to_day_labeler,
+      event_name_to_labeler = TrainingShared.event_name_to_day_labeler,
       save_dir = "validation_day_forecasts_0z_12z",
     );
 
