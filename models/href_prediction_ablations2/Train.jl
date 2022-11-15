@@ -424,7 +424,7 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
   @time Forecasts.data(validation_day_acc_forecasts_0z_12z[1]); # Check if a forecast loads
 
   # Two features per model, total and max, have to double the column names
-  acc_model_names = map(i -> model_names[div(i - 1, 2) + 1] * (isodd(i) ? "_tot" : "_max"), 1:size(X,2))
+  acc_model_names = map(i -> model_names[div(i - 1, 2) + 1] * (isodd(i) ? "_tot" : "_max"), 1:2*length(model_names))
   acc_event_names = vcat(map(name -> [name, name], event_names)...)
 
   println("Drawing Dec 11 to check...")
