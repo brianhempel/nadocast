@@ -546,7 +546,7 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
 
     file_full_range = full_i:(full_i + forecast_row_count - 1)
 
-    my_part = filter(i -> i in file_full_range, my_is)
+    my_part = my_is[searchsortedfirst(my_is, file_full_range.start):searchsortedlast(my_is, file_full_range.stop)]
 
     if length(my_part) > 0
       forecast_data = deserialize(data_file_name)
