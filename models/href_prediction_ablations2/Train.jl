@@ -122,8 +122,7 @@ function find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, bins_
 
     bin_members = (ŷ .> bin_min) .* (ŷ .<= bin_max)
 
-    bin_href_x  = ŷ[bin_members]
-    # bin_ŷ       = ŷ[bin_members]
+    bin_ŷ       = ŷ[bin_members]
     bin_y       = y[bin_members]
     bin_weights = weights[bin_members]
     bin_weight  = sum(bin_weights)
@@ -131,7 +130,7 @@ function find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, bins_
     bin_X_features = Array{Float32}(undef, (length(bin_y), 1))
 
     Threads.@threads :static for i in 1:length(bin_y)
-      logit_href = logit(bin_href_x[i])
+      logit_href = logit(bin_ŷ[i])
 
       bin_X_features[i,1] = logit_href
       # bin_X_features[i,3] = bin_X[i,1]*bin_X[i,2]
@@ -155,10 +154,10 @@ function find_single_predictor_logistic_coeffs(model_name, ŷ, y, weights, bins_
       ("count", length(bin_y)),
       ("pos_count", sum(bin_y)),
       ("weight", bin_weight),
-      ("mean_input_ŷ", sum(bin_href_x .* bin_weights) / bin_weight),
+      ("mean_input_ŷ", sum(bin_ŷ .* bin_weights) / bin_weight),
       ("mean_y", sum(bin_y .* bin_weights) / bin_weight),
-      ("input_logloss", sum(logloss.(bin_y, bin_href_x) .* bin_weights) / bin_weight),
-      ("input_au_pr", Metrics.area_under_pr_curve_fast(bin_href_x, bin_y, bin_weights)),
+      ("input_logloss", sum(logloss.(bin_y, bin_ŷ) .* bin_weights) / bin_weight),
+      ("input_au_pr", Metrics.area_under_pr_curve_fast(bin_ŷ, bin_y, bin_weights)),
       ("mean_logistic_ŷ", sum(logistic_ŷ .* bin_weights) / bin_weight),
       ("logistic_logloss", sum(logloss.(bin_y, logistic_ŷ) .* bin_weights) / bin_weight),
       ("logistic_au_pr", Metrics.area_under_pr_curve_fast(logistic_ŷ, bin_y, bin_weights)),
@@ -190,9 +189,8 @@ function find_two_predictor_logistic_coeffs(model_name, ŷ1, ŷ2, y, weights, bi
 
     bin_members = (ŷ1 .> bin_min) .* (ŷ1 .<= bin_max)
 
-    bin_ŷ1  = ŷ1[bin_members, prediction_i*2 - 1]
-    bin_ŷ2  = ŷ2[bin_members, prediction_i*2]
-    # bin_ŷ       = ŷ[bin_members]
+    bin_ŷ1      = ŷ1[bin_members]
+    bin_ŷ2      = ŷ2[bin_members]
     bin_y       = y[bin_members]
     bin_weights = weights[bin_members]
     bin_weight  = sum(bin_weights)
@@ -227,11 +225,11 @@ function find_two_predictor_logistic_coeffs(model_name, ŷ1, ŷ2, y, weights, bi
       ("mean_y", sum(bin_y .* bin_weights) / bin_weight),
       ("ŷ1_logloss", sum(logloss.(bin_y, bin_ŷ1) .* bin_weights) / bin_weight),
       ("ŷ2_logloss", sum(logloss.(bin_y, bin_ŷ2) .* bin_weights) / bin_weight),
-      ("ŷ1_au_pr", Float32(Metrics.area_under_pr_curve_fast(bin_ŷ1, bin_y, bin_weights))),
-      ("ŷ2_au_pr", Float32(Metrics.area_under_pr_curve_fast(bin_ŷ2, bin_y, bin_weights))),
+      ("ŷ1_au_pr", Metrics.area_under_pr_curve_fast(bin_ŷ1, bin_y, bin_weights)),
+      ("ŷ2_au_pr", Metrics.area_under_pr_curve_fast(bin_ŷ2, bin_y, bin_weights)),
       ("mean_logistic_ŷ", sum(logistic_ŷ .* bin_weights) / bin_weight),
       ("logistic_logloss", sum(logloss.(bin_y, logistic_ŷ) .* bin_weights) / bin_weight),
-      ("logistic_au_pr", Float32(Metrics.area_under_pr_curve_fast(logistic_ŷ, bin_y, bin_weights))),
+      ("logistic_au_pr", Metrics.area_under_pr_curve_fast(logistic_ŷ, bin_y, bin_weights)),
       ("logistic_coeffs", coeffs)
     ]
 
