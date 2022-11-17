@@ -121,7 +121,7 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
   )
 
   # is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
-  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\Atornado_.+_\d+\z" => "tornado")
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1")
   unadj_name(event_name) = replace(event_name, r"_adj\z" => "")
 
   # Use non-sig colors (i.e. not just 10%)
