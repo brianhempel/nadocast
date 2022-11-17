@@ -17,6 +17,9 @@ import HREFPrediction
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
 import HREFPredictionAblations
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
+import HREFPredictionAblations2
+
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_day_experiment")
 import HREFDayExperiment
 
@@ -721,7 +724,7 @@ end
 # Day experiment models
 
 # FORECAST_DISK_PREFETCH=false TASKS=[25,27] DRAW_SPC_MAPS=true julia -t 16 --project=.. Test.jl
-# FORECAST_DISK_PREFETCH=false TASKS=[26,28] julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false TASKS=[28,26] julia -t 16 --project=.. Test.jl
 
 day_experiment_model_names = first.(HREFDayExperiment.models)
 
@@ -729,3 +732,12 @@ day_experiment_model_names = first.(HREFDayExperiment.models)
 26 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFDayExperiment.blurred_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 0, suffix = "_href_day_experiment_absolutely_calibrated")
 27 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFDayExperiment.blurred_spc_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 12, suffix = "_href_day_experiment")
 28 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFDayExperiment.blurred_calibrated_day_prediction_forecasts()), day_experiment_model_names; run_hour = 12, suffix = "_href_day_experiment_absolutely_calibrated")
+
+
+
+ablation2_model_names = map(m -> m[1], HREFPredictionAblations2.models)
+
+29 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day_spc_calibrated()), ablation2_model_names; run_hour = 0, suffix = "_href_ablations2")
+30 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day()), ablation2_model_names; run_hour = 0, suffix = "_href_ablations2_absolutely_calibrated")
+31 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day_spc_calibrated()), ablation2_model_names; run_hour = 12, suffix = "_href_ablations2")
+32 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day()), ablation2_model_names; run_hour = 12, suffix = "_href_ablations2_absolutely_calibrated")

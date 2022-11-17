@@ -247,7 +247,7 @@ function reload_forecasts()
 
   grid = _forecasts[1].grid
 
-  # Determined in Train.jl
+  # Determined in HREF Train.jl
   # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
   # tornado     15                  15                   0.038589306
   # wind        25                  25                   0.115706086
@@ -295,6 +295,7 @@ function reload_forecasts()
   #   "tornado_mean_prob_computed_climatology_3hr_1567"           => [0.001206508,  0.004330907,  0.0109639205, 0.023913587, 0.051235575, 1.0],
   #   "tornado_full_13831"                                        => [0.0012153604, 0.004538168,  0.011742671,  0.023059275, 0.049979284, 1.0],
   # )
+  model_name_to_bins = Dict{String, Vector{Float32}}("wind_mean_prob_computed_climatology_blurs_910" => [0.007349782, 0.019179698, 0.035851445, 0.06126755, 0.107910745, 1.0], "hail_mean_prob_computed_climatology_blurs_910" => [0.0034476055, 0.009904056, 0.020123107, 0.0378312, 0.07595588, 1.0], "wind_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.007349782, 0.019179698, 0.035851445, 0.06126755, 0.107910745, 1.0], "tornado_mean_prob_computed_climatology_blurs_910" => [0.001259957, 0.004403745, 0.010849744, 0.022011435, 0.044833306, 1.0], "tornado_full_13831" => [0.0012153604, 0.004538168, 0.011742671, 0.023059275, 0.049979284, 1.0], "hail_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.0034476055, 0.009904056, 0.020123107, 0.0378312, 0.07595588, 1.0], "wind_full_13831" => [0.007898662, 0.020139106, 0.037745386, 0.06497206, 0.115874514, 1.0], "hail_full_13831" => [0.0033965781, 0.00951148, 0.0200999, 0.037743744, 0.07645232, 1.0], "tornado_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.001294466, 0.004569119, 0.010611137, 0.021681689, 0.043206826, 1.0])
   # event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
   #   "tornado_mean_58"                                           => [[1.0608453, 0.34233692], [1.0113722,  0.013388185], [1.0653579, 0.29739413],  [1.0437187,  0.20861574], [1.0588217, 0.27578637]],
   #   "tornado_prob_80"                                           => [[1.0096253, -0.0469623], [0.9850988,  -0.17768726], [1.0664655, 0.24821338],  [0.9513827,  -0.2362276], [1.0854785, 0.2633485]],
@@ -310,10 +311,11 @@ function reload_forecasts()
   #   "tornado_mean_prob_computed_climatology_3hr_1567"           => [[1.0639268, 0.45781243], [0.9226182,  -0.4165027],  [0.9799438, -0.11478417], [1.0525097,  0.19820513], [1.2263151, 0.7710571]],
   #   "tornado_full_13831"                                        => [[1.0710595, 0.5394862],  [0.89414734, -0.5616081],  [1.108447,  0.50613326],  [0.83939207, -0.5758451], [1.2171175, 0.7334359]],
   # )
+  model_name_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("wind_mean_prob_computed_climatology_blurs_910" => [[1.0957842, 0.44560102], [1.1037341, 0.462977], [1.0819606, 0.3897019], [1.0832871, 0.39767647], [0.85362035, -0.15877303]], "hail_mean_prob_computed_climatology_blurs_910" => [[1.0478816, 0.3216053], [1.0098401, 0.10208285], [0.98269755, 0.0008943792], [1.0002121, 0.06374693], [1.0119866, 0.10483526]], "wind_mean_prob_computed_climatology_blurs_910_before_20200523" => [[1.0957842, 0.44560102], [1.1037341, 0.462977], [1.0819606, 0.3897019], [1.0832871, 0.39767647], [0.85362035, -0.15877303]], "tornado_mean_prob_computed_climatology_blurs_910" => [[1.065771, 0.47239247], [0.9286899, -0.38221243], [1.0567164, 0.26145768], [0.9913568, 0.01256458], [1.0834966, 0.3218238]], "tornado_full_13831" => [[1.0710595, 0.5394862], [0.89414734, -0.5616081], [1.108447, 0.50613326], [0.83939207, -0.5758451], [1.2171175, 0.7334359]], "hail_mean_prob_computed_climatology_blurs_910_before_20200523" => [[1.0478816, 0.3216053], [1.0098401, 0.10208285], [0.98269755, 0.0008943792], [1.0002121, 0.06374693], [1.0119866, 0.10483526]], "wind_full_13831" => [[1.0976788, 0.44982857], [1.1166184, 0.5214092], [1.0803565, 0.39499816], [1.0272967, 0.24607334], [0.9264786, 0.009931214]], "hail_full_13831" => [[1.0600259, 0.43388337], [0.96319646, -0.097637914], [1.0792756, 0.39443073], [0.9629313, -0.01864577], [1.0167043, 0.13172606]], "tornado_mean_prob_computed_climatology_blurs_910_before_20200523" => [[1.039819, 0.28398132], [0.9637524, -0.18635054], [1.0136148, 0.06931454], [1.114865, 0.49855673], [1.0013322, 0.116965175]])
 
-  # hour_models = make_calibrated_hourly_models(event_to_bins, event_to_bins_logistic_coeffs)
+  hour_models = make_calibrated_hourly_models(event_to_bins, event_to_bins_logistic_coeffs)
 
-  # _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_ablations2_severe_probabilities")
+  _forecasts_calibrated = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_ablations2_severe_probabilities")
 
 
   # # Day & Four-hourly forecasts
@@ -329,67 +331,24 @@ function reload_forecasts()
   # # 6. should thereby be absolutely calibrated (check)
   # # 7. calibrate to SPC thresholds (linear interpolation)
 
-  # _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPredictionAblations2")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPredictionAblations2")
 
   # # The following was computed in TrainDay.jl
-  # event_to_day_bins = Dict{String, Vector{Float32}}(
-  #   "tornado_mean_58"                                           => [0.017304773, 0.0553223,   0.13471735, 1.0],
-  #   "tornado_prob_80"                                           => [0.019274753, 0.059863195, 0.13051617, 1.0],
-  #   "tornado_mean_prob_138"                                     => [0.019996958, 0.06293694,  0.14385402, 1.0],
-  #   "tornado_mean_prob_computed_no_sv_219"                      => [0.019619932, 0.06317351,  0.14767814, 1.0],
-  #   "tornado_mean_prob_computed_220"                            => [0.020045973, 0.06332173,  0.14715679, 1.0],
-  #   "tornado_mean_prob_computed_partial_climatology_227"        => [0.019988786, 0.061916392, 0.16038308, 1.0],
-  #   "tornado_mean_prob_computed_climatology_253"                => [0.02144064,  0.063346006, 0.16949469, 1.0],
-  #   "tornado_mean_prob_computed_climatology_blurs_910"          => [0.02166239,  0.06790343,  0.16562855, 1.0],
-  #   "tornado_mean_prob_computed_climatology_grads_1348"         => [0.020726241, 0.06985498,  0.16851029, 1.0],
-  #   "tornado_mean_prob_computed_climatology_blurs_grads_2005"   => [0.021495968, 0.071746476, 0.16894186, 1.0],
-  #   "tornado_mean_prob_computed_climatology_prior_next_hrs_691" => [0.020654399, 0.06460478,  0.16610569, 1.0],
-  #   "tornado_mean_prob_computed_climatology_3hr_1567"           => [0.021308538, 0.067999676, 0.17814146, 1.0],
-  #   "tornado_full_13831"                                        => [0.021043906, 0.074019335, 0.17095083, 1.0],
-  # )
-  # event_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-  #   "tornado_mean_58"                                           => [[0.6559432,  0.33183938,  0.2690549],    [0.6666154,  0.36046487,   0.4614278],     [0.42497587, 0.44417486, 0.20855717]],
-  #   "tornado_prob_80"                                           => [[0.8796285,  0.16921686,  0.22449368],   [0.8071765,  0.3629977,    0.88375133],    [0.51591927, 0.29846162, -0.097147524]],
-  #   "tornado_mean_prob_138"                                     => [[0.93436664, 0.07926717,  -0.026851058], [0.9042307,  0.17261904,   0.32986057],    [0.46952277, 0.3558928,  0.015089741]],
-  #   "tornado_mean_prob_computed_no_sv_219"                      => [[0.8970471,  0.12673378,  0.10686361],   [0.77730256, 0.24956441,   0.30919433],    [0.38325134, 0.41652393, 0.074524485]],
-  #   "tornado_mean_prob_computed_220"                            => [[0.9081216,  0.107832894, 0.050864797],  [0.800826,   0.23256853,   0.31022668],    [0.40040252, 0.4055984,  0.067884356]],
-  #   "tornado_mean_prob_computed_partial_climatology_227"        => [[0.9746325,  0.05395953,  0.059440296],  [0.8418499,  0.16475138,   0.1517096],     [0.48570332, 0.34678283, -0.001083027]],
-  #   "tornado_mean_prob_computed_climatology_253"                => [[0.982298,   0.05099982,  0.06179544],   [0.80724055, 0.13905986,   -0.0778435],    [0.58624,    0.255771,   -0.13458002]],
-  #   "tornado_mean_prob_computed_climatology_blurs_910"          => [[0.98352575, 0.03981221,  0.010008344],  [0.9775675,  0.045042068,  -0.0055927183], [0.57631963, 0.20392773, -0.28303716]],
-  #   "tornado_mean_prob_computed_climatology_grads_1348"         => [[0.94020444, 0.0850467,   0.051697694],  [1.1303655,  -0.08044045,  -0.13138889],   [0.63580066, 0.1437665,  -0.37667832]],
-  #   "tornado_mean_prob_computed_climatology_blurs_grads_2005"   => [[0.95560277, 0.05098174,  -0.06451891],  [1.1089742,  -0.043572877, -0.017801635],  [0.64432305, 0.10341309, -0.47638172]],
-  #   "tornado_mean_prob_computed_climatology_prior_next_hrs_691" => [[0.81858176, 0.18513452,  0.15438604],   [0.6977342,  0.27534917,   0.21286853],    [0.5196121,  0.31482816, -0.040216677]],
-  #   "tornado_mean_prob_computed_climatology_3hr_1567"           => [[0.96216094, 0.034555722, -0.12364115],  [1.0485787,  -0.011567661, -0.047783367],  [0.6019041,  0.21778609, -0.17962365]],
-  #   "tornado_full_13831"                                        => [[0.95958227, 0.04161413,  -0.10651286],  [1.2272763,  -0.15624464,  -0.18067063],   [0.5964124,  0.17200926, -0.3083448]],
-  #   "tornado"                                                   => [[0.95958227, 0.04161413,  -0.10651286],  [1.2272763,  -0.15624464,  -0.18067063],   [0.5964124,  0.17200926, -0.3083448]],
+  model_name_to_day_bins = Dict{String, Vector{Float32}}("wind_mean_prob_computed_climatology_blurs_910" => [0.115368165, 0.25932494, 0.43146545, 1.0], "hail_mean_prob_computed_climatology_blurs_910" => [0.06547251, 0.15664904, 0.29551116, 1.0], "wind_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.115368165, 0.25932494, 0.43146545, 1.0], "tornado_mean_prob_computed_climatology_blurs_910" => [0.02166239, 0.06790343, 0.16562855, 1.0], "tornado_full_13831" => [0.021043906, 0.074019335, 0.17095083, 1.0], "hail_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.06547251, 0.15664904, 0.29551116, 1.0], "wind_full_13831" => [0.12129908, 0.27009565, 0.4460996, 1.0], "hail_full_13831" => [0.066225864, 0.15690458, 0.29827937, 1.0], "tornado_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.022665959, 0.06817255, 0.1642723, 1.0])
 
-  # )
+  model_name_to_day_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}("wind_mean_prob_computed_climatology_blurs_910" => [[0.9183711, 0.11854008, 0.020747136], [1.0090979, 0.052492317, -0.043933667], [0.769292, 0.13937852, -0.011131755]], "hail_mean_prob_computed_climatology_blurs_910" => [[0.9237591, 0.13382848, 0.12147692], [0.9564363, 0.047680803, -0.16887067], [0.98554933, -0.08279941, -0.4769262]], "wind_mean_prob_computed_climatology_blurs_910_before_20200523" => [[0.9183711, 0.11854008, 0.020747136], [1.0090979, 0.052492317, -0.043933667], [0.769292, 0.13937852, -0.011131755]], "tornado_mean_prob_computed_climatology_blurs_910" => [[0.98352575, 0.03981221, 0.010008344], [0.9775675, 0.045042068, -0.0055927183], [0.57631963, 0.20392773, -0.28303716]], "tornado_full_13831" => [[0.95958227, 0.04161413, -0.10651286], [1.2272763, -0.15624464, -0.18067063], [0.5964124, 0.17200926, -0.3083448]], "hail_mean_prob_computed_climatology_blurs_910_before_20200523" => [[0.9237591, 0.13382848, 0.12147692], [0.9564363, 0.047680803, -0.16887067], [0.98554933, -0.08279941, -0.4769262]], "wind_full_13831" => [[1.0433985, -0.0069722184, -0.16421609], [1.1460801, -0.10947033, -0.3195157], [0.9224374, -0.005079186, -0.24423301]], "hail_full_13831" => [[1.0235776, 0.02489767, -0.070147164], [1.1081746, -0.088940814, -0.34076628], [1.1614795, -0.24988303, -0.7304756]], "tornado_mean_prob_computed_climatology_blurs_910_before_20200523" => [[1.0136324, -0.0008003565, -0.1033998], [1.0090433, 0.026480297, 0.0030092064], [0.5625795, 0.22864038, -0.21183096]])
 
-  # _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_day_bins, event_to_day_bins_logistic_coeffs, models; module_name = "HREFPredictionAblations2", period_name = "day")
+  _forecasts_day = PredictionForecasts.period_forecasts_from_accumulators(_forecasts_day_accumulators, event_to_day_bins, event_to_day_bins_logistic_coeffs, models; module_name = "HREFPredictionAblations2", period_name = "day")
 
-  # spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}(
-  #   "tornado_mean_58"                                           => [(0.02, 0.018461227), (0.05, 0.06462288),  (0.1, 0.15732765), (0.15, 0.29961205), (0.3, 0.42596245), (0.45, 0.5749607)],
-  #   "tornado_prob_80"                                           => [(0.02, 0.017969131), (0.05, 0.072660446), (0.1, 0.16031837), (0.15, 0.27256584), (0.3, 0.35550117), (0.45, 0.43262672)],
-  #   "tornado_mean_prob_138"                                     => [(0.02, 0.018060684), (0.05, 0.068006516), (0.1, 0.16544151), (0.15, 0.30457115), (0.3, 0.4305973),  (0.45, 0.54815865)],
-  #   "tornado_mean_prob_computed_no_sv_219"                      => [(0.02, 0.017709732), (0.05, 0.06767845),  (0.1, 0.16807747), (0.15, 0.29662895), (0.3, 0.40353203), (0.45, 0.47664833)],
-  #   "tornado_mean_prob_computed_220"                            => [(0.02, 0.017793655), (0.05, 0.068590164), (0.1, 0.16698647), (0.15, 0.29432106), (0.3, 0.40807152), (0.45, 0.5101414)],
-  #   "tornado_mean_prob_computed_partial_climatology_227"        => [(0.02, 0.017900467), (0.05, 0.065675735), (0.1, 0.17772484), (0.15, 0.3134899),  (0.3, 0.45659447), (0.45, 0.56458473)],
-  #   "tornado_mean_prob_computed_climatology_253"                => [(0.02, 0.018064499), (0.05, 0.06471443),  (0.1, 0.17611122), (0.15, 0.32598686), (0.3, 0.47203255), (0.45, 0.60515404)],
-  #   "tornado_mean_prob_computed_climatology_blurs_910"          => [(0.02, 0.01799202),  (0.05, 0.06854057),  (0.1, 0.17239952), (0.15, 0.29992485), (0.3, 0.46686745), (0.45, 0.6732578)],
-  #   "tornado_mean_prob_computed_climatology_grads_1348"         => [(0.02, 0.01742363),  (0.05, 0.06785774),  (0.1, 0.17230797), (0.15, 0.3162861),  (0.3, 0.45212746), (0.45, 0.59908485)],
-  #   "tornado_mean_prob_computed_climatology_blurs_grads_2005"   => [(0.02, 0.017370224), (0.05, 0.06944466),  (0.1, 0.17526436), (0.15, 0.31707573), (0.3, 0.45667458), (0.45, 0.6287174)],
-  #   "tornado_mean_prob_computed_climatology_prior_next_hrs_691" => [(0.02, 0.017599106), (0.05, 0.06641579),  (0.1, 0.17908287), (0.15, 0.3228054),  (0.3, 0.49178123), (0.45, 0.6537876)],
-  #   "tornado_mean_prob_computed_climatology_3hr_1567"           => [(0.02, 0.017438889), (0.05, 0.0646534),   (0.1, 0.18551826), (0.15, 0.3344822),  (0.3, 0.50450325), (0.45, 0.6276798)],
-  #   "tornado_full_13831"                                        => [(0.02, 0.016950607), (0.05, 0.06830406),  (0.1, 0.17817497), (0.15, 0.3255825),  (0.3, 0.4591999),  (0.45, 0.60011864)],
-  # )
+  spc_calibrations = Dict{String, Vector{Tuple{Float32, Float32}}}("wind_mean_prob_computed_climatology_blurs_910" => [(0.05, 0.04979515), (0.15, 0.21516609), (0.3, 0.4797535), (0.45, 0.70975685)], "hail_mean_prob_computed_climatology_blurs_910" => [(0.05, 0.02939415), (0.15, 0.12362099), (0.3, 0.367239), (0.45, 0.6290493)], "wind_mean_prob_computed_climatology_blurs_910_before_20200523" => [(0.05, 0.04979515), (0.15, 0.21516609), (0.3, 0.4797535), (0.45, 0.70975685)], "tornado_mean_prob_computed_climatology_blurs_910" => [(0.02, 0.01799202), (0.05, 0.06854057), (0.1, 0.17239952), (0.15, 0.29992485), (0.3, 0.46686745), (0.45, 0.6732578)], "tornado_full_13831" => [(0.02, 0.016950607), (0.05, 0.06830406), (0.1, 0.17817497), (0.15, 0.3255825), (0.3, 0.4591999), (0.45, 0.60011864)], "hail_mean_prob_computed_climatology_blurs_910_before_20200523" => [(0.05, 0.02939415), (0.15, 0.12362099), (0.3, 0.367239), (0.45, 0.6290493)], "wind_full_13831" => [(0.05, 0.047945023), (0.15, 0.21813774), (0.3, 0.49361992), (0.45, 0.7422848)], "hail_full_13831" => [(0.05, 0.029951096), (0.15, 0.123464584), (0.3, 0.3763752), (0.45, 0.6608143)], "tornado_mean_prob_computed_climatology_blurs_910_before_20200523" => [(0.02, 0.018140793), (0.05, 0.06867409), (0.1, 0.17149925), (0.15, 0.29029655), (0.3, 0.47507286), (0.45, 0.70194054)])
 
-  # # ensure ordered the same as the features in the data
-  # calibrations =
-  #   map(models) do (model_name, _, _)
-  #     spc_calibrations[model_name]
-  #   end
+  # ensure ordered the same as the features in the data
+  calibrations =
+    map(models) do (model_name, _, _)
+      spc_calibrations[model_name]
+    end
 
-  # _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPredictionAblations2_day_severe_probabilities_calibrated_to_SPC_thresholds")
+  _forecasts_day_spc_calibrated = PredictionForecasts.calibrated_forecasts(_forecasts_day, calibrations; model_name = "HREFPredictionAblations2_day_severe_probabilities_calibrated_to_SPC_thresholds")
 
   ()
 end
