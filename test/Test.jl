@@ -17,7 +17,7 @@ import HREFPrediction
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
 import HREFPredictionAblations
 
-push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations")
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations2")
 import HREFPredictionAblations2
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_day_experiment")
@@ -736,6 +736,9 @@ day_experiment_model_names = first.(HREFDayExperiment.models)
 
 
 ablation2_model_names = map(m -> m[1], HREFPredictionAblations2.models)
+
+# FORECAST_DISK_PREFETCH=false TASKS=[29,30] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false TASKS=[31,32] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 
 29 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day_spc_calibrated()), ablation2_model_names; run_hour = 0, suffix = "_href_ablations2")
 30 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day()), ablation2_model_names; run_hour = 0, suffix = "_href_ablations2_absolutely_calibrated")
