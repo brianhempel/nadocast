@@ -56,6 +56,7 @@
       <span>NWP:
       <label><input type="radio" name="nwp" value="hrefsref" checked>HREF+SREF</label>
       <label><input type="radio" name="nwp" value="href">HREF only</label>
+      <label><input type="radio" name="nwp" value="hrefdayaccs">HREF Day Accs</label>
       </span>
       <span>Time:
       <label><input type="radio" name="run_time" value="0z" checked>0Z vs 0600</label>
@@ -117,23 +118,27 @@
         document.querySelectorAll('.spc_outlook_time').forEach(elem => { elem.innerText = time_str_spc; });
       }
       function updateNWP() {
-        const hrefsref = document.querySelector('input[name="nwp"][value="hrefsref"]').checked;
-        const prefix = hrefsref ? "/nadocast_" : "/nadocast_href_only_";
+        const nwp = Array.from(document.querySelectorAll('input[name="nwp"]')).find(elem => elem.checked).value;
+        const prefix = {
+          "hrefsref": "/nadocast_",
+          "href": "/nadocast_href_only_",
+          "hrefdayaccs": "/nadocast_href_day_experiment_",
+        }[nwp];
         document.querySelectorAll('img').forEach(img => {
-          img.src = img.src.replace(/\/nadocast(_href_only|_href_ablations)?_/, prefix);
+          img.src = img.src.replace(/\/nadocast(_href_only|_href_ablations|_href_day_experiment)?_/, prefix);
         });
         document.querySelectorAll('td a').forEach(a => {
-          a.href = a.href.replace(/\/nadocast(_href_only|_href_ablations)?_/, prefix);
+          a.href = a.href.replace(/\/nadocast(_href_only|_href_ablations|_href_day_experiment)?_/, prefix);
         });
       }
       function updateCalibration() {
         const absolutely_calibrated = document.querySelector('input[name="calibration"][value="absolute"]').checked;
         const prefix = absolutely_calibrated ? "/nadocast$1_absolutely_calibrated_" : "/nadocast$1_";
         document.querySelectorAll('img').forEach(img => {
-          img.src = img.src.replace(/\/nadocast(_href_only|_href_ablations)?(_absolutely_calibrated)?_/, prefix);
+          img.src = img.src.replace(/\/nadocast(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_/, prefix);
         });
         document.querySelectorAll('td a').forEach(a => {
-          a.href = a.href.replace(/\/nadocast(_href_only|_href_ablations)?(_absolutely_calibrated)?_/, prefix);
+          a.href = a.href.replace(/\/nadocast(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_/, prefix);
         });
       }
       function updateSigType() {
@@ -209,25 +214,25 @@
         map[/\Amaps(_2021)?\//, 1] == "_2021" ? 2021 : 2022
       end
       def predictor(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 1]
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 1]
       end
       def nwp(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 2]
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 2]
       end
       def absolutely_calibrated?(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 3] == "_absolutely_calibrated"
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 3] == "_absolutely_calibrated"
       end
       def hazard(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 4]
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 4]
       end
       def bounded?(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 5]
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 5]
       end
       def yyyymmdd(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 6]
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 6]
       end
       def run_hour(map)
-        map[/(nadocast|spc_day_1)(_href_only|_href_ablations)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 7]
+        map[/(nadocast|spc_day_1)(_href_only|_href_ablations|_href_day_experiment)?(_absolutely_calibrated)?_(tornado|wind|wind_adj|hail|sig_tornado|sig_wind|sig_wind_adj|sig_hail|tornado_\w+_\d+)(_gated_by_\w+)?_(\d{8})_t(\d+)z.png$/, 7]
       end
       def sig?(map)
         hazard(map) =~ /_sig_/
