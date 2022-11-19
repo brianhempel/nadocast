@@ -232,6 +232,10 @@ function train_with_coordinate_descent_hyperparameter_search(
   pageout_hint(arr) = nothing
 
   if !load_only
+    if only_before < Dates.now()
+      println("Ignoring data after $only_before")
+    end
+
     if isnothing(validation_server)
       # Load first so it page out first
       rank == root && println("Loading validation data")
@@ -261,10 +265,6 @@ function train_with_coordinate_descent_hyperparameter_search(
         get_data_labels_weights_binned(train_forecasts, "training", only_features = only_features, only_before = only_before)
       end
     print("done. $(size(X_binned,1)) datapoints with $(size(X_binned,2)) features each.\n")
-
-    if only_before < Dates.now()
-      println("Ignoring data after $only_before")
-    end
 
     event_types = isnothing(event_types) ? collect(keys(Ys)) : event_types
 
