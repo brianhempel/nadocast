@@ -120,7 +120,7 @@ function rasterize_prob_regions(grid, threshold_prob, shapefile_path)
 end
 
 # ArchGDAL.intersects
-# Slow as snot. quadtree speeds it a littl
+# Slow as snot. quadtree speeds it a little
 
 mutable struct Quadtree
   on_edge   :: Bool

@@ -573,7 +573,7 @@ function draw_only(spc_forecasts, forecasts, model_names; run_hour, suffix, star
   )
 
   # is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
-  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\Atornado_.+_\d+\z" => "tornado")
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1")
   unadj_name(event_name) = replace(event_name, r"_adj\z" => "")
 
   # Use non-sig colors (i.e. not just 10%)
@@ -738,9 +738,118 @@ day_experiment_model_names = first.(HREFDayExperiment.models)
 ablation2_model_names = map(m -> m[1], HREFPredictionAblations2.models)
 
 # FORECAST_DISK_PREFETCH=false TASKS=[29,30] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
-# FORECAST_DISK_PREFETCH=false TASKS=[31,32] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false USE_ALT_DISK=true TASKS=[31,32] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 
 29 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day_spc_calibrated()), ablation2_model_names; run_hour = 0, suffix = "_href_ablations2")
 30 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day()), ablation2_model_names; run_hour = 0, suffix = "_href_ablations2_absolutely_calibrated")
 31 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day_spc_calibrated()), ablation2_model_names; run_hour = 12, suffix = "_href_ablations2")
 32 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), only_forecasts_with_runtimes(CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), HREFPredictionAblations2.forecasts_day()), ablation2_model_names; run_hour = 12, suffix = "_href_ablations2_absolutely_calibrated")
+
+
+function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, start = Dates.DateTime(2000, 1, 1, 1), cutoff = Dates.DateTime(2022, 6, 1, 12), only_models = model_names, all_days_of_week = false)
+
+  println("************ $(run_hour)z$(suffix) ************")
+
+  println("$(length(spc_forecasts)) SPC forecasts available") #
+
+  (train_forecasts, validation_forecasts, test_forecasts) =
+    TrainingShared.forecasts_train_validation_test(
+      ForecastCombinators.resample_forecasts(forecasts, Grids.get_upsampler, GRID);
+      just_hours_near_storm_events = false
+    );
+
+  if all_days_of_week
+    test_forecasts = vcat(train_forecasts, validation_forecasts, test_forecasts)
+  end
+
+  println("$(length(test_forecasts)) unfiltered test forecasts") #
+  test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts") #
+
+  # We don't have storm events past this time.
+
+  test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= start, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
+
+  event_name_to_unadj_events = Dict(
+    "tornado"     => StormEvents.conus_tornado_events(),
+    "wind"        => StormEvents.conus_severe_wind_events(),
+    "hail"        => StormEvents.conus_severe_hail_events(),
+    "sig_tornado" => StormEvents.conus_sig_tornado_events(),
+    "sig_wind"    => StormEvents.conus_sig_wind_events(),
+    "sig_hail"    => StormEvents.conus_sig_hail_events(),
+  )
+
+  ndays            = 0
+  spc_total_probs  = Dict()
+  test_total_probs = Dict()
+
+  # is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1")
+  unadj_name(event_name) = replace(event_name, r"_adj\z" => "")
+
+  for spc_forecast in spc_forecasts
+    test_forecast_i = findfirst(forecast -> (forecast.run_year, forecast.run_month, forecast.run_day) == (spc_forecast.run_year, spc_forecast.run_month, spc_forecast.run_day), test_forecasts)
+    if isnothing(test_forecast_i)
+      continue
+    end
+    ndays += 1
+    test_forecast = test_forecasts[test_forecast_i]
+
+    spc_data  = Forecasts.data(spc_forecast)
+    ForecastCombinators.turn_forecast_caching_on()
+    test_data = Forecasts.data(test_forecast)
+    ForecastCombinators.clear_cached_forecasts()
+
+    for model_name in model_names
+      model_name in only_models || continue
+      event_name   = model_name_to_event_name(model_name)
+      spc_event_i  = findfirst(m -> m[1] == unadj_name(event_name), SPCOutlooks.models)
+      test_event_i = findfirst(isequal(model_name), model_names)
+
+      spc_event_probs  = @view spc_data[:, spc_event_i]
+      test_event_probs = @view test_data[:, test_event_i]
+
+      if !(model_name in spc_total_probs)
+        spc_total_probs[model_name] = spc_event_probs[:]
+      else
+        spc_total_probs[model_name] .+= spc_event_probs
+      end
+
+      if !(model_name in test_total_probs)
+        test_total_probs[model_name] = test_event_probs[:]
+      else
+        test_total_probs[model_name] .+= test_event_probs
+      end
+    end
+
+    print(".")
+  end
+  println()
+
+
+  for model_name in model_names
+    model_name in only_models || continue
+
+    open((@__DIR__) * "/total_prob_spc_$(model_name)_$(ndays)_days_$(run_hour)z$(suffix).csv", "w") do csv
+      headers = ["lat", "lon", "total_prob"]
+      println(csv, join(headers, ","))
+      for ((lat, lon), total_prob) in zip(spc_forecasts[1].grid.latlons, spc_total_probs[model_name])
+        println(csv, join(Float32[lat, lon, total_prob], ","))
+      end
+    end
+
+    open((@__DIR__) * "/total_prob_nadocast_$(model_name)_$(ndays)_days_$(run_hour)z$(suffix).csv", "w") do csv
+      headers = ["lat", "lon", "total_prob"]
+      println(csv, join(headers, ","))
+      for ((lat, lon), total_prob) in zip(test_forecasts[1].grid.latlons, test_total_probs[model_name])
+        println(csv, join(Float32[lat, lon, total_prob], ","))
+      end
+    end
+  end
+end
+
+model_names = map(m -> m[3], HREFPrediction.models_with_gated)
+
+33 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_with_sig_gated(),                model_names; run_hour = 12, "_absolutely_calibrated", only_models = ["wind", "wind_adj"], all_days_of_week = false)
+34 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, "_spc_calibrated",        only_models = ["wind", "wind_adj"], all_days_of_week = false)
