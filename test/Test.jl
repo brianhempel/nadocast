@@ -849,7 +849,8 @@ function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, star
   end
 end
 
-model_names = map(m -> m[3], HREFPrediction.models_with_gated)
+# FORECAST_DISK_PREFETCH=false FORECASTS_ROOT=~/nadocaster2 TASKS=[33,34] julia -t 16 --project=.. Test.jl
 
-33 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_with_sig_gated(),                model_names; run_hour = 12, "_absolutely_calibrated", only_models = ["wind", "wind_adj"], all_days_of_week = false)
-34 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, "_spc_calibrated",        only_models = ["wind", "wind_adj"], all_days_of_week = false)
+model_names = map(m -> m[3], HREFPrediction.models_with_gated)
+33 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_with_sig_gated(),                model_names; run_hour = 12, suffix = "_absolutely_calibrated", only_models = ["wind", "wind_adj"], all_days_of_week = false)
+34 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_spc_calibrated",        only_models = ["wind", "wind_adj"], all_days_of_week = false)
