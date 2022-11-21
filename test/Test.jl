@@ -810,13 +810,13 @@ function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, star
       spc_event_probs  = @view spc_data[:, spc_event_i]
       test_event_probs = @view test_data[:, test_event_i]
 
-      if !(model_name in spc_total_probs)
+      if !(model_name in keys(spc_total_probs))
         spc_total_probs[model_name] = spc_event_probs[:]
       else
         spc_total_probs[model_name] .+= spc_event_probs
       end
 
-      if !(model_name in test_total_probs)
+      if !(model_name in keys(test_total_probs))
         test_total_probs[model_name] = test_event_probs[:]
       else
         test_total_probs[model_name] .+= test_event_probs
