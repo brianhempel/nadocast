@@ -87,7 +87,7 @@ function do_it(forecasts, model_names; suffix = "", use_5km_grid = false)
       save_dir = "day_ablations2_$(length(test_forecasts_0z))_test_forecasts$(suffix)_0z",
     );
   # We're just looking at Day 1 forecasts, so run times will be unique between forecasts.
-  run_times_0z = Serialization.deserialize("day_ablation_$(length(test_forecasts_0z))_test_forecasts$(suffix)_0z/run_times.serialized")
+  run_times_0z = Serialization.deserialize("day_ablations2_$(length(test_forecasts_0z))_test_forecasts$(suffix)_0z/run_times.serialized")
   @assert length(unique(run_times_0z)) == length(test_forecasts_0z)
   @assert sort(unique(run_times_0z)) == sort(map(Forecasts.run_utc_datetime, test_forecasts_0z))
 
@@ -98,7 +98,7 @@ function do_it(forecasts, model_names; suffix = "", use_5km_grid = false)
       save_dir = "day_ablations2_$(length(test_forecasts_12z))_test_forecasts$(suffix)_12z",
     );
   # We're just looking at Day 1 forecasts, so run times will be unique between forecasts.
-  run_times_12z = Serialization.deserialize("day_ablation_$(length(test_forecasts_12z))_test_forecasts$(suffix)_12z/run_times.serialized")
+  run_times_12z = Serialization.deserialize("day_ablations2_$(length(test_forecasts_12z))_test_forecasts$(suffix)_12z/run_times.serialized")
   @assert length(unique(run_times_12z)) == length(test_forecasts_12z)
   @assert sort(unique(run_times_12z)) == sort(map(Forecasts.run_utc_datetime, test_forecasts_12z))
 
