@@ -13,6 +13,9 @@ import TrainingShared
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction_ablations2")
 import HREFPredictionAblations2
 
+push!(LOAD_PATH, (@__DIR__) * "/../models/href_day_experiment")
+import HREFDayExperiment
+
 push!(LOAD_PATH, (@__DIR__) * "/../lib")
 import Conus
 import Forecasts
@@ -202,6 +205,12 @@ end
 model_names = first.(HREFPredictionAblations2.models)
 
 1 in TASKS && do_it(HREFPredictionAblations2.forecasts_day_spc_calibrated(), model_names)
-
 # Absolutely calibrated should produce the same result for AU-PR, not not logloss
 2 in TASKS && do_it(HREFPredictionAblations2.forecasts_day(), model_names; suffix = "_absolutely_calibrated")
+
+
+day_experiment_model_names = first.(HREFDayExperiment.models)
+
+3 in TASKS && do_it(HREFDayExperiment.blurred_spc_calibrated_day_prediction_forecasts(),  day_experiment_model_names; suffix = "_href_day_experiment")
+# Absolutely calibrated should produce the same result for AU-PR, not not logloss
+4 in TASKS && do_it(HREFDayExperiment.blurred_calibrated_day_prediction_forecasts(),      day_experiment_model_names; suffix = "_href_day_experiment_absolutely_calibrated")
