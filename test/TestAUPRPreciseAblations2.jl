@@ -109,12 +109,11 @@ function do_it(forecasts, model_names; suffix = "", use_5km_grid = false)
   nforecasts = length(unique(run_times_0z))
 
   @assert size(X_0z) == size(X_12z)
-  @assert size(y_0z) == size(y_12z)
   @assert weights_0z == weights_12z
 
-  @assert length(y_0z) == size(X_0z,1)
-  @assert length(y_0z) / nforecasts == round(length(y_0z) / nforecasts)
-  ndata = length(y_0z)
+  @assert length(weights_0z) == size(X_0z,1)
+  @assert length(weights_0z) / nforecasts == round(length(y_0z) / nforecasts)
+  ndata = length(weights_0z)
   ndata_per_forecast = ndata ÷ nforecasts
   @assert run_times_0z[ndata_per_forecast*10] == run_times_0z[ndata_per_forecast*10 - 1]
   @assert run_times_0z[ndata_per_forecast*10] != run_times_0z[ndata_per_forecast*10 + 1]
@@ -169,6 +168,7 @@ function do_it(forecasts, model_names; suffix = "", use_5km_grid = false)
     model_name = model_names[prediction_i]
     event_name = event_names[prediction_i]
     y_0z, y_12z = Ys_0z[event_name], Ys_12z[event_name]
+    @assert size(y_0z) == size(y_12z)
     au_pr_0z   = Metrics.area_under_pr_curve(view(X_0z,  :, prediction_i), y_0z,  weights_0z)
     au_pr_12z  = Metrics.area_under_pr_curve(view(X_12z, :, prediction_i), y_12z, weights_12z)
     au_pr_mean = (au_pr_0z + au_pr_12z) / 2
