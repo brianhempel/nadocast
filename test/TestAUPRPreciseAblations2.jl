@@ -46,7 +46,7 @@ function two_sided_bootstrap_p_value_paired(bootstraps_1, bootstraps_2)
   ))
 end
 
-function do_it(forecasts, model_names; suffix = "")
+function do_it(forecasts, model_names; suffix = "", use_5km_grid = false)
 
   model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1")
 
@@ -56,7 +56,7 @@ function do_it(forecasts, model_names; suffix = "")
 
   (train_forecasts, validation_forecasts, test_forecasts) =
     TrainingShared.forecasts_train_validation_test(
-      ForecastCombinators.resample_forecasts(forecasts, Grids.get_upsampler, GRID);
+      use_5km_grid ? ForecastCombinators.resample_forecasts(forecasts, Grids.get_upsampler, GRID) : forecasts;
       just_hours_near_storm_events = false
     );
 
