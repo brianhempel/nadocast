@@ -339,7 +339,7 @@ function associate(forecastss...)
       push!(out, map(dict -> dict[time_title], dicts))
     end
   end
-  sort(out; alg = MergeSort, by = forecast -> (Forecasts.run_utc_datetime(forecast), forecast.forecast_hour))
+  sort(out; alg = MergeSort, by = forecasts -> (Forecasts.run_utc_datetime(forecasts[1]), forecasts[1].forecast_hour))
 end
 
 
