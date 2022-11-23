@@ -219,8 +219,8 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
       wind_ref_row    = model_rows[reference_model_i - 1]
       hail_ref_row    = model_rows[reference_model_i - 0]
 
-      au_pr_0z_vs_ref   = mean([tornado_row[2] / tornado_ref_row[2], wind_row[2] / wind_ref_row[2], hail_row[2] / hail_ref_row[2]]),
-      au_pr_12z_vs_ref  = mean([tornado_row[3] / tornado_ref_row[3], wind_row[3] / wind_ref_row[3], hail_row[3] / hail_ref_row[3]]),
+      au_pr_0z_vs_ref   = mean([tornado_row[2] / tornado_ref_row[2], wind_row[2] / wind_ref_row[2], hail_row[2] / hail_ref_row[2]])
+      au_pr_12z_vs_ref  = mean([tornado_row[3] / tornado_ref_row[3], wind_row[3] / wind_ref_row[3], hail_row[3] / hail_ref_row[3]])
       au_pr_mean_vs_ref = mean([
         tornado_row[4] / tornado_ref_row[4],
         wind_row[4]    / wind_ref_row[4],
@@ -237,8 +237,8 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
         mean([tornado_vs_ref, wind_vs_ref, hail_vs_ref])
       end
 
-      logloss_0z_vs_ref   = mean([tornado_row[6] / tornado_ref_row[6], wind_row[6] / wind_ref_row[6], hail_row[6] / hail_ref_row[6]]),
-      logloss_12z_vs_ref  = mean([tornado_row[7] / tornado_ref_row[7], wind_row[7] / wind_ref_row[7], hail_row[7] / hail_ref_row[7]]),
+      logloss_0z_vs_ref   = mean([tornado_row[6] / tornado_ref_row[6], wind_row[6] / wind_ref_row[6], hail_row[6] / hail_ref_row[6]])
+      logloss_12z_vs_ref  = mean([tornado_row[7] / tornado_ref_row[7], wind_row[7] / wind_ref_row[7], hail_row[7] / hail_ref_row[7]])
       logloss_mean_vs_ref = mean([
         tornado_row[9] / tornado_ref_row[9],
         wind_row[9]    / wind_ref_row[9],
