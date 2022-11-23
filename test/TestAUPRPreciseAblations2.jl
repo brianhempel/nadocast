@@ -56,7 +56,7 @@ function mean(xs)
   sum(xs) / length(xs)
 end
 
-model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1", r"\A((sig_)(tornado|wind|hail))_day\z" => s"\1")
+model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1", r"\A((sig_)?(tornado|wind|hail))_day\z" => s"\1")
 
 function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, model_names), suffix = "", use_5km_grid = false)
 
