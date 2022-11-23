@@ -112,7 +112,7 @@ function do_it(forecasts, model_names; suffix = "", use_5km_grid = false)
   @assert weights_0z == weights_12z
 
   @assert length(weights_0z) == size(X_0z,1)
-  @assert length(weights_0z) / nforecasts == round(length(y_0z) / nforecasts)
+  @assert length(weights_0z) / nforecasts == round(length(weights_0z) / nforecasts)
   ndata = length(weights_0z)
   ndata_per_forecast = ndata ÷ nforecasts
   @assert run_times_0z[ndata_per_forecast*10] == run_times_0z[ndata_per_forecast*10 - 1]
