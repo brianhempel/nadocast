@@ -202,6 +202,12 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
     ]
     push!(model_rows, row)
     println(join(row, ","))
+  end
+
+  for prediction_i in 1:nmodels
+    model_name = model_names[prediction_i]
+    event_name = event_names[prediction_i]
+    reference_model_i = reference_model_is[prediction_i]
 
     if event_name == "hail" && !isnothing(reference_model_i)
       @assert event_names[prediction_i - 2] == "tornado"
