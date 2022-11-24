@@ -246,9 +246,9 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
       logloss_0z_vs_ref   = mean([tornado_row[6] / tornado_ref_row[6], wind_row[6] / wind_ref_row[6], hail_row[6] / hail_ref_row[6]])
       logloss_12z_vs_ref  = mean([tornado_row[7] / tornado_ref_row[7], wind_row[7] / wind_ref_row[7], hail_row[7] / hail_ref_row[7]])
       logloss_mean_vs_ref = mean([
-        tornado_row[9] / tornado_ref_row[9],
-        wind_row[9]    / wind_ref_row[9],
-        hail_row[9]    / hail_ref_row[9],
+        tornado_row[8] / tornado_ref_row[8],
+        wind_row[8]    / wind_ref_row[8],
+        hail_row[8]    / hail_ref_row[8],
       ]) # this is consistent with how we do the booststraps below, which itself is consistent with the bootstraps for the individual models
 
       row = Any[
