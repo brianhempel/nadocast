@@ -252,7 +252,7 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
       ]) # this is consistent with how we do the booststraps below, which itself is consistent with the bootstraps for the individual models
 
       row = Any[
-        replace(model_name, event => "tornado_wind_hail_mean_relative_to_reference"),
+        replace(model_name, event_name => "tornado_wind_hail_mean_relative_to_reference"),
         au_pr_0z_vs_ref,
         au_pr_12z_vs_ref,
         au_pr_mean_vs_ref,
