@@ -854,3 +854,85 @@ end
 model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 33 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_with_sig_gated(),                model_names; run_hour = 12, suffix = "_absolutely_calibrated", only_models = ["wind", "wind_adj"], all_days_of_week = false)
 34 in TASKS && sum_probs(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_spc_calibrated",        only_models = ["wind", "wind_adj"], all_days_of_week = false)
+
+
+function sum_probs_one(forecasts, model_names; run_hour, suffix, start = Dates.DateTime(2000, 1, 1, 1), cutoff = Dates.DateTime(2022, 6, 1, 12), only_models = model_names, all_days_of_week = false)
+
+  println("************ $(run_hour)z$(suffix) ************")
+
+  println("$(length(forecasts)) forecasts available") #
+
+  (train_forecasts, validation_forecasts, test_forecasts) =
+    TrainingShared.forecasts_train_validation_test(
+      ForecastCombinators.resample_forecasts(forecasts, Grids.get_upsampler, GRID);
+      just_hours_near_storm_events = false
+    );
+
+  if all_days_of_week
+    test_forecasts = vcat(train_forecasts, validation_forecasts, test_forecasts)
+  end
+
+  println("$(length(test_forecasts)) unfiltered test forecasts") #
+  test_forecasts = filter(forecast -> forecast.run_hour == run_hour, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts") #
+
+  # We don't have storm events past this time.
+
+  test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= start, test_forecasts);
+  println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
+
+  event_name_to_unadj_events = Dict(
+    "tornado"     => StormEvents.conus_tornado_events(),
+    "wind"        => StormEvents.conus_severe_wind_events(),
+    "hail"        => StormEvents.conus_severe_hail_events(),
+    "sig_tornado" => StormEvents.conus_sig_tornado_events(),
+    "sig_wind"    => StormEvents.conus_sig_wind_events(),
+    "sig_hail"    => StormEvents.conus_sig_hail_events(),
+  )
+
+  ndays            = 0
+  test_total_probs = Dict()
+
+  # is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
+  model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1")
+  unadj_name(event_name) = replace(event_name, r"_adj\z" => "")
+
+  for test_forecast in test_forecasts
+    ForecastCombinators.turn_forecast_caching_on()
+    test_data = Forecasts.data(test_forecast)
+    ForecastCombinators.clear_cached_forecasts()
+
+    for model_name in model_names
+      model_name in only_models || continue
+      event_name   = model_name_to_event_name(model_name)
+      test_event_i = findfirst(isequal(model_name), model_names)
+
+      test_event_probs = @view test_data[:, test_event_i]
+
+      if !(model_name in keys(test_total_probs))
+        test_total_probs[model_name] = test_event_probs[:]
+      else
+        test_total_probs[model_name] .+= test_event_probs
+      end
+    end
+
+    print(".")
+  end
+  println()
+
+  for model_name in model_names
+    model_name in only_models || continue
+
+    open((@__DIR__) * "/total_prob_$(model_name)_$(ndays)_days_$(run_hour)z$(suffix).csv", "w") do csv
+      headers = ["lat", "lon", "total_prob"]
+      println(csv, join(headers, ","))
+      for ((lat, lon), total_prob) in zip(test_forecasts[1].grid.latlons, test_total_probs[model_name])
+        println(csv, join(Float32[lat, lon, total_prob], ","))
+      end
+    end
+  end
+end
+
+# FORECAST_DISK_PREFETCH=false FORECASTS_ROOT=~/nadocaster2 TASKS=[35] julia -t 16 --project=.. Test.jl
+
+35 in TASKS && sum_probs_one(SPCOutlooks.forecasts_day_1300(), model_names; run_hour = 13, suffix = "_spc_all", only_models = ["wind", "wind_adj"], all_days_of_week = true)
