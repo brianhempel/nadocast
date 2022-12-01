@@ -881,6 +881,8 @@ function sum_probs_one(forecasts, model_names; run_hour, suffix, start = Dates.D
   test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= start, test_forecasts);
   println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
 
+  println(join(Forecasts.time_title.(test_forecasts), ", "))
+
   event_name_to_unadj_events = Dict(
     "tornado"     => StormEvents.conus_tornado_events(),
     "wind"        => StormEvents.conus_severe_wind_events(),
@@ -904,7 +906,6 @@ function sum_probs_one(forecasts, model_names; run_hour, suffix, start = Dates.D
 
     for model_name in model_names
       model_name in only_models || continue
-      event_name   = model_name_to_event_name(model_name)
       test_event_i = findfirst(isequal(model_name), model_names)
 
       test_event_probs = @view test_data[:, test_event_i]
@@ -916,6 +917,7 @@ function sum_probs_one(forecasts, model_names; run_hour, suffix, start = Dates.D
       end
     end
 
+    ndays += 1
     print(".")
   end
   println()
@@ -935,4 +937,5 @@ end
 
 # FORECAST_DISK_PREFETCH=false FORECASTS_ROOT=~/nadocaster2 TASKS=[35] julia -t 16 --project=.. Test.jl
 
-35 in TASKS && sum_probs_one(SPCOutlooks.forecasts_day_1300(), model_names; run_hour = 13, suffix = "_spc_all", only_models = ["wind", "wind_adj"], all_days_of_week = true)
+model_names = first.(SPCOutlooks.models)
+35 in TASKS && sum_probs_one(SPCOutlooks.forecasts_day_1300(), model_names; run_hour = 13, suffix = "_spc_all", only_models = ["wind"], all_days_of_week = true)
