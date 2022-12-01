@@ -1,0 +1,35 @@
+Product Valid Time Begin: 2013-07-28 16:00:00+00:00
+Product Valid Time End: 2013-07-29 12:00:00+00:00
+Coordinate System is:
+PROJCS["unnamed",
+    GEOGCS["WGS 84",
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
+        PRIMEM["Greenwich",0],
+        UNIT["degree",0.0174532925199433],
+        AUTHORITY["EPSG","4326"]],
+    PROJECTION["Lambert_Conformal_Conic_2SP"],
+    PARAMETER["standard_parallel_1",33],
+    PARAMETER["standard_parallel_2",45],
+    PARAMETER["latitude_of_origin",0],
+    PARAMETER["central_meridian",0],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]]]
+Origin = (-9674797.858516041189432,11535704.628745242953300)
+Pixel Size = (4923.905876728560543,-4923.905876728560543)
+Metadata:
+  AREA_OR_POINT=Area
+Image Structure Metadata:
+  INTERLEAVE=BAND
+Corner Coordinates:
+Upper Left  (-9674797.859,11535704.629) (134d 9'23.90"W, 22d 6'22.94"N)
+Lower Left  (-9674797.859, 5262648.542) ( 84d39'54.48"W,  2d58'33.47"N)
+Upper Right (-4091088.594,11535704.629) (122d42'20.94"W, 69d57' 2.81"N)
+Lower Right (-4091088.594, 5262648.542) ( 47d 0'34.62"W, 34d59' 9.95"N)
+Center      (-6882943.226, 8399176.585) ( 94d22'40.13"W, 37d33'43.17"N)
+Band 1 Block=1134x7 Type=Byte, ColorInterp=Gray
+  NoData Value=0

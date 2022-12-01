@@ -1,0 +1,36 @@
+Product Valid Time Begin: 2018-04-01 12:00:00+00:00
+Product Valid Time End: 2018-04-02 12:00:00+00:00
+Coordinate System is:
+PROJCS["NAD83 / UTM zone 14N",
+    GEOGCS["NAD83",
+        DATUM["North_American_Datum_1983",
+            SPHEROID["GRS 1980",6378137,298.2572221010002,
+                AUTHORITY["EPSG","7019"]],
+            TOWGS84[0,0,0,0,0,0,0],
+            AUTHORITY["EPSG","6269"]],
+        PRIMEM["Greenwich",0],
+        UNIT["degree",0.0174532925199433],
+        AUTHORITY["EPSG","4269"]],
+    PROJECTION["Transverse_Mercator"],
+    PARAMETER["latitude_of_origin",0],
+    PARAMETER["central_meridian",-99],
+    PARAMETER["scale_factor",0.9996],
+    PARAMETER["false_easting",500000],
+    PARAMETER["false_northing",0],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]],
+    AUTHORITY["EPSG","26914"]]
+Origin = (-1932841.688063448294997,6238057.181531601585448)
+Pixel Size = (5050.574306328846433,-5050.574306328846433)
+Metadata:
+  AREA_OR_POINT=Area
+Image Structure Metadata:
+  INTERLEAVE=BAND
+Corner Coordinates:
+Upper Left  (-1932841.688, 6238057.182) (133d59'45.41"W, 50d47'59.87"N)
+Lower Left  (-1932841.688, 2399620.709) (121d48'17.42"W, 20d 8' 8.04"N)
+Upper Right ( 3723801.535, 6238057.182) ( 56d32' 1.75"W, 47d31'15.66"N)
+Lower Right ( 3723801.535, 2399620.709) ( 69d26'16.60"W, 19d 4'35.52"N)
+Center      (  895479.923, 4318838.945) ( 94d26'18.16"W, 38d55'45.61"N)
+Band 1 Block=1120x7 Type=Byte, ColorInterp=Gray
+  NoData Value=0
