@@ -881,7 +881,7 @@ function sum_probs_one(forecasts, model_names; run_hour, suffix, start = Dates.D
   test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= start, test_forecasts);
   println("$(length(test_forecasts)) $(run_hour)z test forecasts before the event data cutoff date") #
 
-  println(join(Forecasts.time_title.(test_forecasts), ", "))
+  println(join(sort(Forecasts.time_title.(test_forecasts)), ", "))
 
   event_name_to_unadj_events = Dict(
     "tornado"     => StormEvents.conus_tornado_events(),
