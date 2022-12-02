@@ -938,4 +938,4 @@ end
 # FORECAST_DISK_PREFETCH=false FORECASTS_ROOT=~/nadocaster2 TASKS=[35] julia -t 16 --project=.. Test.jl
 
 model_names = first.(SPCOutlooks.models)
-35 in TASKS && sum_probs_one(SPCOutlooks.forecasts_day_1300(), model_names; run_hour = 13, suffix = "_spc_all", only_models = ["wind"], all_days_of_week = true)
+35 in TASKS && sum_probs_one(SPCOutlooks.forecasts_day_1300(), model_names; run_hour = 13, suffix = "_spc_all", only_models = ["wind"], all_days_of_week = true, cutoff = Dates.DateTime(2022, 1, 1, 12))
