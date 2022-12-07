@@ -939,3 +939,8 @@ end
 
 model_names = first.(SPCOutlooks.models)
 35 in TASKS && sum_probs_one(SPCOutlooks.forecasts_day_1300(), model_names; run_hour = 13, suffix = "_spc_all", only_models = ["wind"], all_days_of_week = true, cutoff = Dates.DateTime(2022, 1, 1, 12))
+
+# HREF-only models vs. 13Z spc
+
+model_names = map(m -> m[3], HREFPrediction.models_with_gated)
+36 in TASKS && do_it(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_href_only_more_days_vs_13Z_spc")
