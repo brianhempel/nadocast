@@ -292,6 +292,28 @@ function do_forecast(forecast)
     #   run(`ruby $tweet_script_path "$(nadocast_run_hour)Z Hourly Tornado Forecasts" $hourlies_movie_path.mp4`)
     # end
   end
+    
+# Addition to send a post to Mastodon
+if get(ENV, "TOOT", "false") == "true"
+    toot_script_path = (@__DIR__) * "/mastodon.rb"
+
+    valid_date = convert(Dates.Date, Forecasts.valid_utc_datetime(forecast))  - Dates.Day(1)
+
+    toot_str =
+      if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
+        "$(nadocast_run_hour)Z Day $(is_day1 ? "" : "2 ")Tornado Reforecast for $(Dates.format(valid_date, "yyyy-m-d")) (New New 2022 Models) #tornado #nadocast #wx"
+      elseif is_day1
+        "$(nadocast_run_hour)Z Day Tornado Forecast (New New 2022 Models) #tornado #nadocast #wx"
+      else
+        "$(nadocast_run_hour)Z Day 2 Tornado Forecast for $(Dates.format(valid_date, "yyyy-m-d")) (New New 2022 Models) #tornado #nadocast #wx"
+      end
+
+    for path in daily_paths_to_perhaps_tweet
+      println("Tooting daily $(path)...")
+      run(`ruby $toot_script_path "$(toot_str)" $path.png`)
+    end
+
+  end
 
   should_publish && map(wait, rsync_processes)
 
