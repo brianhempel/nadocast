@@ -45,7 +45,7 @@ THREAD_COUNT         = Integer((DRY_RUN && "1") || ENV["THREAD_COUNT"] || (FROM_
 HALF_WINDOW_SIZE     = 90*MINUTE # Grab forecasts valid within this many minutes of a geocoded storm event
 
 
-loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
+#loop { break if Dir.exists?("/Volumes/HRRR_1/"); puts "Waiting for HRRR_1 to mount..."; sleep 4 }
 loop { break if Dir.exists?("/Volumes/HRRR_2/"); puts "Waiting for HRRR_2 to mount..."; sleep 4 }
 
 class HRRRForecast < Forecast

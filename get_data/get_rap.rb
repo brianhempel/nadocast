@@ -23,7 +23,7 @@ THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_NOMADS ? "2" : "4"))
 FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes")
 
 
-loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_1/"); puts "Waiting for RAP_1 to mount..."; sleep 4 }
+#loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_1/"); puts "Waiting for RAP_1 to mount..."; sleep 4 }
 loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_3/"); puts "Waiting for RAP_3 to mount..."; sleep 4 }
 
 class RAPForecast < Forecast
