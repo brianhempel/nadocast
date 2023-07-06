@@ -951,6 +951,30 @@ model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 # scp nadocaster2:~/nadocast_dev/test/test_12z_href_only_more_days_vs_13Z_spc.csv ./
 # scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_href_only_more_days_vs_13Z_spc.csv ./
 
+
+
+# HREF-only versus SPC but for 183 days (back to 2018/7 instead of 2019/1)
+
+# FORECAST_DISK_PREFETCH=false TASKS=[37] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false USE_ALT_DISK=true TASKS=[38] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
+
 37 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0,  suffix = "_href_only_more_days")
 38 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_href_only_more_days")
 
+
+
+# Testing more recent HREF-only performance vs SPC, since Nadocast was implemented at SPC
+
+# FORECAST_DISK_PREFETCH=false TASKS=[39] julia -t 16 --project=.. Test.jl
+# FORECAST_DISK_PREFETCH=false USE_ALT_DISK=true TASKS=[40] julia -t 16 --project=.. Test.jl
+
+(39 in TASKS || 40 in TASKS) && begin
+
+  cutoff = Dates.DateTime(2023, 4, 1, 12)
+
+  # Can't remember which date in "late June" 2022 the implementation was announced
+  forecasts_after_nadocast_implemented_at_spc = filter!(fcst -> Forecasts.valid_utc_datetime(fcst) > Dates.DateTime(2022, 7, 1, 12), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
+
+  39 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), forecasts_after_nadocast_implemented_at_spc, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_since_spc_implementation", use_train_validation_too = true)
+  40 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_after_nadocast_implemented_at_spc, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_since_spc_implementation", use_train_validation_too = true)
+end
