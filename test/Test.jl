@@ -942,5 +942,15 @@ model_names = first.(SPCOutlooks.models)
 
 # HREF-only models vs. 13Z spc
 
+# FORECAST_DISK_PREFETCH=false TASKS=[36] julia -t 16 --project=.. Test.jl
+
 model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 36 in TASKS && do_it(SPCOutlooks.forecasts_day_1300(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_href_only_more_days_vs_13Z_spc")
+
+# scp nadocaster2:~/nadocast_dev/test/stats_12z_href_only_more_days_vs_13Z_spc.csv ./
+# scp nadocaster2:~/nadocast_dev/test/test_12z_href_only_more_days_vs_13Z_spc.csv ./
+# scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_href_only_more_days_vs_13Z_spc.csv ./
+
+37 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0,  suffix = "_href_only_more_days")
+38 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_href_only_more_days")
+

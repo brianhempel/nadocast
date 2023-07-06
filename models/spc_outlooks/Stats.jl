@@ -18,8 +18,6 @@ import StormEvents
 MINUTE = 60 # seconds
 HOUR   = 60*MINUTE
 
-# Run below uses outlooks from 2018-6-29 through 2022-5-31
-
 forecasts_day = vcat(SPCOutlooks.forecasts_day_0600(), SPCOutlooks.forecasts_day_1300(), SPCOutlooks.forecasts_day_1630());
 
 (training_forecasts, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(forecasts_day; just_hours_near_storm_events = false);
@@ -149,6 +147,8 @@ function stats_for_run_hours(run_hours)
     end
   end
 end
+
+# Run below uses outlooks from 2018-6-29 through 2022-5-31
 
 stats_for_run_hours([6])
 # Mon-Sat

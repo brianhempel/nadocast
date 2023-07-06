@@ -339,6 +339,16 @@ function verifiable_areas()
     zlow=0,
     zhigh=1,
   )
+  PlotMap.plot_map_for_paper(
+    "verifiable_area_mask_cleaner",
+    HREF_CROPPED_15KM_GRID.latlons,
+    Float32.(verifiable_area_mask);
+    title="Verifiable Area Mask: >=1 event of each type within 1998-2013",
+    zlow=0,
+    zhigh=1,
+    colors="bilbao",
+    label_contours=false
+  )
   write("verifiable_area_mask.bits", verifiable_area_mask)
 end
 verifiable_areas()

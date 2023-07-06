@@ -185,3 +185,36 @@ end # module SPCOutlooks
 # PlotMap.plot_fast("2019-03-03_sig_tornado", SPCOutlooks.grid(), data[:,4]; val_to_color = PlotMap.event_name_to_colorer["sig_tornado"])
 # PlotMap.plot_fast("2019-03-03_sig_wind",    SPCOutlooks.grid(), data[:,5]; val_to_color = PlotMap.event_name_to_colorer["sig_wind"])
 # PlotMap.plot_fast("2019-03-03_sig_hail",    SPCOutlooks.grid(), data[:,6]; val_to_color = PlotMap.event_name_to_colorer["sig_hail"])
+
+
+
+
+# include("SPCOutlooks.jl")
+# forecasts = SPCOutlooks.forecasts_day_1300();
+# import Forecasts
+
+# function to_csv(time_title_prefix = "2022-07-23 13Z"; prediction_i = 2)
+#   f = filter(f -> startswith(Forecasts.time_title(f), time_title_prefix), forecasts)[1];
+
+#   println(Forecasts.time_title(f))
+
+#   data = Forecasts.data(f)[:,prediction_i];
+
+#   open("spc_$(SPCOutlooks.models[prediction_i][1])_$(replace(Forecasts.time_title(f), " " => "_")).csv", "w") do csv
+#     println(csv, "lat,lon,prob")
+#     for ((lat,lon), prob) in zip(SPCOutlooks.grid().latlons, data)
+#       println(csv, "$lat,$lon,$prob")
+#     end
+#   end
+# end
+
+# to_csv("2022-07-23 13Z"; prediction_i = 2)
+# to_csv("2022-07-23 13Z"; prediction_i = 5)
+
+# to_csv("2020-06-21 13Z"; prediction_i = 2)
+# to_csv("2020-06-21 13Z"; prediction_i = 5)
+
+# to_csv("2022-07-24 13Z"; prediction_i = 2)
+# to_csv("2022-07-24 13Z"; prediction_i = 5)
+
+

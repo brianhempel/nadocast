@@ -27,3 +27,5 @@ train_*_stderr.txt
 small_test
 models/*/*.pdf
 models/*/*.png
+test/maps/
+test/maps_2021/
