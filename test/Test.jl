@@ -970,10 +970,11 @@ model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 
 (39 in TASKS || 40 in TASKS) && begin
 
+  start  = Dates.DateTime(2022, 7, 1, 12)
   cutoff = Dates.DateTime(2023, 4, 1, 12)
 
   # Can't remember which date in "late June" 2022 the implementation was announced
-  forecasts_after_nadocast_implemented_at_spc = filter!(fcst -> Forecasts.valid_utc_datetime(fcst) > Dates.DateTime(2022, 7, 1, 12), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
+  forecasts_after_nadocast_implemented_at_spc = filter(fcst -> Forecasts.valid_utc_datetime(fcst) > start, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
 
   39 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), forecasts_after_nadocast_implemented_at_spc, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_since_spc_implementation", use_train_validation_too = true)
   40 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_after_nadocast_implemented_at_spc, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_since_spc_implementation", use_train_validation_too = true)
