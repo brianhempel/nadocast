@@ -367,14 +367,16 @@ mean_layers_to_compute_from_prob = []
 function reload_forecasts()
   sref_paths =
     if get(ENV, "USE_ALT_DISK", "false") == "true"
-      println("Using SREF_HREF_2 and SREF_HREF_4")
+      println("Using SREF_HREF_2 and SREF_HREF_6 and SREF_HREF_4")
       vcat(
         Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_2/sref"),
+        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_6/sref"),
         Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_4/sref")
       )
     else
       vcat(
         Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_1/sref"),
+        Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_5/sref"),
         Grib2.all_grib2_file_paths_in("$(forecasts_root())/SREF_HREF_3/sref")
       )
     end

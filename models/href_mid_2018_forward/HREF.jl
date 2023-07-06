@@ -404,10 +404,10 @@ function reload_forecasts()
 
   href_paths =
     if get(ENV, "USE_ALT_DISK", "false") == "true"
-      println("Using SREF_HREF_2 and SREF_HREF_4")
-      grib2_file_paths_in("SREF_HREF_2/href", "SREF_HREF_4/href")
+      println("Using SREF_HREF_2 and SREF_HREF_6 and SREF_HREF_4")
+      grib2_file_paths_in("SREF_HREF_2/href", "SREF_HREF_6/href", "SREF_HREF_4/href")
     else
-      grib2_file_paths_in("SREF_HREF_1/href", "SREF_HREF_3/href")
+      grib2_file_paths_in("SREF_HREF_1/href", "SREF_HREF_5/href", "SREF_HREF_3/href")
     end
 
   global _forecasts
