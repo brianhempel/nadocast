@@ -961,6 +961,13 @@ model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 37 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 0,  suffix = "_href_only_more_days")
 38 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated(), model_names; run_hour = 12, suffix = "_href_only_more_days")
 
+# scp nadocaster2:~/nadocast_dev/test/stats_0z_href_only_more_days.csv ./
+# scp nadocaster2:~/nadocast_dev/test/stats_12z_href_only_more_days.csv ./
+# scp nadocaster2:~/nadocast_dev/test/test_0z_href_only_more_days.csv ./
+# scp nadocaster2:~/nadocast_dev/test/test_12z_href_only_more_days.csv ./
+# scp nadocaster2:~/nadocast_dev/test/test_reliability_0z_href_only_more_days.csv ./
+# scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_href_only_more_days.csv ./
+
 
 
 # Testing more recent HREF-only performance vs SPC, since Nadocast was implemented at SPC
@@ -978,4 +985,11 @@ model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 
   39 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), forecasts_after_nadocast_implemented_at_spc, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_since_spc_implementation", use_train_validation_too = true)
   40 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), forecasts_after_nadocast_implemented_at_spc, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_since_spc_implementation", use_train_validation_too = true)
+
+  # scp nadocaster2:~/nadocast_dev/test/stats_0z_href_only_since_spc_implementation.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/stats_12z_href_only_since_spc_implementation.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_0z_href_only_since_spc_implementation.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_12z_href_only_since_spc_implementation.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_reliability_0z_href_only_since_spc_implementation.csv ./
+  # scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_href_only_since_spc_implementation.csv ./
 end
