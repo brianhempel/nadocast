@@ -58,7 +58,7 @@ end
 
 model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1", r"\A((sig_)?(tornado|wind|hail))_day\z" => s"\1")
 
-function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, model_names), suffix = "", use_5km_grid = false)
+function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, model_names), suffix = "", use_5km_grid = false, cutoff = Dates.DateTime(2022, 6, 1, 12), use_all_days_of_week_after = cutoff)
 
   event_names = model_name_to_event_name.(model_names)
 
@@ -70,13 +70,18 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
       just_hours_near_storm_events = false
     );
 
-  # We don't have storm events past this time.
-  cutoff = Dates.DateTime(2022, 6, 1, 12)
-
+  println("$(length(train_forecasts)) unfiltered train forecasts")
+  println("$(length(validation_forecasts)) unfiltered validation forecasts")
   println("$(length(test_forecasts)) unfiltered test forecasts")
-  test_forecasts_0z  = filter(forecast -> forecast.run_hour == 0  && Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
-  test_forecasts_12z = filter(forecast -> forecast.run_hour == 12 && Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts);
+  test_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff, test_forecasts)
+  more_forecasts = filter(forecast -> Forecasts.valid_utc_datetime(forecast) < cutoff && Forecasts.valid_utc_datetime(forecast) >= use_all_days_of_week_after, vcat(train_forecasts, validation_forecasts))
+  test_forecasts = vcat(test_forecasts, more_forecasts)
+  sort!(test_forecasts, by = Forecasts.run_utc_datetime, alg = MergeSort)
+
+  test_forecasts_0z  = filter(forecast -> forecast.run_hour == 0,  test_forecasts);
+  test_forecasts_12z = filter(forecast -> forecast.run_hour == 12, test_forecasts);
   test_forecasts = []
+
   println("$(length(test_forecasts_0z)) 0z test forecasts before the event data cutoff date") #
   println("$(length(test_forecasts_12z)) 12z test forecasts before the event data cutoff date") #
 
@@ -403,3 +408,8 @@ println(reference_model_is)
 # tornado_wind_hail_mean_relative_to_reference_mean_prob_computed_climatology_blurs_910_before_20200523,0.97573775,0.96935385,0.9722597,0.1916,1.017866,1.0202699,1.0190296
 # tornado_wind_hail_mean_relative_to_reference_full_13831,1.0,1.0,1.0,1.0,1.0,1.0,1.0
 # tornado_wind_hail_mean_relative_to_reference_day,0.93838286,0.9325258,0.93516564,0.024,1.0163645,1.0204831,1.0183582
+
+
+# Use Sundays 2018-7-1 to 2022-5-31 and then all days through 2023-3-31
+
+6 in TASKS && do_it(experimental_forecasts,  experiment_model_names; reference_model_is = reference_model_is, suffix = "_all_experiments_all_nontraining_days", cutoff = Dates.DateTime(2023, 4, 1, 12), use_all_days_of_week_after = Dates.DateTime(2022, 6, 1, 12))
