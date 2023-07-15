@@ -82,6 +82,13 @@ function do_it(forecasts, model_names; reference_model_is = map(_ -> nothing, mo
   test_forecasts_12z = filter(forecast -> forecast.run_hour == 12, test_forecasts);
   test_forecasts = []
 
+  run_timeset_0z  = Set(Forecasts.run_utc_datetime.(test_forecasts_0z))
+  run_timeset_12z = Set(Forecasts.run_utc_datetime.(test_forecasts_12z) .- Dates.Hour(12))
+  times_to_use = intersect(run_timeset_0z, run_timeset_12z)
+
+  filter!(forecast -> Forecasts.run_utc_datetime(forecast)                  in times_to_use, test_forecasts_0z);
+  filter!(forecast -> Forecasts.run_utc_datetime(forecast) - Dates.Hour(12) in times_to_use, test_forecasts_12z);
+
   println("$(length(test_forecasts_0z)) 0z test forecasts before the event data cutoff date") #
   println("$(length(test_forecasts_12z)) 12z test forecasts before the event data cutoff date") #
 
@@ -412,4 +419,5 @@ println(reference_model_is)
 
 # Use Sundays 2018-7-1 to 2022-5-31 and then all days through 2023-3-31
 
+# FORECAST_DISK_PREFETCH=false NBOOTSTRAPS=2 TASKS=[6] JULIA_NUM_THREADS=${CORE_COUNT} julia --project=.. TestAUPRPreciseAblations2.jl
 6 in TASKS && do_it(experimental_forecasts,  experiment_model_names; reference_model_is = reference_model_is, suffix = "_all_experiments_all_nontraining_days", cutoff = Dates.DateTime(2023, 4, 1, 12), use_all_days_of_week_after = Dates.DateTime(2022, 6, 1, 12))
