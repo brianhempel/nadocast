@@ -379,7 +379,7 @@ reference_model_is = map(experiment_model_names) do model_name
     # half data and day experiments should use their ablated baseline as the reference
     if occursin("_before_", model_name)
       ref_name == event_name * "_mean_prob_computed_climatology_blurs_910"
-    elseif endswith("_day", model_name)
+    elseif endswith(model_name, "_day")
       ref_name == event_name * "_mean_prob_computed_climatology_blurs_910"
     else
       startswith(ref_name, event_name * "_full")
