@@ -374,9 +374,16 @@ experiment_model_names = vcat(
 )
 
 reference_model_is = map(experiment_model_names) do model_name
+  event_name = model_name_to_event_name(model_name)
   findfirst(experiment_model_names) do ref_name
-    event_name = model_name_to_event_name(model_name)
-    startswith(ref_name, event_name * "_full")
+    # half data and day experiments should use their ablated baseline as the reference
+    if occursin("_before_", model_name)
+      ref_name == event_name * "_mean_prob_computed_climatology_blurs_910"
+    elseif endswith("_day", model_name)
+      ref_name == event_name * "_mean_prob_computed_climatology_blurs_910"
+    else
+      startswith(ref_name, event_name * "_full")
+    end
   end
 end
 
@@ -384,37 +391,6 @@ println(experiment_model_names)
 println(reference_model_is)
 
 5 in TASKS && do_it(experimental_forecasts,  experiment_model_names; reference_model_is = reference_model_is, suffix = "_all_experiments")
-# model_name,au_pr_0z,au_pr_12z,au_pr_mean,p_value_vs_reference,logloss_0z,logloss_12z,logloss_mean
-# tornado_mean_58,0.16510153,0.20520219,0.18515186,0.072,0.0088005,0.008221272,0.008510886
-# tornado_prob_80,0.17975347,0.21196741,0.19586045,0.3384,0.008678806,0.00814956,0.008414183
-# tornado_mean_prob_138,0.18378294,0.23100497,0.20739394,0.8144,0.008553031,0.008004237,0.008278634
-# tornado_mean_prob_computed_no_sv_219,0.16982394,0.2449396,0.20738177,0.912,0.008553906,0.007925734,0.008239821
-# tornado_mean_prob_computed_220,0.17699428,0.23611815,0.20655622,0.9302,0.008536221,0.007927402,0.008231811
-# tornado_mean_prob_computed_partial_climatology_227,0.1834287,0.24198967,0.21270919,0.6286,0.008428397,0.007835012,0.008131704
-# tornado_mean_prob_computed_climatology_253,0.19209263,0.24414478,0.2181187,0.5076,0.008349172,0.007763996,0.008056584
-# tornado_mean_prob_computed_climatology_blurs_910,0.19201612,0.24624604,0.21913108,0.178,0.008285367,0.007743316,0.008014342
-# tornado_mean_prob_computed_climatology_grads_1348,0.18194671,0.24468172,0.2133142,0.3218,0.008307756,0.007741169,0.0080244625
-# tornado_mean_prob_computed_climatology_blurs_grads_2005,0.18396346,0.24562801,0.21479574,0.2256,0.008255608,0.007726891,0.00799125
-# tornado_mean_prob_computed_climatology_prior_next_hrs_691,0.18691184,0.24991517,0.2184135,0.226,0.008359615,0.0077447896,0.008052202
-# tornado_mean_prob_computed_climatology_3hr_1567,0.18030307,0.23602337,0.20816322,0.7608,0.008322699,0.0076809498,0.008001825
-# tornado_full_13831,0.18322891,0.22881232,0.20602062,1.0,0.008286422,0.0077760066,0.008031215
-# tornado_mean_prob_computed_climatology_blurs_910,0.19201612,0.24624604,0.21913108,0.178,0.008285367,0.007743316,0.008014342
-# wind_mean_prob_computed_climatology_blurs_910,0.39439,0.42877078,0.41158038,0.0646,0.038538743,0.036201518,0.03737013
-# hail_mean_prob_computed_climatology_blurs_910,0.28069717,0.3085839,0.29464054,0.6362,0.021895804,0.02047679,0.021186296
-# tornado_mean_prob_computed_climatology_blurs_910_before_20200523,0.18599437,0.2298384,0.20791638,0.9666,0.008382405,0.007907587,0.008144996
-# wind_mean_prob_computed_climatology_blurs_910_before_20200523,0.3816257,0.4161498,0.39888775,0.0016,0.039138388,0.036856156,0.037997272
-# hail_mean_prob_computed_climatology_blurs_910_before_20200523,0.27238187,0.2980081,0.285195,0.0272,0.022142077,0.02072011,0.021431092
-# tornado_full_13831,0.18322891,0.22881232,0.20602062,1.0,0.008286422,0.0077760066,0.008031215
-# wind_full_13831,0.40504867,0.43850836,0.4217785,1.0,0.03818646,0.0358155,0.03700098
-# hail_full_13831,0.2808212,0.31219268,0.29650694,1.0,0.021770103,0.020417279,0.02109369
-# tornado_day,0.16121893,0.19874005,0.17997949,0.1488,0.008495962,0.008038434,0.008267198
-# wind_day,0.3878628,0.42487022,0.40636653,0.0104,0.038846515,0.036485177,0.037665844
-# hail_day,0.27455905,0.29973814,0.2871486,0.1172,0.021912074,0.020601101,0.021256588
-# sig_tornado_day,0.09940558,0.09686993,0.09813775,,0.0015366459,0.0014734392,0.0015050425
-# tornado_wind_hail_mean_relative_to_reference_mean_prob_computed_climatology_blurs_910,1.0070671,1.0141422,1.0110544,0.5466,1.0049573,1.0031629,1.0040888
-# tornado_wind_hail_mean_relative_to_reference_mean_prob_computed_climatology_blurs_910_before_20200523,0.97573775,0.96935385,0.9722597,0.1916,1.017866,1.0202699,1.0190296
-# tornado_wind_hail_mean_relative_to_reference_full_13831,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-# tornado_wind_hail_mean_relative_to_reference_day,0.93838286,0.9325258,0.93516564,0.024,1.0163645,1.0204831,1.0183582
 
 
 # Use Sundays 2018-7-1 to 2022-5-31 and then all days through 2023-3-31
