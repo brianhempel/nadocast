@@ -393,7 +393,7 @@ println(reference_model_is)
 5 in TASKS && do_it(experimental_forecasts,  experiment_model_names; reference_model_is = reference_model_is, suffix = "_all_experiments")
 
 
-# Use Sundays 2018-7-1 to 2022-5-31 and then all days through 2023-3-31
+# Use Sundays 2018-7-1 to 2022-5-31 and then all days through 2023-9-30
 
 # FORECAST_DISK_PREFETCH=false NBOOTSTRAPS=2 TASKS=[6] JULIA_NUM_THREADS=${CORE_COUNT} julia --project=.. TestAUPRPreciseAblations2.jl
-6 in TASKS && do_it(experimental_forecasts,  experiment_model_names; reference_model_is = reference_model_is, suffix = "_all_experiments_all_nontraining_days", cutoff = Dates.DateTime(2023, 4, 1, 12), use_all_days_of_week_after = Dates.DateTime(2022, 6, 1, 12))
+6 in TASKS && do_it(experimental_forecasts,  experiment_model_names; reference_model_is = reference_model_is, suffix = "_all_experiments_all_nontraining_days", cutoff = Dates.DateTime(2023, 10, 1, 12), use_all_days_of_week_after = Dates.DateTime(2022, 6, 1, 12))
