@@ -57,7 +57,7 @@ LAT_LON_HEADERS = %w[
   end_lon
 ]
 
-tornadoes_file.print   (BEGIN_END_TIMES_HEADERS + %w[f_scale length width] + LAT_LON_HEADERS).to_csv
+tornadoes_file.print   (BEGIN_END_TIMES_HEADERS + %w[f_scale length width injuries_direct injuries_indirect deaths_direct deaths_indirect] + LAT_LON_HEADERS).to_csv
 wind_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind speed speed_type source] + LAT_LON_HEADERS).to_csv
 hail_events_file.print (BEGIN_END_TIMES_HEADERS + %w[kind inches] + LAT_LON_HEADERS).to_csv
 
@@ -225,6 +225,10 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
       row["TOR_F_SCALE"][/\d+/], # f_scale
       row["TOR_LENGTH"].to_f,
       row["TOR_WIDTH"].to_i,
+      row["INJURIES_DIRECT"].to_i,
+      row["INJURIES_INDIRECT"].to_i,
+      row["DEATHS_DIRECT"].to_i,
+      row["DEATHS_INDIRECT"].to_i,
     ] +
     row_to_lat_lon_cells(row)
   end
@@ -341,6 +345,10 @@ if ARGV[3] == "--add_spc_storm_reports"
         "-1", # f_scale
         "-1", # length
         "-1", # width
+        "-1", # injuries_direct
+        "-1", # injuries_indirect
+        "-1", # deaths_direct
+        "-1", # deaths_indirect
       ] +
       row_to_lat_lon_cells(row)
     end
