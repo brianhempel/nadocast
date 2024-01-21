@@ -1,4 +1,7 @@
-push!(LOAD_PATH, joinpath(@__DIR__, ".."))
+# cribbed from the adjusted wind repo
+# hence the extra lib files here
+
+push!(LOAD_PATH, joinpath(@__DIR__))
 
 import Grids
 using Utils
@@ -7,11 +10,10 @@ import GMTPlot
 
 grid = Grids.grid_130_cropped
 
-# These files are generated in the Nadocast repo.
 plots = [
-  ("total_prob_nadocast_wind_183_days_12z_absolutely_calibrated.csv",     183,  "Nadocast 12Z Wind, Average Day Probability",          "colors_8.cpt"),
-  ("total_prob_nadocast_wind_adj_183_days_12z_absolutely_calibrated.csv", 183,  "Nadocast 12Z Wind Adjusted, Average Day Probability", "colors_3.cpt"),
-  ("total_prob_wind_4017_days_13z_spc_all.csv",                           4017, "SPC 13Z Wind Outlook, Average Day Probability",       "colors_1.5.cpt"),
+  ("../total_prob_nadocast_hail_600_days_0z_spc_calibrated.csv", 600, "Nadocast 0Z Hail, Average Day Probability", "colors_8.cpt"),
+  ("../total_prob_spc_hail_600_days_0z_spc_calibrated.csv",      600, "SPC 6Z Hail, Average Day Probability",      "colors_8.cpt"),
+  ("../total_prob_reports_hail_600_days_0z_spc_calibrated.csv",  600, "Hail Reports, Average Day Probability",     "colors_8.cpt"),
 ]
 
 for (csv_path, ndays, title, colors) in plots
