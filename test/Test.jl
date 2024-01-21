@@ -1130,7 +1130,7 @@ end
     window_half_size = (end_seconds - start_seconds) ÷ 2
     window_mid_time  = (end_seconds + start_seconds) ÷ 2
 
-    0.5f0 < StormEvents.grid_to_event_neighborhoods(hurricane_and_tropical_storm_segments, spc_forecast.grid, radius_mi, window_mid_time, window_half_size)
+    0.5f0 .< StormEvents.grid_to_event_neighborhoods(hurricane_and_tropical_storm_segments, spc_forecast.grid, radius_mi, window_mid_time, window_half_size)
   end
 
   41 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
