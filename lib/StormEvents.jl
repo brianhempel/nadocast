@@ -314,7 +314,7 @@ end
 
 
 # Returns a data layer on the grid with 0.0/1.0 indicators of points within x miles of any storm event
-function grid_to_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
+function grid_to_event_neighborhoods(events, grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
   event_segments = event_segments_around_time(events, seconds_from_utc_epoch, seconds_before_and_after)
 
   is_near_event(latlon) = begin
@@ -415,7 +415,7 @@ function parallel_filter(f, arr)
   vcat(arrs...)
 end
 
-function event_segments_around_time(events :: Vector{Event}, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
+function event_segments_around_time(events, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
   period_start_seconds = seconds_from_utc_epoch - seconds_before_and_after
   period_end_seconds   = seconds_from_utc_epoch + seconds_before_and_after
 

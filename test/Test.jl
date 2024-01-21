@@ -60,7 +60,7 @@ DRAW_SPC_MAPS = get(ENV, "DRAW_SPC_MAPS", "true") == "true"
 
 const ϵ = eps(1f0)
 
-function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff = Dates.DateTime(2022, 6, 1, 12), use_train_validation_too = false)
+function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff = Dates.DateTime(2022, 6, 1, 12), use_train_validation_too = false, compute_extra_mask = nothing)
 
   println("************ $(run_hour)z$(suffix) ************")
 
@@ -172,9 +172,13 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
   spc_threshold_true_negative_areas   = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
   test_threshold_true_negative_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], event_name_to_thresholds[model_name_to_event_name(model_name)]), model_names))
 
-  function forecast_stats(data, labels, threshold)
+  function forecast_stats(data, labels, threshold, extra_mask=nothing)
     painted   = ((@view data[:,1]) .>= threshold*0.9999) .* VERIFIABLE_GRID_MASK
     unpainted = ((@view data[:,1]) .<  threshold*0.9999) .* VERIFIABLE_GRID_MASK
+    if !isnothing(extra_mask)
+      painted   = painted   .* extra_mask
+      unpainted = unpainted .* extra_mask
+    end
     painted_area        = sum(GRID.point_areas_sq_miles[painted])
     unpainted_area      = sum(GRID.point_areas_sq_miles[unpainted])
     true_positive_area  = sum(GRID.point_areas_sq_miles .* painted   .* labels)
@@ -193,8 +197,11 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
   spc_bin_true_positive_areas  = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
   test_bin_true_positive_areas = Dict(map(model_name -> model_name => map(_ -> Float64[], bin_maxes[model_name]), model_names))
 
-  function reliability_stats(data, labels, threshold_lo, threshold_hi)
+  function reliability_stats(data, labels, threshold_lo, threshold_hi, extra_mask=nothing)
     painted             = ((@view data[:,1]) .>= threshold_lo*0.9999) .* ((@view data[:,1]) .< threshold_hi*0.9999) .* VERIFIABLE_GRID_MASK
+    if !isnothing(extra_mask)
+      painted = painted .* extra_mask
+    end
     painted_area        = sum(GRID.point_areas_sq_miles[painted])
     true_positive_area  = sum(GRID.point_areas_sq_miles .* painted .* labels)
     (painted_area, true_positive_area)
@@ -221,6 +228,13 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
       end
       test_forecast = test_forecasts[test_forecast_i]
 
+      if !isnothing(compute_extra_mask)
+        extra_mask = compute_extra_mask(spc_forecast)
+        if sum(extra_mask .* VERIFIABLE_GRID_MASK) == 0
+          continue
+        end
+      end
+
       row = [Forecasts.yyyymmdd(spc_forecast), Forecasts.time_title(spc_forecast), Forecasts.time_title(test_forecast)]
 
       spc_data  = Forecasts.data(spc_forecast)
@@ -241,7 +255,12 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
         map_root = ((@__DIR__) * "/maps/$(Forecasts.yyyymmdd(spc_forecast))")
         mkpath(map_root)
 
-        post_process(img) = PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img))
+        post_process(img) =
+          if isnothing(extra_mask)
+            PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img))
+          else
+            PlotMap.multiply(1 .- (CONUS_MASK .* extra_mask .* 0.5f0), PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK .* extra_mask, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img)))
+          end
 
         make_plot(file_name, data) = begin
           path = map_root * "/" * file_name
@@ -257,8 +276,8 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
         for threshold_i in 1:length(event_name_to_thresholds[model_name_to_event_name(model_name)])
           threshold = event_name_to_thresholds[model_name_to_event_name(model_name)][threshold_i]
 
-          (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area)  = forecast_stats(spc_event_probs,  forecast_labels, threshold)
-          (test_painted_area, test_true_positive_area, test_false_negative_area, test_true_negative_area) = forecast_stats(test_event_probs, forecast_labels, threshold)
+          (spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area)  = forecast_stats(spc_event_probs,  forecast_labels, threshold, extra_mask)
+          (test_painted_area, test_true_positive_area, test_false_negative_area, test_true_negative_area) = forecast_stats(test_event_probs, forecast_labels, threshold, extra_mask)
 
           row = vcat(row, [spc_painted_area,  spc_true_positive_area,  spc_false_negative_area,  spc_true_negative_area])
           row = vcat(row, [test_painted_area, test_true_positive_area, test_false_negative_area, test_true_negative_area])
@@ -277,11 +296,11 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
         for bin_i in 1:length(bin_maxes[model_name])
           bin_hi = bin_maxes[model_name][bin_i]
 
-          (spc_painted_area,  spc_true_positive_area)  = reliability_stats(spc_event_probs,  forecast_labels, bin_lo, bin_hi)
+          (spc_painted_area,  spc_true_positive_area)  = reliability_stats(spc_event_probs,  forecast_labels, bin_lo, bin_hi, extra_mask)
           push!(spc_bin_painted_areas[model_name][bin_i],        spc_painted_area)
           push!(spc_bin_true_positive_areas[model_name][bin_i],  spc_true_positive_area)
 
-          (test_painted_area, test_true_positive_area) = reliability_stats(test_event_probs, forecast_labels, bin_lo, bin_hi)
+          (test_painted_area, test_true_positive_area) = reliability_stats(test_event_probs, forecast_labels, bin_lo, bin_hi, extra_mask)
           push!(test_bin_painted_areas[model_name][bin_i],       test_painted_area)
           push!(test_bin_true_positive_areas[model_name][bin_i], test_true_positive_area)
 
@@ -992,4 +1011,75 @@ model_names = map(m -> m[3], HREFPrediction.models_with_gated)
   # scp nadocaster2:~/nadocast_dev/test/test_12z_href_only_since_spc_implementation.csv ./
   # scp nadocaster2:~/nadocast_dev/test/test_reliability_0z_href_only_since_spc_implementation.csv ./
   # scp nadocaster2:~/nadocast_dev/test/test_reliability_12z_href_only_since_spc_implementation.csv ./
+end
+
+
+
+(41 in TASKS || 42 in TASKS || 43 in TASKS|| 44 in TASKS) && begin
+
+  training_end  = Dates.DateTime(2022, 6, 1, 12)
+  cutoff = Dates.DateTime(2023, 1, 1, 12) # Don't have 2023 TCs yet
+
+  non_training_forecasts = filter(fcst -> TrainingShared.is_test(forecast) || Forecasts.valid_utc_datetime(fcst) > training_end, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
+
+  const tc_segments_path = joinpath(@__DIR__, "..", "tropical_cyclones", "tropical_cyclones_2018-2022.csv")
+  tc_rows, tc_headers = DelimitedFiles.readdlm(path, ',', String; header=true)
+
+  # begin_time_str,begin_time_seconds,end_time_str,end_time_seconds,id,name,status,knots,max_radius_34_knot_winds_nmiles,begin_lat,begin_lon,end_lat,end_lon
+  tc_headers = tc_headers[1,:]
+
+  start_seconds_col_i = findfirst(isequal("begin_time_seconds"), tc_headers)
+  end_seconds_col_i   = findfirst(isequal("end_time_seconds"),   tc_headers)
+  start_lat_col_i     = findfirst(isequal("begin_lat"),          tc_headers)
+  start_lon_col_i     = findfirst(isequal("begin_lon"),          tc_headers)
+  end_lat_col_i       = findfirst(isequal("end_lat"),            tc_headers)
+  end_lon_col_i       = findfirst(isequal("end_lon"),            tc_headers)
+  status_col_i        = findfirst(isequal("status"),             tc_headers)
+
+  struct TCSegment
+    start_seconds_from_epoch_utc :: Int64
+    end_seconds_from_epoch_utc   :: Int64
+    start_latlon                 :: Tuple{Float64, Float64}
+    end_latlon                   :: Tuple{Float64, Float64}
+    status                       :: String # TS and HU are the ones we care about
+  end
+
+  row_to_tc(row) = TCSegment(
+    parse(Int64, row[start_seconds_col_i]),
+    parse(Int64, row[end_seconds_col_i]),
+    parse.(Float64, (row[start_lat_col_i], row[start_lon_col_i])),
+    parse.(Float64, (row[end_lat_col_i],   row[end_lon_col_i])),
+    row[status_col_i],
+  )
+
+  const tc_rows = mapslices(row_to_tc, tc_rows, dims = [2])[:,1]
+  const hurricane_and_tropical_storm_segments = filter(seg -> seg.status == "TS" || seg.status == "HU", tc_rows)
+
+  function compute_tc_grid(spc_forecast)
+    radius_mi = 500.0
+
+    # Annoying that we have to recalculate this.
+    start_seconds =
+      if spc_forecast.run_hour == 6
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast) + 6*HOUR
+      elseif spc_forecast.run_hour == 13
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast)
+      elseif spc_forecast.run_hour == 16
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast) + 30*MINUTE
+      end
+    end_seconds = Forecasts.valid_time_in_seconds_since_epoch_utc(spc_forecast) + HOUR
+    # println(Forecasts.yyyymmdd_thhz_fhh(spc_forecast))
+    # utc_datetime = Dates.unix2datetime(start_seconds)
+    # println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+    # println(Forecasts.valid_yyyymmdd_hhz(spc_forecast))
+    window_half_size = (end_seconds - start_seconds) ÷ 2
+    window_mid_time  = (end_seconds + start_seconds) ÷ 2
+
+    StormEvents.grid_to_event_neighborhoods(hurricane_and_tropical_storm_segments, spc_forecast.grid, radius_mi, window_mid_time, window_half_size)
+  end
+
+  41 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
+  42 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
+  43 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> 1f0 .- compute_tc_grid(spc_fcst))
+  44 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> 1f0 .- compute_tc_grid(spc_fcst))
 end

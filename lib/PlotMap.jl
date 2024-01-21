@@ -648,6 +648,19 @@ function shade_forecast_labels(labels, img)
   out
 end
 
+function multiply_image(grid_layer, img)
+  h, w = size(img)
+  grid_layer = permutedims(reshape(grid_layer, (w, h)))
+  # Now flip vertically
+  for j in 1:(h ÷ 2)
+    row = grid_layer[j,:]
+    grid_layer[j,:] = grid_layer[h - j + 1,:]
+    grid_layer[h - j + 1,:] = row
+  end
+
+  img .* grid_layer
+end
+
 function add_conus_lines_href_5k_native_proj_80_pct(img)
   lines = 0.2f0 .+ 0.8f0 .* conus_lines_href_5k_native_proj()
   img .* lines

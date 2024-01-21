@@ -252,9 +252,10 @@ function reload_forecasts()
   # tornado     15                  15                   0.038589306
   # wind        25                  25                   0.115706086
   # hail        15                  25                   0.07425974
-  # sig_tornado 25                  35                   0.03381651
-  # sig_wind    15                  35                   0.016237844
-  # sig_hail    15                  25                   0.015587974
+
+  # oops copy paste error, the above is from the April 2022 training run
+  # The later version should be 15mi - 25mi for wind.
+  # Darn, but the below was all calibrated based on 25mi - 25mi. Relative results should still be valid.
 
   # blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
   blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)

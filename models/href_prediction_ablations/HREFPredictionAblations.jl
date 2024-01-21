@@ -182,14 +182,9 @@ function reload_forecasts()
 
   grid = _forecasts[1].grid
 
-  # Determined in Train.jl
+  # Determined in HREF Train.jl
   # event_name  best_blur_radius_f2 best_blur_radius_f38 AU_PR
   # tornado     15                  15                   0.038589306
-  # wind        25                  25                   0.115706086
-  # hail        15                  25                   0.07425974
-  # sig_tornado 25                  35                   0.03381651
-  # sig_wind    15                  35                   0.016237844
-  # sig_hail    15                  25                   0.015587974
 
   # blur_0mi_grid_is  = Grids.radius_grid_is(grid, 0.0)
   blur_15mi_grid_is = Grids.radius_grid_is(grid, 15.0)
