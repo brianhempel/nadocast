@@ -1147,5 +1147,5 @@ end
 
   non_training_forecasts = filter(fcst -> TrainingShared.is_test(fcst) || Forecasts.valid_utc_datetime(fcst) > training_end, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
 
-  45 in TASKS && sum_probs(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0, suffix = "_spc_calibrated", all_days_of_week = true)
+  45 in TASKS && sum_probs(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; cutoff = cutoff, run_hour = 0, suffix = "_spc_calibrated", all_days_of_week = true)
 end
