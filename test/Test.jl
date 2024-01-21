@@ -1014,13 +1014,13 @@ model_names = map(m -> m[3], HREFPrediction.models_with_gated)
 end
 
 
-
+# FORECAST_DISK_PREFETCH=false TASKS=[41] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 (41 in TASKS || 42 in TASKS || 43 in TASKS|| 44 in TASKS) && begin
 
   training_end  = Dates.DateTime(2022, 6, 1, 12)
   cutoff = Dates.DateTime(2023, 1, 1, 12) # Don't have 2023 TCs yet
 
-  non_training_forecasts = filter(fcst -> TrainingShared.is_test(forecast) || Forecasts.valid_utc_datetime(fcst) > training_end, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
+  non_training_forecasts = filter(fcst -> TrainingShared.is_test(fcst) || Forecasts.valid_utc_datetime(fcst) > training_end, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
 
   const tc_segments_path = joinpath(@__DIR__, "..", "tropical_cyclones", "tropical_cyclones_2018-2022.csv")
   tc_rows, tc_headers = DelimitedFiles.readdlm(path, ',', String; header=true)
