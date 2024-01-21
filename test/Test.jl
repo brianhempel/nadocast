@@ -259,7 +259,7 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
           if isnothing(extra_mask)
             PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img))
           else
-            PlotMap.multiply_image(1 .- (CONUS_MASK .* extra_mask .* 0.5f0), PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK .* extra_mask, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img)))
+            PlotMap.multiply_image(1 .- (CONUS_MASK .* (1 .- extra_mask) .* 0.5f0), PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK .* extra_mask, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img)))
           end
 
         make_plot(file_name, data) = begin
@@ -1108,7 +1108,8 @@ end
   )
 
   tc_segs = mapslices(row_to_tc, tc_rows, dims = [2])[:,1]
-  const hurricane_and_tropical_storm_segments = filter(seg -> seg.status == "TS" || seg.status == "HU", tc_segs)
+  # const hurricane_and_tropical_storm_segments = filter(seg -> seg.status == "TS" || seg.status == "HU", tc_segs)
+  const hurricane_and_tropical_storm_segments = tc_segs
 
   function compute_tc_grid(spc_forecast)
     radius_mi = 500.0
@@ -1132,6 +1133,8 @@ end
 
     0.5f0 .< StormEvents.grid_to_event_neighborhoods(hurricane_and_tropical_storm_segments, spc_forecast.grid, radius_mi, window_mid_time, window_half_size)
   end
+
+  # rsync -vv --recursive --size-only nadocaster2-raw:/home/brian/nadocast_dev/test/maps ./
 
   41 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
   42 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
