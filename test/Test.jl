@@ -259,7 +259,7 @@ function do_it(spc_forecasts, forecasts, model_names; run_hour, suffix, cutoff =
           if isnothing(extra_mask)
             PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img))
           else
-            PlotMap.multiply(1 .- (CONUS_MASK .* extra_mask .* 0.5f0), PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK .* extra_mask, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img)))
+            PlotMap.multiply_image(1 .- (CONUS_MASK .* extra_mask .* 0.5f0), PlotMap.shade_forecast_labels(forecast_labels .* CONUS_MASK .* extra_mask, PlotMap.add_conus_lines_href_5k_native_proj_80_pct(img)))
           end
 
         make_plot(file_name, data) = begin
