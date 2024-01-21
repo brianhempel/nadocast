@@ -1017,6 +1017,8 @@ end
 # FORECAST_DISK_PREFETCH=false TASKS=[41] DRAW_SPC_MAPS=false julia -t 16 --project=.. Test.jl
 (41 in TASKS || 42 in TASKS || 43 in TASKS|| 44 in TASKS) && begin
 
+  import DelimitedFiles
+
   training_end  = Dates.DateTime(2022, 6, 1, 12)
   cutoff = Dates.DateTime(2023, 1, 1, 12) # Don't have 2023 TCs yet
 
