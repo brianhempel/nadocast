@@ -799,13 +799,50 @@ function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, star
     "sig_hail"    => StormEvents.conus_sig_hail_events(),
   )
 
-  ndays            = 0
-  spc_total_probs  = Dict()
-  test_total_probs = Dict()
-
   # is_ablation(model_name) = occursin(r"\Atornado_.+_\d+\z", model_name)
   model_name_to_event_name(model_name) = replace(model_name, r"_gated_by_\w+" => "", r"\A(tornado|wind|hail)_.+_\d+\z" => s"\1")
   unadj_name(event_name) = replace(event_name, r"_adj\z" => "")
+
+  compute_forecast_labels(model_name, spc_forecast) = begin
+    # Annoying that we have to recalculate this.
+    start_seconds =
+      if spc_forecast.run_hour == 6
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast) + 6*HOUR
+      elseif spc_forecast.run_hour == 13
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast)
+      elseif spc_forecast.run_hour == 16
+        Forecasts.run_time_in_seconds_since_epoch_utc(spc_forecast) + 30*MINUTE
+      end
+    end_seconds = Forecasts.valid_time_in_seconds_since_epoch_utc(spc_forecast) + HOUR
+    println(Forecasts.yyyymmdd_thhz_fhh(spc_forecast))
+    utc_datetime = Dates.unix2datetime(start_seconds)
+    println(Printf.@sprintf "%04d%02d%02d_%02dz" Dates.year(utc_datetime) Dates.month(utc_datetime) Dates.day(utc_datetime) Dates.hour(utc_datetime))
+    println(Forecasts.valid_yyyymmdd_hhz(spc_forecast))
+    window_half_size = (end_seconds - start_seconds) ÷ 2
+    window_mid_time  = (end_seconds + start_seconds) ÷ 2
+    event_name = model_name_to_event_name(model_name)
+    if endswith(event_name, "wind_adj")
+      measured_events, estimated_events, gridded_normalization =
+        if event_name == "wind_adj"
+          StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), TrainingShared.day_estimated_wind_gridded_normalization()
+        elseif event_name == "sig_wind_adj"
+          StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), TrainingShared.day_estimated_sig_wind_gridded_normalization()
+        else
+          error("unknown adj event $event_name")
+        end
+      measured_labels  = StormEvents.grid_to_event_neighborhoods(measured_events, spc_forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+      estimated_labels = StormEvents.grid_to_adjusted_event_neighborhoods(estimated_events, spc_forecast.grid, Grid130.GRID_130_CROPPED, gridded_normalization, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+      max.(measured_labels, estimated_labels)
+    else
+      events = event_name_to_unadj_events[event_name]
+      StormEvents.grid_to_event_neighborhoods(events, spc_forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+    end
+  end
+
+  ndays               = 0
+  spc_total_probs     = Dict()
+  test_total_probs    = Dict()
+  reports_total_probs = Dict()
 
   for spc_forecast in spc_forecasts
     test_forecast_i = findfirst(forecast -> (forecast.run_year, forecast.run_month, forecast.run_day) == (spc_forecast.run_year, spc_forecast.run_month, spc_forecast.run_day), test_forecasts)
@@ -829,6 +866,8 @@ function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, star
       spc_event_probs  = @view spc_data[:, spc_event_i]
       test_event_probs = @view test_data[:, test_event_i]
 
+      forecast_labels = compute_forecast_labels(model_name, spc_forecast)
+
       if !(model_name in keys(spc_total_probs))
         spc_total_probs[model_name] = spc_event_probs[:]
       else
@@ -839,6 +878,12 @@ function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, star
         test_total_probs[model_name] = test_event_probs[:]
       else
         test_total_probs[model_name] .+= test_event_probs
+      end
+
+      if !(model_name in keys(reports_total_probs))
+        reports_total_probs[model_name] = forecast_labels[:]
+      else
+        reports_total_probs[model_name] .+= forecast_labels
       end
     end
 
@@ -862,6 +907,14 @@ function sum_probs(spc_forecasts, forecasts, model_names; run_hour, suffix, star
       headers = ["lat", "lon", "total_prob"]
       println(csv, join(headers, ","))
       for ((lat, lon), total_prob) in zip(test_forecasts[1].grid.latlons, test_total_probs[model_name])
+        println(csv, join(Float32[lat, lon, total_prob], ","))
+      end
+    end
+
+    open((@__DIR__) * "/total_prob_reports_$(model_name)_$(ndays)_days_$(run_hour)z$(suffix).csv", "w") do csv
+      headers = ["lat", "lon", "total_prob"]
+      println(csv, join(headers, ","))
+      for ((lat, lon), total_prob) in zip(spc_forecasts[1].grid.latlons, reports_total_probs[model_name])
         println(csv, join(Float32[lat, lon, total_prob], ","))
       end
     end
@@ -1084,4 +1137,15 @@ end
   42 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
   43 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> 1f0 .- compute_tc_grid(spc_fcst))
   44 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> 1f0 .- compute_tc_grid(spc_fcst))
+end
+
+# now look for hail hotspots
+(45 in TASKS) && begin
+
+  training_end  = Dates.DateTime(2022, 6, 1, 12)
+  cutoff = Dates.DateTime(2023, 10, 1, 12)
+
+  non_training_forecasts = filter(fcst -> TrainingShared.is_test(fcst) || Forecasts.valid_utc_datetime(fcst) > training_end, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
+
+  45 in TASKS && sum_probs(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0, suffix = "_spc_calibrated", all_days_of_week = true)
 end
