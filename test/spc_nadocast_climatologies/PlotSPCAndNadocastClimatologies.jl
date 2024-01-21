@@ -11,9 +11,9 @@ import GMTPlot
 grid = Grids.grid_130_cropped
 
 plots = [
-  ("../total_prob_nadocast_hail_600_days_0z_spc_calibrated.csv", 600, "Nadocast 0Z Hail, Average Day Probability", "colors_8.cpt"),
-  ("../total_prob_spc_hail_600_days_0z_spc_calibrated.csv",      600, "SPC 6Z Hail, Average Day Probability",      "colors_8.cpt"),
-  ("../total_prob_reports_hail_600_days_0z_spc_calibrated.csv",  600, "Hail Reports, Average Day Probability",     "colors_8.cpt"),
+  ("../total_prob_nadocast_hail_600_days_0z_spc_calibrated.csv", 600, "Nadocast 0Z Hail, Average Day Probability", "colors_5.cpt"),
+  ("../total_prob_spc_hail_600_days_0z_spc_calibrated.csv",      600, "SPC 6Z Hail, Average Day Probability",      "colors_5.cpt"),
+  ("../total_prob_reports_hail_600_days_0z_spc_calibrated.csv",  600, "Hail Reports, Average Day Probability",     "colors_5.cpt"),
 ]
 
 for (csv_path, ndays, title, colors) in plots
