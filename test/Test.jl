@@ -1078,7 +1078,7 @@ end
   non_training_forecasts = filter(fcst -> TrainingShared.is_test(fcst) || Forecasts.valid_utc_datetime(fcst) > training_end, HREFPrediction.forecasts_day_spc_calibrated_with_sig_gated())
 
   const tc_segments_path = joinpath(@__DIR__, "..", "tropical_cyclones", "tropical_cyclones_2018-2022.csv")
-  tc_rows, tc_headers = DelimitedFiles.readdlm(path, ',', String; header=true)
+  tc_rows, tc_headers = DelimitedFiles.readdlm(tc_segments_path, ',', String; header=true)
 
   # begin_time_str,begin_time_seconds,end_time_str,end_time_seconds,id,name,status,knots,max_radius_34_knot_winds_nmiles,begin_lat,begin_lon,end_lat,end_lon
   tc_headers = tc_headers[1,:]
