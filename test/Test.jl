@@ -1107,8 +1107,8 @@ end
     row[status_col_i],
   )
 
-  const tc_rows = mapslices(row_to_tc, tc_rows, dims = [2])[:,1]
-  const hurricane_and_tropical_storm_segments = filter(seg -> seg.status == "TS" || seg.status == "HU", tc_rows)
+  tc_segs = mapslices(row_to_tc, tc_rows, dims = [2])[:,1]
+  const hurricane_and_tropical_storm_segments = filter(seg -> seg.status == "TS" || seg.status == "HU", tc_segs)
 
   function compute_tc_grid(spc_forecast)
     radius_mi = 500.0
