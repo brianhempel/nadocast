@@ -374,7 +374,7 @@ function grid_to_tor_life_risk_neighborhoods(tor_events, grid :: Grids.Grid, mil
   out = Vector{Float32}(undef, length(grid.latlons))
 
   Threads.@threads :static for grid_i in 1:length(grid.latlons)
-    out[grid_i] = risk_near_event(latlon)
+    out[grid_i] = risk_near_event(grid.latlons[grid_i])
   end
 
   out
