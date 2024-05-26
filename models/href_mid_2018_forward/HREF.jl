@@ -12,6 +12,7 @@ push!(LOAD_PATH, (@__DIR__) * "/../shared")
 import SREFHREFShared
 import FeatureEngineeringShared
 import ThreeHourWindowForecasts
+import Climatology
 
 # Techincally, the HREF is on grid 227: http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID227
 # Natively 1473x1025 (5km)
@@ -295,6 +296,16 @@ function feature_engineered_forecasts()
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
     new_features_pre = extra_features
+  )
+end
+
+function feature_engineered_forecasts_with_climatology()
+  FeatureEngineeringShared.feature_engineered_forecasts(
+    forecasts();
+    vector_wind_layers = vector_wind_layers,
+    layer_blocks_to_make = layer_blocks_to_make,
+    new_features_pre = extra_features,
+    new_feature_post = Climatology.climatology_features(grid(); run_datetime_to_simulation_version = run_datetime_to_simulation_version)
   )
 end
 

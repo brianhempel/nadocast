@@ -97,7 +97,8 @@ function compute_mean_is2(grid)
 end
 
 # new_features_pre should be a list of pairs of (feature_name, compute_feature_function(grid, inventory, data))
-function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_blocks_to_make, new_features_pre = [])
+# new_features_post should be a list of pairs of (feature_name, compute_feature_function(base_forecast))
+function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_blocks_to_make, new_features_pre = [], new_features_post = [])
 
   if isempty(base_forecasts)
     return base_forecasts
@@ -136,7 +137,21 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
       end
     end
 
-    new_inventory
+    new_features_post_lines =
+      map(new_features_post) do feature_name_and_compute_function
+        Inventories.InventoryLine(
+          "",                                   # message_dot_submessage
+          "",                                   # position_str
+          base_inventory[1].date_str,
+          feature_name_and_compute_function[1], # abbrev
+          "calculated",                         # level
+          "hour fcst",                          # forecast_hour_str
+          "",                                   # misc
+          ""                                    # feature_engineering
+        )
+      end
+
+    vcat(new_inventory, new_features_post_lines)
   end
 
   data_transformer(base_forecast, base_data) = begin
@@ -146,12 +161,14 @@ function feature_engineered_forecasts(base_forecasts; vector_wind_layers, layer_
       grid,
       Forecasts.inventory(base_forecast), # 100k allocs each time
       base_data,
+      base_forecast,
       vector_wind_layers,
       layer_blocks_to_make,
       twenty_five_mi_mean_is2,
       fifty_mi_mean_is2,
       hundred_mi_mean_is2;
-      new_features_pre = new_features_pre
+      new_features_pre = new_features_pre,
+      new_features_post = new_features_post
     )
 
     # println("done.")
@@ -652,12 +669,14 @@ function make_data(
       grid                      :: Grids.Grid,
       inventory                 :: Vector{Inventories.InventoryLine},
       data                      :: Array{Float32,2},
+      base_forecast             :: Forecasts.Forecast,
       vector_wind_layers        :: Vector{String},
       layer_blocks_to_make      :: Vector{Int64}, # List of indices. See top of this file.
       twenty_five_mi_mean_is2   :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}}, # If not using, pass an empty vector.
       fifty_mi_mean_is2         :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}}, # If not using, pass an empty vector.
       hundred_mi_mean_is2       :: Vector{Vector{Tuple{Int64,UnitRange{Int64}}}};  # If not using, pass an empty vector.
-      new_features_pre = [] # list of pairs of (feature_name, compute_feature_function(grid, get_layer_function))
+      new_features_pre = [], # list of pairs of (feature_name, compute_feature_function(grid, get_layer_function))
+      new_features_post = [] # list of pairs of (feature_name, compute_feature_function(base_forecast))
     ) :: Array{Float32,2}
 
 
@@ -683,7 +702,7 @@ function make_data(
 
 
   # out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count + 1 + feature_interaction_terms_count))
-  out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count))
+  out = Array{Float32}(undef, (grid_point_count, length(layer_blocks_to_make)*pre_feature_count + length(new_features_post)))
 
   Threads.@threads :static for j in 1:raw_feature_count
     out[:,j] = @view data[:,j]
@@ -1058,6 +1077,11 @@ function make_data(
       hundred_mi_linestraddling_gradient_v_i = raw_layer_v_i + hundred_mi_linestraddling_gradient_range.start - 1
       rotate_uv_layers!(out, hundred_mi_linestraddling_gradient_u_i, hundred_mi_linestraddling_gradient_v_i, rot_coses, rot_sines)
     end
+  end
+
+  Threads.@threads :static for new_post_feature_i in 1:length(new_features_post)
+    new_feature_name, compute_new_feature_post = new_features_post[new_post_feature_i]
+    out[:, length(layer_blocks_to_make)*pre_feature_count + new_post_feature_i] = compute_new_feature_post(base_forecast)
   end
 
   out
