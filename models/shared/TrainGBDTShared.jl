@@ -156,8 +156,8 @@ function train_with_coordinate_descent_hyperparameter_search(
 
       # Balance the number of each kind of label, as well as negative data
 
-      positive_indices_arrays = map(Y -> Random.shuffle(rng, findall(Y .>  0.5f0)), values(sample_Ys))
-      negative_indices_arrays = map(Y -> Random.shuffle(rng, findall(Y .<= 0.5f0)), values(sample_Ys))
+      positive_indices_arrays = map(Y -> Random.shuffle(rng, findall(Y .>  0f0)), values(sample_Ys))
+      negative_indices_arrays = map(Y -> Random.shuffle(rng, findall(Y .== 0f0)), values(sample_Ys))
 
       indices_arrays = vcat(positive_indices_arrays, negative_indices_arrays)
 
