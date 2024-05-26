@@ -77,4 +77,4 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
   )
 
 
-# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.05 NEAR_STORM_RATIO=0.5 make train_gradient_boosted_decision_trees
+# $ FORECAST_HOUR_RANGE=2:13 DATA_SUBSET_RATIO=0.05 NEAR_STORM_RATIO=0.5 make train_gradient_boosted_decision_trees 2>&1 | tee -a train_2:13_2024-2005.log

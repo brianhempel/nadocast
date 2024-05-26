@@ -305,7 +305,7 @@ function feature_engineered_forecasts_with_climatology()
     vector_wind_layers = vector_wind_layers,
     layer_blocks_to_make = layer_blocks_to_make,
     new_features_pre = extra_features,
-    new_feature_post = Climatology.climatology_features(grid(); run_datetime_to_simulation_version = run_datetime_to_simulation_version)
+    new_features_post = Climatology.climatology_features(grid(); run_datetime_to_simulation_version = run_datetime_to_simulation_version)
   )
 end
 
