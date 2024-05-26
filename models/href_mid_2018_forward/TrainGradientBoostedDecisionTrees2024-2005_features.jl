@@ -57,7 +57,7 @@ TrainGBDTShared.train_with_coordinate_descent_hyperparameter_search(
     only_features     = (only_features_path !=  "" ? readlines(only_features_path) : nothing), # can vary this without reloading the data
     only_before       = only_before,  # can vary this without reloading the data
 
-    bin_split_forecast_sample_count    = 400, # will be divided among the label types
+    bin_split_forecast_sample_count    = 450, # will be divided among the label types
     max_iterations_without_improvement = 30,
 
     # Start with middle value for each parameter, plus some number of random choices, before beginning coordinate descent.

@@ -181,6 +181,10 @@ function grid_to_labels(events, forecast)
   StormEvents.grid_to_event_neighborhoods(events, forecast.grid, EVENT_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
 end
 
+function grid_to_tor_life_risk_labels(tor_events, forecast)
+  StormEvents.grid_to_tor_life_risk_neighborhoods(tor_events, forecast.grid, EVENT_SPATIAL_RADIUS_MILES, Forecasts.valid_time_in_seconds_since_epoch_utc(forecast), EVENT_TIME_WINDOW_HALF_SIZE)
+end
+
 _hour_estimated_wind_gridded_normalization = nothing
 function hour_estimated_wind_gridded_normalization()
   global _hour_estimated_wind_gridded_normalization
@@ -231,25 +235,27 @@ end
 
 # Dict of name to (forecast_has_event, forecast_to_gridpoint_labels)
 event_name_to_forecast_predicate = Dict(
-  "tornado"      => forecast_is_tornado_hour,
-  "wind"         => forecast_is_severe_wind_hour,
-  "wind_adj"     => forecast_is_severe_wind_hour,
-  "hail"         => forecast_is_severe_hail_hour,
-  "sig_tornado"  => forecast_is_sig_tornado_hour,
-  "sig_wind"     => forecast_is_sig_wind_hour,
-  "sig_wind_adj" => forecast_is_sig_wind_hour,
-  "sig_hail"     => forecast_is_sig_hail_hour,
+  "tornado"           => forecast_is_tornado_hour,
+  "tornado_life_risk" => forecast_is_tornado_hour,
+  "wind"              => forecast_is_severe_wind_hour,
+  "wind_adj"          => forecast_is_severe_wind_hour,
+  "hail"              => forecast_is_severe_hail_hour,
+  "sig_tornado"       => forecast_is_sig_tornado_hour,
+  "sig_wind"          => forecast_is_sig_wind_hour,
+  "sig_wind_adj"      => forecast_is_sig_wind_hour,
+  "sig_hail"          => forecast_is_sig_hail_hour,
 )
 
 event_name_to_labeler = Dict(
-  "tornado"      => (forecast -> grid_to_labels(StormEvents.conus_tornado_events(),                                                                                                                           forecast)),
-  "wind"         => (forecast -> grid_to_labels(StormEvents.conus_severe_wind_events(),                                                                                                                       forecast)),
-  "wind_adj"     => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), hour_estimated_wind_gridded_normalization(), forecast)),
-  "hail"         => (forecast -> grid_to_labels(StormEvents.conus_severe_hail_events(),                                                                                                                       forecast)),
-  "sig_tornado"  => (forecast -> grid_to_labels(StormEvents.conus_sig_tornado_events(),                                                                                                                       forecast)),
-  "sig_wind"     => (forecast -> grid_to_labels(StormEvents.conus_sig_wind_events(),                                                                                                                          forecast)),
-  "sig_wind_adj" => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), hour_estimated_sig_wind_gridded_normalization(),   forecast)),
-  "sig_hail"     => (forecast -> grid_to_labels(StormEvents.conus_sig_hail_events(),                                                                                                                          forecast)),
+  "tornado"           => (forecast -> grid_to_labels(StormEvents.conus_tornado_events(),                                                                                                                           forecast)),
+  "tornado_life_risk" => (forecast -> grid_to_tor_life_risk_labels(StormEvents.conus_tornado_events(),                                                                                                             forecast)),
+  "wind"              => (forecast -> grid_to_labels(StormEvents.conus_severe_wind_events(),                                                                                                                       forecast)),
+  "wind_adj"          => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), hour_estimated_wind_gridded_normalization(), forecast)),
+  "hail"              => (forecast -> grid_to_labels(StormEvents.conus_severe_hail_events(),                                                                                                                       forecast)),
+  "sig_tornado"       => (forecast -> grid_to_labels(StormEvents.conus_sig_tornado_events(),                                                                                                                       forecast)),
+  "sig_wind"          => (forecast -> grid_to_labels(StormEvents.conus_sig_wind_events(),                                                                                                                          forecast)),
+  "sig_wind_adj"      => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), hour_estimated_sig_wind_gridded_normalization(),   forecast)),
+  "sig_hail"          => (forecast -> grid_to_labels(StormEvents.conus_sig_hail_events(),                                                                                                                          forecast)),
 )
 
 

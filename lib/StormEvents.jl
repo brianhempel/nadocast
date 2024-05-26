@@ -13,6 +13,8 @@ DAY  = 24*HOUR
 
 struct TornadoSeverity
   ef_rating :: Int64
+  length_miles :: Float64
+  width_yards :: Float64
 end
 
 struct WindSeverity
@@ -106,6 +108,8 @@ function read_events_csv(path) ::Vector{Event}
   end_lat_col_i       = findfirst(isequal("end_lat"), event_headers)
   end_lon_col_i       = findfirst(isequal("end_lon"), event_headers)
   ef_col_i            = findfirst(isequal("f_scale"), event_headers)
+  length_col_i        = findfirst(isequal("length"), event_headers)
+  width_col_i         = findfirst(isequal("width"), event_headers)
   knots_col_i         = findfirst(isequal("speed"), event_headers)
   speed_type_col_i    = findfirst(isequal("speed_type"), event_headers)
   source_col_i        = findfirst(isequal("source"), event_headers)
@@ -130,7 +134,7 @@ function read_events_csv(path) ::Vector{Event}
 
     severity =
       if !isnothing(ef_col_i)
-        TornadoSeverity(row[ef_col_i] == "" ? 0 : row[ef_col_i])
+        TornadoSeverity(row[ef_col_i] == "" ? 0 : row[ef_col_i], row[length_col_i], row[width_col_i])
       elseif !isnothing(knots_col_i)
         WindSeverity(row[knots_col_i] == -1 ? 50.0 : row[knots_col_i], row[speed_type_col_i] == "sustained", row[source_col_i] == "measured")
       elseif !isnothing(inches_col_i)
@@ -339,6 +343,44 @@ function grid_to_event_neighborhoods(events, grid :: Grids.Grid, miles :: Float6
   out
 end
 
+const killed_per_sq_mi_by_ef = [0.00929501, 0.02979021, 0.07824786, 0.22183166, 0.35063774, 1.46567809]
+
+# expected number of people killed within the given number of miles, based on tornado rating and damaged area
+function grid_to_tor_life_risk_neighborhoods(tor_events, grid :: Grids.Grid, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
+  events_and_segments = events_and_segments_around_time(tor_events, seconds_from_utc_epoch, seconds_before_and_after)
+
+  segments_and_risk = map(events_and_segments) do (event, latlon1, latlon2)
+    seg_length_mi = GeoUtils.instantish_distance(latlon1, latlon2) / GeoUtils.METERS_PER_MILE
+    # assume tornadoes are damage at least 0.1mi and are at least 10yds wide
+    # assume damage area is half of length * width, roughly a diamond shape
+    area = max(0.1, seg_length_mi) * (max(10, event.severity.width_yards) / 1760.0) / 2.0
+    risk = area * killed_per_sq_mi_by_ef[event.severity.ef_rating + 1]
+    (latlon1, latlon2, Float32(risk))
+  end
+
+  risk_near_event(latlon) = begin
+    risk = 0f0
+
+    for (latlon1, latlon2, seg_risk) in segments_and_risk
+      meters_away = GeoUtils.instant_meters_to_line(latlon, latlon1, latlon2)
+      if meters_away <= miles * GeoUtils.METERS_PER_MILE
+        risk += seg_risk
+      end
+    end
+
+    min(1f0, risk)
+  end
+
+  out = Vector{Float32}(undef, length(grid.latlons))
+
+  Threads.@threads :static for grid_i in 1:length(grid.latlons)
+    out[grid_i] = risk_near_event(latlon)
+  end
+
+  out
+end
+
+
 # Returns a data layer on the grid with 0.0 to 1.0 indicators of points within x miles of any storm event
 function grid_to_adjusted_event_neighborhoods(events :: Vector{Event}, grid :: Grids.Grid, normalization_grid :: Grids.Grid, gridded_normalization :: Vector{Float32}, miles :: Float64, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Float32}
   event_segments = event_segments_around_time(events, seconds_from_utc_epoch, seconds_before_and_after)
@@ -416,6 +458,12 @@ function parallel_filter(f, arr)
 end
 
 function event_segments_around_time(events, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64) :: Vector{Tuple{Tuple{Float64, Float64}, Tuple{Float64, Float64}}}
+  map(events_and_segments_around_time(events, seconds_from_utc_epoch, seconds_before_and_after)) do (event, seg_start_latlon, seg_end_latlon)
+    (seg_start_latlon, seg_end_latlon)
+  end
+end
+
+function events_and_segments_around_time(events, seconds_from_utc_epoch :: Int64, seconds_before_and_after :: Int64)
   period_start_seconds = seconds_from_utc_epoch - seconds_before_and_after
   period_end_seconds   = seconds_from_utc_epoch + seconds_before_and_after
 
@@ -453,7 +501,7 @@ function event_segments_around_time(events, seconds_from_utc_epoch :: Int64, sec
       seg_end_latlon = GeoUtils.ratio_on_segment(start_latlon, end_latlon, end_ratio)
     end
 
-    (seg_start_latlon, seg_end_latlon)
+    (event, seg_start_latlon, seg_end_latlon)
   end
 
   map(event_to_segment, relevant_events)
