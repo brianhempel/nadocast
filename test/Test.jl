@@ -1135,11 +1135,12 @@ end
   end
 
   # rsync -vv --recursive --size-only nadocaster2-raw:/home/brian/nadocast_dev/test/maps ./
+  # open `ls maps/*/*near_tc* | grep tc_tornado`
 
   41 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
-  42 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
-  43 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> (!).(compute_tc_grid(spc_fcst)))
-  44 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> (!).(compute_tc_grid(spc_fcst)))
+  # 42 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_near_tc", use_train_validation_too = true, compute_extra_mask = compute_tc_grid)
+  # 43 in TASKS && do_it(SPCOutlooks.forecasts_day_0600(), non_training_forecasts, model_names; run_hour = 0,  cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> (!).(compute_tc_grid(spc_fcst)))
+  # 44 in TASKS && do_it(SPCOutlooks.forecasts_day_1630(), non_training_forecasts, model_names; run_hour = 12, cutoff = cutoff, suffix = "_href_only_not_near_tc", use_train_validation_too = true, compute_extra_mask = spc_fcst -> (!).(compute_tc_grid(spc_fcst)))
 end
 
 # now look for hail hotspots

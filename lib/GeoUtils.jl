@@ -71,13 +71,13 @@ function instant_meters_to_line((lat, lon) :: Tuple{Float64,Float64}, (lat1, lon
   x  = (lon  - lon1) * k2
   y  = (lat  - lat1) * k1
 
-  # Unit vector...
   segment_length = √(x2^2 + y2^2)
 
   if segment_length < 1.0/1000.0 # 1m
     # Segment is essentially 0 length.
     return √(x^2 + y^2) * 1000.0
   else
+    # Unit vector
     ux2 = x2 / segment_length
     uy2 = y2 / segment_length
   end
