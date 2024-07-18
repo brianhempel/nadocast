@@ -10,14 +10,14 @@ import TrainingShared
 import Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPrediction2024
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
 
-(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
+(_, validation_forecasts, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction2024.forecasts_with_blurs_and_forecast_hour(); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2024, 2, 28, 12)
@@ -30,12 +30,12 @@ X, Ys, weights =
       save_dir = "validation_forecasts_with_blurs_and_forecast_hour_2024"
     );
 
-length(validation_forecasts) # 24370
-size(X) # (666568240, 57)
-length(weights) # 666568240
+length(validation_forecasts) #
+size(X) #
+length(weights) #
 
-sum(Ys["tornado"]) # 75293.0f0
-sum(weights) # 6.143644f8
+sum(Ys["tornado"]) #
+sum(weights) #
 
 # Sanity check...tornado features should best predict tornadoes, etc
 # (this did find a bug :D)
@@ -43,8 +43,8 @@ sum(weights) # 6.143644f8
 # function test_predictive_power(forecasts, X, Ys, weights)
 #   inventory = Forecasts.inventory(forecasts[1])
 
-#   for prediction_i in 1:length(HREFPrediction.models)
-#     (event_name, _, _) = HREFPrediction.models[prediction_i]
+#   for prediction_i in 1:length(HREFPrediction2024.models)
+#     (event_name, _, _) = HREFPrediction2024.models[prediction_i]
 #     y = Ys[event_name]
 #     for j in 1:size(X,2)
 #       x = @view X[:,j]
@@ -168,8 +168,8 @@ sum(weights) # 6.143644f8
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  for prediction_i in 1:length(HREFPrediction.models)
-    (event_name, _, _) = HREFPrediction.models[prediction_i]
+  for prediction_i in 1:length(HREFPrediction2024.models)
+    (event_name, _, _) = HREFPrediction2024.models[prediction_i]
     y = Ys[event_name]
     for j in 1:size(X,2)
       x = @view X[:,j]
@@ -643,12 +643,12 @@ test_predictive_power(validation_forecasts, X, Ys, weights)
 
 println("Determining best blur radii to maximize area under precision-recall curve")
 
-blur_radii = [0; HREFPrediction.blur_radii]
+blur_radii = [0; HREFPrediction2024.blur_radii]
 forecast_hour_j = size(X, 2)
 
 bests = []
-for prediction_i in 1:length(HREFPrediction.models)
-  (event_name, _, _) = HREFPrediction.models[prediction_i]
+for prediction_i in 1:length(HREFPrediction2024.models)
+  (event_name, _, _) = HREFPrediction2024.models[prediction_i]
   y = Ys[event_name]
   prediction_i_base = (prediction_i - 1) * length(blur_radii) # 0-indexed
 
@@ -1112,7 +1112,7 @@ println()
 # sig_hail     0                   15                   0.018009394
 
 
-# Now go back to HREFPrediction.jl and put those numbers in
+# Now go back to HREFPrediction2024.jl and put those numbers in
 
 
 # CHECKING that the blurred forecasts are correct
@@ -1131,13 +1131,13 @@ import TrainingShared
 import Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPrediction2024
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
-(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.regular_forecasts(HREFPrediction.forecasts_blurred()); just_hours_near_storm_events = false);
+(_, validation_forecasts_blurred, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction2024.regular_forecasts(HREFPrediction2024.forecasts_blurred()); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 6, 1, 12)
@@ -1153,8 +1153,8 @@ X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_blu
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  for prediction_i in 1:length(HREFPrediction.models)
-    (event_name, _, _) = HREFPrediction.models[prediction_i]
+  for prediction_i in 1:length(HREFPrediction2024.models)
+    (event_name, _, _) = HREFPrediction2024.models[prediction_i]
     y = Ys[event_name]
     x = @view X[:,prediction_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
@@ -1197,7 +1197,7 @@ test_predictive_power(validation_forecasts_blurred, X, Ys, weights)
 # sig_hail (31850.0)      feature 8 SHAILPRO:calculated:hour fcst:calculated_prob:blurred AU-PR-curve: 0.018009394
 
 
-Metrics.reliability_curves_midpoints(20, X, Ys, map(m -> m[1], HREFPrediction.models_with_gated), weights, map(m -> m[3], HREFPrediction.models_with_gated))
+Metrics.reliability_curves_midpoints(20, X, Ys, map(m -> m[1], HREFPrediction2024.models_with_gated), weights, map(m -> m[3], HREFPrediction2024.models_with_gated))
 
 # ŷ_tornado,y_tornado,ŷ_wind,y_wind,ŷ_wind_adj,y_wind_adj,ŷ_hail,y_hail,ŷ_sig_tornado,y_sig_tornado,ŷ_sig_wind,y_sig_wind,ŷ_sig_wind_adj,y_sig_wind_adj,ŷ_sig_hail,y_sig_hail,
 # 7.5513485e-6,6.0045345e-6,6.05324e-5,4.6977286e-5,2.0162386e-5,1.4281072e-5,2.2600307e-5,2.0870466e-5,9.4585124e-7,8.0508244e-7,5.4054067e-6,4.6533664e-6,2.1874018e-6,1.6324826e-6,2.6234475e-6,2.472806e-6,
@@ -1275,8 +1275,8 @@ function find_ŷ_bin_splits(event_name, prediction_i, X, Ys, weights)
 end
 
 event_to_bins = Dict{String,Vector{Float32}}()
-for prediction_i in 1:length(HREFPrediction.models)
-  (event_name, _, _, _, _) = HREFPrediction.models[prediction_i]
+for prediction_i in 1:length(HREFPrediction2024.models)
+  (event_name, _, _, _, _) = HREFPrediction2024.models[prediction_i]
 
   event_to_bins[event_name] = find_ŷ_bin_splits(event_name, prediction_i, X, Ys, weights)
 
@@ -1428,8 +1428,8 @@ function find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
 end
 
 event_to_bins_logistic_coeffs = Dict{String,Vector{Vector{Float32}}}()
-for prediction_i in 1:length(HREFPrediction.models)
-  (event_name, _, _, _, _) = HREFPrediction.models[prediction_i]
+for prediction_i in 1:length(HREFPrediction2024.models)
+  (event_name, _, _, _, _) = HREFPrediction2024.models[prediction_i]
 
   event_to_bins_logistic_coeffs[event_name] = find_logistic_coeffs(event_name, prediction_i, X, Ys, weights)
 end
@@ -1503,13 +1503,13 @@ import TrainingShared
 import Metrics
 
 push!(LOAD_PATH, @__DIR__)
-import HREFPrediction
+import HREFPrediction2024
 
 push!(LOAD_PATH, (@__DIR__) * "/../../lib")
 import Forecasts
 import Inventories
 
-(_, validation_forecasts_calibrated_with_sig_gated, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction.regular_forecasts(HREFPrediction.forecasts_calibrated_with_sig_gated()); just_hours_near_storm_events = false);
+(_, validation_forecasts_calibrated_with_sig_gated, _) = TrainingShared.forecasts_train_validation_test(HREFPrediction2024.regular_forecasts(HREFPrediction2024.forecasts_calibrated_with_sig_gated()); just_hours_near_storm_events = false);
 
 # We don't have storm events past this time.
 cutoff = Dates.DateTime(2022, 6, 1, 12)
@@ -1525,8 +1525,8 @@ X, Ys, weights = TrainingShared.get_data_labels_weights(validation_forecasts_cal
 function test_predictive_power(forecasts, X, Ys, weights)
   inventory = Forecasts.inventory(forecasts[1])
 
-  for prediction_i in 1:length(HREFPrediction.models_with_gated)
-    (event_name, _, model_name) = HREFPrediction.models_with_gated[prediction_i]
+  for prediction_i in 1:length(HREFPrediction2024.models_with_gated)
+    (event_name, _, model_name) = HREFPrediction2024.models_with_gated[prediction_i]
     y = Ys[event_name]
     x = @view X[:,prediction_i]
     au_pr_curve = Metrics.area_under_pr_curve(x, y, weights)
@@ -1549,7 +1549,7 @@ test_predictive_power(validation_forecasts_calibrated_with_sig_gated, X, Ys, wei
 # sig_wind_adj_gated_by_wind_adj (21053.29) feature 11 SWINDPRO:calculated:hour fcst:calculated_prob:gated by wind_adj AU-PR-curve: 0.012388945
 # sig_hail_gated_by_hail (31850.0)          feature 12 SHAILPRO:calculated:hour fcst:calculated_prob:gated by hail     AU-PR-curve: 0.017981928
 
-Metrics.reliability_curves_midpoints(20, X, Ys, map(m -> m[1], HREFPrediction.models_with_gated), weights, map(m -> m[3], HREFPrediction.models_with_gated))
+Metrics.reliability_curves_midpoints(20, X, Ys, map(m -> m[1], HREFPrediction2024.models_with_gated), weights, map(m -> m[3], HREFPrediction2024.models_with_gated))
 # ŷ_tornado,y_tornado,ŷ_wind,y_wind,ŷ_wind_adj,y_wind_adj,ŷ_hail,y_hail,ŷ_sig_tornado,y_sig_tornado,ŷ_sig_wind,y_sig_wind,ŷ_sig_wind_adj,y_sig_wind_adj,ŷ_sig_hail,y_sig_hail,ŷ_sig_tornado_gated_by_tornado,y_sig_tornado_gated_by_tornado,ŷ_sig_wind_gated_by_wind,y_sig_wind_gated_by_wind,ŷ_sig_wind_adj_gated_by_wind_adj,y_sig_wind_adj_gated_by_wind_adj,ŷ_sig_hail_gated_by_hail,y_sig_hail_gated_by_hail,
 # 6.1531127e-6,6.0045345e-6,4.4935874e-5,4.6977286e-5,1.3700466e-5,1.4281125e-5,2.0477783e-5,2.0870466e-5,6.8494865e-7,8.0508244e-7,4.5083425e-6,4.6533664e-6,1.5824395e-6,1.6324826e-6,2.138175e-6,2.472806e-6,6.653776e-7,8.0506925e-7,4.4942576e-6,4.6530813e-6,1.5755261e-6,1.6309828e-6,2.1315907e-6,2.4727815e-6,
 # 0.00026546858,0.00029663646,0.002290551,0.0024005529,0.0006841353,0.0007571397,0.0011119856,0.001162719,8.458081e-5,0.00015346402,0.00020227442,0.00023276251,8.8660185e-5,7.6549535e-5,0.00021447489,0.00024548653,8.457267e-5,0.00015368158,0.00020209982,0.0002334415,8.828558e-5,7.8686746e-5,0.00021444552,0.00024552655,
@@ -1636,4 +1636,4 @@ function plot_calibration_curves(model_names, event_to_bins, event_to_bins_logis
   ()
 end
 
-plot_calibration_curves(map(m -> m[1], HREFPrediction.models), event_to_bins, event_to_bins_logistic_coeffs)
+plot_calibration_curves(map(m -> m[1], HREFPrediction2024.models), event_to_bins, event_to_bins_logistic_coeffs)
