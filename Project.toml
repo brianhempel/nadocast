@@ -13,3 +13,6 @@ Proj4 = "9a7e659c-8ee8-5706-894e-f68f43bc57ea"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+
+[compat]
+ArchGDAL = "0.2.1"
