@@ -258,9 +258,9 @@ models = [
                            "gbdt_2024-2005_features_f13-24_2024-06-22T04.41.06.416_sig_hail/422_trees_loss_0.00033432615.model",
                            "gbdt_2024-2005_features_f25-36_2024-07-03T07.38.26.145_sig_hail/419_trees_loss_0.0003533024.model" # not gbdt_2024-2005_features_f25-36_2024-07-09T08.13.32.361_sig_hail/443_trees_loss_0.0003533743.model
   ),
-  ("tornado_life_risk", "TORPROB", "gbdt_2024-2005_features_f1-12_2024-06-17T09.17.19.881_tornado_life_risk/700_trees_loss_2.3796445e-5.model",
-                                   "gbdt_2024-2005_features_f13-24_2024-06-22T04.41.06.416_tornado_life_risk/444_trees_loss_2.5661777e-5.model",
-                                   "gbdt_2024-2005_features_f25-36_2024-07-03T07.38.26.145_tornado_life_risk/773_trees_loss_2.4938929e-5.model"
+  ("tornado_life_risk", "PRSIGSVR", "gbdt_2024-2005_features_f1-12_2024-06-17T09.17.19.881_tornado_life_risk/700_trees_loss_2.3796445e-5.model",
+                                    "gbdt_2024-2005_features_f13-24_2024-06-22T04.41.06.416_tornado_life_risk/444_trees_loss_2.5661777e-5.model",
+                                    "gbdt_2024-2005_features_f25-36_2024-07-03T07.38.26.145_tornado_life_risk/773_trees_loss_2.4938929e-5.model"
   ),
 ]
 
@@ -288,7 +288,7 @@ models_with_gated =
   , ("sig_wind",          "SWINDPRO", "sig_wind_gated_by_wind")
   , ("sig_wind_adj",      "SWINDPRO", "sig_wind_adj_gated_by_wind_adj")
   , ("sig_hail",          "SHAILPRO", "sig_hail_gated_by_hail")
-  , ("tornado_life_risk", "TORPROB",  "tornado_life_risk")
+  , ("tornado_life_risk", "PRSIGSVR", "tornado_life_risk") # Encoded as "prob sig severe" so it's different than TORPROB in the inventory
   ]
 
 
