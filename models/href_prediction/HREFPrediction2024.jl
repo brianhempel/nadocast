@@ -258,9 +258,9 @@ models = [
                            "gbdt_2024-2005_features_f13-24_2024-06-22T04.41.06.416_sig_hail/422_trees_loss_0.00033432615.model",
                            "gbdt_2024-2005_features_f25-36_2024-07-03T07.38.26.145_sig_hail/419_trees_loss_0.0003533024.model" # not gbdt_2024-2005_features_f25-36_2024-07-09T08.13.32.361_sig_hail/443_trees_loss_0.0003533743.model
   ),
-  ("tornado_life_risk", "PRSIGSVR", "gbdt_2024-2005_features_f1-12_2024-06-17T09.17.19.881_tornado_life_risk/700_trees_loss_2.3796445e-5.model",
-                                    "gbdt_2024-2005_features_f13-24_2024-06-22T04.41.06.416_tornado_life_risk/444_trees_loss_2.5661777e-5.model",
-                                    "gbdt_2024-2005_features_f25-36_2024-07-03T07.38.26.145_tornado_life_risk/773_trees_loss_2.4938929e-5.model"
+  ("tornado_life_risk", "TORPROB", "gbdt_2024-2005_features_f1-12_2024-06-17T09.17.19.881_tornado_life_risk/700_trees_loss_2.3796445e-5.model",
+                                   "gbdt_2024-2005_features_f13-24_2024-06-22T04.41.06.416_tornado_life_risk/444_trees_loss_2.5661777e-5.model",
+                                   "gbdt_2024-2005_features_f25-36_2024-07-03T07.38.26.145_tornado_life_risk/773_trees_loss_2.4938929e-5.model"
   ),
 ]
 
@@ -288,7 +288,7 @@ models_with_gated =
   , ("sig_wind",          "SWINDPRO", "sig_wind_gated_by_wind")
   , ("sig_wind_adj",      "SWINDPRO", "sig_wind_adj_gated_by_wind_adj")
   , ("sig_hail",          "SHAILPRO", "sig_hail_gated_by_hail")
-  , ("tornado_life_risk", "PRSIGSVR", "tornado_life_risk") # Encoded as "prob sig severe" so it's different than TORPROB in the inventory
+  , ("tornado_life_risk", "TORPROB",  "tornado_life_risk")
   ]
 
 
@@ -350,57 +350,60 @@ function reload_forecasts()
 
   grid = _forecasts[1].grid
 
-  # # Determined in Train.jl
+  # Determined in Train2024.jl
 
-  # # event_name   best_blur_radius_f2 best_blur_radius_f35 AU_PR
-  # # tornado      15                  15                   0.047551293
-  # # wind         15                  25                   0.1164659
-  # # wind_adj     15                  25                   0.06341821
-  # # hail         15                  25                   0.07535621
-  # # sig_tornado  15                  15                   0.033054337
-  # # sig_wind     15                  35                   0.016219445
-  # # sig_wind_adj 100                 100                  0.012251711
-  # # sig_hail     0                   15                   0.018009394
+  # event_name        best_blur_radius_f1 best_blur_radius_f36 AU_PR
+  # tornado           15                  15                   0.044846594
+  # wind              15                  35                   0.12939164
+  # wind_adj          15                  35                   0.03804059
+  # hail              15                  25                   0.09276263
+  # sig_tornado       15                  15                   0.031650614
+  # sig_wind          15                  70                   0.026028465
+  # sig_wind_adj      25                  70                   0.01369382
+  # sig_hail          15                  25                   0.023982298
+  # tornado_life_risk 0                   15                   0.006764876
 
-  # blur_0mi_grid_is   = Grids.radius_grid_is(grid, 0.0)
-  # blur_15mi_grid_is  = Grids.radius_grid_is(grid, 15.0)
-  # blur_25mi_grid_is  = Grids.radius_grid_is(grid, 25.0)
-  # blur_35mi_grid_is  = Grids.radius_grid_is(grid, 35.0)
-  # blur_50mi_grid_is  = Grids.radius_grid_is(grid, 50.0)
-  # blur_100mi_grid_is = Grids.radius_grid_is(grid, 100.0)
+  blur_0mi_grid_is   = Grids.radius_grid_is(grid, 0.0)
+  blur_15mi_grid_is  = Grids.radius_grid_is(grid, 15.0)
+  blur_25mi_grid_is  = Grids.radius_grid_is(grid, 25.0)
+  blur_35mi_grid_is  = Grids.radius_grid_is(grid, 35.0)
+  blur_50mi_grid_is  = Grids.radius_grid_is(grid, 50.0)
+  blur_70mi_grid_is  = Grids.radius_grid_is(grid, 70.0)
+  blur_100mi_grid_is = Grids.radius_grid_is(grid, 100.0)
 
-  # # Needs to be the same order as models
-  # blur_grid_is = [
-  #   (blur_15mi_grid_is,  blur_15mi_grid_is),  # tornado
-  #   (blur_15mi_grid_is,  blur_25mi_grid_is),  # wind
-  #   (blur_15mi_grid_is,  blur_25mi_grid_is),  # wind_adj
-  #   (blur_15mi_grid_is,  blur_25mi_grid_is),  # hail
-  #   (blur_15mi_grid_is,  blur_15mi_grid_is),  # sig_tornado
-  #   (blur_15mi_grid_is,  blur_35mi_grid_is),  # sig_wind
-  #   (blur_100mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
-  #   (blur_0mi_grid_is,   blur_15mi_grid_is),  # sig_hail
-  # ]
+  # Needs to be the same order as models
+  blur_grid_is = [
+    (blur_15mi_grid_is, blur_15mi_grid_is), # tornado
+    (blur_15mi_grid_is, blur_35mi_grid_is), # wind
+    (blur_15mi_grid_is, blur_35mi_grid_is), # wind_adj
+    (blur_15mi_grid_is, blur_25mi_grid_is), # hail
+    (blur_15mi_grid_is, blur_15mi_grid_is), # sig_tornado
+    (blur_15mi_grid_is, blur_70mi_grid_is), # sig_wind
+    (blur_25mi_grid_is, blur_70mi_grid_is), # sig_wind_adj
+    (blur_15mi_grid_is, blur_25mi_grid_is), # sig_hail
+    (blur_0mi_grid_is,  blur_15mi_grid_is), # tornado_life_risk
+  ]
 
-  # extended_forecasts_blur_grid_is = [
-  #   (blur_15mi_grid_is,  blur_50mi_grid_is),  # tornado
-  #   (blur_25mi_grid_is,  blur_50mi_grid_is),  # wind
-  #   (blur_25mi_grid_is,  blur_50mi_grid_is),  # wind_adj
-  #   (blur_25mi_grid_is,  blur_50mi_grid_is),  # hail
-  #   (blur_15mi_grid_is,  blur_50mi_grid_is),  # sig_tornado
-  #   (blur_35mi_grid_is,  blur_50mi_grid_is),  # sig_wind
-  #   (blur_100mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
-  #   (blur_15mi_grid_is,  blur_50mi_grid_is),  # sig_hail
-  # ]
+  extended_forecasts_blur_grid_is = [
+    (blur_15mi_grid_is, blur_50mi_grid_is),  # tornado
+    (blur_35mi_grid_is, blur_50mi_grid_is),  # wind
+    (blur_35mi_grid_is, blur_50mi_grid_is),  # wind_adj
+    (blur_25mi_grid_is, blur_50mi_grid_is),  # hail
+    (blur_15mi_grid_is, blur_50mi_grid_is),  # sig_tornado
+    (blur_70mi_grid_is, blur_100mi_grid_is), # sig_wind
+    (blur_70mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
+    (blur_25mi_grid_is, blur_50mi_grid_is),  # sig_hail
+    (blur_15mi_grid_is, blur_50mi_grid_is),  # tornado_life_risk
+  ]
 
-  # _forecasts_blurred =
-  #   vcat(
-  #     PredictionForecasts.blurred(regular_forecasts(_forecasts),  2:35,  blur_grid_is),
-  #     PredictionForecasts.blurred(extended_forecasts(_forecasts), 35:47, extended_forecasts_blur_grid_is), # Yes, 35:47 is correct so that f36 uses a bit of the larger radii blur
-  #   )
+  _forecasts_blurred =
+    vcat(
+      PredictionForecasts.blurred(regular_forecasts(_forecasts),  1:36,  blur_grid_is),
+      PredictionForecasts.blurred(extended_forecasts(_forecasts), 36:48, extended_forecasts_blur_grid_is), # Yes, 36:48 is correct so that f37 uses a bit of the larger radii blur
+    )
 
 
-
-  # # Calibrating hourly predictions to validation data so we can make HREF-only day 2 forecasts.
+  # Calibrating hourly predictions to validation data
 
   # event_to_bins = Dict{String, Vector{Float32}}(
   #   "tornado"      => [0.0012153604,  0.004538168,  0.011742671,  0.023059275,  0.049979284,  1.0],
