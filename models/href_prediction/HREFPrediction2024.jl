@@ -355,11 +355,11 @@ function reload_forecasts()
   # event_name        best_blur_radius_f1 best_blur_radius_f36 AU_PR
   # tornado           15                  15                   0.044846594
   # wind              15                  35                   0.12939164
-  # wind_adj          15                  35                   0.03804059
+  # wind_adj          25                  25                   0.08271261
   # hail              15                  25                   0.09276263
   # sig_tornado       15                  15                   0.031650614
   # sig_wind          15                  70                   0.026028465
-  # sig_wind_adj      25                  70                   0.01369382
+  # sig_wind_adj      35                  50                   0.017637556
   # sig_hail          15                  25                   0.023982298
   # tornado_life_risk 0                   15                   0.006764876
 
@@ -375,11 +375,11 @@ function reload_forecasts()
   blur_grid_is = [
     (blur_15mi_grid_is, blur_15mi_grid_is), # tornado
     (blur_15mi_grid_is, blur_35mi_grid_is), # wind
-    (blur_15mi_grid_is, blur_35mi_grid_is), # wind_adj
+    (blur_25mi_grid_is, blur_25mi_grid_is), # wind_adj
     (blur_15mi_grid_is, blur_25mi_grid_is), # hail
     (blur_15mi_grid_is, blur_15mi_grid_is), # sig_tornado
     (blur_15mi_grid_is, blur_70mi_grid_is), # sig_wind
-    (blur_25mi_grid_is, blur_70mi_grid_is), # sig_wind_adj
+    (blur_35mi_grid_is, blur_50mi_grid_is), # sig_wind_adj
     (blur_15mi_grid_is, blur_25mi_grid_is), # sig_hail
     (blur_0mi_grid_is,  blur_15mi_grid_is), # tornado_life_risk
   ]
@@ -387,11 +387,11 @@ function reload_forecasts()
   extended_forecasts_blur_grid_is = [
     (blur_15mi_grid_is, blur_50mi_grid_is),  # tornado
     (blur_35mi_grid_is, blur_50mi_grid_is),  # wind
-    (blur_35mi_grid_is, blur_50mi_grid_is),  # wind_adj
+    (blur_25mi_grid_is, blur_50mi_grid_is),  # wind_adj
     (blur_25mi_grid_is, blur_50mi_grid_is),  # hail
     (blur_15mi_grid_is, blur_50mi_grid_is),  # sig_tornado
     (blur_70mi_grid_is, blur_100mi_grid_is), # sig_wind
-    (blur_70mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
+    (blur_50mi_grid_is, blur_100mi_grid_is), # sig_wind_adj
     (blur_25mi_grid_is, blur_50mi_grid_is),  # sig_hail
     (blur_15mi_grid_is, blur_50mi_grid_is),  # tornado_life_risk
   ]
