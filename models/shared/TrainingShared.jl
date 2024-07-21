@@ -259,7 +259,7 @@ event_name_to_labeler = Dict(
 )
 
 
-function grid_to_day_labels(events, forecast, f1_or_f2_is_soonest = 2)
+function grid_to_day_labels(events, forecast, f1_or_f2_is_soonest)
   # Annoying that we have to recalculate this.
   # The end_seconds will always be the last hour of the convective day
   # start_seconds depends on whether the run started during the day or not
@@ -270,7 +270,7 @@ function grid_to_day_labels(events, forecast, f1_or_f2_is_soonest = 2)
   StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-function grid_to_tor_life_risk_labels(tor_events, forecast, f1_or_f2_is_soonest = 2)
+function grid_to_tor_life_risk_day_labels(tor_events, forecast, f1_or_f2_is_soonest)
   start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + f1_or_f2_is_soonest*HOUR) - 30*MINUTE
   end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
   window_half_size = (end_seconds - start_seconds) ÷ 2
@@ -278,7 +278,7 @@ function grid_to_tor_life_risk_labels(tor_events, forecast, f1_or_f2_is_soonest 
   StormEvents.grid_to_tor_life_risk_neighborhoods(tor_events, forecast.grid, EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast, f1_or_f2_is_soonest = 2)
+function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast, f1_or_f2_is_soonest)
   # Annoying that we have to recalculate this.
   # The end_seconds will always be the last hour of the convective day
   # start_seconds depends on whether the run started during the day or not
@@ -291,7 +291,7 @@ function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gri
   max.(measured_labels, estimated_labels)
 end
 
-function compute_is_near_day_storm_event(forecast, f1_or_f2_is_soonest = 2) :: Array{Float32,1}
+function compute_is_near_day_storm_event(forecast, f1_or_f2_is_soonest) :: Array{Float32,1}
   start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + f1_or_f2_is_soonest*HOUR) - 30*MINUTE
   end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
   window_half_size = (end_seconds - start_seconds) ÷ 2
