@@ -557,7 +557,7 @@ function do_it_all(forecasts, forecast_hour_range, model_names, event_names, mak
   # vec of (model_name, var_name)
   models = map(m -> (m[1], m[2]), hour_models)
 
-  validation_forecasts_day_accumulators, validation_forecasts_day2_accumulators, validation_forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(validation_forecasts_calibrated, models; module_name = "daily_accs")
+  validation_forecasts_day_accumulators, validation_forecasts_day2_accumulators, validation_forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(validation_forecasts_calibrated, models, 2; module_name = "daily_accs")
 
   # ensure we don't accidentally use these
   validation_forecasts = nothing

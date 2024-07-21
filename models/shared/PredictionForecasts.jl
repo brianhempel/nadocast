@@ -203,10 +203,10 @@ end
 
 
 # models is array of (_, var_name, ...) tuples
-function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name)
+function daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models, f1_or_f2_is_soonest; module_name)
   event_types_count = length(models)
 
-  day_hourly_predictions, day2_hourly_predictions, fourhourly_predictions = ForecastCombinators.gather_daily_and_fourhourly(hourly_prediction_forecasts)
+  day_hourly_predictions, day2_hourly_predictions, fourhourly_predictions = ForecastCombinators.gather_daily_and_fourhourly(hourly_prediction_forecasts, f1_or_f2_is_soonest)
 
   hourlies_to_accs_inventory_transformer(day_or_four_hour_str) = (base_forecast, base_inventory) -> begin
     out = Inventories.InventoryLine[]

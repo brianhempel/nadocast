@@ -401,7 +401,7 @@ function reload_forecasts()
 
   hourly_prediction_forecasts = vcat(_forecasts_href_newer_combined,_forecasts_sref_newer_combined)
 
-  _forecasts_day_accumulators, _forecasts_day2_accumulators_unused, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models; module_name = "CombinedHREFSREF")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators_unused, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(hourly_prediction_forecasts, models, 2; module_name = "CombinedHREFSREF")
 
   event_to_day_bins = Dict{String, Vector{Float32}}(
     "tornado"      => [0.022898283, 0.07626015,  0.16708241, 1.0],

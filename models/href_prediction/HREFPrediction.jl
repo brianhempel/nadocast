@@ -489,7 +489,7 @@ function reload_forecasts()
   # 6. should thereby be absolutely calibrated (check)
   # 7. calibrate to SPC thresholds (linear interpolation)
 
-  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPrediction")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models, 2; module_name = "HREFPrediction")
 
   # The following was computed in TrainDay.jl
 

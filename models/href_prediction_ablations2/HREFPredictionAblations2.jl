@@ -303,7 +303,7 @@ function reload_forecasts()
   # # 6. should thereby be absolutely calibrated (check)
   # # 7. calibrate to SPC thresholds (linear interpolation)
 
-  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPredictionAblations2")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models, 2; module_name = "HREFPredictionAblations2")
 
   # # The following was computed in TrainDay.jl
   model_name_to_day_bins = Dict{String, Vector{Float32}}("wind_mean_prob_computed_climatology_blurs_910" => [0.115368165, 0.25932494, 0.43146545, 1.0], "hail_mean_prob_computed_climatology_blurs_910" => [0.06547251, 0.15664904, 0.29551116, 1.0], "wind_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.115368165, 0.25932494, 0.43146545, 1.0], "tornado_mean_prob_computed_climatology_blurs_910" => [0.02166239, 0.06790343, 0.16562855, 1.0], "tornado_full_13831" => [0.021043906, 0.074019335, 0.17095083, 1.0], "hail_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.06547251, 0.15664904, 0.29551116, 1.0], "wind_full_13831" => [0.12129908, 0.27009565, 0.4460996, 1.0], "hail_full_13831" => [0.066225864, 0.15690458, 0.29827937, 1.0], "tornado_mean_prob_computed_climatology_blurs_910_before_20200523" => [0.022665959, 0.06817255, 0.1642723, 1.0])

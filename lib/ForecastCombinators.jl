@@ -118,7 +118,7 @@ end
 #   day2_hourlies_concated,
 #   fourhourlies_concated
 # )
-function gather_daily_and_fourhourly(hourly_forecasts)
+function gather_daily_and_fourhourly(hourly_forecasts, f1_or_f2_is_soonest)
   run_time_seconds_to_hourly_forecasts = Forecasts.run_time_seconds_to_forecasts(hourly_forecasts)
 
   run_ymdhs = sort(unique(map(Forecasts.run_year_month_day_hour, hourly_forecasts)), alg=MergeSort)
@@ -142,7 +142,7 @@ function gather_daily_and_fourhourly(hourly_forecasts)
       end
     end
 
-    forecast_hours_in_convective_day1 = max(12-run_hour,2) : 35-run_hour
+    forecast_hours_in_convective_day1 = max(12-run_hour,f1_or_f2_is_soonest) : 35-run_hour
     forecast_hours_in_convective_day2 = forecast_hours_in_convective_day1.stop+1 : forecast_hours_in_convective_day1.stop+24
 
     forecasts_for_convective_day1 = filter(forecast -> forecast.forecast_hour in forecast_hours_in_convective_day1, forecasts_for_run_time)

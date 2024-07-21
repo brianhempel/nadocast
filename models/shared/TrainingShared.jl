@@ -236,7 +236,6 @@ end
 # Dict of name to (forecast_has_event, forecast_to_gridpoint_labels)
 event_name_to_forecast_predicate = Dict(
   "tornado"           => forecast_is_tornado_hour,
-  "tornado_life_risk" => forecast_is_tornado_hour,
   "wind"              => forecast_is_severe_wind_hour,
   "wind_adj"          => forecast_is_severe_wind_hour,
   "hail"              => forecast_is_severe_hail_hour,
@@ -244,11 +243,11 @@ event_name_to_forecast_predicate = Dict(
   "sig_wind"          => forecast_is_sig_wind_hour,
   "sig_wind_adj"      => forecast_is_sig_wind_hour,
   "sig_hail"          => forecast_is_sig_hail_hour,
+  "tornado_life_risk" => forecast_is_tornado_hour,
 )
 
 event_name_to_labeler = Dict(
   "tornado"           => (forecast -> grid_to_labels(StormEvents.conus_tornado_events(),                                                                                                                           forecast)),
-  "tornado_life_risk" => (forecast -> grid_to_tor_life_risk_labels(StormEvents.conus_tornado_events(),                                                                                                             forecast)),
   "wind"              => (forecast -> grid_to_labels(StormEvents.conus_severe_wind_events(),                                                                                                                       forecast)),
   "wind_adj"          => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), hour_estimated_wind_gridded_normalization(), forecast)),
   "hail"              => (forecast -> grid_to_labels(StormEvents.conus_severe_hail_events(),                                                                                                                       forecast)),
@@ -256,25 +255,34 @@ event_name_to_labeler = Dict(
   "sig_wind"          => (forecast -> grid_to_labels(StormEvents.conus_sig_wind_events(),                                                                                                                          forecast)),
   "sig_wind_adj"      => (forecast -> grid_to_adjusted_wind_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), hour_estimated_sig_wind_gridded_normalization(),   forecast)),
   "sig_hail"          => (forecast -> grid_to_labels(StormEvents.conus_sig_hail_events(),                                                                                                                          forecast)),
+  "tornado_life_risk" => (forecast -> grid_to_tor_life_risk_labels(StormEvents.conus_tornado_events(),                                                                                                             forecast)),
 )
 
 
-function grid_to_day_labels(events, forecast)
+function grid_to_day_labels(events, forecast, f1_or_f2_is_soonest = 2)
   # Annoying that we have to recalculate this.
   # The end_seconds will always be the last hour of the convective day
   # start_seconds depends on whether the run started during the day or not
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + f1_or_f2_is_soonest*HOUR) - 30*MINUTE
   end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
   StormEvents.grid_to_event_neighborhoods(events, forecast.grid, TrainingShared.EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast)
+function grid_to_tor_life_risk_labels(tor_events, forecast, f1_or_f2_is_soonest = 2)
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + f1_or_f2_is_soonest*HOUR) - 30*MINUTE
+  end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
+  window_half_size = (end_seconds - start_seconds) ÷ 2
+  window_mid_time  = (end_seconds + start_seconds) ÷ 2
+  StormEvents.grid_to_tor_life_risk_neighborhoods(tor_events, forecast.grid, EVENT_SPATIAL_RADIUS_MILES, window_mid_time, window_half_size)
+end
+
+function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gridded_normalization, forecast, f1_or_f2_is_soonest = 2)
   # Annoying that we have to recalculate this.
   # The end_seconds will always be the last hour of the convective day
   # start_seconds depends on whether the run started during the day or not
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + f1_or_f2_is_soonest*HOUR) - 30*MINUTE
   end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
@@ -283,23 +291,24 @@ function grid_to_adjusted_wind_day_labels(measured_events, estimated_events, gri
   max.(measured_labels, estimated_labels)
 end
 
-function compute_is_near_day_storm_event(forecast) :: Array{Float32,1}
-  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + 2*HOUR) - 30*MINUTE
+function compute_is_near_day_storm_event(forecast, f1_or_f2_is_soonest = 2) :: Array{Float32,1}
+  start_seconds    = max(Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) - 23*HOUR, Forecasts.run_time_in_seconds_since_epoch_utc(forecast) + f1_or_f2_is_soonest*HOUR) - 30*MINUTE
   end_seconds      = Forecasts.valid_time_in_seconds_since_epoch_utc(forecast) + 30*MINUTE
   window_half_size = (end_seconds - start_seconds) ÷ 2
   window_mid_time  = (end_seconds + start_seconds) ÷ 2
   StormEvents.grid_to_event_neighborhoods(StormEvents.conus_events(), forecast.grid, NEAR_EVENT_RADIUS_MILES, window_mid_time, window_half_size)
 end
 
-event_name_to_day_labeler = Dict(
-  "tornado"      => (forecast -> grid_to_day_labels(StormEvents.conus_tornado_events(),     forecast)),
-  "wind"         => (forecast -> grid_to_day_labels(StormEvents.conus_severe_wind_events(), forecast)),
-  "wind_adj"     => (forecast -> grid_to_adjusted_wind_day_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), day_estimated_wind_gridded_normalization(), forecast)),
-  "hail"         => (forecast -> grid_to_day_labels(StormEvents.conus_severe_hail_events(), forecast)),
-  "sig_tornado"  => (forecast -> grid_to_day_labels(StormEvents.conus_sig_tornado_events(), forecast)),
-  "sig_wind"     => (forecast -> grid_to_day_labels(StormEvents.conus_sig_wind_events(),    forecast)),
-  "sig_wind_adj" => (forecast -> grid_to_adjusted_wind_day_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), day_estimated_sig_wind_gridded_normalization(),   forecast)),
-  "sig_hail"     => (forecast -> grid_to_day_labels(StormEvents.conus_sig_hail_events(),    forecast)),
+event_name_to_day_labeler(f1_or_f2_is_soonest) = Dict(
+  "tornado"           => (forecast -> grid_to_day_labels(StormEvents.conus_tornado_events(),     forecast, f1_or_f2_is_soonest)),
+  "wind"              => (forecast -> grid_to_day_labels(StormEvents.conus_severe_wind_events(), forecast, f1_or_f2_is_soonest)),
+  "wind_adj"          => (forecast -> grid_to_adjusted_wind_day_labels(StormEvents.conus_measured_severe_wind_events(), StormEvents.conus_estimated_severe_wind_events(), day_estimated_wind_gridded_normalization(), forecast, f1_or_f2_is_soonest)),
+  "hail"              => (forecast -> grid_to_day_labels(StormEvents.conus_severe_hail_events(), forecast, f1_or_f2_is_soonest)),
+  "sig_tornado"       => (forecast -> grid_to_day_labels(StormEvents.conus_sig_tornado_events(), forecast, f1_or_f2_is_soonest)),
+  "sig_wind"          => (forecast -> grid_to_day_labels(StormEvents.conus_sig_wind_events(),    forecast, f1_or_f2_is_soonest)),
+  "sig_wind_adj"      => (forecast -> grid_to_adjusted_wind_day_labels(StormEvents.conus_measured_sig_wind_events(), StormEvents.conus_estimated_sig_wind_events(), day_estimated_sig_wind_gridded_normalization(), forecast, f1_or_f2_is_soonest)),
+  "sig_hail"          => (forecast -> grid_to_day_labels(StormEvents.conus_sig_hail_events(),    forecast, f1_or_f2_is_soonest)),
+  "tornado_life_risk" => (forecast -> grid_to_tor_life_risk_day_labels(StormEvents.conus_tornado_events(), forecast, f1_or_f2_is_soonest)),
 )
 
 
