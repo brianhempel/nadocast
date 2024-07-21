@@ -483,20 +483,20 @@ function reload_forecasts()
   _forecasts_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_calibrated, models, gated_models; model_name = "HREF_hour_severe_probabilities_with_sig_gated")
 
 
-  # # Day & Four-hourly forecasts
+  # Day & Four-hourly forecasts
 
-  # # 1. Try both independent events total prob and max hourly prob as the main descriminator
-  # # 2. bin predictions into 10 bins of equal weight of positive labels
-  # # 3. combine bin-pairs (overlapping, 9 bins total)
-  # # 4. train a logistic regression for each bin,
-  # #   σ(a1*logit(independent events total prob) +
-  # #     a2*logit(max hourly prob) +
-  # #     b)
-  # # 5. prediction is weighted mean of the two overlapping logistic models
-  # # 6. should thereby be absolutely calibrated (check)
-  # # 7. calibrate to SPC thresholds (linear interpolation)
+  # 1. Try both independent events total prob and max hourly prob as the main descriminator
+  # 2. bin predictions into 10 bins of equal weight of positive labels
+  # 3. combine bin-pairs (overlapping, 9 bins total)
+  # 4. train a logistic regression for each bin,
+  #   σ(a1*logit(independent events total prob) +
+  #     a2*logit(max hourly prob) +
+  #     b)
+  # 5. prediction is weighted mean of the two overlapping logistic models
+  # 6. should thereby be absolutely calibrated (check)
+  # 7. calibrate to SPC thresholds (linear interpolation)
 
-  # _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPrediction")
+  _forecasts_day_accumulators, _forecasts_day2_accumulators, _forecasts_fourhourly_accumulators = PredictionForecasts.daily_and_fourhourly_accumulators(_forecasts_calibrated, models; module_name = "HREFPrediction")
 
   # # The following was computed in TrainDay.jl
 
