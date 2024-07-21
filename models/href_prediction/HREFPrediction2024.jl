@@ -405,79 +405,82 @@ function reload_forecasts()
 
   # Calibrating hourly predictions to validation data
 
-  # event_to_bins = Dict{String, Vector{Float32}}(
-  #   "tornado"      => [0.0012153604,  0.004538168,  0.011742671,  0.023059275,  0.049979284,  1.0],
-  #   "wind"         => [0.0078376075,  0.020091131,  0.037815828,  0.065400586,  0.11733462,   1.0],
-  #   "wind_adj"     => [0.0025728762,  0.008021789,  0.016496103,  0.030200316,  0.058084033,  1.0],
-  #   "hail"         => [0.0033965781,  0.00951148,   0.0200999,    0.037743744,  0.07645232,   1.0],
-  #   "sig_tornado"  => [0.00080238597, 0.0032272756, 0.007747574,  0.0136314705, 0.022335978,  1.0],
-  #   "sig_wind"     => [0.0006871624,  0.0022018508, 0.0047563836, 0.008192127,  0.015201166,  1.0],
-  #   "sig_wind_adj" => [0.00042257016, 0.0012706288, 0.002259613,  0.003675646,  0.0054352577, 1.0],
-  #   "sig_hail"     => [0.00072055974, 0.0021597594, 0.00463198,   0.009187652,  0.01903059,   1.0],
-  # )
-  # event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
-  #   "tornado"      => [[1.0710595, 0.5394862],  [0.89414734, -0.5616081],   [1.108447,  0.50613326],  [0.83939207, -0.5758451],  [1.2171175,  0.7334359]],
-  #   "wind"         => [[1.0940193, 0.44082266], [1.1078424,  0.48961264],   [1.0705312, 0.36004978],  [1.0221666,  0.22469698],  [0.9163128,  -0.022937609]],
-  #   "wind_adj"     => [[1.1026261, 0.554337],   [1.1907648,  0.9671046],    [1.1658177, 0.862035],    [1.0740721,  0.5209931],   [0.9590977,  0.1968526]],
-  #   "hail"         => [[1.0600259, 0.43388337], [0.96319646, -0.097637914], [1.0792756, 0.39443073],  [0.9629313,  -0.01864577], [1.0167043,  0.13172606]],
-  #   "sig_tornado"  => [[1.0426707, 0.21755064], [1.1516033,  0.7787872],    [1.6196959, 3.2147853],   [1.4218588,  2.3287997],   [1.032921,   0.7553395]],
-  #   "sig_wind"     => [[1.0894886, 0.7778136],  [1.0595194,  0.49330923],   [1.3312615, 2.0373042],   [0.87163,    -0.28045976], [0.66988313, -1.1392391]],
-  #   "sig_wind_adj" => [[1.0503622, 0.2618211],  [1.5049535,  3.5953336],    [1.3739139, 2.7983332],   [2.022486,   6.61417],     [0.99839044, 1.0990105]],
-  #   "sig_hail"     => [[1.0996535, 0.9160373],  [1.0066487,  0.20982021],   [0.9350299, -0.20348155], [0.9644414,  -0.02964372], [0.8333078,  -0.5743816]],
-  # )
+  event_to_bins = Dict{String, Vector{Float32}}(
+    "tornado"           => [0.0011201472,  0.0040470827,  0.009924359,  0.020150831,  0.04450299,   1.0],
+    "wind"              => [0.0075269686,  0.019717596,   0.037927717,  0.067318514,  0.12851062,   1.0],
+    "wind_adj"          => [0.0028242674,  0.008482344,   0.017187402,  0.032382138,  0.06685648,   1.0],
+    "hail"              => [0.003987495,   0.011505866,   0.023705853,  0.04564259,   0.09055661,   1.0],
+    "sig_tornado"       => [0.00048080692, 0.0023937228,  0.006148654,  0.012262353,  0.022267453,  1.0],
+    "sig_wind"          => [0.00078459026, 0.0025756117,  0.005378738,  0.009706564,  0.020927433,  1.0],
+    "sig_wind_adj"      => [0.00041078764, 0.0013922893,  0.002989863,  0.0053869793, 0.010809073,  1.0],
+    "sig_hail"          => [0.00091282465, 0.0031095394,  0.00634054,   0.012477984,  0.02483106,   1.0],
+    "tornado_life_risk" => [0.00011407318, 0.00061691855, 0.0014705167, 0.0029623061, 0.0065326905, 1.0],
+  )
 
-  # # Returns array of (event_name, var_name, predict)
-  # function make_models(event_to_bins, event_to_bins_logistic_coeffs)
-  #   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
+  event_to_bins_logistic_coeffs = Dict{String, Vector{Vector{Float32}}}(
+    "tornado"           => [[1.0151445,  0.2071434],   [0.990645,  0.08936819], [1.0937685, 0.61661005],  [0.86215496, -0.3573002],  [0.9471853,  -0.049062375]],
+    "wind"              => [[1.052107,   0.26756564],  [1.0934643, 0.45261195], [1.0603855, 0.33706936],  [0.97554934, 0.09084179],  [0.98142743, 0.10940261]],
+    "wind_adj"          => [[1.0665799,  0.36155185],  [1.2188917, 1.1445187],  [1.0872297, 0.5649324],   [1.0266879,  0.34076434],  [1.036534,   0.3751357]],
+    "hail"              => [[0.98223704, -0.05874168], [1.0158885, 0.1087229],  [1.0228801, 0.14139068],  [1.0846623,  0.34556273],  [1.127743,   0.46917012]],
+    "sig_tornado"       => [[1.003107,   0.06779992],  [1.0754979, 0.41287646], [1.3813931, 2.1319306],   [1.3965261,  2.2143273],   [0.91918075, 0.24742183]],
+    "sig_wind"          => [[1.030558,   0.19321586],  [1.1623001, 1.0385767],  [1.1844709, 1.1859512],   [0.7777289,  -0.807949],   [0.9798549,  0.035456475]],
+    "sig_wind_adj"      => [[0.9896531,  -0.11605113], [1.1852539, 1.3334796],  [1.3313962, 2.2548943],   [0.9650048,  0.245746],    [1.0000306,  0.3686924]],
+    "sig_hail"          => [[0.98084414, -0.12066075], [1.166308,  0.9986842],  [0.9872798, 0.031519376], [1.0985931,  0.55506366],  [0.87546086, -0.3075612]],
+    "tornado_life_risk" => [[0.97598267, 0.19340746],  [1.0696578, 0.8193858],  [1.0577359, 0.78586924],  [0.8839506,  -0.27480733], [0.64814734, -1.5873486]],
+  )
 
-  #   map(1:length(models)) do model_i
-  #     event_name, var_name, _, _, _ = models[model_i] # event_name == model_name here
+  # Returns array of (event_name, var_name, predict)
+  function make_models(event_to_bins, event_to_bins_logistic_coeffs)
+    ratio_between(x, lo, hi) = (x - lo) / (hi - lo)
 
-  #     predict(forecasts, data) = begin
-  #       href_ŷs = @view data[:,model_i]
+    map(1:length(models)) do model_i
+      event_name, var_name, _, _, _ = models[model_i] # event_name == model_name here
 
-  #       out = Array{Float32}(undef, length(href_ŷs))
+      predict(forecasts, data) = begin
+        href_ŷs = @view data[:,model_i]
 
-  #       bin_maxes            = event_to_bins[event_name]
-  #       bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
+        out = Array{Float32}(undef, length(href_ŷs))
 
-  #       @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
+        bin_maxes            = event_to_bins[event_name]
+        bins_logistic_coeffs = event_to_bins_logistic_coeffs[event_name]
 
-  #       predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
+        @assert length(bin_maxes) == length(bins_logistic_coeffs) + 1
 
-  #       Threads.@threads :static for i in 1:length(href_ŷs)
-  #         href_ŷ = href_ŷs[i]
-  #         if href_ŷ <= bin_maxes[1]
-  #           # Bin 1-2 predictor only
-  #           ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
-  #         elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
-  #           # Bin 5-6 predictor only
-  #           ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
-  #         else
-  #           # Overlapping bins
-  #           higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
-  #           lower_bin_i  = higher_bin_i - 1
-  #           coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
-  #           coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
+        predict_one(coeffs, href_ŷ) = σ(coeffs[1]*logit(href_ŷ) + coeffs[2])
 
-  #           # Bin 1-2 and 2-3 predictors
-  #           ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
-  #           ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
-  #         end
-  #         out[i] = ŷ
-  #       end
+        Threads.@threads :static for i in 1:length(href_ŷs)
+          href_ŷ = href_ŷs[i]
+          if href_ŷ <= bin_maxes[1]
+            # Bin 1-2 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[1], href_ŷ)
+          elseif href_ŷ > bin_maxes[length(bin_maxes) - 1]
+            # Bin 5-6 predictor only
+            ŷ = predict_one(bins_logistic_coeffs[length(bins_logistic_coeffs)], href_ŷ)
+          else
+            # Overlapping bins
+            higher_bin_i = findfirst(bin_max -> href_ŷ <= bin_max, bin_maxes)
+            lower_bin_i  = higher_bin_i - 1
+            coeffs_higher_bin = bins_logistic_coeffs[higher_bin_i]
+            coeffs_lower_bin  = bins_logistic_coeffs[lower_bin_i]
 
-  #       out
-  #     end
+            # Bin 1-2 and 2-3 predictors
+            ratio = ratio_between(href_ŷ, bin_maxes[lower_bin_i], bin_maxes[higher_bin_i])
+            ŷ = ratio*predict_one(coeffs_higher_bin, href_ŷ) + (1f0 - ratio)*predict_one(coeffs_lower_bin, href_ŷ)
+          end
+          out[i] = ŷ
+        end
 
-  #     (event_name, var_name, predict)
-  #   end
-  # end
+        out
+      end
 
-  # hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
+      (event_name, var_name, predict)
+    end
+  end
 
-  # _forecasts_calibrated                = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_severe_probabilities")
-  # _forecasts_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_calibrated, models, gated_models; model_name = "HREF_hour_severe_probabilities_with_sig_gated")
+  hour_models = make_models(event_to_bins, event_to_bins_logistic_coeffs)
+
+  _forecasts_calibrated                = PredictionForecasts.simple_prediction_forecasts(_forecasts_blurred, hour_models; model_name = "HREF_hour_severe_probabilities")
+  _forecasts_calibrated_with_sig_gated = PredictionForecasts.added_gated_predictions(_forecasts_calibrated, models, gated_models; model_name = "HREF_hour_severe_probabilities_with_sig_gated")
 
 
   # # Day & Four-hourly forecasts
