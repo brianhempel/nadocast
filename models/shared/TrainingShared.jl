@@ -536,7 +536,7 @@ function read_data_labels_weights_from_disk(save_dir; chunk_i = 1, chunk_count =
   only_feature_is =
     if isnothing(only_features)
       1:raw_feature_count
-    elseif only_features[0] in feature_names
+    elseif only_features[1] in feature_names
       map(feat_name -> findfirst(isequal(feat_name), feature_names), only_features)
     else
       only_features :: Vector{Int64}
