@@ -18,6 +18,7 @@ wind_hail_colors_path = (@__DIR__) * "/wind_hail_colors.cpt"
 sig_colors_path       = (@__DIR__) * "/sig_colors.cpt"
 sig_tornado_more_colors_path   = (@__DIR__) * "/sig_tornado_more_colors.cpt" # 10% contour is blackened
 sig_wind_hail_more_colors_path = (@__DIR__) * "/sig_wind_hail_more_colors.cpt" # adds a 10% contour
+tornado_life_risk_colors_path  = (@__DIR__) * "/tornado_life_risk_colors.cpt"
 
 HOUR = 60*60
 
@@ -214,6 +215,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       "Sigwind"          => sig_wind_hail_more_colors_path,
       "Sigwind Adjusted" => sig_wind_hail_more_colors_path,
       "Sighail"          => sig_wind_hail_more_colors_path,
+      "Tor Life Risk"    => tornado_life_risk_colors_path,
     )[event_title]
 
     dark_colors_path = replace(colors_path, ".cpt" => "-dark.cpt")
@@ -227,6 +229,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       "Sigwind"          => "65+ knot t-storm wind",
       "Sigwind Adjusted" => "65+ knot t-storm wind",
       "Sighail"          => "2+ inch hail",
+      "Tor Life Risk"    => "a tornado death",
     )[event_title]
 
     sig_hazard_str = Dict(
@@ -238,6 +241,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       "Sigwind"          => "",
       "Sigwind Adjusted" => "",
       "Sighail"          => "",
+      "Tor Life Risk"    => "",
     )[event_title]
 
     println(f, "projection=-Jl-100/35/33/45/0.3")
