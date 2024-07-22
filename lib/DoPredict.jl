@@ -253,7 +253,7 @@ function do_forecast(forecast)
           sref_run_hours = sref_run_hours,
           pdf = pdf
         )
-        push!(plotting_paths, sig_period_path)
+        !isnothing(sig_model_i) && push!(plotting_paths, sig_period_path)
       end
 
       if event_name == "tornado" && !is_hourly && !is_fourhourly && !is_absolutely_calibrated
