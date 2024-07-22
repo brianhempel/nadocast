@@ -1,0 +1,112 @@
+<html>
+  <head>
+    <title>Nadocast Data Viewer</title>
+    <style>
+      img { width: 33%; }
+    </style>
+  </head>
+  <body>
+    <strong>Run Date:</strong>
+    <input type="date">
+
+    <strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run:</strong>
+    <label><input type="radio" name="time" value="t0z 2022_models t00z_f12-35 day1 1200">0z</label>
+    <label><input type="radio" name="time" value="t12z 2022_models t12z_f02-23 day1 1300">12z</label>
+    <label><input type="radio" name="time" value="t14z 2020_models t14z_f02-21 day1 1630">14z (old, no sig, adds HRRR)</label>
+    <label><input type="radio" name="time" value="t18z 2022_models t18z_f02-17 day1 2000">18z</label>
+    <label><input type="radio" name="time" value="t12z 2022_models t12z_f24-47 day2 0600">12z Day 2</label>
+
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <label><input type="checkbox" name="show_sig">Sig</label>
+
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <label><input type="checkbox" name="2024_preliminary">2024 Preliminary Models</label>
+
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <label><input type="checkbox" name="reweighted_wind">Reweighted Wind</label>
+
+    <strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Calibration:</strong>
+    <label><input type="radio" name="calibration" value="" checked>SPC-like</label>
+    <label><input type="radio" name="calibration" value="abs_calib_">Absolute</label>
+
+    <strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SPC:</strong>
+    <label><input type="radio" name="verif" value="" checked>Outlook</label>
+    <label><input type="radio" name="verif" value="v_">Verification</label>
+
+    <br><br>
+
+    <div>
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_tornado_CALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_tornado_CALIBYRMODAY_RT_VALID.png"></a>
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_wind_WINDADJCALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_wind_WINDADJCALIBYRMODAY_RT_VALID.png"></a>
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_hail_CALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_hail_CALIBYRMODAY_RT_VALID.png"></a>
+    </div>
+
+    <div id="sig" style="display: none;">
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_sig_tornado_CALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_sig_tornado_CALIBYRMODAY_RT_VALID.png"></a>
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_sig_wind_WINDADJCALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_sig_wind_WINDADJCALIBYRMODAY_RT_VALID.png"></a>
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_sig_hail_CALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_sig_hail_CALIBYRMODAY_RT_VALID.png"></a>
+    </div>
+
+    <div>
+      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_torn_prt.gif"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_torn_prt.gif"></a>
+      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_wind_prt.gif"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_wind_prt.gif"></a>
+      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_hail_prt.gif"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_hail_prt.gif"></a>
+    </div>
+
+    <div id="tor_life_risk" style="display: none;">
+      <a data-href-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_tornado_life_risk_CALIBYRMODAY_RT_VALID.png"><img data-src-template="http://data.nadocast.com/YRMO/YRMODAY/RUN_TIME/nadocast_MODEL_conus_tornado_life_risk_CALIBYRMODAY_RT_VALID.png"></a>
+    </div>
+
+    <script>
+      document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('change', () => {
+          let [yr, mo, day] = document.querySelector('input[type="date"]').value.split('-')
+          let [run_time, model, rt_valid, spc_d1_d2, spc_valid] = document.querySelector('input[name="time"]:checked').value.split(' ')
+
+          let show_sig = document.querySelector('input[name="show_sig"]').checked
+
+          let preliminary_2024 = document.querySelector('input[name="2024_preliminary"]').checked
+
+          let reweighted_wind = document.querySelector('input[name="reweighted_wind"]').checked ? 'adj_' : ''
+
+          let calib = document.querySelector('input[name="calibration"]:checked').value
+          let verif = document.querySelector('input[name="verif"]:checked').value
+
+          if (show_sig) {
+            document.getElementById('sig').style.display = 'block'
+          } else {
+            document.getElementById('sig').style.display = 'none'
+          }
+
+          if (preliminary_2024) {
+            document.getElementById('tor_life_risk').style.display = 'block'
+            model = "2024_preliminary"
+          } else {
+            document.getElementById('tor_life_risk').style.display = 'none'
+          }
+
+          function template_to_path(template) {
+            return template.
+              replace(/SPCVERIF/g, verif).
+              replace(/SPCD1D2/g, spc_d1_d2).
+              replace(/SPCVALID/g, spc_valid).
+              replace(/MODEL/g, model).replace(/YR/g, yr).
+              replace(/MO/g, mo).
+              replace(/DAY/g, day).
+              replace(/RUN_TIME/g, run_time).
+              replace(/RT_VALID/g, rt_valid).
+              replace(/CALIB/g, calib).
+              replace(/WINDADJ/g, reweighted_wind)
+          }
+
+          document.querySelectorAll('img[data-src-template]').forEach(img => {
+            img.src = template_to_path(img.dataset.srcTemplate)
+          })
+          document.querySelectorAll('a[data-href-template]').forEach(a => {
+            a.href = template_to_path(a.dataset.hrefTemplate)
+          })
+        })
+      })
+    </script>
+  </body>
+</html>
