@@ -20,7 +20,7 @@
     <label><input type="checkbox" name="show_sig">Sig</label>
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <label><input type="checkbox" name="2024_preliminary">2024 Preliminary Models</label>
+    <label><input type="checkbox" name="2024_preliminary_models">2024 Preliminary Models</label>
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <label><input type="checkbox" name="reweighted_wind">Reweighted Wind</label>
@@ -65,7 +65,7 @@
 
           let show_sig = document.querySelector('input[name="show_sig"]').checked
 
-          let preliminary_2024 = document.querySelector('input[name="2024_preliminary"]').checked
+          let preliminary_2024 = document.querySelector('input[name="2024_preliminary_models"]').checked
 
           let reweighted_wind = document.querySelector('input[name="reweighted_wind"]').checked ? 'adj_' : ''
 
@@ -80,7 +80,7 @@
 
           if (preliminary_2024) {
             document.getElementById('tor_life_risk').style.display = 'block'
-            model = "2024_preliminary"
+            model = "2024_preliminary_models"
           } else {
             document.getElementById('tor_life_risk').style.display = 'none'
           }
