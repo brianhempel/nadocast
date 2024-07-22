@@ -25,6 +25,7 @@ import PlotMap
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/href_prediction")
 import HREFPrediction
+import HREFPrediction2024
 
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_href_sref")
 import CombinedHREFSREF
@@ -32,9 +33,18 @@ import CombinedHREFSREF
 push!(LOAD_PATH, (@__DIR__) * "/../models/combined_hrrr_rap_href_sref")
 import CombinedHRRRRAPHREFSREF
 
-day1_forecasts, day1_absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_calibrated_forecasts =
-  if get(ENV, "HRRR_RAP", "true") == "false"
-    (CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day2_with_sig_gated())
+model_year = get(ENV, "NADOCAST_MODEL", "2022")
+
+models, models_with_gated, day1_forecasts, day1_absolutely_calibrated_forecasts, day2_forecasts, day2_absolutely_calibrated_forecasts =
+  if get(ENV, "HRRR_RAP", "false") == "false"
+    if model_year == "2022"
+      (CombinedHREFSREF.models, CombinedHREFSREF.models_with_gated, CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day2_with_sig_gated())
+    elseif model_year == "2024_preliminary"
+      # Only absolutely calibrated for the moment
+      (HREFPrediction2024.models, HREFPrediction2024.models_with_gated, HREFPrediction2024.forecasts_day_with_sig_gated(), HREFPrediction2024.forecasts_day_with_sig_gated(), HREFPrediction2024.forecasts_day2_with_sig_gated(), HREFPrediction2024.forecasts_day2_with_sig_gated())
+    else
+      (Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[])
+    end
   else
     (Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[])
     # [CombinedHREFSREF.forecasts_day_spc_calibrated(); CombinedHRRRRAPHREFSREF.forecasts_day_spc_calibrated()]
@@ -131,7 +141,7 @@ function do_forecast(forecast)
   rsync_dir = "$(Dates.format(nadocast_run_time_utc, "yyyymm"))"
   push!(rsync_dirs, rsync_dir)
 
-  non_sig_model_count = count(m -> !occursin("sig_", m[1]), CombinedHREFSREF.models)
+  non_sig_model_is = findall(m -> !occursin("sig_", m[1]), models)
 
   function plot_forecast(forecast; is_hourly, is_fourhourly, is_absolutely_calibrated = false, grib2 = true, draw = true, pdf = true)
 
@@ -179,19 +189,21 @@ function do_forecast(forecast)
       end
     mkpath(out_dir)
 
-    for model_i in 1:non_sig_model_count
-      event_name, _, _     = CombinedHREFSREF.models[model_i]
-      sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", CombinedHREFSREF.models_with_gated)
-      sig_event_name, _, _ = CombinedHREFSREF.models_with_gated[sig_model_i]
+    for model_i in non_sig_model_is
+      event_name, _, _     = models[model_i]
       calibration_blurb    = is_absolutely_calibrated ? "_abs_calib" : ""
       println("plotting$(grib2 ? " grib2" : "")$(draw ? " png" : "")$(draw && pdf ? " pdf" : "") for (sig_)$(event_name)$(calibration_blurb) f$(f_str)...")
-      out_path_prefix      = out_dir *     "nadocast_2022_models_conus_$(event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
-      sig_out_path_prefix  = out_dir * "nadocast_2022_models_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+      out_path_prefix      = out_dir * "nadocast_$(model_year)_models_conus_$(event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
       period_path          = out_path_prefix     * "_f$(f_str)"
-      sig_period_path      = sig_out_path_prefix * "_f$(f_str)"
       # write(period_path * ".float16.bin", Float16.(prediction))
       prediction           = @view predictions[:, model_i]
-      sig_prediction       = @view predictions[:, sig_model_i]
+      sig_model_i          = findfirst(m -> m[3] == "sig_$(event_name)_gated_by_$(event_name)", models_with_gated)
+      if !isnothing(sig_model_i)
+        sig_event_name, _, _ = models_with_gated[sig_model_i]
+        sig_out_path_prefix  = out_dir * "nadocast_$(model_year)_models_conus_$(sig_event_name)$(calibration_blurb)_$(Dates.format(nadocast_run_time_utc, "yyyymmdd"))_t$((@sprintf "%02d" nadocast_run_hour))z"
+        sig_period_path      = sig_out_path_prefix * "_f$(f_str)"
+        sig_prediction       = @view predictions[:, sig_model_i]
+      end
 
       if grib2
         Grib2.write_15km_HREF_probs_grib2(
@@ -201,7 +213,7 @@ function do_forecast(forecast)
           event_type = event_name,
           out_name = period_path * ".grib2",
         )
-        Grib2.write_15km_HREF_probs_grib2(
+        !isnothing(sig_model_i) && Grib2.write_15km_HREF_probs_grib2(
           sig_prediction;
           run_time = Forecasts.run_utc_datetime(forecast),
           forecast_hour = (is_hourly ? forecast.forecast_hour : (period_start_forecast_hour, period_stop_forecast_hour)),
@@ -215,9 +227,9 @@ function do_forecast(forecast)
           period_path,
           forecast.grid,
           prediction;
-          sig_vals = sig_prediction,
-          event_title = Dict("tornado" => "Tor", "wind" => "Wind", "wind_adj" => "Wind Adjusted", "hail" => "Hail")[event_name],
-          models_str = "2022 Models$(is_absolutely_calibrated ? ", Absolutely Calibrated" : "")",
+          sig_vals = !isnothing(sig_model_i) ? sig_prediction : nothing,
+          event_title = Dict("tornado" => "Tor", "wind" => "Wind", "wind_adj" => "Wind Adjusted", "hail" => "Hail", "tornado_life_risk" => "Tor Life Risk")[event_name],
+          models_str = "$(model_year) Models$(is_absolutely_calibrated ? ", Absolutely Calibrated" : "")",
           run_time_utc = nadocast_run_time_utc,
           forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
           hrrr_run_hours = hrrr_run_hours,
@@ -227,12 +239,12 @@ function do_forecast(forecast)
           pdf = pdf
         )
         push!(plotting_paths, period_path)
-        PlotMap.plot_map(
+        !isnothing(sig_model_i) && PlotMap.plot_map(
           sig_period_path,
           forecast.grid,
           sig_prediction;
           event_title = Dict("sig_tornado" => "Sigtor", "sig_wind" => "Sigwind", "sig_wind_adj" => "Sigwind Adjusted", "sig_hail" => "Sighail")[sig_event_name],
-          models_str = "2022 Models$(is_absolutely_calibrated ? ", Absolutely Calibrated" : "")",
+          models_str = "$(model_year) Models$(is_absolutely_calibrated ? ", Absolutely Calibrated" : "")",
           run_time_utc = nadocast_run_time_utc,
           forecast_hour_range = period_start_forecast_hour:period_stop_forecast_hour,
           hrrr_run_hours = hrrr_run_hours,
@@ -250,7 +262,9 @@ function do_forecast(forecast)
     end
   end
 
-  plot_forecast(forecast;                       is_hourly = false, is_fourhourly = false)
+  if model_year != "2024_preliminary"
+    plot_forecast(forecast; is_hourly = false, is_fourhourly = false)
+  end
   plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
   # @sync doesn't seem to work; poll until subprocesses are done.
@@ -275,11 +289,11 @@ function do_forecast(forecast)
 
     tweet_str =
       if Dates.now(Dates.UTC) > Forecasts.valid_utc_datetime(forecast)
-        "$(nadocast_run_hour)Z Day $(is_day1 ? "" : "2 ")Tornado Reforecast for $(Dates.format(valid_date, "yyyy-m-d")) (New New 2022 Models)"
+        "$(nadocast_run_hour)Z Day $(is_day1 ? "" : "2 ")Tornado Reforecast for $(Dates.format(valid_date, "yyyy-m-d")) (New New $(model_year) Models)"
       elseif is_day1
-        "$(nadocast_run_hour)Z Day Tornado Forecast (New New 2022 Models)"
+        "$(nadocast_run_hour)Z Day Tornado Forecast (New New $(model_year) Models)"
       else
-        "$(nadocast_run_hour)Z Day 2 Tornado Forecast for $(Dates.format(valid_date, "yyyy-m-d")) (New New 2022 Models)"
+        "$(nadocast_run_hour)Z Day 2 Tornado Forecast for $(Dates.format(valid_date, "yyyy-m-d")) (New New $(model_year) Models)"
       end
 
     for path in daily_paths_to_perhaps_tweet
