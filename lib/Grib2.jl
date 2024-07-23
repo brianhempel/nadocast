@@ -437,7 +437,7 @@ function write_15km_HREF_probs_grib2(probs :: AbstractVector; run_time :: Dates.
     "sig_wind"          => "SWINDPRO",
     "sig_wind_adj"      => "SWINDPRO",
     "sig_hail"          => "SHAILPRO",
-    "tornado_life_risk" => "TORPROB",
+    "tornado_life_risk" => "STORPROB",
   )[event_type]
 
   date_str = Printf.@sprintf "%04d%02d%02d%02d" Dates.year(run_time) Dates.month(run_time) Dates.day(run_time) Dates.hour(run_time)
