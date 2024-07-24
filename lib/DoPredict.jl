@@ -156,6 +156,11 @@ function do_forecast(forecast)
       end
     end
 
+    # Follows Forecasts.based_on to the leaves to find the underlying forecast hours
+    function forecast_hours(forecast)
+      forecast.based_on == [] ? [forecast.forecast_hour] : vcat(map(forecast_hours, forecast.based_on)...)
+    end
+
     hrrr_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HRRR")))
     rap_run_hours  = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "RAP")))
     href_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HREF")))
@@ -167,14 +172,14 @@ function do_forecast(forecast)
     ForecastCombinators.clear_cached_forecasts()
 
     period_stop_forecast_hour  = forecast.forecast_hour
-    period_start_forecast_hour =
-      if is_hourly
-        forecast.forecast_hour
-      elseif is_fourhourly
-        forecast.forecast_hour - 3
-      else
-        max(2, period_stop_forecast_hour - 23)
-      end
+    period_start_forecast_hour = minimum(forecast_hours(forecast))
+    #   if is_hourly
+    #     forecast.forecast_hour
+    #   elseif is_fourhourly
+    #     forecast.forecast_hour - 3
+    #   else
+    #     max(min_forecast_hour, period_stop_forecast_hour - 23)
+    #   end
     f_str = is_hourly ? (@sprintf "%02d" forecast.forecast_hour) : "$((@sprintf "%02d" period_start_forecast_hour))-$((@sprintf "%02d" period_stop_forecast_hour))"
 
     is_day1 = period_start_forecast_hour <= 12
