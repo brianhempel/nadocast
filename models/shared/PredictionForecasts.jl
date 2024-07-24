@@ -24,7 +24,7 @@ function weighted_prediction_between_models_at_different_forecast_hours(forecast
   (1 - high_weight) .* low_hour_predict(data) .+ high_weight .* high_hour_predict(data)
 end
 
-# calibrations should be ordered
+# calibrations should be ordered the same as the data
 function calibrated_forecasts(base_forecasts, calibrations; model_name = nothing)
 
   ratio_between(x, lo, hi) = (x - lo) / (hi - lo)

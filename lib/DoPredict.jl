@@ -41,7 +41,7 @@ models, models_with_gated, day1_forecasts, day1_absolutely_calibrated_forecasts,
       (CombinedHREFSREF.models, CombinedHREFSREF.models_with_gated, CombinedHREFSREF.forecasts_day_spc_calibrated_with_sig_gated(), CombinedHREFSREF.forecasts_day_with_sig_gated(), HREFPrediction.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction.forecasts_day2_with_sig_gated())
     elseif model_year == "2024_preliminary"
       # Only absolutely calibrated for the moment
-      (HREFPrediction2024.models, HREFPrediction2024.models_with_gated, HREFPrediction2024.forecasts_day_with_sig_gated(), HREFPrediction2024.forecasts_day_with_sig_gated(), HREFPrediction2024.forecasts_day2_with_sig_gated(), HREFPrediction2024.forecasts_day2_with_sig_gated())
+      (HREFPrediction2024.models, HREFPrediction2024.models_with_gated, HREFPrediction2024.forecasts_day_spc_calibrated_with_sig_gated(), HREFPrediction2024.forecasts_day_with_sig_gated(), HREFPrediction2024.forecasts_day2_spc_calibrated_with_sig_gated(), HREFPrediction2024.forecasts_day2_with_sig_gated())
     else
       (Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[], Forecasts.Forecast[])
     end
