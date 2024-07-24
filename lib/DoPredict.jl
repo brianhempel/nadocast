@@ -157,8 +157,12 @@ function do_forecast(forecast)
     end
 
     # Follows Forecasts.based_on to the leaves to find the underlying forecast hours
+    # BUT don't grab the forecast hours of the inputs used prior to running the GBDT
     function forecast_hours(forecast)
-      forecast.based_on == [] ? [forecast.forecast_hour] : vcat(map(forecast_hours, forecast.based_on)...)
+      vcat(
+        occursin("hour_severe_probabilities", forecast.model_name) ? [forecast.forecast_hour] : [],
+        map(forecast_hours, forecast.based_on)...
+      )
     end
 
     hrrr_run_hours = unique(map(forecast -> forecast.run_hour, model_parts(forecast, "HRRR")))
