@@ -267,9 +267,7 @@ function do_forecast(forecast)
     end
   end
 
-  if model_year != "2024_preliminary"
-    plot_forecast(forecast; is_hourly = false, is_fourhourly = false)
-  end
+  plot_forecast(forecast; is_hourly = false, is_fourhourly = false)
   plot_forecast(absolutely_calibrated_forecast; is_hourly = false, is_fourhourly = false, is_absolutely_calibrated = true, draw = true, pdf = false)
 
   # @sync doesn't seem to work; poll until subprocesses are done.
