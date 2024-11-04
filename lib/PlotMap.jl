@@ -362,7 +362,7 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
       expected_deaths = 0.0
       for i in 1:length(vals)
         if Conus.is_in_conus(grid.latlons[i])
-          expected_deaths += vals[i] * grid.point_areas_sq_miles[i] / (25*π^2)
+          expected_deaths += vals[i] * grid.point_areas_sq_miles[i] / (π*25^2)
         end
       end
       println(f, "echo '-95.65 25.35 Naive expected deaths in CONUS: $(@sprintf("%.1f", expected_deaths))' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
