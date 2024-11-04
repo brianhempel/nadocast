@@ -4,6 +4,7 @@ import Dates
 import TimeZones
 import DelimitedFiles
 import Statistics
+using Printf
 
 import PNGFiles
 import PNGFiles.ImageCore.ColorTypes
@@ -356,6 +357,15 @@ function plot_map(base_path, grid, vals; pdf=true, sig_vals=nothing, run_time_ut
     println(f, "echo '-95.55 27.93 Chance of $hazard_str within 25 miles of a point.' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
     if !isnothing(sig_vals)
       println(f, "echo '-95.65 25.35 Black hatched = 10%+ chance of $sig_hazard_str' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
+    end
+    if event_title == "Tor Life Risk"
+      expected_deaths = 0.0
+      for i in 1:length(vals)
+        if Conus.is_in_conus(grid.latlons[i])
+          expected_deaths += vals[i] * grid.point_areas_sq_miles[i] / (25*π^2)
+        end
+      end
+      println(f, "echo '-95.65 25.35 Naive expected deaths in CONUS: $(@sprintf("%.1f", expected_deaths))' | gmt text \$region \$projection -F+f4p,Helvetica+jLB")
     end
     println(f, "gmt end")
 
