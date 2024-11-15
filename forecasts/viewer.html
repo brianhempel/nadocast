@@ -8,6 +8,21 @@
   <body>
     <strong>Run Date:</strong>
     <input type="date">
+    <script>
+      // 3h20m ago; 0Z and 12Z are about 3h15m delay, 18Z is about 2h50m delay
+      run_time = new Date(new Date() - 1000*60*60*3.33)
+
+      run_date_picker = document.querySelector('input[type="date"]')
+      run_date_picker.value = run_time.toISOString().split("T")[0]
+
+      function change_by_days(delta_days) {
+        // Need.getTime because ADDING will produce a string, even though substraction makes a number
+        const run_time = new Date(new Date(run_date_picker.value).getTime() + 1000*60*60*24*delta_days)
+        run_date_picker.value = run_time.toISOString().split("T")[0]
+      }
+    </script>
+    <button onclick="change_by_days(-1);update_images()">←</button>
+    <button onclick="change_by_days(1);update_images()">→</button>
 
     <strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run:</strong>
     <label><input type="radio" name="time" value="t0z 2022_models t00z_f12-35 day1 1200">0z</label>
@@ -15,6 +30,21 @@
     <label><input type="radio" name="time" value="t14z 2020_models t14z_f02-21 day1 1630">14z (old, no sig, adds HRRR)</label>
     <label><input type="radio" name="time" value="t18z 2022_models t18z_f02-17 day1 2000">18z</label>
     <label><input type="radio" name="time" value="t12z 2022_models t12z_f24-47 day2 0600">12z Day 2</label>
+    <script>
+      // Check the most recent run time of the 2022 day 1 models
+      // Checks each one in order and then breaks when it finds one that is too new
+      for(const radio of document.querySelectorAll('input[type="radio"]')) {
+        if (radio.value.includes('2020_models') || radio.value.includes('day2')) {
+          continue;
+        }
+        const radio_utc_hours = parseInt(radio.value.split(/\D/)[1])
+        if (radio_utc_hours <= run_time.getUTCHours()) {
+          radio.checked = true
+        } else {
+          break;
+        }
+      }
+    </script>
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <label><input type="checkbox" name="show_sig">Sig</label>
@@ -58,56 +88,58 @@
     </div>
 
     <script>
-      document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('change', () => {
-          let [yr, mo, day] = document.querySelector('input[type="date"]').value.split('-')
-          let [run_time, model, rt_valid, spc_d1_d2, spc_valid] = document.querySelector('input[name="time"]:checked').value.split(' ')
+      function update_images() {
+        let [yr, mo, day] = document.querySelector('input[type="date"]').value.split('-')
+        let [run_time, model, rt_valid, spc_d1_d2, spc_valid] = document.querySelector('input[name="time"]:checked').value.split(' ')
 
-          let show_sig = document.querySelector('input[name="show_sig"]').checked
+        let show_sig = document.querySelector('input[name="show_sig"]').checked
 
-          let preliminary_2024 = document.querySelector('input[name="2024_preliminary_models"]').checked
+        let preliminary_2024 = document.querySelector('input[name="2024_preliminary_models"]').checked
 
-          let reweighted_wind = document.querySelector('input[name="reweighted_wind"]').checked ? 'adj_' : ''
+        let reweighted_wind = document.querySelector('input[name="reweighted_wind"]').checked ? 'adj_' : ''
 
-          let calib = document.querySelector('input[name="calibration"]:checked').value
-          let verif = document.querySelector('input[name="verif"]:checked').value
+        let calib = document.querySelector('input[name="calibration"]:checked').value
+        let verif = document.querySelector('input[name="verif"]:checked').value
 
-          if (show_sig) {
-            document.getElementById('sig').style.display = 'block'
-          } else {
-            document.getElementById('sig').style.display = 'none'
-          }
+        if (show_sig) {
+          document.getElementById('sig').style.display = 'block'
+        } else {
+          document.getElementById('sig').style.display = 'none'
+        }
 
-          if (preliminary_2024) {
-            document.getElementById('tor_life_risk').style.display = 'block'
-            model = "2024_preliminary_models"
-            rt_valid = rt_valid.replace('f02', 'f01')
-          } else {
-            document.getElementById('tor_life_risk').style.display = 'none'
-          }
+        if (preliminary_2024) {
+          document.getElementById('tor_life_risk').style.display = 'block'
+          model = "2024_preliminary_models"
+          rt_valid = rt_valid.replace('f02', 'f01')
+        } else {
+          document.getElementById('tor_life_risk').style.display = 'none'
+        }
 
-          function template_to_path(template) {
-            return template.
-              replace(/SPCVERIF/g, verif).
-              replace(/SPCD1D2/g, spc_d1_d2).
-              replace(/SPCVALID/g, spc_valid).
-              replace(/MODEL/g, model).replace(/YR/g, yr).
-              replace(/MO/g, mo).
-              replace(/DAY/g, day).
-              replace(/RUN_TIME/g, run_time).
-              replace(/RT_VALID/g, rt_valid).
-              replace(/CALIB/g, calib).
-              replace(/WINDADJ/g, reweighted_wind)
-          }
+        function template_to_path(template) {
+          return template.
+            replace(/SPCVERIF/g, verif).
+            replace(/SPCD1D2/g, spc_d1_d2).
+            replace(/SPCVALID/g, spc_valid).
+            replace(/MODEL/g, model).replace(/YR/g, yr).
+            replace(/MO/g, mo).
+            replace(/DAY/g, day).
+            replace(/RUN_TIME/g, run_time).
+            replace(/RT_VALID/g, rt_valid).
+            replace(/CALIB/g, calib).
+            replace(/WINDADJ/g, reweighted_wind)
+        }
 
-          document.querySelectorAll('img[data-src-template]').forEach(img => {
-            img.src = template_to_path(img.dataset.srcTemplate)
-          })
-          document.querySelectorAll('a[data-href-template]').forEach(a => {
-            a.href = template_to_path(a.dataset.hrefTemplate)
-          })
+        document.querySelectorAll('img[data-src-template]').forEach(img => {
+          img.src = template_to_path(img.dataset.srcTemplate)
         })
-      })
+        document.querySelectorAll('a[data-href-template]').forEach(a => {
+          a.href = template_to_path(a.dataset.hrefTemplate)
+        })
+      }
+
+      document.querySelectorAll('input').forEach(input => input.addEventListener('change', update_images))
+
+      update_images()
     </script>
   </body>
 </html>
