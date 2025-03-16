@@ -173,7 +173,7 @@ if FROM_ARCHIVE
       HRRRForecast.new(date, run_hour, forecast_hour)
     end
 
-  forecasts_to_get = (forecasts_to_get + validation_forecasts_to_get + test_forecasts_to_get).uniq
+  forecasts_to_get = (forecasts_in_range + validation_forecasts_to_get + test_forecasts_to_get).uniq
 
   # forecasts_to_remove = DELETE_UNNEEDED ? (forecasts_in_range - forecasts_to_get) : []
 
