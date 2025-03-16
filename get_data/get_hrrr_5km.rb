@@ -151,7 +151,7 @@ if FROM_ARCHIVE
 
   # This is a little conservative because we aren't computing backwards from the valid time
   forecasts_in_range =
-    DATES.product(RUN_HOURS, (1..18).to_a).map do |date, run_hour, forecast_hour|
+    DATES.product(RUN_HOURS, FORECAST_HOURS).map do |date, run_hour, forecast_hour|
       HRRRForecast.new(date, run_hour, forecast_hour)
     end
 
