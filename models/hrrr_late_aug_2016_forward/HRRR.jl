@@ -290,7 +290,14 @@ function reload_forecasts()
     # println(hrrr_path)
     # "/Volumes/HRRR_1/hrrr/201607/20160715/hrrr_conus_sfc_20160715_t08z_f12.grib2"
 
-    year_str, month_str, day_str, run_hour_str, forecast_hour_str = match(r"/hrrr_conus_sfc_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_f(\d\d)\.gri?b2", hrrr_path).captures
+    m = match(r"/hrrr_conus_sfc_(\d\d\d\d)(\d\d)(\d\d)_t(\d\d)z_f(\d\d)\.gri?b2", hrrr_path)
+
+    # Skip the 5km files
+    if isnothing(m)
+      continue
+    end
+
+    year_str, month_str, day_str, run_hour_str, forecast_hour_str = m.captures
 
     run_year      = parse(Int64, year_str)
     run_month     = parse(Int64, month_str)
