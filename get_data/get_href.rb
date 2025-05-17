@@ -952,25 +952,28 @@ def time(&block)
   [out, end_t - start_t]
 end
 
-FTPPROD = "ftpprd.ncep.noaa.gov"
+# FTPPROD is ftp only now
+# FTPPROD = "ftpprd.ncep.noaa.gov"
 NOMADS  = "nomads.ncep.noaa.gov/pub"
 
-ymds_1, ftpprod_time = time { `curl -s https://#{FTPPROD}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
+# ymds_1, ftpprod_time = time { `curl -s https://#{FTPPROD}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
 ymds_2, nomads_time  = time { `curl -s https://#{NOMADS}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
 
-if ([ymds_1.size, -ftpprod_time] <=> [ymds_2.size, -nomads_time]) > 0
-  DOMAIN = FTPPROD
-  YMDS   = ymds_1
-else
-  DOMAIN = NOMADS
-  YMDS   = ymds_2
-end
+# if ([ymds_1.size, -ftpprod_time] <=> [ymds_2.size, -nomads_time]) > 0
+#   DOMAIN = FTPPROD
+#   YMDS   = ymds_1
+# else
+DOMAIN = NOMADS
+YMDS   = ymds_2
+# end
+
+FORECASTS_ROOT = ENV["FORECASTS_ROOT"] || "/Volumes" # || "/home/brian/DATA_TEMP"
 
 TYPES          = ["mean", "prob"]
 HOURS_OF_DAY   = [00, 06, 12, 18]
 FORECAST_HOURS = (01..48).to_a
-BASE_DIRECTORY_1 = "/Volumes/SREF_HREF_1/href"
-BASE_DIRECTORY_2 = "/Volumes/SREF_HREF_3/href"
+BASE_DIRECTORY_1 = "#{FORECASTS_ROOT}/SREF_HREF_1/href"
+BASE_DIRECTORY_2 = "#{FORECASTS_ROOT}/SREF_HREF_3/href"
 MIN_FILE_BYTES = 20_000_000
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
 
@@ -980,11 +983,11 @@ AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
 end.to_set
 
 def alt_location(directory)
-  directory.sub(/^\/Volumes\/SREF_HREF_1\//, "/Volumes/SREF_HREF_2/").sub(/^\/Volumes\/SREF_HREF_3\//, "/Volumes/SREF_HREF_4/")
+  directory.sub(/^#{FORECASTS_ROOT}\/SREF_HREF_1\//, "#{FORECASTS_ROOT}/SREF_HREF_2/").sub(/^#{FORECASTS_ROOT}\/SREF_HREF_3\//, "#{FORECASTS_ROOT}/SREF_HREF_4/")
 end
 
-loop { break if Dir.exists?("/Volumes/SREF_HREF_3/"); puts "Waiting for SREF_HREF_3 to mount..."; sleep 4 }
-loop { break if Dir.exists?("/Volumes/SREF_HREF_4/"); puts "Waiting for SREF_HREF_4 to mount..."; sleep 4 }
+loop { break if Dir.exist?("#{FORECASTS_ROOT}/SREF_HREF_3/"); puts "Waiting for SREF_HREF_3 to mount..."; sleep 4 }
+loop { break if Dir.exist?("#{FORECASTS_ROOT}/SREF_HREF_4/"); puts "Waiting for SREF_HREF_4 to mount..."; sleep 4 }
 
 
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/href/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2
@@ -1015,7 +1018,7 @@ threads = THREAD_COUNT.times.map do
           data = `curl -f -s --show-error #{url_to_get}`
           if $?.success? && data.size >= MIN_FILE_BYTES
             File.write(path, data)
-            File.write(alt_path, data) if Dir.exists?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
+            File.write(alt_path, data) if Dir.exist?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES
           end
         end
       end
