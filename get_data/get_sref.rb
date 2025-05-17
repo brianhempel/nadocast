@@ -33,7 +33,26 @@ DOMAIN = NOMADS
 YMDS   = ymds_2
 # end
 
-FORECASTS_ROOT = ENV["FORECASTS_ROOT"] || "/Volumes" # || "/home/brian/DATA_TEMP"
+PRIMARY_FORECASTS_ROOT = ENV["FORECASTS_ROOT"] || "/Volumes" # || "/Volumes/hd2/DATA_TEMP"
+BACKUP_FORECASTS_ROOT  = ENV["BACKUP_FORECASTS_ROOT"] || "/Volumes/hd2/DATA_TEMP"
+
+loop { break if Dir.exist?("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3/"); puts "Waiting for SREF_HREF_3 to mount..."; sleep 4 }
+loop { break if Dir.exist?("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4/"); puts "Waiting for SREF_HREF_4 to mount..."; sleep 4 }
+
+def mb_available(path)
+  # Filesystem     1M-blocks  Used Available Use% Mounted on
+  # /dev/sdb1        5676931 32903   5357855   1% /media/brian/hd2
+  `df -m #{path}`.split("\n")[1].split[3].to_f
+end
+
+if [mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3/"), mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4/")].min < 10_000
+  puts "#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3 space: #{mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3/")MB}"
+  puts "#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4 space: #{mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4/")MB}"
+  puts "Not enough space, using backup location: #{BACKUP_FORECASTS_ROOT}"
+  FORECASTS_ROOT = BACKUP_FORECASTS_ROOT
+else
+  FORECASTS_ROOT = PRIMARY_FORECASTS_ROOT
+end
 
 TYPES          = ["mean_1hrly", "mean_3hrly", "prob_1hrly", "prob_3hrly"]
 HOURS_OF_DAY   = [3, 9, 15, 21]
@@ -51,9 +70,6 @@ end.to_set
 def alt_location(directory)
   directory.sub(/^#{FORECASTS_ROOT}\/SREF_HREF_1\//, "#{FORECASTS_ROOT}/SREF_HREF_2/").sub(/^#{FORECASTS_ROOT}\/SREF_HREF_3\//, "#{FORECASTS_ROOT}/SREF_HREF_4/")
 end
-
-loop { break if Dir.exist?("#{FORECASTS_ROOT}/SREF_HREF_3/"); puts "Waiting for SREF_HREF_3 to mount..."; sleep 4 }
-loop { break if Dir.exist?("#{FORECASTS_ROOT}/SREF_HREF_4/"); puts "Waiting for SREF_HREF_4 to mount..."; sleep 4 }
 
 
 # https://nomads.ncep.noaa.gov/pub/data/nccf/com/hiresw/prod/href.20180629/ensprod/href.t00z.conus.prob.f01.grib2
