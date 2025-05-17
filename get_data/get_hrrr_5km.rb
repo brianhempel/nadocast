@@ -140,7 +140,7 @@ class HRRRForecast < Forecast
 end
 
 if FROM_ARCHIVE
-  start_date_parts = ENV["START_DATE"]&.split("-")&.map(&:to_i) || [2016,8,24]
+  start_date_parts = (ENV["START_DATE"] || "2018-7-13").split("-")&.map(&:to_i) # HRRRv3 started sometime on 2018-7-12, but not at 0z so we'll start on 2018-7-13
 
   DATES     = (Date.new(*start_date_parts)..Date.today).to_a
   SATURDAYS = DATES.select(&:saturday?)
