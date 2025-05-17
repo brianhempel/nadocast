@@ -46,8 +46,8 @@ def mb_available(path)
 end
 
 if [mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3/"), mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4/")].min < 10_000
-  puts "#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3 space: #{mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3/")MB}"
-  puts "#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4 space: #{mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4/")MB}"
+  puts "#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3 space: #{mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_3/")}MB"
+  puts "#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4 space: #{mb_available("#{PRIMARY_FORECASTS_ROOT}/SREF_HREF_4/")}MB"
   puts "Not enough space, using backup location: #{BACKUP_FORECASTS_ROOT}"
   FORECASTS_ROOT = BACKUP_FORECASTS_ROOT
 else
