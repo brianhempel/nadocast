@@ -20,7 +20,7 @@ RUN_HOURS      = ENV["RUN_HOURS"]&.split(",")&.map(&:to_i) || (0..23).to_a
 FORECAST_HOURS = ENV["FORECAST_HOURS"]&.split(",")&.map(&:to_i) || (1..21).to_a
 MIN_FILE_BYTES = 10_000_000
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || (FROM_NOMADS ? "2" : "4"))
-FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes")
+FORECASTS_ROOT = (ENV["FORECASTS_ROOT"] || "/Volumes/hd2")
 
 
 #loop { break if Dir.exists?("#{FORECASTS_ROOT}/RAP_1/"); puts "Waiting for RAP_1 to mount..."; sleep 4 }

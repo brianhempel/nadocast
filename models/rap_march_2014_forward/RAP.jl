@@ -22,7 +22,7 @@ crop = ((1+14):(451-0), (1+26):(337-55))
 # RAP is missing convective cloud top field from 2018-07-12 12z run through the 2018-08-10 13z run; in prior experiments, this was the most important feature so we'll skip these forecasts.
 
 
-forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes")
+forecasts_root() = get(ENV, "FORECASTS_ROOT", "/Volumes/hd2")
 
 layer_blocks_to_make = FeatureEngineeringShared.all_layer_blocks
 
@@ -345,7 +345,7 @@ common_layers = filter(line -> line != "", split(read(open((@__DIR__) * "/common
 
 function reload_forecasts()
   rap_paths = vcat(
-    Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_1/rap"),
+#    Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_1/rap"),
     Grib2.all_grib2_file_paths_in("$(forecasts_root())/RAP_3/rap")
   )
 
