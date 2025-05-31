@@ -82,7 +82,7 @@ class HRRRForecast < Forecast
   end
 
   def ncep_url
-    "https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/hrrr.#{year_month_day}/conus/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
+    "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/hrrr.#{year_month_day}/conus/hrrr.t#{run_hour_str}z.wrfsfcf#{forecast_hour_str}.grib2"
   end
 
   def base_directory
@@ -194,9 +194,9 @@ if FROM_ARCHIVE # Storm event hours only, for now. Would be 12TB for all +2 +6 +
 
   forecasts_to_remove.each(&:remove!)
 else
-  # https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/hrrr.20190220/conus/hrrr.t02z.wrfsfcf18.grib2
+  # https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/hrrr.20190220/conus/hrrr.t02z.wrfsfcf18.grib2
   ymds =
-    ENV["FORECAST_DATE"] ? [ENV["FORECAST_DATE"].gsub("-","")] : `curl -s https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
+    ENV["FORECAST_DATE"] ? [ENV["FORECAST_DATE"].gsub("-","")] : `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
   forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| HRRRForecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
 end
 

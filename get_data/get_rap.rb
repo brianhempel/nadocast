@@ -41,7 +41,7 @@ class RAPForecast < Forecast
   end
 
   def ncep_url
-    "https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/rap.#{year_month_day}/rap.t#{run_hour_str}z.awp130pgrbf#{forecast_hour_str}.grib2"
+    "https://nomads.ncep.noaa.gov/pub/data/nccf/com/rap/prod/rap.#{year_month_day}/rap.t#{run_hour_str}z.awp130pgrbf#{forecast_hour_str}.grib2"
   end
 
   def base_directory
@@ -79,9 +79,9 @@ if FROM_NOMADS
 
   forecasts_to_remove.each(&:remove!)
 else
-  # https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/rap.20180319/rap.t00z.awp130pgrbf02.grib2
+  # https://nomads.ncep.noaa.gov/pub/data/nccf/com/rap/prod/rap.20180319/rap.t00z.awp130pgrbf02.grib2
   ymds =
-    ENV["FORECAST_DATE"] ? [ENV["FORECAST_DATE"].gsub("-","")] : `curl -s https://www.ftp.ncep.noaa.gov/data/nccf/com/rap/prod/`.scan(/rap\.(\d{8})\//).flatten.uniq
+    ENV["FORECAST_DATE"] ? [ENV["FORECAST_DATE"].gsub("-","")] : `curl -s https://nomads.ncep.noaa.gov/pub/data/nccf/com/rap/prod/`.scan(/rap\.(\d{8})\//).flatten.uniq
   forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| RAPForecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
 end
 
