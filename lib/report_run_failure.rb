@@ -66,6 +66,6 @@ json_str = {
   "MessageStream" => "outbound"
 }.to_json
 
-put json_str
+puts json_str
 
 # system(`curl "https://api.postmarkapp.com/email" -X POST -H "Accept: application/json" -H "Content-Type: application/json" -H "X-Postmark-Server-Token: #{ENV['POSTMARK_SERVER_TOKEN']}" -d #{json_str}`)
