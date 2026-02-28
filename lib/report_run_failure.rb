@@ -52,12 +52,12 @@ report_mtime(body, "/home/brian/nadocast_dev/get_data/get_sref.log")
 report_cmd_result(body, "tail -20 /home/brian/nadocast_dev/get_data/get_sref.log")
 body << "\n"
 body << "\n"
-# report_mtime(body, "/home/brian/nadocast_operational_2020/forecaster.log")
-# report_cmd_result(body, "tail -100 /home/brian/nadocast_operational_2020/forecaster.log")
-# report_mtime(body, "/home/brian/nadocast_operational_2020/get_data/get_href.log")
-# report_cmd_result(body, "tail -20 /home/brian/nadocast_operational_2020/get_data/get_href.log")
-# report_mtime(body, "/home/brian/nadocast_operational_2020/get_data/get_sref.log")
-# report_cmd_result(body, "tail -20 /home/brian/nadocast_operational_2020/get_data/get_sref.log")
+report_mtime(body, "/home/brian/nadocast_operational_2020/forecaster.log")
+report_cmd_result(body, "tail -100 /home/brian/nadocast_operational_2020/forecaster.log")
+report_mtime(body, "/home/brian/nadocast_operational_2020/get_data/get_href.log")
+report_cmd_result(body, "tail -20 /home/brian/nadocast_operational_2020/get_data/get_href.log")
+report_mtime(body, "/home/brian/nadocast_operational_2020/get_data/get_sref.log")
+report_cmd_result(body, "tail -20 /home/brian/nadocast_operational_2020/get_data/get_sref.log")
 
 json_str = {
   "From" => "Nadocast Bot <#{ENV["EMAIL_ADDRESS"]}>",
@@ -67,7 +67,7 @@ json_str = {
   "MessageStream" => "outbound"
 }.to_json
 
-puts json_str
+# puts json_str
 
 cmd = ["curl", "https://api.postmarkapp.com/email", "-X", "POST", "-H", "Accept: application/json", "-H", "Content-Type: application/json", "-H", "X-Postmark-Server-Token: #{ENV['POSTMARK_SERVER_TOKEN']}", "--data-binary", "@-"]
 
