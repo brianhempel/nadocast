@@ -45,19 +45,19 @@ report_cmd_result(body, "top -c -b -n 1 -o %CPU | head -30")
 body << "\n"
 body << "\n"
 report_mtime(body, "/home/brian/nadocast_dev/forecaster.log")
-report_cmd_result(body, "tail -100 /home/brian/nadocast_dev/forecaster.log")
+report_cmd_result(body, "tail -60 /home/brian/nadocast_dev/forecaster.log")
 report_mtime(body, "/home/brian/nadocast_dev/get_data/get_href.log")
-report_cmd_result(body, "tail -20 /home/brian/nadocast_dev/get_data/get_href.log")
+report_cmd_result(body, "tail -10 /home/brian/nadocast_dev/get_data/get_href.log")
 report_mtime(body, "/home/brian/nadocast_dev/get_data/get_sref.log")
-report_cmd_result(body, "tail -20 /home/brian/nadocast_dev/get_data/get_sref.log")
+report_cmd_result(body, "tail -10 /home/brian/nadocast_dev/get_data/get_sref.log")
 body << "\n"
 body << "\n"
 report_mtime(body, "/home/brian/nadocast_operational_2020/forecaster.log")
-report_cmd_result(body, "tail -100 /home/brian/nadocast_operational_2020/forecaster.log")
+report_cmd_result(body, "tail -60 /home/brian/nadocast_operational_2020/forecaster.log")
 report_mtime(body, "/home/brian/nadocast_operational_2020/get_data/get_href.log")
-report_cmd_result(body, "tail -20 /home/brian/nadocast_operational_2020/get_data/get_href.log")
+report_cmd_result(body, "tail -10 /home/brian/nadocast_operational_2020/get_data/get_href.log")
 report_mtime(body, "/home/brian/nadocast_operational_2020/get_data/get_sref.log")
-report_cmd_result(body, "tail -20 /home/brian/nadocast_operational_2020/get_data/get_sref.log")
+report_cmd_result(body, "tail -10 /home/brian/nadocast_operational_2020/get_data/get_sref.log")
 
 json_str = {
   "From" => "Nadocast Bot <#{ENV["EMAIL_ADDRESS"]}>",
