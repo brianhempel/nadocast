@@ -53,6 +53,8 @@ loop do
 
   if Time.now - start_time > 10*HOUR
     STDERR.puts("RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} 10hr timeout")
+    FileUtils.cd File.expand_path("..", __FILE__)
+    system(`ruby report_run_failure.rb RUN_HOUR=#{RUN_HOUR} RUN_DATE=#{RUN_DATE} 10hr timeout`)
     exit(1)
   end
 

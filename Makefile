@@ -92,6 +92,8 @@ training_setup_aws:
 	cd ~
 	curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
 	ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.4-linux-x86_64.tar.gz | tar -xvz
+	# ln -s $(pwd)/julia-1.10.4/bin/julia ~/bin/julia
 
 	curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
 	cd grib2/
@@ -113,6 +115,44 @@ training_setup_aws:
 	screen -UdR
 
 
+training_setup_rhel:
+	bash
+	cd ~
+	source .bash_profile
+
+	mkdir .ssh
+	vim .ssh/authorized_keys # copy ssh keys over
+
+	echo CORE_COUNT=16 >> ~/.bashrc
+
+	# ssh-keygen # copy public keys to places you need to connect (GitHub)
+
+	mkdir -p ~/miniconda3
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+	bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+	rm -rf ~/miniconda3/miniconda.sh
+	echo PATH="\$HOME/miniconda3/bin:$PATH" >> ~/.bashrc
+	echo PATH="\$HOME/bin:$PATH" >> ~/.bashrc
+	source ~/.bashrc
+
+	conda install -y -c conda-forge git make gcc gfortran screen htop cmake
+
+	cd ~
+	mkdir ~/bin
+	curl https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.4-linux-x86_64.tar.gz | tar -xvz
+	ln -s $(pwd)/julia-1.10.4/bin/julia ~/bin/julia
+
+	curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
+	cd ~/grib2/ && CC=gcc FC=gfortran make
+	cd ~/grib2/ && ln -s $(pwd)/wgrib2/wgrib2 ~/bin/wgrib2
+
+	git clone https://github.com/brianhempel/nadocast.git nadocast_dev
+	cd nadocast_dev
+	JULIA_NUM_THREADS=$CORE_COUNT julia --project
+	#> ]instantiate
+	#> ]build MPI
+	#> ]build Proj4
+	#> ]build SpecialFunctions
 
 
 
@@ -174,7 +214,7 @@ setup:
 	# sudo swapon swapfile
 	# echo '/media/brian/ssd/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
 
-	# Apparently you need to be logged in graphically in order for the HDs to automount
+	# Apparently you need to be logged in graphically in order for the HDs to automount, see below for commands to mount
 
 	# sudo ln -s /media/brian /Volumes
 	# sudo apt install -y git
@@ -188,7 +228,7 @@ setup:
 	# crontab crontab.cron
 	#
 	# curl https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz | tar -xvz
-	# sudo apt install -y gcc make gfortran
+	# sudo apt install -y gcc make gfortran cmake
 	# cd grib2/
 	# CC=gcc FC=gfortran make # CC=gcc-10 FC=gfortran-10 make on my Mac
 	# mkdir ~/bin
@@ -204,6 +244,8 @@ setup:
 	# cd ~
 	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz | tar -xvz
 	# ln -s $(pwd)/julia-1.7.2/bin/julia ~/bin/julia
+	# curl https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.4-linux-x86_64.tar.gz | tar -xvz
+	# ln -s $(pwd)/julia-1.10.4/bin/julia ~/bin/julia
 
 	# sudo apt install inetutils-ftp
 	# ln -s `which inetutils-ftp` ~/bin/ftp
@@ -214,6 +256,17 @@ setup:
 	# echo 'ENV["JULIA_MPI_BINARY"]="system"; import Pkg; Pkg.instantiate()' | julia --project=.
 	# echo 'export CORE_COUNT=16' >> ~/.bash_profile
 	# source ~/.bash_profile
+
+	# Mount the hard drives
+	# udisksctl mount --block-device $(blkid --label HRRR_2)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_1)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_2)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_3)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_4)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_5)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_6)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_7)
+	# udisksctl mount --block-device $(blkid --label SREF_HREF_8)
 
 	# cd models/sref_mid_2018_forward/
 	# make train_gradient_boosted_decision_trees
@@ -250,6 +303,10 @@ setup:
 	# sudo apt install pngquant
 
 	# sudo apt install ffmpeg
+
+	# echo 'export EMAIL_ADDRESS=your_addy@example.com' >> ~/.bash_profile # For 10hr timeout failure reporting
+	# echo 'export POSTMARK_SERVER_TOKEN=' >> ~/.bash_profile # For 10hr timeout failure reporting
+	# source ~/.bash_profile
 
 	# make forecast
 	# scp -r nadocaster:~/nadocast_dev/forecasts remote_forecasts
