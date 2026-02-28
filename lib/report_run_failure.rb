@@ -69,7 +69,7 @@ json_str = {
 
 puts json_str
 
-cmd = ["curl", "https://api.postmarkapp.com/email", "-X", "POST", "-H", '"Accept: application/json"', '-H', '"Content-Type: application/json"', '-H', '"X-Postmark-Server-Token: ', ENV['POSTMARK_SERVER_TOKEN'], "--data-binary", "@-"]
+cmd = ["curl", "https://api.postmarkapp.com/email", "-X", "POST", "-H", "Accept: application/json", "-H", "Content-Type: application/json", "-H", "X-Postmark-Server-Token: ", ENV['POSTMARK_SERVER_TOKEN'], "--data-binary", "@-"]
 
 IO.popen(cmd, "r+") do |io|
   io.write(json_str)
