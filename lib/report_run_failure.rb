@@ -2,6 +2,7 @@
 
 require 'json'
 require 'date'
+require 'open3'
 
 if ENV["POSTMARK_SERVER_TOKEN"].to_s == ""
   STDERR.puts "POSTMARK_SERVER_TOKEN env var required"
@@ -68,4 +69,10 @@ json_str = {
 
 # puts json_str
 
-system(`curl "https://api.postmarkapp.com/email" -X POST -H "Accept: application/json" -H "Content-Type: application/json" -H "X-Postmark-Server-Token: #{ENV['POSTMARK_SERVER_TOKEN']}" -d #{json_str}`)
+cmd = ["curl", "https://api.postmarkapp.com/email", "-X", "POST", "-H", '"Accept: application/json"', '-H', '"Content-Type: application/json"', '-H', '"X-Postmark-Server-Token: ', ENV['POSTMARK_SERVER_TOKEN'], "--data-binary", "@-"]
+
+IO.popen(cmd, "r+") do |io|
+  io.write(body)
+  io.close_write
+  puts io.read
+end
