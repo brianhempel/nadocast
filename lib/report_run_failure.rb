@@ -40,9 +40,9 @@ def report_mtime(body, fname)
   body << "\n"
 end
 
-# report_cmd_result(body, "df -h")
-# report_cmd_result(body, "top -c -b -n 1 -o %CPU | head -30")
-# body << "\n"
+report_cmd_result(body, "df -h")
+report_cmd_result(body, "top -c -b -n 1 -o %CPU | head -30")
+body << "\n"
 # body << "\n"
 # report_mtime(body, "/home/brian/nadocast_dev/forecaster.log")
 # report_cmd_result(body, "tail -100 /home/brian/nadocast_dev/forecaster.log")
