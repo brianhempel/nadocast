@@ -17,7 +17,7 @@ body << "\n"
 
 def report_cmd_result(body, cmd)
   body << "$ #{cmd}\n"
-  body << `#{cmd} 2>&1`.gsub("\\u0000", '')
+  body << `#{cmd} 2>&1`.gsub("\u0000", '')
   body << "\n"
   body << "\n"
 end
