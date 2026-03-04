@@ -29,7 +29,7 @@
     <label><input type="radio" name="time" value="t12z 2022_models t12z_f02-23 day1 1300">12z</label>
     <label><input type="radio" name="time" value="t14z 2020_models t14z_f02-21 day1 1630">14z (old, no sig, adds HRRR)</label>
     <label><input type="radio" name="time" value="t18z 2022_models t18z_f02-17 day1 2000">18z</label>
-    <label><input type="radio" name="time" value="t12z 2022_models t12z_f24-47 day2 0600">12z Day 2</label>
+    <label><input type="radio" name="time" value="t12z 2022_models t12z_f24-47 day2 0600/0700">12z Day 2</label>
     <script>
       // Check the most recent run time of the 2022 day 1 models
       // Checks each one in order and then breaks when it finds one that is too new
@@ -78,9 +78,9 @@
     </div>
 
     <div>
-      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_torn_prt.gif"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_torn_prt.gif"></a>
-      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_wind_prt.gif"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_wind_prt.gif"></a>
-      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_hail_prt.gif"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_hail_prt.gif"></a>
+      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_torn_prt.SPCPNGORGIF"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_torn_prt.SPCPNGORGIF"></a>
+      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_wind_prt.SPCPNGORGIF"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_wind_prt.SPCPNGORGIF"></a>
+      <a data-href-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_hail_prt.SPCPNGORGIF"><img data-src-template="https://www.spc.noaa.gov/products/outlook/archive/YR/SPCD1D2probotlk_SPCVERIFYRMODAY_SPCVALID_hail_prt.SPCPNGORGIF"></a>
     </div>
 
     <div id="tor_life_risk" style="display: none;">
@@ -91,6 +91,12 @@
       function update_images() {
         let [yr, mo, day] = document.querySelector('input[type="date"]').value.split('-')
         let [run_time, model, rt_valid, spc_d1_d2, spc_valid] = document.querySelector('input[name="time"]:checked').value.split(' ')
+
+        if (spc_valid == '0600/0700') { // SPC Day 2 outlook shifted from 0600 issuance to 0700 issuance on 2025-11-03
+          spc_valid = run_date_picker.value >= '2025-11-03' ? '0700' : '0600'
+        }
+
+        let spc_png_or_gif = [run_date_picker.value, spc_valid] >= ['2026-03-03', '2000'] ? 'png' : 'gif'
 
         let show_sig = document.querySelector('input[name="show_sig"]').checked
 
@@ -120,6 +126,7 @@
             replace(/SPCVERIF/g, verif).
             replace(/SPCD1D2/g, spc_d1_d2).
             replace(/SPCVALID/g, spc_valid).
+            replace(/SPCPNGORGIF/g, spc_png_or_gif).
             replace(/MODEL/g, model).
             replace(/YR/g, yr).
             replace(/MO/g, mo).
