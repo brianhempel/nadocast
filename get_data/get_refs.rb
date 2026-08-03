@@ -54,7 +54,7 @@ end
 # rrfs_public/ also holds rrfs.YYYYMMDD/, so match refs. specifically.
 YMDS = s3_dirs(S3_PREFIX).map { |dir| dir[/\brefs\.(\d{8})\//, 1] }.compact.uniq.sort
 
-p YMDS
+# p YMDS
 
 PRIMARY_FORECASTS_ROOT = ENV["FORECASTS_ROOT"] || "/Volumes" # || "/Volumes/hd2/DATA_TEMP"
 BACKUP_FORECASTS_ROOT  = ENV["BACKUP_FORECASTS_ROOT"] || "/Volumes/hd2/DATA_TEMP"
