@@ -29,12 +29,12 @@ DO_REPAIR_LATLONS = (ENV["BAD_LATLON_HANDLING"] == "repair")
 
 # Part 1: Storm Events Database
 
-ROOT_URL = "https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
+ROOT_URL = "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
 
 file_names = `curl #{ROOT_URL}`.scan(/StormEvents_details-ftp_v1\.0_d\d\d\d\d_c\d+\.csv\.gz/).uniq
 
 if file_names.empty?
-  STDERR.puts "Could not retreive storm event database file list from https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
+  STDERR.puts "Could not retreive storm event database file list from https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
   exit 1
 end
 
