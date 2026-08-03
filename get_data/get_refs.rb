@@ -21,7 +21,7 @@ S3_PREFIX = ENV["REFS_S3_PREFIX"] || "rrfs_public/"
 # here is only tens of entries, so this never needs continuation tokens.
 def s3_dirs(prefix)
   xml = `curl -f -s --show-error "https://#{RRFS_S3}/?list-type=2&delimiter=%2F&prefix=#{CGI.escape(prefix)}"`
-  puts xml
+  # puts xml
   STDERR.puts "Failed to list #{prefix}" unless $?.success?
   # S3 echoes the requested prefix back in its own <Prefix> element; drop it.
   xml.scan(/<Prefix>([^<]+)<\/Prefix>/).flatten.uniq - [prefix]
