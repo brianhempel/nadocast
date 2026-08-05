@@ -41,7 +41,9 @@ def wgrib2(*args)
   out
 end
 
-def lambert_arg(g) = "lambert:#{format('%g', g[:lov])}:#{format('%g', g[:latin1])}:#{format('%g', g[:latin2])}"
+def lambert_arg(g)
+  "lambert:#{format('%g', g[:lov])}:#{format('%g', g[:latin1])}:#{format('%g', g[:latin2])}"
+end
 
 # The REFS 3km CONUS source grid, read off refs.t00z.mean.f01.conus.grib2 with the commented-out
 # grid_info below. Lat1/Lon1 are the SW corner at the full micro-degree precision of the header.
@@ -179,8 +181,13 @@ def describe(g, c, n, km)
   ]
 end
 
-def record_count(path) = wgrib2(path).lines.size
-def undef_totals(path) = wgrib2(path, "-stats").scan(/undef=(\d+)/).flatten.map(&:to_i).uniq.sort
+def record_count(path)
+  wgrib2(path).lines.size
+end
+
+def undef_totals(path)
+  wgrib2(path, "-stats").scan(/undef=(\d+)/).flatten.map(&:to_i).uniq.sort
+end
 
 # [downsample factor, corner/size info, km] for each output grid. get_data/downsample_refs.rb
 # requires this file for these, so everything below here is CLI-only.

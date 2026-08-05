@@ -75,7 +75,9 @@ if GRIDS_TO_MAKE.empty?
   abort "--km #{options[:km].join(',')}: no such grid (have #{GRIDS.map { |_n, _c, km| km }.join(', ')})"
 end
 
-def out_root(src_root, km) = "#{src_root}_#{km}km"
+def out_root(src_root, km)
+  "#{src_root}_#{km}km"
+end
 
 def out_path(src_root, rel_path, km, suffix_names)
   path = File.join(out_root(src_root, km), rel_path)
@@ -92,13 +94,20 @@ end
 STDOUT.sync = true
 MUTEX  = Mutex.new
 COUNTS = Hash.new(0)
-def say(line, quiet: false) = MUTEX.synchronize { puts line unless quiet }
-def count(key, by = 1) = MUTEX.synchronize { COUNTS[key] += by }
+def say(line, quiet: false)
+  MUTEX.synchronize { puts line unless quiet }
+end
+
+def count(key, by = 1)
+  MUTEX.synchronize { COUNTS[key] += by }
+end
 
 # Temp output lives in the destination directory so the rename is atomic (same filesystem).
 # Leading dot keeps it out of the way; the pattern is what the stale sweep below matches.
 TMP_GLOB = ".*.downsample_refs_tmp*"
-def tmp_path(output, tag) = File.join(File.dirname(output), ".#{File.basename(output)}.downsample_refs_tmp#{tag}.#{Process.pid}.#{Thread.current.object_id}")
+def tmp_path(output, tag)
+  File.join(File.dirname(output), ".#{File.basename(output)}.downsample_refs_tmp#{tag}.#{Process.pid}.#{Thread.current.object_id}")
+end
 
 # A killed run (reboot, SIGKILL) can strand temp files. Nothing else cleans them up, and this
 # script runs forever on a full disk otherwise.
@@ -120,7 +129,7 @@ inputs = SRC_ROOTS.flat_map do |root|
   Dir.glob("**/*.{grib2,grb2}", base: root).sort.reject { |rel| rel.include?(".unpaired.") }.map { |rel| [root, rel] }
 end
 
-queue = Thread::Queue.new
+queue = Queue.new # Thread::Queue only got that name in Ruby 3.0
 inputs.each { |job| queue << job }
 queue.close
 
