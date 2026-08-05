@@ -28,11 +28,11 @@ require "tmpdir"
 
 options = {
   km:           nil, # nil = every grid the grid-definition file knows about
-  jobs:         4,
+  jobs:         1, # wgrib2 parallelizes the conversion
   force:        false,
   dry_run:      false,
   min_age:      120, # seconds; a file still being downloaded is not a file to convert
-  suffix_names: false,
+  suffix_names: true,
   quiet:        false,
 }
 
@@ -44,7 +44,7 @@ parser = OptionParser.new do |o|
   o.on("-f", "--force", "Redo files that already look up to date") { options[:force] = true }
   o.on("-n", "--dry-run", "List what would be converted") { options[:dry_run] = true }
   o.on("--min-age SECONDS", Integer, "Skip inputs modified this recently (default #{options[:min_age]})") { |v| options[:min_age] = v }
-  o.on("--suffix-names", "Name outputs foo.12km.grib2 instead of foo.grib2") { options[:suffix_names] = true }
+  o.on("--no-suffix-names", "Name outputs foo.grib2 instead of foo.12km.grib2") { options[:suffix_names] = false }
   o.on("-q", "--quiet", "Only print warnings and the summary") { options[:quiet] = true }
   o.on("-h", "--help") { puts o; exit }
 end
