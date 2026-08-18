@@ -119,7 +119,7 @@ class HRRRForecast < Forecast
       # The pando HRRR archive server doesn't like it when TLS 1.3 is tried before TLS 1.2
       # data = `curl -f -s --show-error --tlsv1.2 --tls-max 1.2 #{url_to_get}`
 
-      data = `curl -f -s --show-error #{url_to_get} | wgrib2 - -set_grib_type same -new_grid_winds grid -new_grid_interpolation bilinear -new_grid lambert:265:25:25:25 234.906000:1161:5079 19.858000:678:5079 -`
+      data = `curl --http1.1 -f -s --show-error #{url_to_get} | wgrib2 - -set_grib_type same -new_grid_winds grid -new_grid_interpolation bilinear -new_grid lambert:265:25:25:25 234.906000:1161:5079 19.858000:678:5079 -`
 
       if $?.success? && data.size >= min_file_bytes
         File.write(path, data)
@@ -127,7 +127,7 @@ class HRRRForecast < Forecast
         url_to_get = alt_archive_url
         puts "#{url_to_get} -> #{path}"
         return if DRY_RUN
-        data = `curl -f -s --show-error #{url_to_get}`
+        data = `curl --http1.1 -f -s --show-error #{url_to_get}`
         if $?.success? && data.size >= min_file_bytes
           File.write(path, data)
           if alt_path
@@ -180,7 +180,7 @@ if FROM_ARCHIVE
   # forecasts_to_remove.each(&:remove!)
 else
   # https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/hrrr.20190220/conus/hrrr.t02z.wrfsfcf18.grib2
-  ymds = ENV["FORECAST_DATE"] ? [ENV["FORECAST_DATE"].gsub("-","")] : `curl -s https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
+  ymds = ENV["FORECAST_DATE"] ? [ENV["FORECAST_DATE"].gsub("-","")] : `curl --http1.1 -s https://ftp.ncep.noaa.gov/data/nccf/com/hrrr/prod/`.scan(/hrrr\.(\d{8})\//).flatten.uniq
   forecasts_to_get = ymds.product(RUN_HOURS, FORECAST_HOURS).map { |ymd, run_hour, forecast_hour| HRRRForecast.new(ymd_to_date(ymd), run_hour, forecast_hour) }
 end
 

@@ -31,7 +31,7 @@ DO_REPAIR_LATLONS = (ENV["BAD_LATLON_HANDLING"] == "repair")
 
 ROOT_URL = "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
 
-file_names = `curl #{ROOT_URL}`.scan(/StormEvents_details-ftp_v1\.0_d\d\d\d\d_c\d+\.csv\.gz/).uniq
+file_names = `curl --http1.1 #{ROOT_URL}`.scan(/StormEvents_details-ftp_v1\.0_d\d\d\d\d_c\d+\.csv\.gz/).uniq
 
 if file_names.empty?
   STDERR.puts "Could not retreive storm event database file list from https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
@@ -204,7 +204,7 @@ last_storm_events_database_event_time = Time.new(START_YEAR)
 
   next unless file_name
 
-  rows = CSV.parse(`curl #{ROOT_URL + file_name} | gunzip`, headers: true)
+  rows = CSV.parse(`curl --http1.1 #{ROOT_URL + file_name} | gunzip`, headers: true)
 
   # STDERR.puts "Event types: #{rows.map { |row| row["EVENT_TYPE"] }.uniq.sort}"
 
@@ -327,7 +327,7 @@ if ARGV[3] == "--add_spc_storm_reports"
     # 1237,150,WATSON,DESHA,AR,33.89,-91.26,(LZK)
     # 1315,100,CLARKSDALE,COAHOMA,MS,34.2,-90.58,SOCIAL MEDIA REPORT OF QUARTER SIZED HAIL. (MEG)
 
-    day_reports_csv_str = `curl https://www.spc.noaa.gov/climo/reports/#{yymmdd}_rpts_filtered.csv`
+    day_reports_csv_str = `curl --http1.1 https://www.spc.noaa.gov/climo/reports/#{yymmdd}_rpts_filtered.csv`
     day_reports_csv_str.gsub!('"', 'inch') # SPC CSV doesn't quote fields so " for "inch" messes us up.
 
     day_reports_tornado_csv_str, day_reports_wind_csv_str, day_reports_hail_csv_str = day_reports_csv_str.split(/^(?=Time)/)

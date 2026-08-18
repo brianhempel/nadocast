@@ -957,7 +957,7 @@ end
 NOMADS  = "nomads.ncep.noaa.gov/pub"
 
 # ymds_1, ftpprod_time = time { `curl -s https://#{FTPPROD}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
-ymds_2, nomads_time  = time { `curl -s https://#{NOMADS}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
+ymds_2, nomads_time  = time { `curl --http1.1 -s https://#{NOMADS}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
 
 # if ([ymds_1.size, -ftpprod_time] <=> [ymds_2.size, -nomads_time]) > 0
 #   DOMAIN = FTPPROD
@@ -997,7 +997,7 @@ MIN_FILE_BYTES = 20_000_000
 THREAD_COUNT   = Integer(ENV["THREAD_COUNT"] || "4")
 
 AVAILABLE_FOR_DOWNLOAD = YMDS.flat_map do |ymd|
-  remote_files = `curl -s https://#{DOMAIN}/data/nccf/com/href/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
+  remote_files = `curl --http1.1 -s https://#{DOMAIN}/data/nccf/com/href/prod/href.#{ymd}/ensprod/`.scan(/\bhref\.t[\.0-9a-z_]+/).grep(/conus.*grib2$/)
   remote_files.map { |name| "https://#{DOMAIN}/data/nccf/com/href/prod/href.#{ymd}/ensprod/#{name}" }
 end.to_set
 
@@ -1031,7 +1031,7 @@ threads = THREAD_COUNT.times.map do
         system("mkdir -p #{alt_location(alt_directory)} 2> /dev/null")
         if (File.size(path) rescue 0) < MIN_FILE_BYTES
           puts "#{url_to_get} -> #{path}"
-          data = `curl -f -s --show-error #{url_to_get}`
+          data = `curl --http1.1 -f -s --show-error #{url_to_get}`
           if $?.success? && data.size >= MIN_FILE_BYTES
             File.write(path, data)
             File.write(alt_path, data) if Dir.exist?(alt_directory) && (File.size(alt_path) rescue 0) < MIN_FILE_BYTES

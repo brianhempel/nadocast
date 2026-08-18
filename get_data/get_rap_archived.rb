@@ -19,7 +19,7 @@ OUT_TOP_DIR_NAME = ENV["OUT_TOP_DIR_NAME"] || "rap" # The name of the top direct
 # VALIDATION_RUN_HOURS = ENV["VALIDATION_RUN_HOURS"]&.split(",")&.map(&:to_i) || []
 FILE_NAME_REGEXP = /\A(rap|ruc2)_130_\w+_(#{FORECAST_HOURS.map {|i| "%03d" % i}.join("|")}).grb2/
 
-html = `curl -s #{base_url}`
+html = `curl --http1.1 -s #{base_url}`
 
 urls_to_get = html.scan(/\w+\.g2\.tar\b/).uniq
 
@@ -47,7 +47,7 @@ threads = THREAD_COUNT.times.map do
 
       # There's extra weirdo "./PaxHeaders.6294/rap_130_20170101_0400_000.grb2" files that we want to skip.
       loop do
-        header = `curl -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`.force_encoding("ASCII-8BIT")
+        header = `curl --http1.1 -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + 512 - 1}" #{tar_url}`.force_encoding("ASCII-8BIT")
         # puts [at_byte, header].inspect
         if !$?.success?
           STDERR.puts "Failed reading #{tar_url}"
@@ -84,7 +84,7 @@ threads = THREAD_COUNT.times.map do
           # alt_path = "#{alt_directory}/#{file_name}"
           if (File.size(path) rescue 0) < MIN_FILE_BYTES
             puts "#{file_name} -> #{path}"
-            data = `curl -f -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}" #{tar_url}`
+            data = `curl --http1.1 -f -s --show-error -H"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}" #{tar_url}`
             if data.bytesize == file_size
               if FIELD_FILTER
                 tmp = Tempfile.new(file_name)
@@ -97,7 +97,7 @@ threads = THREAD_COUNT.times.map do
                 # File.write(alt_path, data)
               end
             elsif !$?.success?
-              STDERR.puts "Failed: curl -f -s --show-error -H\"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}\" #{tar_url}"
+              STDERR.puts "Failed: curl --http1.1 -f -s --show-error -H\"Range: bytes=#{at_byte}-#{at_byte + file_size - 1}\" #{tar_url}"
               exit 1
             else
               STDERR.puts "Asked for #{file_size} bytes of #{file_name} but only got #{data.size}!!! Not saved."

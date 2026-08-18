@@ -8,5 +8,5 @@ require 'date'
   dir = "%04d%02d" % [convective_date.year, convective_date.month]
   Dir.exist?(dir) || system("mkdir #{dir}")
   puts url
-  system("curl -s '#{url}' > #{dir}/#{"mesh_%04d-%02d-%02d.png" % [convective_date.year, convective_date.month, convective_date.day]}")
+  system("curl --http1.1 -s '#{url}' > #{dir}/#{"mesh_%04d-%02d-%02d.png" % [convective_date.year, convective_date.month, convective_date.day]}")
 end

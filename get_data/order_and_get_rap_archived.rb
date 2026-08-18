@@ -192,7 +192,7 @@ end
 
 def check_outstanding_orders(outstanding_orders, orders_downloading)
   outstanding_orders.each do |order_name, order_status_url|
-    html_str = `curl -s '#{order_status_url.strip}'`
+    html_str = `curl --http1.1 -s '#{order_status_url.strip}'`
     if html_str =~ /Queued For Processing/
       puts "#{order_name}\tQueued"
     elsif html_str =~ /In Progress/

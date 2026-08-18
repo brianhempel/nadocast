@@ -87,7 +87,7 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
       puts "#{url_to_get} -> #{path}"
       return if DRY_RUN
       # The pando HRRR archive server doesn't like it when TLS 1.3 is tried before TLS 1.2
-      data = `curl -f -s --show-error --tlsv1.2 --tls-max 1.2 #{url_to_get}`
+      data = `curl --http1.1 -f -s --show-error --tlsv1.2 --tls-max 1.2 #{url_to_get}`
       if $?.success? && data.size >= min_file_bytes
         File.write(path, data)
         if alt_path
@@ -97,7 +97,7 @@ class Forecast < Struct.new(:run_date, :run_hour, :forecast_hour)
         url_to_get = alt_archive_url
         puts "#{url_to_get} -> #{path}"
         return if DRY_RUN
-        data = `curl -f -s --show-error #{url_to_get}`
+        data = `curl --http1.1 -f -s --show-error #{url_to_get}`
         if $?.success? && data.size >= min_file_bytes
           File.write(path, data)
           if alt_path

@@ -37,7 +37,7 @@ DATES.each do |date|
       if (File.size("#{dir}/day1otlk_#{date.yyyymmdd}_#{hour}_torn.shp") rescue 0) == 0
         system("mkdir -p #{dir} 2> /dev/null")
         puts "#{url_to_get} -> #{path}"
-        data = `curl -f -s --show-error #{url_to_get}`
+        data = `curl --http1.1 -f -s --show-error #{url_to_get}`
         File.write(path, data) if $?.success?
         system("unzip -d #{dir} #{path} && rm #{path}")
       end
