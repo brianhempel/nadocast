@@ -18,9 +18,9 @@ end
 # FTPPROD = "ftpprd.ncep.noaa.gov"
 NOMADS  = "nomads.ncep.noaa.gov/pub"
 
-# SCN 26-48: parallel feed since Aug 11 2026, becomes "prod" at implementation Oct 6 2026.
+# SCN 26-48: parallel "para" feed since Aug 11 2026, becomes "prod" at implementation Oct 6 2026.
 # Only ~2 days are retained here, vs ~10 on the old S3 prototype bucket (see get_refs_s3.rb).
-REFS_FEED = ENV["REFS_FEED"] || "para"
+REFS_FEED = ENV["REFS_FEED"] || "prod"
 
 # ymds_1, ftpprod_time = time { `curl -s https://#{FTPPROD}/data/nccf/com/href/prod/`.scan(/\bhref\.(\d{8})\//).flatten.uniq }
 ymds_2, nomads_time  = time { `curl --http1.1 -s https://#{NOMADS}/data/nccf/com/refs/#{REFS_FEED}/`.scan(/\brefs\.(\d{8})\//).flatten.uniq }
